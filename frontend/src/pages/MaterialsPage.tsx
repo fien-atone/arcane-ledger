@@ -90,7 +90,7 @@ const TYPE_ICON: Record<MockMaterial['type'], string> = {
 };
 
 export default function MaterialsPage() {
-  const { id: campaignId } = useParams<{ id: string }>();
+  const { id: _campaignId } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<MaterialTab>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string>(MOCK_MATERIALS[0].id);

@@ -88,7 +88,7 @@ export default function NpcDetailPage() {
   }
 
   const st = STATUS_STYLES[npc.status];
-  const primaryGroup = npc.groupMemberships[0];
+  const _primaryGroup = npc.groupMemberships[0];
 
   const resolvedRelations = (npc.relations ?? [])
     .map((rel) => ({ rel, other: allNpcs?.find((n) => n.id === rel.npcId) }))
