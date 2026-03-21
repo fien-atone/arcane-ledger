@@ -1,0 +1,276 @@
+import type { Session } from '@/entities/session';
+
+export const MOCK_SESSIONS: Session[] = [
+  // ── Farchester ──────────────────────────────────────────────────────────
+  {
+    id: 'ses-fc-5',
+    campaignId: 'campaign-farchester',
+    number: 5,
+    title: 'Session 5 — 18.03.2026',
+    datetime: '2026-03-18T18:00:00Z',
+    brief: "Gnurk's mold request, brewing with Yorvert, Alvin falls down stairs",
+    summary:
+      'The party continued talks with the protesters. Gnurk asked for a special mold from the city. Yorvert helped brew the special alcohol — only 1 bottle survived after Alvin drunkenly smashed one falling down stairs.',
+    nextSessionNotes:
+      'Will 1 bottle be enough for Kronhev? What does Gnurk need the mold for? What do the elves want?',
+    locationIds: ['loc-fc-farchester', 'loc-fc-tavern', 'loc-fc-rathusha'],
+    createdAt: '2026-03-18T00:00:00Z',
+  },
+  {
+    id: 'ses-fc-4',
+    campaignId: 'campaign-farchester',
+    number: 4,
+    title: 'Session 4 — 12.03.2026',
+    datetime: '2026-03-12T18:00:00Z',
+    brief: 'Meeting with Tuts',
+    summary: "The party met Tuts and learned more about the city's political situation.",
+    locationIds: ['loc-fc-farchester', 'loc-fc-tower'],
+    createdAt: '2026-03-12T00:00:00Z',
+  },
+  {
+    id: 'ses-fc-3',
+    campaignId: 'campaign-farchester',
+    number: 3,
+    title: 'Session 3 — 02.03.2026',
+    datetime: '2026-03-02T18:00:00Z',
+    brief: 'Mage Tower, negotiations',
+    summary: 'The party explored the Mage Tower and engaged in delicate negotiations.',
+    locationIds: ['loc-fc-farchester', 'loc-fc-tower'],
+    createdAt: '2026-03-02T00:00:00Z',
+  },
+  {
+    id: 'ses-fc-2',
+    campaignId: 'campaign-farchester',
+    number: 2,
+    title: 'Session 2 — 24.02.2026',
+    datetime: '2026-02-24T18:00:00Z',
+    brief: 'Town Hall, Lord-Admiral Kronhev',
+    summary: 'Getting to know the city, meeting at Town Hall, introduction to Lord-Admiral Kronhev.',
+    locationIds: ['loc-fc-farchester', 'loc-fc-rathusha', 'loc-fc-residence'],
+    createdAt: '2026-02-24T00:00:00Z',
+  },
+  {
+    id: 'ses-fc-1',
+    campaignId: 'campaign-farchester',
+    number: 1,
+    title: 'Session 1 — 20.02.2026',
+    datetime: '2026-02-20T18:00:00Z',
+    brief: 'Road from Brinwick, arrival in Farchester',
+    summary: 'The party travelled from Brinwick and arrived at the city of Farchester.',
+    locationIds: ['loc-fc-farchester'],
+    createdAt: '2026-02-20T00:00:00Z',
+  },
+
+  // ── Drakkenheim ─────────────────────────────────────────────────────────
+  {
+    id: 'ses-dk-17',
+    campaignId: 'campaign-drakkenheim',
+    number: 17,
+    title: 'Session 17 — 16.03.2026',
+    datetime: '2026-03-16T18:00:00Z',
+    brief: 'Aldor, Doppelganger, Escape through the sewers',
+    summary:
+      "Aldor appeared demanding the 500gp debt — Korvin paid with the cursed fire sword. A doppelganger impersonating Zoya was scared off. Veronika Yad was found at the Sweaty Bugbear. The party escaped Bent Row through the sewers, fighting a Gelatinous Cube. Chertyaka was released and ran north.",
+    nextSessionNotes:
+      "Party is stuck in the sewers. Where is Chertyaka? What is Aldor's scepter? Find Black Jack at the Hanging Lock tavern.",
+    createdAt: '2026-03-16T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-16',
+    campaignId: 'campaign-drakkenheim',
+    number: 16,
+    title: 'Session 16 — Подземная Арена',
+    datetime: '2026-03-09T18:00:00Z',
+    brief: 'Underground Arena, Sai & Patrikeyevna as "Elf and Granny", Aldor demands debt',
+    summary:
+      "The party discovered a large underground arena in the sewers beneath Bent Row. Sai and Patrikeyevna signed up as \"Elf and Granny\". Fights organized by Bull — scarred face, one blind eye. Korvin chased by Queen's Men through tunnels and found a cursed fire sword. The whole party was locked in cages in the morning. Aldor appeared in the dungeon demanding the 500gp debt.",
+    nextSessionNotes:
+      "Arena fights — Elf and Granny go in. Patrikeyevna owes Marv the gnome 20gp (3 days). Chertyaka left at the stables. Close the 500gp debt to Aldor.",
+    createdAt: '2026-03-09T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-15',
+    campaignId: 'campaign-drakkenheim',
+    number: 15,
+    title: 'Session 15 — Осьминог и Река',
+    datetime: '2026-02-26T18:00:00Z',
+    brief: 'Octopus Paul, anomaly, crayfish procession, Smi\'s Palace',
+    summary:
+      "Octopus Paul sucked in Korvin. The party found an anomaly. Met August Elderfire (Gus) and pale man Friedrich for Lichten — a renegade. Found another slime sample. Discovered a procession of crayfish immune to contaminated water, near a large body of water ruled by the Duchess. Explored Smi's Palace for the night.",
+    createdAt: '2026-02-26T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-14',
+    campaignId: 'campaign-drakkenheim',
+    number: 14,
+    title: 'Session 14 — Зоя и Ингредиенты',
+    datetime: '2026-02-19T18:00:00Z',
+    brief: 'Ingredients for Zoya, Bryce Landry found, Aldor catches up',
+    summary:
+      "Re-summoned owl Nix. Zakaris found Sir Bryce Landry — Korvin hit him with Magic Missile in the kneecaps. Gathered ingredients for Zoya's delirium cure: temple slime (50gp, 2 found) and mandrake roots x5 (8 found). Zoya is heading to Bent Row. Learned of Johann Ghostweaver who taught Zoya the cure and had dealings with Oscar. Aldor caught the party — Korvin left the delirium shard as collateral. The Trio killed the Manticore Gorota.",
+    nextSessionNotes:
+      "Korvin owes Aldor the Giant 500gp for the destroyed Bag of Holding.",
+    createdAt: '2026-02-19T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-13',
+    campaignId: 'campaign-drakkenheim',
+    number: 13,
+    title: 'Session 13',
+    datetime: '2026-02-05T18:00:00Z',
+    brief: "Bag of Holding destroyed, Katya revealed as cultist fanatic",
+    summary:
+      "Stress triggers contamination checks. Korvin destroyed the Bag of Holding when Katya and other fanatics tried to take it — Katya turned out to be a Followers of the Falling Fire fanatic. Loss of the Bag of Holding means a 500gp debt to Aldor.",
+    createdAt: '2026-02-05T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-12',
+    campaignId: 'campaign-drakkenheim',
+    number: 12,
+    title: 'Session 12',
+    datetime: '2026-01-22T18:00:00Z',
+    brief: "River's debt, Sebastian's past, Knight-Lieutenant Wyatt",
+    summary:
+      "River sent a telepathic message on departure: return the bag to Giant Aldor within 24 hours. Korvin tossed a coin into the Skull and Sword, bought 2 sets of familiar summoning ingredients. Met Knight-Lieutenant Cassandra Wyatt on a griffon. Learned Sebastian left the Academy — he was Oscar's student, stole tomes on summoning and necromancy. Patrikeyevna gained 1 level of contamination. Party looted 30gp from a nobleman and a 100gp delirium fragment.",
+    createdAt: '2026-01-22T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-11',
+    campaignId: 'campaign-drakkenheim',
+    number: 11,
+    title: 'Session 11 — Яды и Квест Фонарей',
+    datetime: '2026-01-15T18:00:00Z',
+    brief: "Poisoners Muskorina & Bufotenia, Lanterns quest, Red Lion, Bent Row discovered",
+    summary:
+      "Encountered poisoners Muskorina and Bufotenia — Bufotenia's eyes glow red and seem to grant true sight. The Hooded Lanterns want to meet. Rented a room at the Red Lion Hotel. Negotiated one day's delay. Discovered Bent Row — a new underground location in the Spire District beyond the Rat Nest. River was reading 'Antidotes and Poisons'. Kosta Stavros found dead. Lanterns quest: their purification potions purchased from a suspicious figure are contaminated. Meeting point: Shepherd's Gate. Suspect operates from a mansion near Eckerman Mill. OSCAR YOREN is connected.",
+    createdAt: '2026-01-15T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-10',
+    campaignId: 'campaign-drakkenheim',
+    number: 10,
+    title: "Session 10 — Врата Чемпионов и Культисты",
+    datetime: '2026-01-08T18:00:00Z',
+    brief: "Champion's Gate, cultists, Korvin's backstory revealed",
+    summary:
+      "Found 8 more citrines (~25gp each). Met cultists — Tanya Brown, a former classmate of Vermira who defected after the Sacred Flame Massacre. Swapped wands (Korvin's wand now in the bag). Major revelation: Patrikeyevna has no crystal inside her — why? Korvin is the only surviving child from the Sacred Flame Massacre where children with awakening magical abilities were killed. The sword found by the party comes from Sai's dreams. Reached Champion's Gate — Lucretia Mathias is there.",
+    createdAt: '2026-01-08T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-9',
+    campaignId: 'campaign-drakkenheim',
+    number: 9,
+    title: 'Session 09 — Элементали и Голем',
+    datetime: '2025-12-10T18:00:00Z',
+    brief: 'Elementals, Golem, Copperpot note still undeciphered',
+    summary:
+      "Played hide-and-seek with elementals. Identified the Golem in Emberwood. The note found on Copperpot's corpse remains in an unknown language — not yet deciphered. Loot: 2 citrines (~25gp each), 1 scorched sword, 2 flame pendants (burned). Gear covered in soot.",
+    createdAt: '2025-12-10T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-8',
+    campaignId: 'campaign-drakkenheim',
+    number: 8,
+    title: 'Session 08',
+    datetime: '2025-12-01T18:00:00Z',
+    brief: 'Skull and Sword explored, altar found, Gorota the manticore spotted',
+    summary:
+      "Explored the Skull and Sword Taphouse — no windows, saloon doors, everything broken. Spotted Hooded Lanterns member Anya Kruger. Gorota the manticore seen nearby (named by the Lanterns). Found an altar with 3 vials, incense, and a silver pendant.",
+    createdAt: '2025-12-01T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-7',
+    campaignId: 'campaign-drakkenheim',
+    number: 7,
+    title: 'Session 07 — Спасение Петры',
+    datetime: '2025-11-24T18:00:00Z',
+    brief: 'Petra rescued from the Rat Nest, contamination cured',
+    summary:
+      "Rescued Petra Lang from the Rat Nest. A white rat with huge delirium chunks found inside. Petra offered to ask the Amethyst Academy about Oscar Yoren's location. Cured contamination with a purification syringe. Couldn't reach Eckerman Mill.",
+    createdAt: '2025-11-24T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-6',
+    campaignId: 'campaign-drakkenheim',
+    number: 6,
+    title: 'Session 06',
+    datetime: '2025-11-18T18:00:00Z',
+    brief: 'Gilded Lily, rat fight, Korvin warms to Vermira',
+    summary:
+      "Re-summoned familiar Nix. Visited the Gilded Lily — owned by Madam Rochelle, grogs for 1gp, live music evening. Fought rats in the ruins. Korvin began treating Vermira better after she healed him and cast Shield.",
+    createdAt: '2025-11-18T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-5',
+    campaignId: 'campaign-drakkenheim',
+    number: 5,
+    title: 'Session 05 — Зоя, Лавки, Уровень 3',
+    datetime: '2025-11-07T18:00:00Z',
+    brief: "Met Zoya, Orson's shop, River's tip about Eckerman Mill, reached level 3",
+    summary:
+      "Found Zoya's house — an old woman selling amber beads who worships the Old Gods and knows Patrikeyevna. Visited Orson Fairweather's delirium shop — bought a small lead container (4gp). River shared a new point of interest: Eckerman Mill, outside both Drakkenheim and Emberwood. Quest received from Ansom to rescue Petra Lang. Sold delirium for 27gp. Officially reached Level 3.",
+    createdAt: '2025-11-07T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-4',
+    campaignId: 'campaign-drakkenheim',
+    number: 4,
+    title: 'Session 04 — Горгульи и Делириум',
+    datetime: '2025-10-15T18:00:00Z',
+    brief: "Gargoyles, 60gp loot, Copperpot's hidden note found",
+    summary:
+      "Fought gargoyles — fire and intellect attacks work. Found a body bearing the Amethyst Academy sigil. Encountered Queen's Men marked with red diamonds; met Reggie 'Hat' — enemies of the Cobras. Found a secret message hidden behind an illusion signed 'Coxworth B. Copperpot'. Loot: 60gp in old coins (15 per person), 3 pieces of delirium (~10gp each), a Scroll of Identify.",
+    createdAt: '2025-10-15T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-3',
+    campaignId: 'campaign-drakkenheim',
+    number: 3,
+    title: 'Session 03 — Первый рейд в Дракенхейм',
+    datetime: '2025-09-23T18:00:00Z',
+    brief: 'First raid into Drakkenheim, Tainted creatures, Old Rattlecan, Nix summoned',
+    summary:
+      "First raid into Drakkenheim, entering from the south-east. Encountered Tainted Scum, Leech Scum, and Glowing Scum — all vulnerable to fire. Rats fell asleep easily. Locals climbed Old Rattlecan (animated armor) — Patrikeyevna took a hit. Korvin summoned owl familiar Nix for the first time. Patrikeyevna revealed herself as a Monk.",
+    createdAt: '2025-09-23T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-2',
+    campaignId: 'campaign-drakkenheim',
+    number: 2,
+    title: 'Session 02 — Эмбервуд',
+    datetime: '2025-09-09T18:00:00Z',
+    brief: 'Emberwood explored, Skull and Sword, Lanterns, River at Red Lion',
+    summary:
+      "Explored Emberwood Village. Spotted a large carriage pulled by two steel bulls radiating magic — its passenger reeked of delirium. Skull and Sword Taphouse confirmed as Queen's Men territory. Night market: Eren Marlow, Aldor (magic items), and Orson Fairweather (delirium trader). River — a tiefling warlock — spends evenings in the Red Lion Hotel library. Tainted cannot cross the river but can walk bridges. The Amethyst Academy's conclave is led by Eldric Runeweaver.",
+    createdAt: '2025-09-09T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-1',
+    campaignId: 'campaign-drakkenheim',
+    number: 1,
+    title: 'Session 01 — Дорога в Эмбервуд',
+    datetime: '2025-09-02T18:00:00Z',
+    brief: 'Road to Emberwood, Rikard turns into a monster, Bogdan flees',
+    summary:
+      "Met Eren Marlow — a caravan driver who brought the party to Emberwood. A masked woman with a dagger gave a copper coin. On the road: a corpse with a coin near the Dran river, surrounded by two humans and 'something made of meat and bone'. Rikard Vos touched delirium and began transforming. By night he was fully monstrous. Bogdan fled with the dagger. Party arrived in Emberwood.",
+    nextSessionNotes:
+      "Eren is at the square and can introduce Armin Gainsbury.",
+    createdAt: '2025-09-02T00:00:00Z',
+  },
+  {
+    id: 'ses-dk-0',
+    campaignId: 'campaign-drakkenheim',
+    number: 0,
+    title: 'Session 00 — Вводная',
+    datetime: '2025-08-13T18:00:00Z',
+    brief: 'Introductory session — world and characters',
+    summary:
+      "Introductory session for the Drakkenheim setting. Party assembled: Korvin (Human Wizard), Sai (Elf), Vermira (Dwarf cleric of Sacred Flame), Patrikeyevna (Elderly Monk). No major events recorded.",
+    createdAt: '2025-08-13T00:00:00Z',
+  },
+];
+
+export const getLastSession = (campaignId: string): Session | undefined =>
+  MOCK_SESSIONS.filter((s) => s.campaignId === campaignId).sort(
+    (a, b) => b.number - a.number
+  )[0];
