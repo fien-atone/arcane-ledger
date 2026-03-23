@@ -9,6 +9,7 @@ interface NavItem {
   icon: string;
   to: (id: string) => string;
   exact: boolean;
+  sub?: boolean;
 }
 
 interface NavSection {
@@ -25,6 +26,7 @@ const NAV: Array<NavItem | NavSection> = [
       { label: 'NPCs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false },
       { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false },
       { label: 'Groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false },
+      { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true },
     ],
   },
   {
@@ -114,7 +116,7 @@ export function Sidebar() {
                     <div className="mx-3 my-3 h-px bg-outline-variant/20" />
                   )}
                   <ul className="space-y-0.5">
-                    {items.map(({ label, icon, to, exact }) => {
+                    {items.map(({ label, icon, to, exact, sub }) => {
                       const href = id ? to(id) : '#';
                       const active = id ? isActive(href, exact) : false;
                       return (
@@ -122,7 +124,11 @@ export function Sidebar() {
                           <Link
                             to={href}
                             title={collapsed ? label : undefined}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-200 text-sm font-medium ${
+                            className={`flex items-center gap-3 rounded-sm transition-all duration-200 font-medium ${
+                              sub
+                                ? `px-3 py-1.5 ${collapsed ? '' : 'pl-9'} text-xs`
+                                : 'px-3 py-2.5 text-sm'
+                            } ${
                               active
                                 ? 'text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary/10 to-transparent'
                                 : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
@@ -130,7 +136,7 @@ export function Sidebar() {
                           >
                             <span
                               className={`material-symbols-outlined flex-shrink-0 ${active ? 'text-primary' : ''}`}
-                              style={{ fontSize: '20px' }}
+                              style={{ fontSize: sub ? '16px' : '20px' }}
                             >
                               {icon}
                             </span>

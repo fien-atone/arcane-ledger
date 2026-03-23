@@ -1,27 +1,25 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useGroups, useGroup } from '@/features/groups/api';
+import { useGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
+import { useGroupTypes } from '@/features/groupTypes';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import type { GroupType } from '@/entities/group';
+import type { NpcStatus } from '@/entities/npc';
 
-const TYPE_CONFIG: Record<GroupType, { label: string; icon: string }> = {
-  faction:  { label: 'Faction',              icon: 'flag' },
-  guild:    { label: 'Guild',                icon: 'handshake' },
-  family:   { label: 'Family',               icon: 'family_restroom' },
-  religion: { label: 'Religion',             icon: 'auto_awesome' },
-  criminal: { label: 'Criminal Org.',        icon: 'warning' },
-  military: { label: 'Military / Order',     icon: 'military_tech' },
-  academy:  { label: 'Academy',              icon: 'school' },
-  secret:   { label: 'Secret Society',       icon: 'visibility_off' },
+const RELATION_CONFIG: Record<string, { label: string; pill: string; icon: string }> = {
+  allied:  { label: 'Allied',   pill: 'bg-secondary/10 text-secondary border border-secondary/20',                        icon: 'handshake' },
+  neutral: { label: 'Neutral',  pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/20',      icon: 'remove' },
+  hostile: { label: 'Hostile',  pill: 'bg-primary/10 text-primary border border-primary/20',                              icon: 'warning' },
+  unknown: { label: 'Unknown',  pill: 'bg-surface-container text-on-surface-variant/60 border border-outline-variant/10', icon: 'help' },
 };
 
-const RELATION_CONFIG: Record<string, { label: string; pill: string }> = {
-  allied:  { label: 'Allied',   pill: 'bg-secondary/10 text-secondary border border-secondary/20' },
-  neutral: { label: 'Neutral',  pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/20' },
-  hostile: { label: 'Hostile',  pill: 'bg-primary/10 text-primary border border-primary/20' },
-  unknown: { label: 'Unknown',  pill: 'bg-surface-container text-on-surface-variant/60 border border-outline-variant/10' },
+const STATUS_DOT: Record<NpcStatus, string> = {
+  alive:   'bg-secondary',
+  dead:    'bg-outline-variant',
+  missing: 'bg-on-surface-variant',
+  unknown: 'bg-outline',
+  hostile: 'bg-primary animate-pulse',
 };
 
 function GroupHero({ name }: { name: string }) {
@@ -38,19 +36,18 @@ function GroupHero({ name }: { name: string }) {
 
 export default function GroupDetailPage() {
   const { id: campaignId, groupId } = useParams<{ id: string; groupId: string }>();
-  const { data: groups } = useGroups(campaignId ?? '');
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
+  const { data: groupTypes } = useGroupTypes();
 
-  const members = allNpcs?.filter((n) =>
-    n.groupMemberships.some((m) => m.groupId === groupId)
-  ) ?? [];
+  const members = (allNpcs ?? [])
+    .filter((n) => n.groupMemberships.some((m) => m.groupId === groupId))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const [editOpen, setEditOpen] = useState(false);
 
-  const relation = group?.partyRelation
-    ? (RELATION_CONFIG[group.partyRelation] ?? RELATION_CONFIG.unknown)
-    : null;
+  const tc = groupTypes?.find((t) => t.id === group?.type) ?? { name: group?.type ?? '', icon: 'category' };
+  const relation = group?.partyRelation ? (RELATION_CONFIG[group.partyRelation] ?? RELATION_CONFIG.unknown) : null;
 
   if (isLoading) {
     return (
@@ -62,12 +59,8 @@ export default function GroupDetailPage() {
   }
 
   if (isError || !group) {
-    return (
-      <main className="p-12 text-on-surface-variant text-sm">Group not found.</main>
-    );
+    return <main className="p-12 text-on-surface-variant text-sm">Group not found.</main>;
   }
-
-  const tc = TYPE_CONFIG[group.type];
 
   return (
     <main className="flex-1 min-h-screen bg-surface">
@@ -93,12 +86,13 @@ export default function GroupDetailPage() {
             {/* Header */}
             <header className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-full text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
                   <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
-                  {tc.label}
+                  {tc.name}
                 </span>
                 {relation && (
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${relation.pill}`}>
+                  <span className={`flex items-center gap-1.5 px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest border ${relation.pill}`}>
+                    <span className="material-symbols-outlined text-[13px]">{relation.icon}</span>
                     {relation.label}
                   </span>
                 )}
@@ -150,6 +144,55 @@ export default function GroupDetailPage() {
               </section>
             )}
 
+            {/* Members */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-4">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                  Members
+                </h2>
+                <div className="h-px flex-1 bg-outline-variant/20" />
+                {members.length > 0 && (
+                  <span className="text-xs font-bold text-on-surface-variant/40">{members.length}</span>
+                )}
+              </div>
+              {members.length === 0 ? (
+                <p className="text-sm text-on-surface-variant/40 italic">No members tagged yet.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {members.map((npc) => {
+                    const membership = npc.groupMemberships.find((m) => m.groupId === groupId);
+                    const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+                    const dot = STATUS_DOT[npc.status];
+                    return (
+                      <Link
+                        key={npc.id}
+                        to={`/campaigns/${campaignId}/npcs/${npc.id}`}
+                        className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 hover:border-outline-variant/30 transition-all group"
+                      >
+                        <div className="relative flex-shrink-0">
+                          <div className="w-10 h-10 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center">
+                            <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
+                          </div>
+                          <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface-container-low ${dot}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">
+                            {npc.name}
+                          </p>
+                          <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
+                            {[npc.species, membership?.relation].filter(Boolean).join(' · ') || '—'}
+                          </p>
+                        </div>
+                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 flex-shrink-0">
+                          chevron_right
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
             {/* GM Notes */}
             <section className="bg-surface-container-low p-8 border border-primary/20 rounded-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -176,7 +219,6 @@ export default function GroupDetailPage() {
           {/* ── Right column (35%) ──────────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            {/* Edit button */}
             <div className="flex justify-end">
               <button
                 onClick={() => setEditOpen(true)}
@@ -193,7 +235,7 @@ export default function GroupDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between text-[11px]">
                   <span className="text-on-surface-variant/60 italic">Type</span>
-                  <span className="text-on-surface font-bold">{tc.label}</span>
+                  <span className="text-on-surface font-bold">{tc.name}</span>
                 </div>
                 {relation && (
                   <div className="flex justify-between text-[11px]">
@@ -204,101 +246,17 @@ export default function GroupDetailPage() {
                   </div>
                 )}
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-on-surface-variant/60 italic">Known Aliases</span>
-                  <span className="text-on-surface">{group.aliases.length}</span>
+                  <span className="text-on-surface-variant/60 italic">Members</span>
+                  <span className="text-on-surface font-bold">{members.length}</span>
                 </div>
+                {group.aliases.length > 0 && (
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-on-surface-variant/60 italic">Known Aliases</span>
+                    <span className="text-on-surface">{group.aliases.length}</span>
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Members */}
-            <section>
-              <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">group</span>
-                Members
-                {members.length > 0 && (
-                  <span className="ml-auto text-on-surface font-headline text-sm">{members.length}</span>
-                )}
-              </h4>
-              {members.length > 0 ? (
-                <div className="space-y-2">
-                  {members.map((npc) => {
-                    const membership = npc.groupMemberships.find((m) => m.groupId === groupId);
-                    const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-                    return (
-                      <Link
-                        key={npc.id}
-                        to={`/campaigns/${campaignId}/npcs/${npc.id}`}
-                        className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-colors group"
-                      >
-                        <div className="w-8 h-8 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[10px] font-bold text-on-surface-variant/60">{initials}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors truncate">
-                            {npc.name}
-                          </p>
-                          {membership?.relation && (
-                            <p className="text-[10px] text-on-surface-variant uppercase tracking-tighter">
-                              {membership.relation}
-                            </p>
-                          )}
-                        </div>
-                        {npc.species && (
-                          <span className="text-[10px] text-on-surface-variant/40 italic flex-shrink-0">{npc.species}</span>
-                        )}
-                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60">
-                          chevron_right
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-xs text-on-surface-variant/40 italic">No members tagged yet.</p>
-              )}
-            </section>
-
-            {/* Locations placeholder */}
-            <section>
-              <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">location_on</span>
-                Known Bases
-              </h4>
-              <p className="text-xs text-on-surface-variant/40 italic">
-                Location links will appear here once tagged.
-              </p>
-            </section>
-
-            {/* Other groups in campaign */}
-            {groups && groups.filter((g) => g.id !== group.id).length > 0 && (
-              <section className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40">Other Groups</h4>
-                <div className="space-y-2">
-                  {groups
-                    .filter((g) => g.id !== group.id)
-                    .map((g) => {
-                      const gtc = TYPE_CONFIG[g.type];
-                      return (
-                        <Link
-                          key={g.id}
-                          to={`/campaigns/${campaignId}/groups/${g.id}`}
-                          className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container transition-colors group"
-                        >
-                          <span className="material-symbols-outlined text-[16px] text-on-surface-variant/30 group-hover:text-primary transition-colors">
-                            {gtc.icon}
-                          </span>
-                          <span className="text-xs text-on-surface group-hover:text-primary transition-colors flex-1 truncate">
-                            {g.name}
-                          </span>
-                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60">
-                            chevron_right
-                          </span>
-                        </Link>
-                      );
-                    })}
-                </div>
-              </section>
-            )}
           </div>
 
         </div>

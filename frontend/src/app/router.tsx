@@ -23,6 +23,7 @@ const CharacterDetailPage = lazy(() => import('@/pages/CharacterDetailPage'));
 const MaterialsPage = lazy(() => import('@/pages/MaterialsPage'));
 const SpeciesPage = lazy(() => import('@/pages/SpeciesPage'));
 const SpeciesDetailPage = lazy(() => import('@/pages/SpeciesDetailPage'));
+const GroupTypesPage = lazy(() => import('@/pages/GroupTypesPage'));
 
 const Fallback = () => (
   <div className="flex h-screen items-center justify-center text-on-surface-variant">
@@ -74,6 +75,7 @@ export const router = createBrowserRouter(
             { path: 'materials', element: withSuspense(MaterialsPage) },
             { path: 'species', element: withSuspense(SpeciesPage) },
             { path: 'species/:speciesId', element: withSuspense(SpeciesDetailPage) },
+            { path: 'group-types', element: withSuspense(GroupTypesPage) },
           ],
         },
       ],

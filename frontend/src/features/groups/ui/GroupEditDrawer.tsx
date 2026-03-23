@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveGroup } from '@/features/groups/api';
-import type { Group, GroupType } from '@/entities/group';
+import { useGroupTypes } from '@/features/groupTypes';
+import type { Group } from '@/entities/group';
 
 interface Props {
   open: boolean;
@@ -9,18 +10,12 @@ interface Props {
   group?: Group;
 }
 
-const GROUP_TYPES: { value: GroupType; label: string }[] = [
-  { value: 'faction', label: 'Faction' },
-  { value: 'guild', label: 'Guild' },
-  { value: 'family', label: 'Family' },
-  { value: 'religion', label: 'Religion' },
-  { value: 'criminal', label: 'Criminal Organization' },
-  { value: 'military', label: 'Military / Order' },
-  { value: 'academy', label: 'Academy / School' },
-  { value: 'secret', label: 'Secret Society' },
+const RELATION_OPTIONS: { value: string; label: string; icon: string }[] = [
+  { value: 'allied',  label: 'Allied',  icon: 'handshake' },
+  { value: 'neutral', label: 'Neutral', icon: 'remove' },
+  { value: 'hostile', label: 'Hostile', icon: 'warning' },
+  { value: 'unknown', label: 'Unknown', icon: 'help' },
 ];
-
-const RELATION_OPTIONS = ['allied', 'neutral', 'hostile', 'unknown'];
 
 function generateId() {
   return `group-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -46,10 +41,11 @@ const labelCls =
 
 export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
   const save = useSaveGroup();
+  const { data: groupTypes } = useGroupTypes();
   const isEdit = !!group;
 
   const [name, setName] = useState('');
-  const [type, setType] = useState<GroupType>('faction');
+  const [type, setType] = useState<string>('faction');
   const [aliases, setAliases] = useState('');
   const [description, setDescription] = useState('');
   const [goals, setGoals] = useState('');
@@ -127,35 +123,47 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
               placeholder="Group name…" className={inputCls} />
           </div>
 
-          {/* Type + Party Relation row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Type</label>
-              <div className="relative">
-                <select value={type} onChange={(e) => setType(e.target.value as GroupType)}
-                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}>
-                  {GROUP_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">
-                  unfold_more
-                </span>
-              </div>
+          {/* Type */}
+          <div>
+            <label className={labelCls}>Type</label>
+            <div className="flex flex-wrap gap-1.5">
+              {(groupTypes ?? []).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setType(t.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                    type === t.id
+                      ? 'bg-primary/10 text-primary border-primary/30'
+                      : 'bg-surface-container text-on-surface-variant border-outline-variant/20 hover:border-outline-variant/50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[13px]">{t.icon}</span>
+                  {t.name}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className={labelCls}>Party Relation</label>
-              <div className="relative">
-                <select value={partyRelation} onChange={(e) => setPartyRelation(e.target.value)}
-                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}>
-                  {RELATION_OPTIONS.map((r) => (
-                    <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">
-                  unfold_more
-                </span>
-              </div>
+          </div>
+
+          {/* Party Relation */}
+          <div>
+            <label className={labelCls}>Party Relation</label>
+            <div className="flex flex-wrap gap-1.5">
+              {RELATION_OPTIONS.map(({ value, label, icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPartyRelation(value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                    partyRelation === value
+                      ? 'bg-secondary/10 text-secondary border-secondary/30'
+                      : 'bg-surface-container text-on-surface-variant border-outline-variant/20 hover:border-outline-variant/50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[13px]">{icon}</span>
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 

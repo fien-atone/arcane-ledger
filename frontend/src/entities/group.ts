@@ -1,10 +1,8 @@
-export type GroupType = 'faction' | 'guild' | 'family' | 'religion' | 'criminal' | 'military' | 'academy' | 'secret';
-
 export interface Group {
   id: string;
   campaignId: string;
   name: string;
-  type: GroupType;
+  type: string;
   aliases: string[];
   description: string;
   goals?: string;
