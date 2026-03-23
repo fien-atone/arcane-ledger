@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useParty } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
+import { useSpecies } from '@/features/species/api';
+import { SocialRelationsSection } from '@/features/relations/ui';
 function CharacterPortrait({ name }: { name: string }) {
   const initials = name
     .split(' ')
@@ -26,6 +28,7 @@ export default function CharacterDetailPage() {
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
   const { data: characters, isLoading, isError } = useParty(campaignId ?? '');
   const character = characters?.find((c) => c.id === charId);
+  const { data: allSpecies } = useSpecies();
   const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
@@ -73,11 +76,23 @@ export default function CharacterDetailPage() {
               <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface tracking-tight">
                 {character.name}
               </h1>
-              {character.species && (
-                <span className="text-secondary text-sm font-label uppercase tracking-widest border-b border-secondary/20 pb-1">
-                  {character.species}
-                </span>
-              )}
+              {character.species && (() => {
+                const matchedSpecies = allSpecies?.find(
+                  (s) => s.id === character.speciesId || s.name.toLowerCase() === character.species?.toLowerCase()
+                );
+                return matchedSpecies ? (
+                  <Link
+                    to={`/campaigns/${campaignId}/species`}
+                    className="text-secondary text-sm font-label uppercase tracking-widest border-b border-secondary/20 pb-1 hover:text-primary hover:border-primary/20 transition-colors"
+                  >
+                    {character.species}
+                  </Link>
+                ) : (
+                  <span className="text-secondary text-sm font-label uppercase tracking-widest border-b border-secondary/20 pb-1">
+                    {character.species}
+                  </span>
+                );
+              })()}
             </div>
             {character.class && (
               <p className="text-on-surface-variant italic font-headline text-xl mt-2">
@@ -189,6 +204,12 @@ export default function CharacterDetailPage() {
                 </div>
               </section>
             )}
+
+            {/* Social Relations */}
+            <SocialRelationsSection
+              campaignId={campaignId ?? ''}
+              entityId={charId ?? ''}
+            />
 
             {(() => {
               const missing = [

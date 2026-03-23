@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useGroups, useGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
+import { SocialRelationsSection } from '@/features/relations/ui';
 import type { GroupType } from '@/entities/group';
 
 const TYPE_CONFIG: Record<GroupType, { label: string; icon: string }> = {
@@ -261,6 +262,12 @@ export default function GroupDetailPage() {
                 </p>
               </div>
             </section>
+
+            {/* Social Relations */}
+            <SocialRelationsSection
+              campaignId={campaignId ?? ''}
+              entityId={displayId}
+            />
           </div>
 
           {/* ── Right column (35%) ──────────────────────────────── */}

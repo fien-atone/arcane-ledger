@@ -117,7 +117,6 @@ export function DiceRoller() {
   const [modifier, setModifier] = useState(0);
   const [history, setHistory] = useState<RollEntry[]>([]);
   const [animKey, setAnimKey] = useState(0);
-
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const historyScrollRef = useRef<HTMLDivElement>(null);
 
@@ -147,7 +146,7 @@ export function DiceRoller() {
       total,
       ts: Date.now(),
     };
-        setAnimKey((k) => k + 1);
+    setAnimKey((k) => k + 1);
     setExpandedIds((prev) => new Set([...prev, entry.id]));
     setHistory((prev) => [entry, ...prev].slice(0, 50));
   }, [pool, modifier, poolEmpty]);

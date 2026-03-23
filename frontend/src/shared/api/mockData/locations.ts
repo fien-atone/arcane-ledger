@@ -8,6 +8,8 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Фарчестер',
     aliases: ['Farchester'],
     type: 'settlement',
+    settlementType: 'city',
+    settlementPopulation: 12000,
     description:
       'Бывший вольный город в Степной Марке. Два года назад назначен имперский маркграф Кронхейв. Осада с востока гоблинами (~1,5 года), сухой закон, комендантский час, нехватка еды и воды.',
     gmNotes: 'Город под давлением — важен для кампании. Следи за балансом сил между Кронхейвом и бургомистром.',
@@ -19,7 +21,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Ратуша',
     aliases: ['Town Hall'],
     type: 'building',
-    subtype: 'government',
     parentLocationId: 'loc-fc-farchester',
     description: 'Центральная ратуша. Место встречи с бургомистром Стоунгривом. Рядом фонтан.',
     createdAt: '2026-02-24T00:00:00Z',
@@ -30,7 +31,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Резиденция Кронхейва',
     aliases: ["Kronhev's Residence"],
     type: 'building',
-    subtype: 'estate',
     parentLocationId: 'loc-fc-farchester',
     description: 'Большой дом с садом, много стражников в красном. Резиденция Лорд-Адмирала Кронхейва.',
     createdAt: '2026-02-24T00:00:00Z',
@@ -41,7 +41,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Таверна Ы Куру Айр',
     aliases: ['Y Kuru Ayr', 'The Tavern'],
     type: 'building',
-    subtype: 'tavern',
     parentLocationId: 'loc-fc-farchester',
     description: 'Таверна, где остановилась партия. Тавернщик Йорверт. Место отдыха и планирования.',
     createdAt: '2026-02-24T00:00:00Z',
@@ -52,7 +51,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Башня мага',
     aliases: ["Mage's Tower", "Tuts' Tower"],
     type: 'building',
-    subtype: 'tower',
     parentLocationId: 'loc-fc-farchester',
     description: 'Башня городского мага Тутса. Потрёпанная, но функционирующая.',
     createdAt: '2026-02-24T00:00:00Z',
@@ -65,6 +63,7 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Drakkenheim Region',
     aliases: ['Регион Дракенхейма'],
     type: 'region',
+    climate: 'temperate',
     description:
       'Регион вокруг разрушенного Дракенхейма. Заражён делириумом. Искажённые мутанты бродят по руинам.',
     createdAt: '2025-09-01T00:00:00Z',
@@ -75,6 +74,7 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Emberwood Village Region',
     aliases: ['Регион Эмбервуда'],
     type: 'region',
+    climate: 'temperate',
     description: 'Регион вокруг Эмбервуда — относительно безопасная зона вдали от делириума.',
     createdAt: '2025-09-01T00:00:00Z',
   },
@@ -85,8 +85,7 @@ export const MOCK_LOCATIONS: Location[] = [
     campaignId: 'campaign-drakkenheim',
     name: 'Road to Emberwood',
     aliases: ['Дорога в Эмбервуд'],
-    type: 'natural',
-    subtype: 'road',
+    type: 'district',
     parentLocationId: 'loc-dk-emberwood-region',
     description:
       'Дорога в Эмбервуд — место первой встречи с делириумом. Здесь Рикард Вос прикоснулся к осколку и превратился в монстра. Богдан сбежал по этой дороге.',
@@ -98,7 +97,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Zoya House',
     aliases: ['Домик Зои'],
     type: 'building',
-    subtype: 'residence',
     parentLocationId: 'loc-dk-emberwood-region',
     description:
       'Небольшой домик отшельницы Зои за пределами деревни. Её не жалуют в Эмбервуде. Продаёт янтарные шарики, поклоняется Старым богам. Знает лечение от заражения делириумом через Иоганна Призроткача.',
@@ -112,6 +110,8 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Emberwood Village',
     aliases: ['Эмбервуд', 'Emberwood'],
     type: 'settlement',
+    settlementType: 'village',
+    settlementPopulation: 340,
     parentLocationId: 'loc-dk-emberwood-region',
     description: 'Стартовая деревня, база партии. В раздрае, но относительно безопасна.',
     createdAt: '2025-09-01T00:00:00Z',
@@ -122,7 +122,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Marketplace',
     aliases: ['Рынок в Эмбервуд', 'Emberwood City Centre'],
     type: 'district',
-    subtype: 'market',
     parentLocationId: 'loc-dk-emberwood',
     description:
       'Рынок в центре Эмбервуда. Работает с 10 утра. Ночные торговцы: Эрен Марлоу (припасы), Алдор (магические предметы), Орсон Фейруэзер (делириум и контейнеры).',
@@ -134,7 +133,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Bark and Buzzard',
     aliases: ['Коршун и Ищейка'],
     type: 'building',
-    subtype: 'tavern',
     parentLocationId: 'loc-dk-emberwood',
     description: 'Рекомендованная таверна. Еда 1gp, домик 2gp за человека. Хозяйка — Карин Альсберг.',
     createdAt: '2025-09-01T00:00:00Z',
@@ -145,7 +143,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Skull and Sword Taphouse',
     aliases: ['Меч и Череп'],
     type: 'building',
-    subtype: 'tavern',
     parentLocationId: 'loc-dk-emberwood',
     description: "Таверна Людей Королевы. Подозрительная атмосфера. Место для контактов с Queen's Men.",
     createdAt: '2025-09-01T00:00:00Z',
@@ -156,7 +153,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Red Lion Hotel',
     aliases: ['Красный Лев'],
     type: 'building',
-    subtype: 'hotel',
     parentLocationId: 'loc-dk-emberwood',
     description:
       'Дорогущий люксовый отель. Ночь: 25gp, бутылка вина: 100gp. Владелец — Коста Ставрос (теперь мёртв). Река (Аметисты) проводит вечера в отдельной библиотеке.',
@@ -168,7 +164,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Gilded Lily',
     aliases: ['Позолоченная Лилия'],
     type: 'building',
-    subtype: 'tavern',
     parentLocationId: 'loc-dk-emberwood',
     description:
       'Приятная таверна с музыкальными вечерами. Грог 1gp. Открытый вечер Микра. Владелица — Мадам Рошель.',
@@ -180,7 +175,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Crowe and Sons Smithy',
     aliases: ['Кузня Кроу'],
     type: 'building',
-    subtype: 'shop',
     parentLocationId: 'loc-dk-emberwood',
     description: 'Кузня Тобиаса Кроу. Дорогая, но делают на заказ.',
     createdAt: '2025-09-01T00:00:00Z',
@@ -191,7 +185,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Chapel of Saint Ardenna',
     aliases: ['Часовня Святой Арденны'],
     type: 'building',
-    subtype: 'temple',
     parentLocationId: 'loc-dk-emberwood',
     description: 'База Рыцарей Серебряного Ордена в Эмбервуде. Центр Священного Пламени.',
     createdAt: '2025-09-01T00:00:00Z',
@@ -202,7 +195,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Emberwood Watchtower',
     aliases: ['Часовая Башня', 'Башня фонарей'],
     type: 'building',
-    subtype: 'military',
     parentLocationId: 'loc-dk-emberwood',
     description:
       'Башня Капюшонных Фонарей — самая высокая постройка в деревне. Охрана у моста, проверка на заражение делириумом. Капитан дозора — Рейн Хайлэш.',
@@ -214,7 +206,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Old Rattlecan',
     aliases: ['Старый Трещот'],
     type: 'building',
-    subtype: 'curiosity',
     parentLocationId: 'loc-dk-emberwood',
     description:
       'Анимированные доспехи на заднем дворе "Коршуна и Ищейки". Местное развлечение. В сессии 3 местные полезли к нему — Патрикеевна получила по лицу. Кто его создал — неизвестно.',
@@ -228,7 +219,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Eckerman Mill',
     aliases: ['Мельница Эккермена'],
     type: 'building',
-    subtype: 'mill',
     parentLocationId: 'loc-dk-region',
     description:
       'Мельница за пределами Дракенхейма и Эмбервуда. Река когда-то предлагала встретиться здесь. Рядом — заброшенный особняк, место встречи с подозрительной личностью, продающей заражённые зелья (квест Фонарей).',
@@ -242,6 +232,8 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Drakkenheim',
     aliases: ['Дракенхейм', 'Драккенхейм'],
     type: 'settlement',
+    settlementType: 'city',
+    settlementPopulation: 40000,
     parentLocationId: 'loc-dk-region',
     description:
       'Разрушенный город. Место падения метеорита с делириумом. Крайне опасно: заражение, монстры, Искажённые. Река Дран — граница безопасной зоны.',
@@ -253,7 +245,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: "House with Copperpot's Corpse",
     aliases: ['Домик с трупом Копперпота'],
     type: 'building',
-    subtype: 'ruin',
     parentLocationId: 'loc-dk-city',
     description:
       'Место в Дракенхейме с трупом Коксворда Б. Копперпота. Содержит: нерабочий круг телепортации, скрытую записку на неизвестном языке (не расшифрована), надпись на стене.',
@@ -265,7 +256,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: "Champion's Gate",
     aliases: ['Врата Чемпионов'],
     type: 'building',
-    subtype: 'gate',
     parentLocationId: 'loc-dk-city',
     description:
       "Врата в Дракенхейме — место тусовки культистов Падшего Пламени. Здесь обосновалась Лукреция Матиас.",
@@ -300,7 +290,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Old Imperial Pub',
     aliases: ['Старый Имперский Паб'],
     type: 'building',
-    subtype: 'tavern',
     parentLocationId: 'loc-dk-bent-row',
     description:
       "Подземная таверна в Прогнутом ряду. База группы «Роза и Шипы» Людей Королевы. Владеет Роза Карвер, бармен — Израэль.",
@@ -312,7 +301,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Sweaty Bugbear',
     aliases: ['Трактир Потный Багбир'],
     type: 'building',
-    subtype: 'tavern',
     parentLocationId: 'loc-dk-bent-row',
     description:
       "Подземная таверна в Прогнутом ряду. Место Вероники Яд. Здесь партии дали бесплатный стейк как извинение. Патрикеевна попала дротиком в гнома, привязанного к мишени.",
@@ -324,7 +312,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: "Smi's Palace",
     aliases: ['Дворец Сми'],
     type: 'building',
-    subtype: 'tavern',
     parentLocationId: 'loc-dk-bent-row',
     description:
       "Подземное заведение в Прогнутом ряду. База группы «Раненые Сердца» Людей Королевы. Хозяин — Кристиан Лам, официантка-эльфийка Тильда. Партия ночевала здесь после сессии 15.",
@@ -336,7 +323,6 @@ export const MOCK_LOCATIONS: Location[] = [
     name: 'Arena',
     aliases: ['Подземная Арена'],
     type: 'dungeon',
-    subtype: 'arena',
     parentLocationId: 'loc-dk-bent-row',
     description:
       'Большая подземная арена в канализации под Прогнутым рядом. Пол в крови и грязи, скамейки для ~40 зрителей, боевое кольцо с деревянными баррикадами, VIP-площадка. Организатор — Булл (обезображенное лицо, один слепой глаз). Ставки принимает полурослик Рокки.',

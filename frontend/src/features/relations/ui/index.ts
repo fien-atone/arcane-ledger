@@ -1,0 +1,1 @@
+export { SocialRelationsSection } from './SocialRelationsSection';

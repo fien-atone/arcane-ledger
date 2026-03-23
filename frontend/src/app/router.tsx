@@ -20,6 +20,7 @@ const QuestDetailPage = lazy(() => import('@/pages/QuestDetailPage'));
 const PartyPage = lazy(() => import('@/pages/PartyPage'));
 const CharacterDetailPage = lazy(() => import('@/pages/CharacterDetailPage'));
 const MaterialsPage = lazy(() => import('@/pages/MaterialsPage'));
+const SpeciesPage = lazy(() => import('@/pages/SpeciesPage'));
 
 const Fallback = () => (
   <div className="flex h-screen items-center justify-center text-on-surface-variant">
@@ -69,6 +70,7 @@ export const router = createBrowserRouter(
             { path: 'party', element: withSuspense(PartyPage) },
             { path: 'characters/:charId', element: withSuspense(CharacterDetailPage) },
             { path: 'materials', element: withSuspense(MaterialsPage) },
+            { path: 'species', element: withSuspense(SpeciesPage) },
           ],
         },
       ],

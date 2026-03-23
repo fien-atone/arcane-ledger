@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
 import { useAuthStore } from '@/features/auth';
+import { ChangelogDrawer, getHasUnread } from '@/widgets/Changelog/ChangelogDrawer';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: 'dashboard', to: (id: string) => `/campaigns/${id}`, exact: true },
@@ -10,6 +12,7 @@ const NAV_ITEMS = [
   { label: 'Quests', icon: 'assignment', to: (id: string) => `/campaigns/${id}/quests`, exact: false },
   { label: 'Sessions', icon: 'event', to: (id: string) => `/campaigns/${id}/sessions`, exact: false },
   { label: 'Party', icon: 'groups', to: (id: string) => `/campaigns/${id}/party`, exact: false },
+  { label: 'Species', icon: 'blur_on', to: (id: string) => `/campaigns/${id}/species`, exact: false },
   { label: 'Materials', icon: 'menu_book', to: (id: string) => `/campaigns/${id}/materials`, exact: false },
 ] as const;
 
@@ -20,6 +23,13 @@ export function Sidebar() {
   const collapsed = useCampaignUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useCampaignUiStore((s) => s.toggleSidebar);
   const logout = useAuthStore((s) => s.logout);
+
+  const [changelogOpen, setChangelogOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+
+  useEffect(() => {
+    setHasUnread(getHasUnread());
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -106,6 +116,21 @@ export function Sidebar() {
           {!collapsed && <span className="whitespace-nowrap">All Campaigns</span>}
         </Link>
 
+        {/* What's New */}
+        <button
+          onClick={() => { setChangelogOpen(true); setHasUnread(false); }}
+          title={collapsed ? "What's New" : undefined}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300 relative"
+        >
+          <span className="relative flex-shrink-0">
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>new_releases</span>
+            {hasUnread && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary" />
+            )}
+          </span>
+          {!collapsed && <span className="whitespace-nowrap">What's New</span>}
+        </button>
+
         <div className="border-t border-outline-variant/10 my-1" />
 
         <button
@@ -119,6 +144,11 @@ export function Sidebar() {
           {!collapsed && <span className="whitespace-nowrap">Logout</span>}
         </button>
       </div>
+
+      <ChangelogDrawer
+        open={changelogOpen}
+        onClose={() => setChangelogOpen(false)}
+      />
     </aside>
   );
 }

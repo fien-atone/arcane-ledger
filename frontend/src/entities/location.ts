@@ -1,4 +1,19 @@
-export type LocationType = 'region' | 'settlement' | 'district' | 'building' | 'natural' | 'dungeon';
+export type LocationType = 'region' | 'settlement' | 'district' | 'building' | 'dungeon';
+
+/** Classification of a settlement by scale */
+export type SettlementType = 'village' | 'town' | 'city' | 'metropolis';
+
+export type Climate =
+  | 'arctic'
+  | 'subarctic'
+  | 'temperate'
+  | 'continental'
+  | 'maritime'
+  | 'subtropical'
+  | 'tropical'
+  | 'arid'
+  | 'semi-arid'
+  | 'highland';
 
 export interface LocationConnection {
   locationAId: string;
@@ -22,7 +37,12 @@ export interface Location {
   name: string;
   aliases: string[];
   type: LocationType;
-  subtype?: string;
+  /** Only for type === 'settlement' */
+  settlementType?: SettlementType;
+  /** Population count — only for type === 'settlement' */
+  settlementPopulation?: number;
+  /** Only for type === 'region' */
+  climate?: Climate;
   parentLocationId?: string;
   adjacentLocationIds?: string[];
   description: string;

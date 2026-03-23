@@ -4,6 +4,7 @@ export interface PlayerCharacter {
   userId: string;
   name: string;
   species?: string;
+  speciesId?: string;
   class?: string;
   appearance?: string;
   background?: string;

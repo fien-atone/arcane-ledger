@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useNpc, useNpcs } from '@/features/npcs/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { NpcEditDrawer } from '@/features/npcs/ui';
+import { useSpecies } from '@/features/species/api';
+import { SocialRelationsSection } from '@/features/relations/ui';
 import type { NpcStatus, NpcRelationType } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
@@ -65,6 +67,7 @@ export default function NpcDetailPage() {
   const { data: npc, isLoading, isError } = useNpc(campaignId ?? '', npcId ?? '');
   const { data: groups } = useGroups(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
+  const { data: allSpecies } = useSpecies();
 
   const groupNameById = (id: string) =>
     groups?.find((g) => g.id === id)?.name ?? id;
@@ -121,11 +124,23 @@ export default function NpcDetailPage() {
                     <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${st.pill}`}>
                       {st.label}
                     </span>
-                    {npc.species && (
-                      <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                        {npc.species}
-                      </span>
-                    )}
+                    {npc.species && (() => {
+                      const matchedSpecies = allSpecies?.find(
+                        (s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase()
+                      );
+                      return matchedSpecies ? (
+                        <Link
+                          to={`/campaigns/${campaignId}/species`}
+                          className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10 hover:border-primary/30 hover:text-primary transition-colors"
+                        >
+                          {npc.species}
+                        </Link>
+                      ) : (
+                        <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                          {npc.species}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
                     {npc.name}
@@ -294,6 +309,12 @@ export default function NpcDetailPage() {
                 </div>
               </section>
             )}
+
+            {/* Social Relations */}
+            <SocialRelationsSection
+              campaignId={campaignId ?? ''}
+              entityId={npcId ?? ''}
+            />
 
             {/* Connections via shared groups */}
             {(() => {
