@@ -57,6 +57,7 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
       campaignId,
       userId: character?.userId ?? 'gm',
       image: character?.image,
+      gmNotes: character?.gmNotes ?? '',
       createdAt: character?.createdAt ?? ts,
       ...(character ?? {}),
       name: name.trim(),
