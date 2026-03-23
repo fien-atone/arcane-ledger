@@ -17,6 +17,11 @@ export interface NPCRelation {
   note?: string;
 }
 
+export interface NPCLocationPresence {
+  locationId: string;
+  note?: string;
+}
+
 export interface NPCGroupMembership {
   npcId: string;
   groupId: string;
@@ -31,10 +36,12 @@ export interface NPC {
   aliases: string[];
   status: NpcStatus;
   species?: string;
+  speciesId?: string;
   appearance?: string;
   personality?: string;
   lastSeenLocationId?: string;
   locations: string[];
+  locationPresences?: NPCLocationPresence[];
   description: string;
   gmNotes?: string;
   image?: string;

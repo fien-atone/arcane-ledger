@@ -8,7 +8,6 @@ const TYPE_ICON: Record<LocationType, string> = {
   settlement: 'location_city',
   district: 'holiday_village',
   building: 'domain',
-  natural: 'forest',
   dungeon: 'skull',
 };
 
@@ -17,13 +16,12 @@ const TYPE_LABEL: Record<LocationType, string> = {
   settlement: 'Settlement',
   district: 'District',
   building: 'Building',
-  natural: 'Natural',
   dungeon: 'Dungeon',
 };
 
 const DEPTH_INDENT = ['', 'pl-6', 'pl-12', 'pl-16', 'pl-20'];
 
-const TYPE_ORDER: LocationType[] = ['region', 'settlement', 'district', 'building', 'natural', 'dungeon'];
+const TYPE_ORDER: LocationType[] = ['region', 'settlement', 'district', 'building', 'dungeon'];
 
 const TYPE_FILTERS: Array<{ value: LocationType | 'all'; label: string }> = [
   { value: 'all', label: 'All' },
@@ -33,6 +31,7 @@ const TYPE_FILTERS: Array<{ value: LocationType | 'all'; label: string }> = [
   { value: 'building', label: 'Buildings' },
   { value: 'dungeon', label: 'Dungeons' },
 ];
+
 
 export default function LocationListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
@@ -85,25 +84,6 @@ export default function LocationListPage() {
             <p className="text-on-surface-variant text-sm mt-1">
               Known places, landmarks, and territories.
             </p>
-            {/* Stats inline under subtitle */}
-            {locations && locations.length > 0 && (
-              <div className="flex gap-6 mt-4">
-                {[
-                  { label: 'Total', value: locations.length, color: 'text-on-surface' },
-                  { label: 'Regions', value: locations.filter((l) => l.type === 'region').length, color: 'text-primary' },
-                  { label: 'Settlements', value: locations.filter((l) => l.type === 'settlement').length, color: 'text-secondary' },
-                  { label: 'Buildings', value: locations.filter((l) => l.type === 'building').length, color: 'text-on-surface-variant' },
-                  { label: 'Dungeons', value: locations.filter((l) => l.type === 'dungeon').length, color: 'text-on-surface-variant' },
-                ]
-                  .filter((s) => s.value > 0)
-                  .map(({ label, value, color }) => (
-                    <div key={label}>
-                      <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/50">{label}</p>
-                      <p className={`text-base font-headline font-bold ${color}`}>{value}</p>
-                    </div>
-                  ))}
-              </div>
-            )}
           </div>
           <button
             disabled
@@ -135,19 +115,29 @@ export default function LocationListPage() {
 
         {/* Type filter pills */}
         <div className="flex flex-wrap gap-2 mb-10">
-          {TYPE_FILTERS.map(({ value, label }) => (
+          {TYPE_FILTERS.map(({ value, label }) => {
+            const count = value === 'all'
+              ? (locations?.length ?? 0)
+              : (locations?.filter((l) => l.type === value).length ?? 0);
+            return (
             <button
               key={value}
               onClick={() => setTypeFilter(value)}
-              className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-full transition-all ${
+              className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-full transition-all flex items-center gap-1.5 ${
                 typeFilter === value
                   ? 'bg-primary text-on-primary'
                   : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
               {label}
+              {count > 0 && (
+                <span className={`text-[9px] font-bold ${typeFilter === value ? 'text-on-primary/70' : 'text-on-surface-variant/40'}`}>
+                  {count}
+                </span>
+              )}
             </button>
-          ))}
+            );
+          })}
         </div>
 
         {isLoading && (

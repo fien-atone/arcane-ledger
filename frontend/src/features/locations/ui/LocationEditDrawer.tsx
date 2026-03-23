@@ -1,30 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSaveLocation } from '@/features/locations/api/queries';
-import type { Location, LocationType } from '@/entities/location';
+import { Select } from '@/shared/ui/Select';
+import type { SelectOption } from '@/shared/ui/Select';
+import type { Location, LocationType, SettlementType, Climate } from '@/entities/location';
 
-interface Props {
-  open: boolean;
-  onClose: () => void;
-  location: Location;
-}
-
-const LOCATION_TYPES: LocationType[] = [
-  'region',
-  'settlement',
-  'district',
-  'building',
-  'natural',
-  'dungeon',
+const LOCATION_TYPE_OPTIONS: SelectOption<LocationType>[] = [
+  { value: 'region',     label: 'Region' },
+  { value: 'settlement', label: 'Settlement' },
+  { value: 'district',   label: 'District' },
+  { value: 'building',   label: 'Building' },
+  { value: 'dungeon',    label: 'Dungeon' },
 ];
 
-const TYPE_LABEL: Record<LocationType, string> = {
-  region: 'Region',
-  settlement: 'Settlement',
-  district: 'District',
-  building: 'Building',
-  natural: 'Natural Feature',
-  dungeon: 'Dungeon',
+const SETTLEMENT_TYPE_OPTIONS: SelectOption<SettlementType>[] = [
+  { value: 'village',    label: 'Village' },
+  { value: 'town',       label: 'Town' },
+  { value: 'city',       label: 'City' },
+  { value: 'metropolis', label: 'Metropolis' },
+];
+
+const SETTLEMENT_DEFAULT_POPULATION: Record<SettlementType, number> = {
+  village: 400,
+  town: 3000,
+  city: 12000,
+  metropolis: 75000,
 };
+
+const CLIMATE_OPTIONS: SelectOption<Climate>[] = [
+  { value: 'arctic',      label: 'Arctic' },
+  { value: 'subarctic',   label: 'Subarctic' },
+  { value: 'temperate',   label: 'Temperate' },
+  { value: 'continental', label: 'Continental' },
+  { value: 'maritime',    label: 'Maritime' },
+  { value: 'subtropical', label: 'Subtropical' },
+  { value: 'tropical',    label: 'Tropical' },
+  { value: 'arid',        label: 'Arid (Desert)' },
+  { value: 'semi-arid',   label: 'Semi-Arid' },
+  { value: 'highland',    label: 'Highland' },
+];
 
 const inputCls =
   'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
@@ -32,11 +45,14 @@ const inputCls =
 const textareaCls =
   'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30 resize-none';
 
-const selectCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors';
-
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  location: Location;
+}
 
 export function LocationEditDrawer({ open, onClose, location }: Props) {
   const save = useSaveLocation(location.campaignId);
@@ -44,7 +60,9 @@ export function LocationEditDrawer({ open, onClose, location }: Props) {
 
   const [name, setName] = useState('');
   const [type, setType] = useState<LocationType>('building');
-  const [subtype, setSubtype] = useState('');
+  const [settlementType, setSettlementType] = useState<SettlementType | ''>('');
+  const [settlementPopulation, setSettlementPopulation] = useState('');
+  const [climate, setClimate] = useState<Climate | ''>('');
   const [description, setDescription] = useState('');
   const [gmNotes, setGmNotes] = useState('');
   const [image, setImage] = useState<string | undefined>(undefined);
@@ -53,7 +71,9 @@ export function LocationEditDrawer({ open, onClose, location }: Props) {
     if (!open) return;
     setName(location.name);
     setType(location.type);
-    setSubtype(location.subtype ?? '');
+    setSettlementType(location.settlementType ?? '');
+    setSettlementPopulation(location.settlementPopulation?.toString() ?? '');
+    setClimate(location.climate ?? '');
     setDescription(location.description);
     setGmNotes(location.gmNotes ?? '');
     setImage(location.image);
@@ -63,19 +83,20 @@ export function LocationEditDrawer({ open, onClose, location }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setImage(ev.target?.result as string);
-    };
+    reader.onload = (ev) => setImage(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
 
   const handleSave = () => {
     if (!name.trim()) return;
+    const pop = parseInt(settlementPopulation, 10);
     const record: Location = {
       ...location,
       name: name.trim(),
       type,
-      subtype: subtype.trim() || undefined,
+      settlementType: type === 'settlement' && settlementType ? settlementType : undefined,
+      settlementPopulation: type === 'settlement' && !isNaN(pop) && pop > 0 ? pop : undefined,
+      climate: type === 'region' && climate ? climate : undefined,
       description: description.trim(),
       gmNotes: gmNotes.trim() || undefined,
       image,
@@ -112,27 +133,62 @@ export function LocationEditDrawer({ open, onClose, location }: Props) {
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
           </div>
 
-          {/* Type + Subtype */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Type</label>
-              <select value={type} onChange={(e) => setType(e.target.value as LocationType)} className={selectCls}>
-                {LOCATION_TYPES.map((t) => (
-                  <option key={t} value={t}>{TYPE_LABEL[t]}</option>
-                ))}
-              </select>
+          {/* Location Type */}
+          <div>
+            <label className={labelCls}>Type</label>
+            <Select
+              value={type}
+              options={LOCATION_TYPE_OPTIONS}
+              nullable={false}
+              onChange={(v) => setType((v || 'building') as LocationType)}
+            />
+          </div>
+
+          {/* Settlement fields — type + population side by side */}
+          {type === 'settlement' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Settlement Type</label>
+                <Select
+                  value={settlementType}
+                  options={SETTLEMENT_TYPE_OPTIONS}
+                  placeholder="— not set —"
+                  onChange={(val) => {
+                    const prevDefault = settlementType ? SETTLEMENT_DEFAULT_POPULATION[settlementType as SettlementType] : null;
+                    const isDefaultOrEmpty = !settlementPopulation || (prevDefault !== null && settlementPopulation === String(prevDefault));
+                    setSettlementType(val);
+                    if (val && isDefaultOrEmpty) {
+                      setSettlementPopulation(String(SETTLEMENT_DEFAULT_POPULATION[val as SettlementType]));
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Population</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={settlementPopulation}
+                  onChange={(e) => setSettlementPopulation(e.target.value)}
+                  placeholder="e.g. 12 000"
+                  className={inputCls}
+                />
+              </div>
             </div>
+          )}
+
+          {/* Climate (only for region) */}
+          {type === 'region' && (
             <div>
-              <label className={labelCls}>Subtype</label>
-              <input
-                type="text"
-                value={subtype}
-                onChange={(e) => setSubtype(e.target.value)}
-                placeholder="tavern, gate, tower…"
-                className={inputCls}
+              <label className={labelCls}>Climate</label>
+              <Select
+                value={climate}
+                options={CLIMATE_OPTIONS}
+                placeholder="— not set —"
+                onChange={setClimate}
               />
             </div>
-          </div>
+          )}
 
           {/* Description */}
           <div>
