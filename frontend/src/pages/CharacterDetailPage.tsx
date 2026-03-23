@@ -1,35 +1,212 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useParty } from '@/features/characters/api/queries';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
+import StarterKit from '@tiptap/starter-kit';
+import { useParty, useSaveCharacter } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-function CharacterPortrait({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
+import { ImageUpload } from '@/shared/ui';
+import type { PlayerCharacter } from '@/entities/character';
+
+// ── WYSIWYG inline field ─────────────────────────────────────────────────────
+
+type TextField = 'gmNotes' | 'background' | 'appearance' | 'personality' | 'motivation' | 'bonds' | 'flaws';
+
+interface InlineFieldProps {
+  label: string;
+  value: string | undefined;
+  field: TextField;
+  activeField: TextField | null;
+  onActivate: (field: TextField) => void;
+  onSave: (field: TextField, html: string) => void;
+  isGmNotes?: boolean;
+}
+
+function ToolbarButton({
+  onClick, active, icon, title,
+}: { onClick: () => void; active?: boolean; icon: string; title: string }) {
   return (
-    <div className="relative group w-full">
-      <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-transparent blur-xl opacity-50 group-hover:opacity-100 transition duration-1000" />
-      <div className="relative w-full aspect-[16/9] overflow-hidden rounded-sm bg-surface-container-low flex items-center justify-center">
-        <span className="font-headline text-[12rem] font-bold text-on-surface-variant/10 select-none leading-none">
-          {initials}
-        </span>
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+    <button
+      type="button"
+      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      title={title}
+      className={`w-7 h-7 flex items-center justify-center rounded transition-colors text-[13px] font-bold
+        ${active ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'}`}
+    >
+      {icon.startsWith('material:')
+        ? <span className="material-symbols-outlined text-[15px]">{icon.slice(9)}</span>
+        : icon}
+    </button>
+  );
+}
+
+function TipTapEditor({ field, initialHtml, onSave }: {
+  field: TextField;
+  initialHtml: string;
+  onSave: (field: TextField, html: string) => void;
+}) {
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: initialHtml || '',
+    autofocus: 'end',
+    editorProps: {
+      attributes: {
+        class: 'outline-none min-h-[4rem] prose prose-sm prose-invert max-w-none font-sans ' +
+          'prose-p:text-on-surface prose-p:leading-relaxed prose-p:my-1 ' +
+          'prose-strong:text-on-surface prose-strong:font-semibold ' +
+          'prose-em:text-on-surface-variant/80 ' +
+          'prose-headings:text-on-surface prose-headings:font-headline prose-headings:font-bold ' +
+          'prose-h2:text-base prose-h3:text-sm ' +
+          'prose-ul:text-on-surface prose-ol:text-on-surface ' +
+          'prose-li:my-0.5 prose-li:marker:text-primary/50 ' +
+          'prose-blockquote:border-l-primary/40 prose-blockquote:text-on-surface-variant/70 prose-blockquote:italic ' +
+          'prose-hr:border-outline-variant/20',
+      },
+    },
+    onBlur: ({ editor: e }) => {
+      const html = e.getHTML();
+      onSave(field, html === '<p></p>' ? '' : html);
+    },
+  });
+
+  if (!editor) return null;
+
+  return (
+    <div className="relative">
+      <BubbleMenu
+        editor={editor}
+className="flex items-center gap-0.5 px-1.5 py-1 bg-surface-container-highest border border-outline-variant/30 rounded-sm shadow-xl"
+      >
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()}
+          active={editor.isActive('bold')} icon="B" title="Bold" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()}
+          active={editor.isActive('italic')} icon="I" title="Italic" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()}
+          active={editor.isActive('strike')} icon="S̶" title="Strikethrough" />
+        <div className="w-px h-4 bg-outline-variant/30 mx-0.5" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          active={editor.isActive('heading', { level: 2 })} icon="H2" title="Heading 2" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          active={editor.isActive('heading', { level: 3 })} icon="H3" title="Heading 3" />
+        <div className="w-px h-4 bg-outline-variant/30 mx-0.5" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()}
+          active={editor.isActive('bulletList')} icon="material:format_list_bulleted" title="Bullet list" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          active={editor.isActive('orderedList')} icon="material:format_list_numbered" title="Ordered list" />
+        <div className="w-px h-4 bg-outline-variant/30 mx-0.5" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          active={editor.isActive('blockquote')} icon="material:format_quote" title="Blockquote" />
+      </BubbleMenu>
+
+      <div className="border border-primary/40 rounded-sm px-3 py-2.5 bg-surface-container-low focus-within:border-primary transition-colors">
+        <EditorContent editor={editor} />
       </div>
+      <p className="text-[10px] text-on-surface-variant/30 mt-1.5 text-right">
+        Select text to format · Esc to cancel
+      </p>
     </div>
   );
 }
+
+function InlineField({ label, value, field, activeField, onActivate, onSave, isGmNotes }: InlineFieldProps) {
+  const isEditing = activeField === field;
+
+  const content = isEditing ? (
+    <TipTapEditor field={field} initialHtml={value ?? ''} onSave={onSave} />
+  ) : value ? (
+    <div
+      onClick={() => onActivate(field)}
+      className="cursor-text group relative prose prose-sm prose-invert max-w-none font-sans
+        prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1
+        prose-strong:text-on-surface prose-strong:font-semibold
+        prose-em:text-on-surface-variant/80
+        prose-headings:text-on-surface prose-headings:font-headline prose-headings:font-bold
+        prose-h2:text-base prose-h3:text-sm
+        prose-ul:text-on-surface-variant prose-ol:text-on-surface-variant
+        prose-li:my-0.5 prose-li:marker:text-primary/50
+        prose-blockquote:border-l-primary/40 prose-blockquote:text-on-surface-variant/70 prose-blockquote:italic
+        prose-hr:border-outline-variant/20
+        hover:prose-p:text-on-surface transition-colors"
+      dangerouslySetInnerHTML={{ __html: value }}
+    />
+  ) : (
+    <button
+      onClick={() => onActivate(field)}
+      className="w-full flex items-center justify-between py-3 px-4 border border-dashed border-outline-variant/20 rounded-sm hover:border-primary/30 hover:bg-primary/3 transition-all group"
+    >
+      <span className="text-xs text-on-surface-variant/30 italic group-hover:text-on-surface-variant/50 transition-colors">Not recorded yet.</span>
+      <span className="flex items-center gap-1 text-[10px] text-primary/30 group-hover:text-primary uppercase tracking-widest transition-colors">
+        <span className="material-symbols-outlined text-[12px]">edit</span>
+        Fill in
+      </span>
+    </button>
+  );
+
+  if (isGmNotes) {
+    return (
+      <section className="bg-surface-container-low p-8 border border-primary/20 rounded-sm relative overflow-hidden group/section">
+        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/section:opacity-20 transition-opacity pointer-events-none">
+          <span className="material-symbols-outlined text-6xl text-primary">lock</span>
+        </div>
+        <div className="relative z-10 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-primary">GM Notes</h3>
+          </div>
+          {content}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-4">
+        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">{label}</h2>
+        <div className="h-px flex-1 bg-outline-variant/20" />
+        {!isEditing && value && (
+          <button onClick={() => onActivate(field)}
+            className="opacity-0 group-hover:opacity-100 text-on-surface-variant/30 hover:text-primary transition-all">
+            <span className="material-symbols-outlined text-[15px]">edit</span>
+          </button>
+        )}
+      </div>
+      {content}
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CharacterDetailPage() {
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
   const { data: characters, isLoading, isError } = useParty(campaignId ?? '');
   const character = characters?.find((c) => c.id === charId);
   const { data: allSpecies } = useSpecies();
-  const [editOpen, setEditOpen] = useState(false);
+  const saveCharacter = useSaveCharacter();
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [activeField, setActiveField] = useState<TextField | null>(null);
+  const [lightbox, setLightbox] = useState(false);
+
+  const handleActivate = (field: TextField) => setActiveField(field);
+
+  const handleSave = (field: TextField, html: string) => {
+    if (!character) return;
+    setActiveField(null);
+    const trimmed = html.trim();
+    if (trimmed === (character[field] ?? '').trim()) return;
+    saveCharacter.mutate({
+      ...character,
+      [field]: trimmed || undefined,
+      updatedAt: new Date().toISOString(),
+    } as PlayerCharacter);
+  };
+
+  const handleImageUpload = (dataUrl: string) => {
+    saveCharacter.mutate({ ...character!, image: dataUrl, updatedAt: new Date().toISOString() });
+  };
 
   if (isLoading) {
     return (
@@ -43,10 +220,8 @@ export default function CharacterDetailPage() {
   if (isError || !character) {
     return (
       <main className="p-12">
-        <Link
-          to={`/campaigns/${campaignId}/party`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest mb-8"
-        >
+        <Link to={`/campaigns/${campaignId}/party`}
+          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest mb-8">
           <span className="material-symbols-outlined text-sm">chevron_left</span>
           Party
         </Link>
@@ -55,265 +230,108 @@ export default function CharacterDetailPage() {
     );
   }
 
+  const matchedSpecies = allSpecies?.find(
+    (s) => s.id === character.speciesId || s.name.toLowerCase() === character.species?.toLowerCase()
+  );
+  const displaySpecies = matchedSpecies?.name ?? character.species;
+  const displayGender = character.gender === 'nonbinary'
+    ? 'Non-binary'
+    : character.gender
+      ? character.gender.charAt(0).toUpperCase() + character.gender.slice(1)
+      : undefined;
+
+  const demoBadge = [displaySpecies, displayGender, character.class, character.age != null ? `Age ${character.age}` : null]
+    .filter(Boolean).join(' · ');
+
+  const fieldProps = { activeField, onActivate: handleActivate, onSave: handleSave };
+
   return (
     <main className="flex-1 min-h-screen bg-surface">
-      {/* Breadcrumb */}
       <div className="px-10 pt-8">
-        <Link
-          to={`/campaigns/${campaignId}/party`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors"
-        >
+        <Link to={`/campaigns/${campaignId}/party`}
+          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors">
           <span className="material-symbols-outlined text-sm">chevron_left</span>
           Party
         </Link>
       </div>
 
-      <div className="px-10 py-8 pb-24 max-w-7xl">
-        {/* Header */}
-        <header className="mb-12 flex justify-between items-end">
-          <div>
-            <div className="flex items-baseline gap-4 flex-wrap">
-              <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface tracking-tight">
-                {character.name}
-              </h1>
-              {character.species && (() => {
-                const matchedSpecies = allSpecies?.find(
-                  (s) => s.id === character.speciesId || s.name.toLowerCase() === character.species?.toLowerCase()
-                );
-                const displayName = matchedSpecies?.name ?? character.species;
-                return matchedSpecies ? (
-                  <Link
-                    to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
-                    className="text-secondary text-sm font-label uppercase tracking-widest border-b border-secondary/20 pb-1 hover:text-primary hover:border-primary/20 transition-colors"
-                  >
-                    {displayName}
-                  </Link>
-                ) : (
-                  <span className="text-secondary text-sm font-label uppercase tracking-widest border-b border-secondary/20 pb-1">
-                    {displayName}
-                  </span>
-                );
-              })()}
-            </div>
-            {character.class && (
-              <p className="text-on-surface-variant italic font-headline text-xl mt-2">
-                {character.class}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={() => setEditOpen(true)}
-            className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-          >
-            <span className="material-symbols-outlined text-sm">edit</span>
-            Edit Entry
-          </button>
-        </header>
+      <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
+        <div className="flex flex-col lg:flex-row gap-16">
 
-        {/* Asymmetric grid */}
-        <div className="grid grid-cols-1 md:grid-cols-10 gap-12">
-          {/* Left column (6/10) */}
-          <div className="md:col-span-6 space-y-12">
-            <CharacterPortrait name={character.name} />
+          {/* ── Left column ─────────────────────────────────────── */}
+          <div className="lg:w-[65%] space-y-12">
 
-            {/* Appearance */}
-            {character.appearance && (
-              <section>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="h-px w-8 bg-primary/40" />
-                  <h3 className="text-xs font-label uppercase tracking-[0.3em] text-on-surface-variant">
-                    Appearance
-                  </h3>
-                </div>
-                <div className="bg-surface-container-low p-8 border-b border-outline-variant/10">
-                  <p className="text-on-surface-variant leading-relaxed">{character.appearance}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Background */}
-            {character.background && (
-              <section>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="h-px w-8 bg-primary/40" />
-                  <h3 className="text-xs font-label uppercase tracking-[0.3em] text-on-surface-variant">
-                    Backstory
-                  </h3>
-                </div>
-                <div className="bg-surface-container-low p-8 border-b border-outline-variant/10">
-                  <p className="text-on-surface-variant leading-relaxed">{character.background}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Personality */}
-            {character.personality && (
-              <section>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="h-px w-8 bg-primary/40" />
-                  <h3 className="text-xs font-label uppercase tracking-[0.3em] text-on-surface-variant">
-                    Personality Traits
-                  </h3>
-                </div>
-                <div className="bg-surface-container-low p-8 border-b border-outline-variant/10">
-                  <p className="text-on-surface-variant leading-relaxed italic">{character.personality}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Motivation */}
-            {character.motivation && (
-              <section>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="h-px w-8 bg-secondary/40" />
-                  <h3 className="text-xs font-label uppercase tracking-[0.3em] text-secondary/80">
-                    Motivation & Ideals
-                  </h3>
-                </div>
-                <div className="bg-surface-container-low p-8 border-l-2 border-secondary/30">
-                  <p className="text-on-surface-variant leading-relaxed">{character.motivation}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Bonds */}
-            {character.bonds && (
-              <section>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="h-px w-8 bg-primary/40" />
-                  <h3 className="text-xs font-label uppercase tracking-[0.3em] text-on-surface-variant">
-                    Bonds
-                  </h3>
-                </div>
-                <div className="bg-surface-container-low p-8 border-b border-outline-variant/10">
-                  <p className="text-on-surface-variant leading-relaxed">{character.bonds}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Flaws */}
-            {character.flaws && (
-              <section>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="h-px w-8 bg-outline-variant/60" />
-                  <h3 className="text-xs font-label uppercase tracking-[0.3em] text-on-surface-variant/60">
-                    Flaws
-                  </h3>
-                </div>
-                <div className="bg-surface-container-low p-8 border-l-2 border-outline-variant/20">
-                  <p className="text-on-surface-variant/70 leading-relaxed">{character.flaws}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Social Relations */}
-            <SocialRelationsSection
-              campaignId={campaignId ?? ''}
-              entityId={charId ?? ''}
+            <ImageUpload
+              image={character.image}
+              name={character.name}
+              className="w-full aspect-[21/9]"
+              onUpload={handleImageUpload}
+              onView={character.image ? () => setLightbox(true) : undefined}
             />
 
-            {(() => {
-              const missing = [
-                { key: 'appearance', label: 'Appearance' },
-                { key: 'background', label: 'Backstory' },
-                { key: 'personality', label: 'Personality' },
-                { key: 'motivation', label: 'Motivation' },
-                { key: 'bonds', label: 'Bonds' },
-                { key: 'flaws', label: 'Flaws' },
-              ].filter(({ key }) => !character[key as keyof typeof character]);
-              if (missing.length === 0) return null;
-              return (
-                <section className="border-t border-outline-variant/10 pt-6">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/30 font-bold">
-                      Not recorded:
-                    </span>
-                    {missing.map(({ label }) => (
-                      <span
-                        key={label}
-                        className="px-2.5 py-1 border border-dashed border-outline-variant/20 text-[10px] text-on-surface-variant/30 uppercase tracking-widest rounded-sm"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                    <button
-                      onClick={() => setEditOpen(true)}
-                      className="ml-auto text-[10px] text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center gap-1"
-                    >
-                      <span className="material-symbols-outlined text-[12px]">edit</span>
-                      Fill in
-                    </button>
-                  </div>
-                </section>
-              );
-            })()}
+            <header className="space-y-4">
+              {demoBadge && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-[13px]">person</span>
+                  {demoBadge}
+                </span>
+              )}
+              <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
+                {character.name}
+              </h1>
+            </header>
+
+            <InlineField field="gmNotes" label="GM Notes" value={character.gmNotes} isGmNotes {...fieldProps} />
+            <InlineField field="background" label="Backstory" value={character.background} {...fieldProps} />
+
+            <SocialRelationsSection campaignId={campaignId ?? ''} entityId={charId ?? ''} />
           </div>
 
-          {/* Right column (4/10) */}
-          <div className="md:col-span-4 space-y-8">
-            {/* GM Notes */}
-            <div className="bg-surface-container border-l-2 border-primary-container p-6 shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-xs font-label uppercase tracking-widest text-primary">
-                  GM Notes
-                </h4>
-                <span className="material-symbols-outlined text-primary/40 text-sm">lock</span>
-              </div>
-              <p className="text-sm text-on-surface-variant italic leading-relaxed">
-                {character.gmNotes || 'No GM notes for this character yet.'}
-              </p>
+          {/* ── Right column ────────────────────────────────────── */}
+          <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
+
+            <div className="flex justify-end">
+              <button onClick={() => setDetailsOpen(true)}
+                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors">
+                <span className="material-symbols-outlined text-sm">edit</span>
+                Edit
+              </button>
             </div>
 
-            {/* Quick metadata */}
-            <div className="grid grid-cols-2 gap-4">
-              {character.species && (
-                <div className="bg-surface-container-lowest p-4 border border-outline-variant/5">
-                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">Species</p>
-                  <p className="text-sm font-headline">{allSpecies?.find(s => s.id === character.speciesId)?.name ?? character.species}</p>
-                </div>
-              )}
-              {character.gender && (
-                <div className="bg-surface-container-lowest p-4 border border-outline-variant/5">
-                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">Gender</p>
-                  <p className="text-sm font-headline">
-                    {character.gender === 'nonbinary' ? 'Non-binary' : character.gender.charAt(0).toUpperCase() + character.gender.slice(1)}
-                  </p>
-                </div>
-              )}
-              {character.age != null && (
-                <div className="bg-surface-container-lowest p-4 border border-outline-variant/5">
-                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">Age</p>
-                  <p className="text-sm font-headline">{character.age}</p>
-                </div>
-              )}
-              {character.class && (
-                <div className="bg-surface-container-lowest p-4 border border-outline-variant/5">
-                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">Class</p>
-                  <p className="text-sm font-headline">{character.class}</p>
-                </div>
-              )}
-            </div>
+            <InlineField field="appearance" label="Appearance" value={character.appearance} {...fieldProps} />
+            <InlineField field="personality" label="Personality" value={character.personality} {...fieldProps} />
+            <InlineField field="motivation" label="Motivation & Ideals" value={character.motivation} {...fieldProps} />
+            <InlineField field="bonds" label="Bonds" value={character.bonds} {...fieldProps} />
+            <InlineField field="flaws" label="Flaws" value={character.flaws} {...fieldProps} />
 
-            {/* Personal quests (placeholder) */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-xs font-label uppercase tracking-widest text-on-surface-variant">
-                  Personal Quests
-                </h4>
-              </div>
-              <p className="text-xs text-on-surface-variant/40 italic">
-                Personal quest links will appear here in a future update.
-              </p>
-            </div>
           </div>
         </div>
       </div>
-      {character && (
-        <CharacterEditDrawer
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          character={character}
-        />
+
+      <CharacterEditDrawer
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        campaignId={campaignId ?? ''}
+        character={character}
+      />
+
+      {lightbox && character.image && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out"
+          onClick={() => setLightbox(false)}
+        >
+          <img
+            src={character.image}
+            alt={character.name}
+            className="max-w-full max-h-full object-contain drop-shadow-2xl"
+          />
+          <button
+            onClick={() => setLightbox(false)}
+            className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-3xl">close</span>
+          </button>
+        </div>
       )}
     </main>
   );

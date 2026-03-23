@@ -1,29 +1,24 @@
-import { Link } from 'react-router-dom';
-import { CampaignCard, useCampaigns } from '@/features/campaigns';
+import { useState } from 'react';
+import { CampaignCard, CampaignCreateDrawer, useCampaigns } from '@/features/campaigns';
 
 export default function CampaignsPage() {
   const { data: campaigns, isLoading, isError } = useCampaigns();
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <main className="max-w-7xl mx-auto px-8 py-12 pb-24">
-      {/* Editorial header */}
-      <section className="mb-16 flex flex-col items-start gap-2">
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary">
-          Grand Master's Overview
-        </span>
-        <div className="flex flex-col md:flex-row md:items-baseline md:justify-between w-full gap-4">
-          <h1 className="font-headline text-5xl lg:text-6xl font-bold tracking-tight text-on-surface">
-            My Campaigns
-          </h1>
-          <button
-            disabled
-            className="flex items-center gap-2 bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-3 rounded-sm font-semibold text-xs uppercase tracking-wider opacity-50 cursor-not-allowed"
-            title="Coming soon"
-          >
-            <span className="material-symbols-outlined text-base">add</span>
-            Create Campaign
-          </button>
-        </div>
+      {/* Header */}
+      <section className="mb-16 flex flex-col md:flex-row md:items-baseline md:justify-between gap-4">
+        <h1 className="font-headline text-5xl lg:text-6xl font-bold tracking-tight text-on-surface">
+          My Campaigns
+        </h1>
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="flex items-center gap-2 bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-3 rounded-sm font-semibold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity"
+        >
+          <span className="material-symbols-outlined text-base">add</span>
+          Create Campaign
+        </button>
       </section>
 
       {/* States */}
@@ -62,24 +57,7 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {/* Quick links */}
-      {campaigns && campaigns.length > 0 && (
-        <div className="mt-16 flex items-center gap-4 border-t border-outline-variant/10 pt-8">
-          <span className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant/40">
-            Quick links
-          </span>
-          {campaigns.map((c) => (
-            <Link
-              key={c.id}
-              to={`/campaigns/${c.id}`}
-              className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-base">chevron_right</span>
-              {c.title}
-            </Link>
-          ))}
-        </div>
-      )}
+      <CampaignCreateDrawer open={createOpen} onClose={() => setCreateOpen(false)} />
     </main>
   );
 }

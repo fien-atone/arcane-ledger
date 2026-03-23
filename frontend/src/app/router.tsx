@@ -5,6 +5,7 @@ import { AppLayout } from './AppLayout';
 import { CampaignShell } from '@/widgets/CampaignShell';
 
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const ChangelogPage = lazy(() => import('@/pages/ChangelogPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const CampaignsPage = lazy(() => import('@/pages/CampaignsPage'));
 const CampaignDashboardPage = lazy(() => import('@/pages/CampaignDashboardPage'));
@@ -41,6 +42,7 @@ export const router = createBrowserRouter(
   [
     // Public
     { path: '/', element: withSuspense(LandingPage) },
+    { path: '/changelog', element: withSuspense(ChangelogPage) },
     { path: '/login', element: withSuspense(LoginPage) },
 
     // Protected

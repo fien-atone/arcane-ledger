@@ -38,7 +38,7 @@ export function Select<T extends string>({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-sm focus:ring-0 focus:outline-none transition-colors"
+        className={`w-full flex items-center justify-between bg-surface-container-low border rounded-sm py-2.5 px-3 text-sm focus:ring-0 focus:outline-none transition-colors ${open ? 'border-primary' : 'border-outline-variant/25 hover:border-outline-variant/50'}`}
       >
         <span className={selected ? 'text-on-surface' : 'text-on-surface-variant/30'}>
           {selected ? selected.label : placeholder}

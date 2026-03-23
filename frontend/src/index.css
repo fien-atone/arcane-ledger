@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   /* ── Surface hierarchy ── */
@@ -68,6 +69,10 @@
   --font-headline: "Noto Serif", Georgia, serif;
   --font-body:     "Inter", system-ui, sans-serif;
   --font-label:    "Inter", system-ui, sans-serif;
+
+  /* ── Z-index scale extension ── */
+  --z-60: 60;
+  --z-70: 70;
 
   /* ── Radius (sharp precision look per DESIGN.md) ── */
   --radius-sm:   0.125rem;

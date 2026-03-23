@@ -1,208 +1,287 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Footer } from '@/shared/ui';
+import { Footer, D20Icon } from '@/shared/ui';
+
+// ── Feature data ─────────────────────────────────────────────────────────────
+
+const FEATURES = [
+  {
+    icon: 'location_on',
+    title: 'Locations & Maps',
+    desc: 'Hierarchical world-building: regions, settlements, districts, buildings, dungeons. Upload maps and drop markers linked to locations and NPCs.',
+    wide: true,
+    accent: 'primary',
+  },
+  {
+    icon: 'group',
+    title: 'NPCs',
+    desc: 'Rich character sheets with portrait, appearance, backstory, personality, GM notes, and social relations.',
+    wide: false,
+    accent: 'secondary',
+  },
+  {
+    icon: 'shield_person',
+    title: 'Party & Characters',
+    desc: 'Player character profiles with inline WYSIWYG editing — backstory, motivation, bonds, flaws.',
+    wide: false,
+    accent: 'primary',
+  },
+  {
+    icon: 'groups',
+    title: 'Factions & Groups',
+    desc: 'Track guilds, cults, families, councils. Manage membership, goals, and relationship to the party.',
+    wide: false,
+    accent: 'tertiary',
+  },
+  {
+    icon: 'event',
+    title: 'Session Journal',
+    desc: 'Log every session with short recap and full notes. Auto-formatted timeline of your campaign.',
+    wide: false,
+    accent: 'secondary',
+  },
+  {
+    icon: 'favorite',
+    title: 'Social Relations',
+    desc: 'Directional relationship graph between any entities — characters, NPCs, groups. Friendliness scale with notes.',
+    wide: true,
+    accent: 'primary',
+  },
+  {
+    icon: 'blur_on',
+    title: 'Species & Races',
+    desc: 'Homebrew species catalogue with traits, size, and lore. Linked to characters and NPCs automatically.',
+    wide: false,
+    accent: 'tertiary',
+  },
+  {
+    icon: 'assignment',
+    title: 'Quests',
+    desc: 'Active and completed quest tracking with objectives, status, and related sessions.',
+    wide: false,
+    accent: 'secondary',
+  },
+  {
+    icon: 'd20',
+    title: 'Dice Roller',
+    desc: 'd4 through d100 — roll any combination, see full history. Always available from the sidebar.',
+    wide: false,
+    accent: 'primary',
+  },
+  {
+    icon: 'lock',
+    title: 'GM Notes',
+    desc: 'Private notes on every entity — locations, NPCs, characters, groups. Separate from player-facing content.',
+    wide: false,
+    accent: 'tertiary',
+  },
+];
+
+const ROADMAP = [
+  { icon: 'inventory_2', title: 'Items & Artifacts', desc: 'Magical items, homebrew equipment, cursed relics — with properties and history.' },
+  { icon: 'timeline', title: 'Campaign Timeline', desc: 'Visual chronological map of sessions, events, and quest milestones.' },
+  { icon: 'picture_as_pdf', title: 'Export to PDF', desc: 'Print-ready character sheets, session summaries, and location compendium.' },
+  { icon: 'person_play', title: 'Player View', desc: 'Separate access level — players see their own sheet and shared world lore.' },
+  { icon: 'menu_book', title: 'GM Screen', desc: 'Dedicated GM screen with encounter tools, reference tables, and session prep.' },
+  { icon: 'cloud_sync', title: 'Cloud Sync', desc: 'Real-time sync across devices and players.' },
+];
+
+// ── Components ────────────────────────────────────────────────────────────────
+
+function FeatureCard({ icon, title, desc, wide, accent }: typeof FEATURES[0]) {
+  const accentMap = {
+    primary: 'text-primary',
+    secondary: 'text-secondary',
+    tertiary: 'text-tertiary',
+  };
+  const accentClass = accentMap[accent as keyof typeof accentMap];
+  return (
+    <div className={`${wide ? 'md:col-span-2' : ''} bg-surface-container-low border border-outline-variant/10 p-8 flex flex-col gap-4 hover:border-outline-variant/25 transition-colors group`}>
+      <div className="w-8 h-8 group-hover:scale-110 transition-transform">
+        {icon === 'd20'
+          ? <D20Icon className={`w-8 h-8 ${accentClass}`} />
+          : <span className={`material-symbols-outlined ${accentClass} text-[2rem] leading-none`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+        }
+      </div>
+      <div>
+        <h3 className="font-headline text-lg font-bold text-on-surface mb-1">{title}</h3>
+        <p className="text-sm text-on-surface-variant leading-relaxed">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function RoadmapCard({ icon, title, desc }: typeof ROADMAP[0]) {
+  return (
+    <div className="flex items-start gap-4 p-5 border border-outline-variant/10 rounded-sm bg-surface-container-lowest">
+      <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-sm bg-surface-container border border-outline-variant/20">
+        <span className="material-symbols-outlined text-on-surface-variant/40 text-[18px]">{icon}</span>
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-on-surface-variant mb-0.5">{title}</p>
+        <p className="text-xs text-on-surface-variant/50 leading-relaxed">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   return (
     <div className="bg-background text-on-background min-h-screen">
-      {/* ── Top Navigation ── */}
-      <nav className="fixed top-0 w-full z-50 bg-neutral-950/80 backdrop-blur-md shadow-[0_16px_32px_-12px_rgba(227,226,232,0.04)] flex justify-between items-center px-12 py-6">
-        <div className="text-2xl font-serif italic text-primary tracking-tight">
-          Arcane Ledger
-        </div>
-        <div className="hidden md:flex items-center space-x-12">
-          <a
-            href="#features"
-            className="text-on-surface-variant font-medium hover:text-primary-fixed transition-colors duration-300"
-          >
-            The Archive
-          </a>
-          <a
-            href="#codex"
-            className="text-on-surface-variant font-medium hover:text-primary-fixed transition-colors duration-300"
-          >
-            Codex
-          </a>
-          <a
-            href="#chronicles"
-            className="text-on-surface-variant font-medium hover:text-primary-fixed transition-colors duration-300"
-          >
-            Chronicles
-          </a>
+
+      {/* ── Nav ── */}
+      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/10 flex justify-between items-center px-10 py-5">
+        <span className="text-2xl font-serif italic text-primary tracking-tight">Arcane Ledger</span>
+        <div className="hidden md:flex items-center gap-8">
+          <a href="#features" className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Features</a>
+          <a href="#roadmap" className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Roadmap</a>
+          <Link to="/changelog" className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Changelog</Link>
         </div>
         <Link
           to="/login"
-          className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2 rounded-sm font-semibold hover:scale-95 duration-200 ease-in-out inline-block"
+          className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2 rounded-sm text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
         >
-          Sign In
+          Open App
         </Link>
       </nav>
 
-      {/* ── Main Content ── */}
-      <main className="pt-32 pb-24 px-6 md:px-12 flex flex-col items-center max-w-5xl mx-auto text-center">
+      <main className="max-w-6xl mx-auto px-8">
 
         {/* ── Hero ── */}
-        <header className="mb-16">
-          <span className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary mb-4 block">
-            Editorial Worldbuilding
-          </span>
-          <h1 className="font-headline text-5xl md:text-7xl font-bold text-on-surface mb-8 tracking-tight leading-tight">
-            Arcane Ledger:<br />
-            Your campaign.{' '}
-            <span className="italic text-primary">Remembered.</span>
-          </h1>
-          <p className="font-body text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-            A bespoke digital grimoire designed for the modern chronicler.
-            Effortlessly map interconnected lore for GMs while providing
-            players a living, high-fidelity ledger of their heroic journey.
-          </p>
-        </header>
-
-        {/* ── CTA ── */}
-        <div className="mb-24 flex flex-col items-center gap-6">
-          <Link
-            to="/login"
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-12 py-5 rounded-sm text-lg font-bold shadow-[0_0_40px_-10px_rgba(242,202,80,0.3)] hover:scale-95 transition-transform duration-200 inline-block"
-          >
-            Begin Your Chronicle
-          </Link>
-          <div className="flex items-center gap-4 text-on-surface-variant text-sm">
-            <span className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[18px]">verified</span>
-              Encrypted Lore
-            </span>
-            <span className="w-1 h-1 bg-outline-variant rounded-full" />
-            <span className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[18px]">group</span>
-              Shared Ledger
-            </span>
+        <section className="pt-48 pb-32 flex flex-col items-center text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-full text-[10px] font-label uppercase tracking-widest text-primary mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Demo · v0.1.9
           </div>
-        </div>
 
-        {/* ── App Mockup ── */}
-        <section className="w-full relative group" id="features">
-          <div className="absolute -inset-1 bg-gradient-to-b from-primary/20 to-transparent blur-2xl opacity-50 group-hover:opacity-75 transition duration-1000" />
-          <div className="relative bg-surface-container-low rounded-lg p-2 shadow-2xl overflow-hidden border border-outline-variant/20">
-            <div className="bg-surface-container-lowest rounded-sm overflow-hidden aspect-[16/10] flex items-center justify-center border border-outline-variant/10 relative">
-              <img
-                alt="Arcane Ledger Interface Mockup"
-                className="w-full h-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMFFnvoJyClLSQwD688CeOp7Y3X4XJzA6M0bTPLZXoheSSGAXZWsSLDzzBv1oMyB-XmPbQ7g4NxJgBPQdlkuQSgvbJy6q4tOo45dN1FZXL9HjW7yfj4lfckaGXFQMM2xYk6KGb28xqlfZhKdW9E52xdgxQjY8ZlaRp2NRBNqi4zBBPCWm32Z0iAzo1e7dz8ZZI1B62NN2q5BYaKEieBF6TSIoK5Qm9_-qEiJ02EhAGIsifCSsfV2rXSbBqCXrPpj2BpnUaQ8R0rB6B"
-              />
-              {/* Floating Quest Card */}
-              <div className="absolute top-12 left-12 p-6 bg-surface-container-high/90 backdrop-blur-xl rounded-sm border border-outline-variant/20 shadow-2xl max-w-xs text-left hidden md:block">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="material-symbols-outlined text-secondary">auto_stories</span>
-                  <span className="font-label text-[10px] uppercase tracking-widest text-secondary">
-                    Active Quest
-                  </span>
-                </div>
-                <h3 className="font-headline text-xl mb-2">The Sunken Spire</h3>
-                <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-                  The echoes of the deep calling from beneath the shifting sands of Olaria.
-                </p>
-              </div>
-              {/* Floating Character Card */}
-              <div className="absolute bottom-12 right-12 p-4 bg-surface-container-high/80 backdrop-blur-md rounded-sm border border-outline-variant/20 shadow-xl hidden md:flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-                  <span className="material-symbols-outlined">person</span>
-                </div>
-                <div className="text-left">
-                  <div className="text-xs font-bold">Valerius Thorne</div>
-                  <div className="text-[10px] text-secondary">Level 12 Chronicler</div>
-                </div>
-              </div>
+          <h1 className="font-headline text-6xl md:text-8xl font-bold text-on-surface tracking-tight leading-[1.05] mb-8">
+            Your campaign.<br />
+            <span className="text-primary italic">Remembered.</span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl leading-relaxed mb-12">
+            Arcane Ledger is a GM-first campaign companion for TTRPG. Track your world — locations, NPCs, factions, sessions, and characters — in one focused tool.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <Link
+              to="/login"
+              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-10 py-4 rounded-sm font-bold text-sm uppercase tracking-wider shadow-[0_0_40px_-8px_rgba(242,202,80,0.4)] hover:opacity-90 transition-opacity"
+            >
+              Begin Your Chronicle
+            </Link>
+            <a
+              href="#features"
+              className="px-8 py-4 border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:border-outline-variant/60 text-sm rounded-sm transition-colors"
+            >
+              Explore features
+            </a>
+          </div>
+
+          <p className="mt-6 text-[11px] text-on-surface-variant/30 font-label uppercase tracking-widest">
+            All data stored locally in your browser · No account required
+          </p>
+        </section>
+
+        {/* ── Stat strip ── */}
+        <section className="border-y border-outline-variant/10 py-10 grid grid-cols-2 md:grid-cols-4 gap-8 mb-32">
+          {([
+            { n: '10+', label: 'Entity types' },
+            { n: '∞', label: 'Locations & maps' },
+            { n: (
+              <svg viewBox="0 0 512 512" fill="currentColor" className="w-10 h-10 mx-auto text-primary">
+                <path d="M217.5 56.4L77.9 140.2l61.4 44.7L217.5 56.4zM64 169.6V320.3l59.2-107.6L64 169.6zM104.8 388L240 469.1V398.8L104.8 388zM272 469.1L407.2 388 272 398.8v70.3zM448 320.3V169.6l-59.2 43L448 320.3zM434.1 140.2L294.5 56.4l78.2 128.4 61.4-44.7zM243.7 3.4c7.6-4.6 17.1-4.6 24.7 0l200 120c7.2 4.3 11.7 12.1 11.7 20.6V368c0 8.4-4.4 16.2-11.7 20.6l-200 120c-7.6 4.6-17.1 4.6-24.7 0l-200-120C36.4 384.2 32 376.4 32 368V144c0-8.4 4.4-16.2 11.7-20.6l200-120zM225.3 365.5L145 239.4 81.9 354l143.3 11.5zM338.9 224H173.1L256 354.2 338.9 224zM256 54.8L172.5 192H339.5L256 54.8zm30.7 310.7L430.1 354 367 239.4 286.7 365.5z" />
+              </svg>
+            ), label: 'Dice roller' },
+            { n: 'Beta', label: 'In active dev' },
+          ] as { n: React.ReactNode; label: string }[]).map(({ n, label }) => (
+            <div key={label} className="text-center flex flex-col items-center">
+              <div className="font-headline text-4xl font-bold text-primary mb-1 leading-none">{n}</div>
+              <p className="text-xs font-label uppercase tracking-widest text-on-surface-variant/50">{label}</p>
             </div>
+          ))}
+        </section>
+
+        {/* ── Features ── */}
+        <section id="features" className="mb-32">
+          <div className="mb-12">
+            <span className="text-[10px] font-label uppercase tracking-widest text-primary block mb-3">What's inside</span>
+            <h2 className="font-headline text-4xl md:text-5xl font-bold text-on-surface">Everything a GM needs</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {FEATURES.map((f) => (
+              <FeatureCard key={f.title} {...f} />
+            ))}
           </div>
         </section>
 
-        {/* ── Feature Bento Grid ── */}
-        <section className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-32 w-full text-left">
-          {/* Large left card */}
-          <div className="md:col-span-8 bg-surface-container-low p-10 flex flex-col justify-end min-h-[400px] relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8">
-              <span className="material-symbols-outlined text-primary opacity-20" style={{ fontSize: '6rem' }}>
-                hub
-              </span>
-            </div>
-            <div className="relative z-10">
-              <span className="font-label text-[10px] uppercase tracking-widest text-primary mb-2 block">
-                For the Architect
-              </span>
-              <h2 className="font-headline text-3xl mb-4">Neural World-Mapping</h2>
-              <p className="font-body text-on-surface-variant max-w-md">
-                Connect NPCs, locations, and secret plot threads with a semantic engine that
-                remembers what your players might forget. No more flipping through notes during a
-                boss fight.
-              </p>
-            </div>
+        {/* ── Roadmap ── */}
+        <section id="roadmap" className="mb-32">
+          <div className="mb-12">
+            <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50 block mb-3">Coming next</span>
+            <h2 className="font-headline text-4xl md:text-5xl font-bold text-on-surface">On the horizon</h2>
+            <p className="text-on-surface-variant mt-3 max-w-xl">These features are planned or in progress. The app is actively developed.</p>
           </div>
 
-          {/* Small right card */}
-          <div className="md:col-span-4 bg-surface-container p-10 flex flex-col justify-between border border-outline-variant/10">
-            <span className="material-symbols-outlined text-secondary" style={{ fontSize: '2.5rem' }}>
-              inventory_2
-            </span>
-            <div>
-              <h2 className="font-headline text-2xl mb-4">Vaulted Artifacts</h2>
-              <p className="font-body text-sm text-on-surface-variant">
-                A dedicated system for homebrew items, magical properties, and cursed relics that
-                grow with your players.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {ROADMAP.map((r) => (
+              <RoadmapCard key={r.title} {...r} />
+            ))}
           </div>
+        </section>
 
-          {/* Small left card */}
-          <div className="md:col-span-4 bg-surface-container p-10 flex flex-col justify-between border border-outline-variant/10">
-            <span className="material-symbols-outlined text-tertiary" style={{ fontSize: '2.5rem' }}>
-              history_edu
-            </span>
-            <div>
-              <h2 className="font-headline text-2xl mb-4">Session Scribe</h2>
-              <p className="font-body text-sm text-on-surface-variant">
-                Automated timeline generation turns your messy session notes into an elegant,
-                readable chronicle for your group.
-              </p>
-            </div>
+        {/* ── Contact ── */}
+        <section className="border-t border-outline-variant/10 py-20 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-0">
+          <div>
+            <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 block mb-3">Get in touch</span>
+            <h2 className="font-headline text-3xl font-bold text-on-surface mb-2">Say hello</h2>
+            <p className="text-on-surface-variant text-sm max-w-sm">Questions, feedback, collaboration — reach out on any of these.</p>
           </div>
-
-          {/* Large right card */}
-          <div className="md:col-span-8 bg-surface-container-low p-10 flex flex-col justify-end min-h-[400px] relative overflow-hidden">
-            <img
-              alt="Fantasy Atmosphere"
-              className="absolute inset-0 w-full h-full object-cover opacity-10 grayscale"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9YW4WWxGT0zYtmctEKSTTGWOV6C64opOm7gdQv24agmaQALL4S0MX5ozX_8B13_Amvb3jUprmfbyN-8wAnB2uBT-ENc-toUqfmlQEp_87DuYTeJXqF7hAAb82UvdHiGD6PJQTIX99qvFBfMPnFioQT0GErztOwTNRUfT2XJ4QvIuSn9h7058E9u2SHDDwBVPskq04AItG8PIPnyRcV6_X4uTawMRpVyNxB16dtux_0UJp8LrYDIlFc_04A8sDG5QA5uDJIwbNGzon"
-            />
-            <div className="relative z-10">
-              <span className="font-label text-[10px] uppercase tracking-widest text-primary mb-2 block">
-                The Player Experience
-              </span>
-              <h2 className="font-headline text-3xl mb-4">Living Character Tomes</h2>
-              <p className="font-body text-on-surface-variant max-w-md">
-                Beyond just stats. Track relationships, personal growth, and inventory with a UI
-                that feels as premium as the story you're telling.
-              </p>
-            </div>
+          <div className="flex flex-col gap-3 min-w-[200px]">
+            <a
+              href="https://t.me/inoise"
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-3 bg-surface-container-low border border-outline-variant/15 hover:border-primary/30 hover:text-primary text-on-surface-variant rounded-sm transition-colors text-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">send</span>
+              Telegram · @inoise
+            </a>
+            <a
+              href="https://twitter.com/inoise"
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-3 bg-surface-container-low border border-outline-variant/15 hover:border-primary/30 hover:text-primary text-on-surface-variant rounded-sm transition-colors text-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">alternate_email</span>
+              Twitter · @inoise
+            </a>
+            <a
+              href="mailto:ivnshumov@gmail.com"
+              className="flex items-center gap-3 px-4 py-3 bg-surface-container-low border border-outline-variant/15 hover:border-primary/30 hover:text-primary text-on-surface-variant rounded-sm transition-colors text-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">mail</span>
+              ivnshumov@gmail.com
+            </a>
           </div>
         </section>
 
         {/* ── Final CTA ── */}
-        <section className="mt-48 mb-24 py-24 w-full border-t border-outline-variant/20 flex flex-col items-center">
-          <h2 className="font-headline text-4xl mb-8">Ready to write your history?</h2>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              to="/login"
-              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-10 py-4 rounded-sm font-bold inline-block text-center"
-            >
-              Create Free Account
-            </Link>
-            <button className="px-10 py-4 rounded-sm border border-outline-variant/40 hover:bg-surface-container transition-colors font-medium">
-              Explore the Codex
-            </button>
+        <section className="border-t border-outline-variant/10 py-32 flex flex-col items-center text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface-container mb-8 border border-outline-variant/10 shadow-[0_0_30px_rgba(242,202,80,0.08)]">
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: '1.75rem' }}>auto_stories</span>
           </div>
-          <p className="mt-8 text-on-surface-variant text-xs font-label uppercase tracking-widest">
-            Free for up to 3 campaigns. No scroll required.
-          </p>
+          <h2 className="font-headline text-4xl md:text-5xl font-bold text-on-surface mb-4">Ready to start?</h2>
+          <p className="text-on-surface-variant mb-10 max-w-md">Use the test credentials to explore — or sign in and start building your world.</p>
+          <Link
+            to="/login"
+            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-12 py-4 rounded-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-[0_0_40px_-8px_rgba(242,202,80,0.3)]"
+          >
+            Open Arcane Ledger
+          </Link>
         </section>
+
       </main>
 
       <Footer />

@@ -1384,9 +1384,9 @@ export default function LocationDetailPage() {
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 <button
                   onClick={() => { setAddNpcOpen((v) => !v); setAddNpcSearch(''); }}
-                  className="flex items-center gap-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors flex-shrink-0"
+                  className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                 >
-                  <span className="material-symbols-outlined text-[14px]">person_add</span>
+                  <span className="material-symbols-outlined text-[13px]">person_add</span>
                   Add
                 </button>
               </div>
@@ -1671,9 +1671,9 @@ export default function LocationDetailPage() {
                   <div className="h-px flex-1 bg-outline-variant/10" />
                   <button
                     onClick={() => { setAddChildLocOpen((v) => !v); setNewChildName(''); }}
-                    className="flex items-center gap-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors flex-shrink-0"
+                    className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                   >
-                    <span className="material-symbols-outlined text-[14px]">add_location_alt</span>
+                    <span className="material-symbols-outlined text-[13px]">add_location_alt</span>
                     Add
                   </button>
                 </div>
@@ -1788,6 +1788,7 @@ export default function LocationDetailPage() {
       <LocationEditDrawer
         open={editOpen}
         onClose={() => setEditOpen(false)}
+        campaignId={campaignId ?? ''}
         location={location}
       />
 

@@ -3,9 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth';
 
 const NAV_ITEMS = [
-  { label: 'Library', to: '/campaigns', icon: 'auto_stories' },
-  { label: 'Chronicles', to: null, icon: 'history_edu' },
-  { label: 'Sanctum', to: null, icon: 'fort' },
+  { label: 'All Campaigns', to: '/campaigns', icon: 'auto_stories' },
 ] as const;
 
 export function Topbar() {

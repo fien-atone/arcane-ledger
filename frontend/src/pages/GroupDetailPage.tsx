@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useGroup } from '@/features/groups/api';
+import { useGroup, useSaveGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
-import { useNpcs } from '@/features/npcs/api/queries';
+import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import type { NpcStatus } from '@/entities/npc';
+import { ImageUpload } from '@/shared/ui';
+import type { NPC, NpcStatus } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<string, { label: string; pill: string; icon: string }> = {
   allied:  { label: 'Allied',   pill: 'bg-secondary/10 text-secondary border border-secondary/20',                        icon: 'handshake' },
@@ -22,29 +23,192 @@ const STATUS_DOT: Record<NpcStatus, string> = {
   hostile: 'bg-primary animate-pulse',
 };
 
-function GroupHero({ name }: { name: string }) {
-  const initials = name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+// ── Add Member Panel ─────────────────────────────────────────────────────────
+
+interface AddMemberPanelProps {
+  onClose: () => void;
+  groupId: string;
+  nonMembers: NPC[];
+}
+
+function AddMemberPanel({ onClose, groupId, nonMembers }: AddMemberPanelProps) {
+  const saveNpc = useSaveNpc();
+  const [search, setSearch] = useState('');
+  const [selectedNpc, setSelectedNpc] = useState<NPC | null>(null);
+  const [role, setRole] = useState('');
+
+  const filtered = nonMembers.filter((n) =>
+    !search || n.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleAdd = () => {
+    if (!selectedNpc) return;
+    const updated: NPC = {
+      ...selectedNpc,
+      groupMemberships: [
+        ...selectedNpc.groupMemberships,
+        { npcId: selectedNpc.id, groupId, relation: role.trim() || undefined },
+      ],
+      updatedAt: new Date().toISOString(),
+    };
+    saveNpc.mutate(updated, { onSuccess: onClose });
+  };
+
   return (
-    <div className="relative w-full aspect-[21/9] overflow-hidden rounded-sm bg-surface-container-low flex items-center justify-center group">
-      <span className="font-headline text-[10rem] font-bold text-on-surface-variant/10 select-none leading-none grayscale">
-        {initials}
-      </span>
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-    </div>
+    <>
+      <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-70 w-full max-w-md flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
+          <div>
+            <h2 className="font-headline text-xl font-bold text-on-surface">Add Member</h2>
+            <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
+              Select an NPC to add to this group
+            </p>
+          </div>
+          <button onClick={onClose} className="p-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="px-8 pt-5 pb-3 flex-shrink-0">
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
+            <input
+              type="text"
+              placeholder="Search NPCs…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+              className="w-full pl-8 pr-3 py-2 bg-surface-container border border-outline-variant/20 focus:border-primary rounded-sm text-on-surface text-sm placeholder:text-on-surface-variant/30 focus:ring-0 focus:outline-none transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* NPC list */}
+        <div className="flex-1 overflow-y-auto px-8 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
+          {filtered.length === 0 ? (
+            <p className="text-sm text-on-surface-variant/40 italic py-6 text-center">
+              {nonMembers.length === 0 ? 'All NPCs are already members.' : 'No NPCs found.'}
+            </p>
+          ) : (
+            <div className="space-y-1 py-2">
+              {filtered.map((npc) => {
+                const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+                const dot = STATUS_DOT[npc.status];
+                const isSelected = selectedNpc?.id === npc.id;
+                return (
+                  <button
+                    key={npc.id}
+                    type="button"
+                    onClick={() => setSelectedNpc(isSelected ? null : npc)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-sm border transition-all text-left ${
+                      isSelected
+                        ? 'bg-primary/8 border-primary/30'
+                        : 'bg-surface-container-low border-outline-variant/10 hover:bg-surface-container hover:border-outline-variant/30'
+                    }`}
+                  >
+                    <div className="relative flex-shrink-0">
+                      <div className={`w-9 h-9 rounded-sm flex items-center justify-center border ${isSelected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
+                        <span className={`text-xs font-bold ${isSelected ? 'text-primary' : 'text-on-surface-variant/60'}`}>{initials}</span>
+                      </div>
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-surface-container-low ${dot}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${isSelected ? 'text-primary' : 'text-on-surface'}`}>{npc.name}</p>
+                      {npc.species && (
+                        <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">{npc.species}</p>
+                      )}
+                    </div>
+                    {isSelected && (
+                      <span className="material-symbols-outlined text-primary text-[18px] flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
+                        check_circle
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Role field + footer */}
+        <div className="px-8 py-5 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container-lowest space-y-4">
+          {selectedNpc && (
+            <div>
+              <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5">
+                Role / Relation <span className="normal-case tracking-normal text-on-surface-variant/40 font-normal">optional</span>
+              </label>
+              <input
+                type="text"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                placeholder="e.g. Leader, Spy, Recruit…"
+                className="w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
+              />
+            </div>
+          )}
+          <div className="flex items-center justify-end gap-3">
+            <button
+              onClick={onClose}
+              className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAdd}
+              disabled={!selectedNpc || saveNpc.isPending}
+              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+            >
+              {saveNpc.isPending
+                ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                : <span className="material-symbols-outlined text-sm">person_add</span>}
+              Add Member
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function GroupDetailPage() {
   const { id: campaignId, groupId } = useParams<{ id: string; groupId: string }>();
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes();
+  const saveNpc = useSaveNpc();
 
   const members = (allNpcs ?? [])
     .filter((n) => n.groupMemberships.some((m) => m.groupId === groupId))
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const nonMembers = (allNpcs ?? [])
+    .filter((n) => !n.groupMemberships.some((m) => m.groupId === groupId))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const saveGroup = useSaveGroup();
+
+  const handleGroupImageUpload = (dataUrl: string) => {
+    saveGroup.mutate({ ...group!, image: dataUrl, updatedAt: new Date().toISOString() });
+  };
+
   const [editOpen, setEditOpen] = useState(false);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+
+  const handleRemoveMember = (npc: NPC) => {
+    const updated: NPC = {
+      ...npc,
+      groupMemberships: npc.groupMemberships.filter((m) => m.groupId !== groupId),
+      updatedAt: new Date().toISOString(),
+    };
+    saveNpc.mutate(updated);
+  };
 
   const tc = groupTypes?.find((t) => t.id === group?.type) ?? { name: group?.type ?? '', icon: 'category' };
   const relation = group?.partyRelation ? (RELATION_CONFIG[group.partyRelation] ?? RELATION_CONFIG.unknown) : null;
@@ -81,7 +245,12 @@ export default function GroupDetailPage() {
           {/* ── Left column (65%) ──────────────────────────────── */}
           <div className="lg:w-[65%] space-y-12">
 
-            <GroupHero name={group.name} />
+            <ImageUpload
+              image={group.image}
+              name={group.name}
+              className="w-full aspect-[21/9]"
+              onUpload={handleGroupImageUpload}
+            />
 
             {/* Header */}
             <header className="space-y-4">
@@ -154,9 +323,16 @@ export default function GroupDetailPage() {
                 {members.length > 0 && (
                   <span className="text-xs font-bold text-on-surface-variant/40">{members.length}</span>
                 )}
+                <button
+                  onClick={() => setAddMemberOpen(true)}
+                  className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+                >
+                  <span className="material-symbols-outlined text-[13px]">person_add</span>
+                  Add
+                </button>
               </div>
               {members.length === 0 ? (
-                <p className="text-sm text-on-surface-variant/40 italic">No members tagged yet.</p>
+                <p className="text-sm text-on-surface-variant/40 italic">No members yet.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {members.map((npc) => {
@@ -164,29 +340,53 @@ export default function GroupDetailPage() {
                     const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
                     const dot = STATUS_DOT[npc.status];
                     return (
-                      <Link
-                        key={npc.id}
-                        to={`/campaigns/${campaignId}/npcs/${npc.id}`}
-                        className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 hover:border-outline-variant/30 transition-all group"
-                      >
-                        <div className="relative flex-shrink-0">
-                          <div className="w-10 h-10 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center">
-                            <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
+                      <div key={npc.id} className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 hover:border-outline-variant/30 transition-all group">
+                        <Link
+                          to={`/campaigns/${campaignId}/npcs/${npc.id}`}
+                          className="flex items-center gap-3 flex-1 min-w-0"
+                        >
+                          <div className="relative flex-shrink-0">
+                            <div className="w-10 h-10 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center">
+                              <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
+                            </div>
+                            <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface-container-low ${dot}`} />
                           </div>
-                          <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface-container-low ${dot}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">
-                            {npc.name}
-                          </p>
-                          <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
-                            {[npc.species, membership?.relation].filter(Boolean).join(' · ') || '—'}
-                          </p>
-                        </div>
-                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 flex-shrink-0">
-                          chevron_right
-                        </span>
-                      </Link>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">
+                              {npc.name}
+                            </p>
+                            <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
+                              {[npc.species, membership?.relation].filter(Boolean).join(' · ') || '—'}
+                            </p>
+                          </div>
+                        </Link>
+                        {confirmRemoveId === npc.id ? (
+                          <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5 flex-shrink-0">
+                            <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                            <button
+                              onClick={() => { handleRemoveMember(npc); setConfirmRemoveId(null); }}
+                              disabled={saveNpc.isPending}
+                              className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors disabled:opacity-40"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmRemoveId(null)}
+                              className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmRemoveId(npc.id)}
+                            title="Remove from group"
+                            className="flex-shrink-0 opacity-0 group-hover:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">person_remove</span>
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -229,34 +429,6 @@ export default function GroupDetailPage() {
               </button>
             </div>
 
-            {/* Profile card */}
-            <div className="bg-surface-container-low p-6 rounded-sm ring-1 ring-outline-variant/10 space-y-4">
-              <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Group Profile</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-on-surface-variant/60 italic">Type</span>
-                  <span className="text-on-surface font-bold">{tc.name}</span>
-                </div>
-                {relation && (
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-on-surface-variant/60 italic">Party Relation</span>
-                    <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-widest ${relation.pill}`}>
-                      {relation.label}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-on-surface-variant/60 italic">Members</span>
-                  <span className="text-on-surface font-bold">{members.length}</span>
-                </div>
-                {group.aliases.length > 0 && (
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-on-surface-variant/60 italic">Known Aliases</span>
-                    <span className="text-on-surface">{group.aliases.length}</span>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
 
         </div>
@@ -268,6 +440,14 @@ export default function GroupDetailPage() {
         campaignId={campaignId ?? ''}
         group={group}
       />
+
+      {addMemberOpen && (
+        <AddMemberPanel
+          onClose={() => setAddMemberOpen(false)}
+          groupId={groupId ?? ''}
+          nonMembers={nonMembers}
+        />
+      )}
     </main>
   );
 }

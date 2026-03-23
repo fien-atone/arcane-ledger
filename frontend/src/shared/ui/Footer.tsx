@@ -1,28 +1,22 @@
 import { Link } from 'react-router-dom';
 
-const LINKS = [
-  { label: 'Home', to: '/' },
-  { label: 'Privacy', to: '#' },
-  { label: 'Terms', to: '#' },
-];
-
 export function Footer() {
   return (
-    <footer className="w-full py-16 border-t border-yellow-900/10 flex flex-col items-center justify-center space-y-4">
-      <div className="flex space-x-6">
-        {LINKS.map(({ label, to }) => (
-          <Link
-            key={label}
-            to={to}
-            className="text-neutral-500 hover:text-neutral-200 text-[10px] uppercase tracking-[0.1em] transition-colors"
-          >
-            {label}
-          </Link>
-        ))}
+    <footer className="w-full border-t border-outline-variant/10 py-10 px-10">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+        <span className="font-serif italic text-primary text-lg tracking-tight">Arcane Ledger</span>
+
+        <div className="flex items-center gap-6">
+          <Link to="/" className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50 hover:text-on-surface-variant transition-colors">Home</Link>
+          <Link to="/changelog" className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50 hover:text-on-surface-variant transition-colors">Changelog</Link>
+          <a href="https://t.me/inoise" target="_blank" rel="noopener noreferrer" className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50 hover:text-on-surface-variant transition-colors">Telegram</a>
+          <a href="mailto:ivnshumov@gmail.com" className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50 hover:text-on-surface-variant transition-colors">Email</a>
+        </div>
+
+        <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/30">
+          © 2026 Ivan Shumov
+        </p>
       </div>
-      <p className="font-label text-[10px] uppercase tracking-[0.2em] text-neutral-600">
-        © 2026 Arcane Ledger. All rights reserved.
-      </p>
     </footer>
   );
 }

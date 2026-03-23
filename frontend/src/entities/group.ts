@@ -9,6 +9,7 @@ export interface Group {
   symbols?: string;
   gmNotes?: string;
   partyRelation?: string;
+  image?: string;
   createdAt: string;
   updatedAt: string;
 }

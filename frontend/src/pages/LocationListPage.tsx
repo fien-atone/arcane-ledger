@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLocations } from '@/features/locations/api';
+import { LocationEditDrawer } from '@/features/locations/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
 import type { Location, LocationType, SettlementType, Climate } from '@/entities/location';
 
@@ -237,6 +238,7 @@ export default function LocationListPage() {
   const [typeFilter, setTypeFilter] = useState<LocationType | 'all'>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   const depthMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -283,9 +285,8 @@ export default function LocationListPage() {
             <p className="text-on-surface-variant text-sm mt-1">Known places, landmarks, and territories.</p>
           </div>
           <button
-            disabled
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 opacity-50 cursor-not-allowed"
-            title="Coming soon"
+            onClick={() => setAddOpen(true)}
+            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
             <span className="material-symbols-outlined text-[18px]">add_location</span>
             <span className="font-label text-xs uppercase tracking-widest">Add Location</span>
@@ -393,6 +394,12 @@ export default function LocationListPage() {
 
         </div>
       )}
+
+      <LocationEditDrawer
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        campaignId={campaignId ?? ''}
+      />
     </main>
   );
 }

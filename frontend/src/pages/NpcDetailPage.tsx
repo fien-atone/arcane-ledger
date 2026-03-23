@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useNpc, useNpcs } from '@/features/npcs/api/queries';
+import { useNpc, useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
+import { ImageUpload } from '@/shared/ui';
 import type { NpcStatus, NpcRelationType } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
@@ -42,25 +43,6 @@ const STATUS_STYLES: Record<NpcStatus, { pill: string; label: string }> = {
   },
 };
 
-function NpcPortrait({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-  return (
-    <div className="relative group flex-shrink-0">
-      <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300" />
-      <div className="relative w-48 h-64 bg-surface-container border border-outline-variant/30 rounded-sm overflow-hidden flex items-center justify-center">
-        <span className="font-headline text-7xl font-bold text-on-surface-variant/20 select-none">
-          {initials}
-        </span>
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-surface-dim to-transparent" />
-      </div>
-    </div>
-  );
-}
 
 export default function NpcDetailPage() {
   const { id: campaignId, npcId } = useParams<{ id: string; npcId: string }>();
@@ -68,6 +50,11 @@ export default function NpcDetailPage() {
   const { data: groups } = useGroups(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allSpecies } = useSpecies();
+
+  const saveNpc = useSaveNpc();
+  const handleImageUpload = (dataUrl: string) => {
+    saveNpc.mutate({ ...npc!, image: dataUrl, updatedAt: new Date().toISOString() });
+  };
 
   const groupNameById = (id: string) =>
     groups?.find((g) => g.id === id)?.name ?? id;
@@ -116,7 +103,15 @@ export default function NpcDetailPage() {
 
             {/* Header: portrait + identity */}
             <section className="flex flex-col md:flex-row gap-8 items-start">
-              <NpcPortrait name={npc.name} />
+              <div className="relative group flex-shrink-0">
+                <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+                <ImageUpload
+                  image={npc.image}
+                  name={npc.name}
+                  className="relative w-48 h-64"
+                  onUpload={handleImageUpload}
+                />
+              </div>
 
               <div className="flex-1 pt-4 space-y-6">
                 <div>

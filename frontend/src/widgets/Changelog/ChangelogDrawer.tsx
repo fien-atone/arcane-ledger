@@ -38,8 +38,8 @@ export function ChangelogDrawer({ open, onClose }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
+      <div className="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-70 w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
 
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">

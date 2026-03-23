@@ -127,12 +127,20 @@ export default function LoginPage() {
             </div>
           </form>
 
-          {/* Footer note */}
-          <div className="mt-8 pt-8 border-t border-outline-variant/10 text-center">
-            <p className="text-on-surface-variant text-xs leading-relaxed">
-              Don't have an account?{' '}
-              <br />
-              <span className="text-on-surface font-medium">Contact your Game Master.</span>
+          {/* Test credentials */}
+          <div className="mt-8 pt-8 border-t border-outline-variant/10 space-y-4">
+            <div className="bg-surface-container rounded-sm px-4 py-3 border border-outline-variant/15">
+              <p className="text-[10px] font-label uppercase tracking-widest text-primary mb-2.5">Test access</p>
+              <div className="text-xs text-on-surface-variant font-mono">
+                <div className="flex justify-between gap-4">
+                  <span className="text-on-surface-variant/50">Game Master</span>
+                  <span><span className="text-on-surface">user</span> / <span className="text-on-surface">user</span></span>
+                </div>
+              </div>
+            </div>
+            <p className="text-on-surface-variant/40 text-[11px] leading-relaxed text-center flex items-start gap-1.5 justify-center">
+              <span className="material-symbols-outlined text-[13px] mt-px flex-shrink-0">info</span>
+              All data is stored locally in your browser. Nothing is sent to any server.
             </p>
           </div>
         </div>

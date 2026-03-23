@@ -51,12 +51,18 @@ const labelCls =
 interface Props {
   open: boolean;
   onClose: () => void;
-  location: Location;
+  campaignId: string;
+  location?: Location;
 }
 
-export function LocationEditDrawer({ open, onClose, location }: Props) {
-  const save = useSaveLocation(location.campaignId);
+function generateId() {
+  return `loc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+export function LocationEditDrawer({ open, onClose, campaignId, location }: Props) {
+  const save = useSaveLocation(campaignId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isNew = !location;
 
   const [name, setName] = useState('');
   const [type, setType] = useState<LocationType>('building');
@@ -69,14 +75,20 @@ export function LocationEditDrawer({ open, onClose, location }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    setName(location.name);
-    setType(location.type);
-    setSettlementType(location.settlementType ?? '');
-    setSettlementPopulation(location.settlementPopulation?.toString() ?? '');
-    setClimate(location.climate ?? '');
-    setDescription(location.description);
-    setGmNotes(location.gmNotes ?? '');
-    setImage(location.image);
+    if (location) {
+      setName(location.name);
+      setType(location.type);
+      setSettlementType(location.settlementType ?? '');
+      setSettlementPopulation(location.settlementPopulation?.toString() ?? '');
+      setClimate(location.climate ?? '');
+      setDescription(location.description);
+      setGmNotes(location.gmNotes ?? '');
+      setImage(location.image);
+    } else {
+      setName(''); setType('building'); setSettlementType('');
+      setSettlementPopulation(''); setClimate(''); setDescription('');
+      setGmNotes(''); setImage(undefined);
+    }
   }, [open, location]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,8 +102,13 @@ export function LocationEditDrawer({ open, onClose, location }: Props) {
   const handleSave = () => {
     if (!name.trim()) return;
     const pop = parseInt(settlementPopulation, 10);
+    const ts = new Date().toISOString();
     const record: Location = {
-      ...location,
+      id: location?.id ?? generateId(),
+      campaignId,
+      aliases: location?.aliases ?? [],
+      createdAt: location?.createdAt ?? ts,
+      ...(location ?? {}),
       name: name.trim(),
       type,
       settlementType: type === 'settlement' && settlementType ? settlementType : undefined,
@@ -108,15 +125,17 @@ export function LocationEditDrawer({ open, onClose, location }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
+      <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-70 w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
 
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
-            <h2 className="font-headline text-xl font-bold text-on-surface">Edit Location</h2>
+            <h2 className="font-headline text-xl font-bold text-on-surface">
+              {isNew ? 'New Location' : 'Edit Location'}
+            </h2>
             <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
-              {location.name}
+              {isNew ? 'Add a location to the world' : location!.name}
             </p>
           </div>
           <button onClick={onClose} className="p-2 text-on-surface-variant hover:text-on-surface transition-colors">
@@ -272,7 +291,7 @@ export function LocationEditDrawer({ open, onClose, location }: Props) {
             ) : (
               <span className="material-symbols-outlined text-sm">save</span>
             )}
-            Save Changes
+            {isNew ? 'Create Location' : 'Save Changes'}
           </button>
         </div>
       </div>

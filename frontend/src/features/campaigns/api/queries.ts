@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { campaignRepository } from '@/shared/api/repositories/campaignRepository';
 
 export const useCampaigns = () =>
@@ -13,3 +13,12 @@ export const useCampaign = (id: string) =>
     queryFn: () => campaignRepository.getById(id),
     enabled: !!id,
   });
+
+export const useCreateCampaign = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (campaign: import('@/entities/campaign').CampaignSummary) =>
+      campaignRepository.save(campaign),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['campaigns'] }),
+  });
+};

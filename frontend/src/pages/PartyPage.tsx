@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useParty } from '@/features/characters/api/queries';
+import { CharacterEditDrawer } from '@/features/characters/ui';
 import { useSpecies } from '@/features/species/api';
 import type { PlayerCharacter } from '@/entities/character';
 
@@ -97,6 +98,7 @@ export default function PartyPage() {
   const { data: allSpecies } = useSpecies();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [addOpen, setAddOpen] = useState(false);
 
   const resolveSpeciesName = (char: PlayerCharacter) =>
     allSpecies?.find((s) => s.id === char.speciesId)?.name ?? char.species;
@@ -115,11 +117,14 @@ export default function PartyPage() {
       <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="font-headline text-4xl font-bold tracking-tight text-on-surface">The Fellowship</h1>
-            <p className="text-on-surface-variant text-sm mt-1">Campaign members and their characters.</p>
+            <h1 className="font-headline text-4xl font-bold tracking-tight text-on-surface">Party</h1>
+            <p className="text-on-surface-variant text-sm mt-1">The Fellowship — campaign members and their characters.</p>
           </div>
-          <button disabled className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-semibold rounded-sm opacity-50 cursor-not-allowed" title="Coming soon">
-            <span className="material-symbols-outlined text-[20px]">person_add</span>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined text-[18px]">person_add</span>
             <span className="font-label text-xs uppercase tracking-widest">Add Character</span>
           </button>
         </div>
@@ -198,6 +203,12 @@ export default function PartyPage() {
           </div>
         </div>
       )}
+
+      <CharacterEditDrawer
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        campaignId={campaignId ?? ''}
+      />
     </main>
   );
 }

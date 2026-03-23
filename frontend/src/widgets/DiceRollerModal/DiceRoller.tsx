@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { D20Icon } from '@/shared/ui';
 
 const DICE = [4, 6, 8, 10, 12, 20, 100] as const;
 type Die = typeof DICE[number];
@@ -187,9 +188,7 @@ export function DiceRoller() {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/10 flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              casino
-            </span>
+            <D20Icon className="w-5 h-5 text-primary" />
             <h2 className="font-headline text-base font-bold text-on-surface">Dice Roller</h2>
           </div>
           <button onClick={() => setOpen(false)} className="p-1 text-on-surface-variant hover:text-on-surface transition-colors">
@@ -385,7 +384,7 @@ export function DiceRoller() {
                 disabled={poolEmpty}
                 className="ml-auto flex-1 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary font-label text-[10px] uppercase tracking-widest rounded-sm font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <span className="material-symbols-outlined text-sm">casino</span>
+                <D20Icon className="w-3.5 h-3.5" />
                 Roll
               </button>
             </div>
