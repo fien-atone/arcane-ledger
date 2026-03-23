@@ -1,4 +1,5 @@
 export type NpcStatus = 'alive' | 'dead' | 'missing' | 'unknown' | 'hostile';
+export type NpcGender = 'male' | 'female' | 'nonbinary';
 
 export type NpcRelationType =
   | 'sibling'
@@ -35,6 +36,8 @@ export interface NPC {
   name: string;
   aliases: string[];
   status: NpcStatus;
+  gender?: NpcGender;
+  age?: number;
   species?: string;
   speciesId?: string;
   appearance?: string;

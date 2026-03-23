@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveNpc } from '@/features/npcs/api';
-import type { NPC, NpcStatus } from '@/entities/npc';
+import { useSpecies } from '@/features/species/api';
+import type { NPC, NpcGender, NpcStatus } from '@/entities/npc';
 
 interface Props {
   open: boolean;
@@ -38,12 +39,15 @@ const labelCls =
 
 export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   const save = useSaveNpc();
+  const { data: allSpecies } = useSpecies();
   const isEdit = !!npc;
 
   const [name, setName] = useState('');
   const [aliases, setAliases] = useState('');
   const [status, setStatus] = useState<NpcStatus>('alive');
-  const [species, setSpecies] = useState('');
+  const [speciesId, setSpeciesId] = useState('');
+  const [gender, setGender] = useState<NpcGender | ''>('');
+  const [age, setAge] = useState('');
   const [appearance, setAppearance] = useState('');
   const [personality, setPersonality] = useState('');
   const [description, setDescription] = useState('');
@@ -58,7 +62,9 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
       setName(npc.name);
       setAliases(fromArray(npc.aliases));
       setStatus(npc.status);
-      setSpecies(npc.species ?? '');
+      setSpeciesId(npc.speciesId ?? '');
+      setGender(npc.gender ?? '');
+      setAge(npc.age?.toString() ?? '');
       setAppearance(npc.appearance ?? '');
       setPersonality(npc.personality ?? '');
       setDescription(npc.description);
@@ -67,7 +73,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
       setGmNotes(npc.gmNotes ?? '');
       setLocations(fromArray(npc.locations));
     } else {
-      setName(''); setAliases(''); setStatus('alive'); setSpecies('');
+      setName(''); setAliases(''); setStatus('alive'); setSpeciesId(''); setGender(''); setAge('');
       setAppearance(''); setPersonality(''); setDescription('');
       setMotivation(''); setFlaws(''); setGmNotes(''); setLocations('');
     }
@@ -76,13 +82,17 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   const handleSave = () => {
     if (!name.trim()) return;
     const ts = now();
+    const selectedSpecies = allSpecies?.find((s) => s.id === speciesId);
     const record: NPC = {
       id: npc?.id ?? generateId(),
       campaignId,
       name: name.trim(),
       aliases: toArray(aliases),
       status,
-      species: species.trim() || undefined,
+      gender: gender || undefined,
+      age: age ? parseInt(age, 10) : undefined,
+      speciesId: selectedSpecies?.id,
+      species: selectedSpecies?.name,
       appearance: appearance.trim() || undefined,
       personality: personality.trim() || undefined,
       description: description.trim(),
@@ -162,11 +172,10 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
             />
           </div>
 
-          {/* Status + Species row */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Status / Gender / Age / Species row */}
+          <div className="grid grid-cols-4 gap-3">
             <div>
               <label className={labelCls}>Status</label>
-              {/* Custom select wrapper */}
               <div className="relative">
                 <select
                   value={status}
@@ -174,25 +183,54 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
                   className={`${inputCls} appearance-none pr-8 cursor-pointer`}
                 >
                   {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </option>
+                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                   ))}
                 </select>
-                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">
-                  unfold_more
-                </span>
+                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">unfold_more</span>
               </div>
             </div>
             <div>
-              <label className={labelCls}>Species</label>
+              <label className={labelCls}>Gender</label>
+              <div className="relative">
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value as NpcGender | '')}
+                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}
+                >
+                  <option value="">—</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="nonbinary">Non-binary</option>
+                </select>
+                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">unfold_more</span>
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>Age</label>
               <input
-                type="text"
-                value={species}
-                onChange={(e) => setSpecies(e.target.value)}
-                placeholder="Human, Elf…"
+                type="number"
+                min={0}
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="—"
                 className={inputCls}
               />
+            </div>
+            <div>
+              <label className={labelCls}>Species</label>
+              <div className="relative">
+                <select
+                  value={speciesId}
+                  onChange={(e) => setSpeciesId(e.target.value)}
+                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}
+                >
+                  <option value="">— None —</option>
+                  {(allSpecies ?? []).sort((a, b) => a.name.localeCompare(b.name)).map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">unfold_more</span>
+              </div>
             </div>
           </div>
 

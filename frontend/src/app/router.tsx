@@ -14,6 +14,7 @@ const SessionListPage = lazy(() => import('@/pages/SessionListPage'));
 const SessionDetailPage = lazy(() => import('@/pages/SessionDetailPage'));
 const LocationListPage = lazy(() => import('@/pages/LocationListPage'));
 const LocationDetailPage = lazy(() => import('@/pages/LocationDetailPage'));
+const GroupListPage = lazy(() => import('@/pages/GroupListPage'));
 const GroupDetailPage = lazy(() => import('@/pages/GroupDetailPage'));
 const QuestListPage = lazy(() => import('@/pages/QuestListPage'));
 const QuestDetailPage = lazy(() => import('@/pages/QuestDetailPage'));
@@ -21,6 +22,7 @@ const PartyPage = lazy(() => import('@/pages/PartyPage'));
 const CharacterDetailPage = lazy(() => import('@/pages/CharacterDetailPage'));
 const MaterialsPage = lazy(() => import('@/pages/MaterialsPage'));
 const SpeciesPage = lazy(() => import('@/pages/SpeciesPage'));
+const SpeciesDetailPage = lazy(() => import('@/pages/SpeciesDetailPage'));
 
 const Fallback = () => (
   <div className="flex h-screen items-center justify-center text-on-surface-variant">
@@ -63,7 +65,7 @@ export const router = createBrowserRouter(
             { path: 'sessions/:sessionId', element: withSuspense(SessionDetailPage) },
             { path: 'locations', element: withSuspense(LocationListPage) },
             { path: 'locations/:locationId', element: withSuspense(LocationDetailPage) },
-            { path: 'groups', element: withSuspense(GroupDetailPage) },
+            { path: 'groups', element: withSuspense(GroupListPage) },
             { path: 'groups/:groupId', element: withSuspense(GroupDetailPage) },
             { path: 'quests', element: withSuspense(QuestListPage) },
             { path: 'quests/:questId', element: withSuspense(QuestDetailPage) },
@@ -71,6 +73,7 @@ export const router = createBrowserRouter(
             { path: 'characters/:charId', element: withSuspense(CharacterDetailPage) },
             { path: 'materials', element: withSuspense(MaterialsPage) },
             { path: 'species', element: withSuspense(SpeciesPage) },
+            { path: 'species/:speciesId', element: withSuspense(SpeciesDetailPage) },
           ],
         },
       ],

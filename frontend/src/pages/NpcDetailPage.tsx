@@ -124,20 +124,31 @@ export default function NpcDetailPage() {
                     <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${st.pill}`}>
                       {st.label}
                     </span>
+                    {npc.gender && (
+                      <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                        {npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1)}
+                      </span>
+                    )}
+                    {npc.age != null && (
+                      <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                        Age {npc.age}
+                      </span>
+                    )}
                     {npc.species && (() => {
                       const matchedSpecies = allSpecies?.find(
                         (s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase()
                       );
+                      const displayName = matchedSpecies?.name ?? npc.species;
                       return matchedSpecies ? (
                         <Link
-                          to={`/campaigns/${campaignId}/species`}
+                          to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
                           className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10 hover:border-primary/30 hover:text-primary transition-colors"
                         >
-                          {npc.species}
+                          {displayName}
                         </Link>
                       ) : (
                         <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                          {npc.species}
+                          {displayName}
                         </span>
                       );
                     })()}

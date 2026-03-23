@@ -4,17 +4,44 @@ import { useCampaignUiStore } from '@/features/campaigns/model/store';
 import { useAuthStore } from '@/features/auth';
 import { ChangelogDrawer, getHasUnread } from '@/widgets/Changelog/ChangelogDrawer';
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', icon: 'dashboard', to: (id: string) => `/campaigns/${id}`, exact: true },
-  { label: 'NPCs', icon: 'group', to: (id: string) => `/campaigns/${id}/npcs`, exact: false },
-  { label: 'Locations', icon: 'location_on', to: (id: string) => `/campaigns/${id}/locations`, exact: false },
-  { label: 'Groups', icon: 'groups', to: (id: string) => `/campaigns/${id}/groups`, exact: false },
-  { label: 'Quests', icon: 'assignment', to: (id: string) => `/campaigns/${id}/quests`, exact: false },
-  { label: 'Sessions', icon: 'event', to: (id: string) => `/campaigns/${id}/sessions`, exact: false },
-  { label: 'Party', icon: 'groups', to: (id: string) => `/campaigns/${id}/party`, exact: false },
-  { label: 'Species', icon: 'blur_on', to: (id: string) => `/campaigns/${id}/species`, exact: false },
-  { label: 'Materials', icon: 'menu_book', to: (id: string) => `/campaigns/${id}/materials`, exact: false },
-] as const;
+interface NavItem {
+  label: string;
+  icon: string;
+  to: (id: string) => string;
+  exact: boolean;
+}
+
+interface NavSection {
+  section: string;
+  items: NavItem[];
+}
+
+const NAV: Array<NavItem | NavSection> = [
+  { label: 'Dashboard', icon: 'dashboard', to: (id) => `/campaigns/${id}`, exact: true },
+  {
+    section: 'World',
+    items: [
+      { label: 'Locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false },
+      { label: 'NPCs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false },
+      { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false },
+      { label: 'Groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false },
+    ],
+  },
+  {
+    section: 'Adventure',
+    items: [
+      { label: 'Sessions', icon: 'event', to: (id) => `/campaigns/${id}/sessions`, exact: false },
+      { label: 'Party', icon: 'shield_person', to: (id) => `/campaigns/${id}/party`, exact: false },
+      { label: 'Quests', icon: 'assignment', to: (id) => `/campaigns/${id}/quests`, exact: false },
+    ],
+  },
+  {
+    section: 'GM Screen',
+    items: [
+      { label: 'Materials', icon: 'menu_book', to: (id) => `/campaigns/${id}/materials`, exact: false },
+    ],
+  },
+];
 
 export function Sidebar() {
   const { id } = useParams<{ id: string }>();
@@ -71,9 +98,53 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden">
-        <ul className="space-y-0.5 px-2">
-          {NAV_ITEMS.map(({ label, icon, to, exact }) => {
+      <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
+        <ul className="px-2 space-y-0.5">
+          {NAV.map((entry) => {
+            if ('section' in entry) {
+              const { section, items } = entry;
+              return (
+                <li key={section}>
+                  {/* Section header */}
+                  {!collapsed ? (
+                    <p className="px-3 pt-4 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/35 select-none">
+                      {section}
+                    </p>
+                  ) : (
+                    <div className="mx-3 my-3 h-px bg-outline-variant/20" />
+                  )}
+                  <ul className="space-y-0.5">
+                    {items.map(({ label, icon, to, exact }) => {
+                      const href = id ? to(id) : '#';
+                      const active = id ? isActive(href, exact) : false;
+                      return (
+                        <li key={label}>
+                          <Link
+                            to={href}
+                            title={collapsed ? label : undefined}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-200 text-sm font-medium ${
+                              active
+                                ? 'text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary/10 to-transparent'
+                                : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
+                            }`}
+                          >
+                            <span
+                              className={`material-symbols-outlined flex-shrink-0 ${active ? 'text-primary' : ''}`}
+                              style={{ fontSize: '20px' }}
+                            >
+                              {icon}
+                            </span>
+                            {!collapsed && <span className="whitespace-nowrap">{label}</span>}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              );
+            }
+            // Top-level item (Dashboard)
+            const { label, icon, to, exact } = entry;
             const href = id ? to(id) : '#';
             const active = id ? isActive(href, exact) : false;
             return (
@@ -84,13 +155,11 @@ export function Sidebar() {
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-200 text-sm font-medium ${
                     active
                       ? 'text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary/10 to-transparent'
-                      : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300'
+                      : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
                   }`}
                 >
                   <span
-                    className={`material-symbols-outlined flex-shrink-0 ${
-                      active ? 'text-primary' : ''
-                    }`}
+                    className={`material-symbols-outlined flex-shrink-0 ${active ? 'text-primary' : ''}`}
                     style={{ fontSize: '20px' }}
                   >
                     {icon}

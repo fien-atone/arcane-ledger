@@ -138,7 +138,7 @@ export default function MaterialsPage() {
       <div className="flex flex-1 overflow-hidden min-h-0">
 
         {/* ── Left panel: list (35%) ───────────────────────────── */}
-        <div className="w-full lg:w-[35%] flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-y-auto">
+        <div className="w-full lg:w-[580px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-y-auto">
 
           {/* Search */}
           <div className="p-4 border-b border-outline-variant/10 flex-shrink-0">

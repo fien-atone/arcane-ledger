@@ -46,14 +46,10 @@ export default function GroupDetailPage() {
     n.groupMemberships.some((m) => m.groupId === groupId)
   ) ?? [];
 
-  const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  const displayGroup = group;
-  const displayId = groupId;
-
-  const relation = displayGroup?.partyRelation
-    ? (RELATION_CONFIG[displayGroup.partyRelation] ?? RELATION_CONFIG.unknown)
+  const relation = group?.partyRelation
+    ? (RELATION_CONFIG[group.partyRelation] ?? RELATION_CONFIG.unknown)
     : null;
 
   if (isLoading) {
@@ -65,106 +61,13 @@ export default function GroupDetailPage() {
     );
   }
 
-  // No group selected — show list
-  if (!displayId || isError || !displayGroup) {
+  if (isError || !group) {
     return (
-      <main className="flex-1 min-h-screen bg-surface">
-        <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">
-                Groups
-              </h1>
-              <p className="text-on-surface-variant text-sm mt-1">
-                Factions, guilds, families, and other social structures.
-              </p>
-              {groups && groups.length > 0 && (
-                <div className="flex gap-6 mt-4">
-                  <div>
-                    <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/50">Total</p>
-                    <p className="text-base font-headline font-bold text-on-surface">{groups.length}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => setAddOpen(true)}
-              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              <span className="font-label text-xs uppercase tracking-widest">Add Group</span>
-            </button>
-          </div>
-        </header>
-
-        <div className="px-10 py-10 pb-24 max-w-5xl">
-          {groups && groups.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {groups.map((g) => {
-                const rel = g.partyRelation
-                  ? (RELATION_CONFIG[g.partyRelation] ?? RELATION_CONFIG.unknown)
-                  : null;
-                const tc = TYPE_CONFIG[g.type];
-                return (
-                  <Link
-                    key={g.id}
-                    to={`/campaigns/${campaignId}/groups/${g.id}`}
-                    className="group bg-surface-container-low hover:bg-surface-container border-b border-outline-variant/10 p-6 transition-all duration-200"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors">
-                          {tc.icon}
-                        </span>
-                        <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 font-bold">
-                          {tc.label}
-                        </span>
-                      </div>
-                      {rel && (
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${rel.pill}`}>
-                          {rel.label}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-headline text-xl text-on-surface group-hover:text-primary transition-colors mb-2 leading-tight">
-                      {g.name}
-                    </h3>
-                    {g.aliases.length > 0 && (
-                      <p className="text-[10px] text-on-surface-variant/40 italic mb-3">
-                        aka {g.aliases.join(', ')}
-                      </p>
-                    )}
-                    <p className="text-xs text-on-surface-variant/70 leading-relaxed line-clamp-2">
-                      {g.description}
-                    </p>
-                    <div className="mt-4 flex items-center gap-1 text-[10px] text-primary/50 group-hover:text-primary transition-colors uppercase tracking-widest">
-                      View details
-                      <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-24 flex flex-col items-center gap-4">
-              <span className="material-symbols-outlined text-on-surface-variant/20 text-6xl">
-                groups
-              </span>
-              <p className="font-headline text-2xl text-on-surface-variant">No groups recorded.</p>
-            </div>
-          )}
-        </div>
-
-        <GroupEditDrawer
-          open={addOpen}
-          onClose={() => setAddOpen(false)}
-          campaignId={campaignId ?? ''}
-        />
-      </main>
+      <main className="p-12 text-on-surface-variant text-sm">Group not found.</main>
     );
   }
 
-  const tc = TYPE_CONFIG[displayGroup.type];
+  const tc = TYPE_CONFIG[group.type];
 
   return (
     <main className="flex-1 min-h-screen bg-surface">
@@ -185,7 +88,7 @@ export default function GroupDetailPage() {
           {/* ── Left column (65%) ──────────────────────────────── */}
           <div className="lg:w-[65%] space-y-12">
 
-            <GroupHero name={displayGroup.name} />
+            <GroupHero name={group.name} />
 
             {/* Header */}
             <header className="space-y-4">
@@ -201,11 +104,11 @@ export default function GroupDetailPage() {
                 )}
               </div>
               <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
-                {displayGroup.name}
+                {group.name}
               </h1>
-              {displayGroup.aliases.length > 0 && (
+              {group.aliases.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {displayGroup.aliases.map((alias) => (
+                  {group.aliases.map((alias) => (
                     <span key={alias} className="text-xs text-on-surface-variant bg-surface-container px-3 py-1 border border-outline-variant/20 italic">
                       "{alias}"
                     </span>
@@ -220,30 +123,30 @@ export default function GroupDetailPage() {
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">About</h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
               </div>
-              <p className="text-on-surface-variant leading-loose text-base">{displayGroup.description}</p>
+              <p className="text-on-surface-variant leading-loose text-base">{group.description}</p>
             </section>
 
             {/* Goals */}
-            {displayGroup.goals && (
+            {group.goals && (
               <section className="space-y-4">
                 <div className="flex items-center gap-4">
                   <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Goals</h2>
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>
                 <div className="bg-surface-container-low p-6 border-l-2 border-primary/30">
-                  <p className="text-on-surface-variant leading-relaxed italic">{displayGroup.goals}</p>
+                  <p className="text-on-surface-variant leading-relaxed italic">{group.goals}</p>
                 </div>
               </section>
             )}
 
             {/* Symbols */}
-            {displayGroup.symbols && (
+            {group.symbols && (
               <section className="space-y-4">
                 <div className="flex items-center gap-4">
                   <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Symbols & Insignia</h2>
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>
-                <p className="text-on-surface-variant leading-relaxed">{displayGroup.symbols}</p>
+                <p className="text-on-surface-variant leading-relaxed">{group.symbols}</p>
               </section>
             )}
 
@@ -258,7 +161,7 @@ export default function GroupDetailPage() {
                   <h3 className="text-sm font-bold uppercase tracking-widest text-primary">GM Notes</h3>
                 </div>
                 <p className="text-on-surface-variant text-sm leading-relaxed italic">
-                  {displayGroup.gmNotes ?? `No GM notes for ${displayGroup.name} yet.`}
+                  {group.gmNotes ?? `No GM notes for ${group.name} yet.`}
                 </p>
               </div>
             </section>
@@ -266,7 +169,7 @@ export default function GroupDetailPage() {
             {/* Social Relations */}
             <SocialRelationsSection
               campaignId={campaignId ?? ''}
-              entityId={displayId}
+              entityId={groupId ?? ''}
             />
           </div>
 
@@ -302,7 +205,7 @@ export default function GroupDetailPage() {
                 )}
                 <div className="flex justify-between text-[11px]">
                   <span className="text-on-surface-variant/60 italic">Known Aliases</span>
-                  <span className="text-on-surface">{displayGroup.aliases.length}</span>
+                  <span className="text-on-surface">{group.aliases.length}</span>
                 </div>
               </div>
             </div>
@@ -367,12 +270,12 @@ export default function GroupDetailPage() {
             </section>
 
             {/* Other groups in campaign */}
-            {groups && groups.filter((g) => g.id !== displayGroup.id).length > 0 && (
+            {groups && groups.filter((g) => g.id !== group.id).length > 0 && (
               <section className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40">Other Groups</h4>
                 <div className="space-y-2">
                   {groups
-                    .filter((g) => g.id !== displayGroup.id)
+                    .filter((g) => g.id !== group.id)
                     .map((g) => {
                       const gtc = TYPE_CONFIG[g.type];
                       return (
@@ -405,7 +308,7 @@ export default function GroupDetailPage() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         campaignId={campaignId ?? ''}
-        group={displayGroup}
+        group={group}
       />
     </main>
   );

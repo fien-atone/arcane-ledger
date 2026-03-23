@@ -80,16 +80,17 @@ export default function CharacterDetailPage() {
                 const matchedSpecies = allSpecies?.find(
                   (s) => s.id === character.speciesId || s.name.toLowerCase() === character.species?.toLowerCase()
                 );
+                const displayName = matchedSpecies?.name ?? character.species;
                 return matchedSpecies ? (
                   <Link
-                    to={`/campaigns/${campaignId}/species`}
+                    to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
                     className="text-secondary text-sm font-label uppercase tracking-widest border-b border-secondary/20 pb-1 hover:text-primary hover:border-primary/20 transition-colors"
                   >
-                    {character.species}
+                    {displayName}
                   </Link>
                 ) : (
                   <span className="text-secondary text-sm font-label uppercase tracking-widest border-b border-secondary/20 pb-1">
-                    {character.species}
+                    {displayName}
                   </span>
                 );
               })()}
@@ -267,17 +268,27 @@ export default function CharacterDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               {character.species && (
                 <div className="bg-surface-container-lowest p-4 border border-outline-variant/5">
-                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">
-                    Species
+                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">Species</p>
+                  <p className="text-sm font-headline">{allSpecies?.find(s => s.id === character.speciesId)?.name ?? character.species}</p>
+                </div>
+              )}
+              {character.gender && (
+                <div className="bg-surface-container-lowest p-4 border border-outline-variant/5">
+                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">Gender</p>
+                  <p className="text-sm font-headline">
+                    {character.gender === 'nonbinary' ? 'Non-binary' : character.gender.charAt(0).toUpperCase() + character.gender.slice(1)}
                   </p>
-                  <p className="text-sm font-headline">{character.species}</p>
+                </div>
+              )}
+              {character.age != null && (
+                <div className="bg-surface-container-lowest p-4 border border-outline-variant/5">
+                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">Age</p>
+                  <p className="text-sm font-headline">{character.age}</p>
                 </div>
               )}
               {character.class && (
                 <div className="bg-surface-container-lowest p-4 border border-outline-variant/5">
-                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">
-                    Class
-                  </p>
+                  <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant mb-1">Class</p>
                   <p className="text-sm font-headline">{character.class}</p>
                 </div>
               )}

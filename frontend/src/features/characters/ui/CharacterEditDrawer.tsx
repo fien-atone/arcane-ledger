@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveCharacter } from '@/features/characters/api/queries';
-import type { PlayerCharacter } from '@/entities/character';
+import { useSpecies } from '@/features/species/api';
+import type { PlayerCharacter, CharacterGender } from '@/entities/character';
 
 interface Props {
   open: boolean;
@@ -21,9 +22,12 @@ const labelCls =
 
 export function CharacterEditDrawer({ open, onClose, character }: Props) {
   const save = useSaveCharacter();
+  const { data: allSpecies } = useSpecies();
 
   const [name, setName] = useState('');
-  const [species, setSpecies] = useState('');
+  const [speciesId, setSpeciesId] = useState('');
+  const [gender, setGender] = useState<CharacterGender | ''>('');
+  const [age, setAge] = useState('');
   const [cls, setCls] = useState('');
   const [appearance, setAppearance] = useState('');
   const [background, setBackground] = useState('');
@@ -36,7 +40,9 @@ export function CharacterEditDrawer({ open, onClose, character }: Props) {
   useEffect(() => {
     if (!open) return;
     setName(character.name);
-    setSpecies(character.species ?? '');
+    setSpeciesId(character.speciesId ?? '');
+    setGender(character.gender ?? '');
+    setAge(character.age?.toString() ?? '');
     setCls(character.class ?? '');
     setAppearance(character.appearance ?? '');
     setBackground(character.background ?? '');
@@ -49,10 +55,14 @@ export function CharacterEditDrawer({ open, onClose, character }: Props) {
 
   const handleSave = () => {
     if (!name.trim()) return;
+    const selectedSpecies = allSpecies?.find((s) => s.id === speciesId);
     const record: PlayerCharacter = {
       ...character,
       name: name.trim(),
-      species: species.trim() || undefined,
+      gender: gender || undefined,
+      age: age ? parseInt(age, 10) : undefined,
+      species: selectedSpecies?.name,
+      speciesId: selectedSpecies?.id,
       class: cls.trim() || undefined,
       appearance: appearance.trim() || undefined,
       background: background.trim() || undefined,
@@ -95,15 +105,54 @@ export function CharacterEditDrawer({ open, onClose, character }: Props) {
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
           </div>
 
-          {/* Species + Class */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Gender / Age / Species / Class */}
+          <div className="grid grid-cols-4 gap-3">
+            <div>
+              <label className={labelCls}>Gender</label>
+              <div className="relative">
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value as CharacterGender | '')}
+                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}
+                >
+                  <option value="">—</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="nonbinary">Non-binary</option>
+                </select>
+                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">unfold_more</span>
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>Age</label>
+              <input
+                type="number"
+                min={0}
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="—"
+                className={inputCls}
+              />
+            </div>
             <div>
               <label className={labelCls}>Species</label>
-              <input type="text" value={species} onChange={(e) => setSpecies(e.target.value)} placeholder="Human, Elf…" className={inputCls} />
+              <div className="relative">
+                <select
+                  value={speciesId}
+                  onChange={(e) => setSpeciesId(e.target.value)}
+                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}
+                >
+                  <option value="">— None —</option>
+                  {(allSpecies ?? []).sort((a, b) => a.name.localeCompare(b.name)).map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">unfold_more</span>
+              </div>
             </div>
             <div>
               <label className={labelCls}>Class</label>
-              <input type="text" value={cls} onChange={(e) => setCls(e.target.value)} placeholder="Wizard, Paladin…" className={inputCls} />
+              <input type="text" value={cls} onChange={(e) => setCls(e.target.value)} placeholder="Wizard…" className={inputCls} />
             </div>
           </div>
 

@@ -1,8 +1,12 @@
+export type CharacterGender = 'male' | 'female' | 'nonbinary';
+
 export interface PlayerCharacter {
   id: string;
   campaignId: string;
   userId: string;
   name: string;
+  gender?: CharacterGender;
+  age?: number;
   species?: string;
   speciesId?: string;
   class?: string;
