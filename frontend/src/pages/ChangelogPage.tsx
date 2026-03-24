@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CHANGELOG } from '@/shared/changelog/entries';
-import { Footer } from '@/shared/ui';
+import { Footer, BackLink } from '@/shared/ui';
 
 const TAG_STYLES = {
   new: 'bg-secondary/10 text-secondary border border-secondary/20',
@@ -33,10 +33,7 @@ export default function ChangelogPage() {
 
         {/* Header */}
         <div className="mb-16">
-          <Link to="/" className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors mb-8">
-            <span className="material-symbols-outlined text-sm">chevron_left</span>
-            Back
-          </Link>
+          <BackLink to="/">Back</BackLink>
           <span className="text-[10px] font-label uppercase tracking-widest text-primary block mb-3">Release history</span>
           <h1 className="font-headline text-5xl font-bold text-on-surface">Changelog</h1>
           <p className="text-on-surface-variant mt-3">What's been built, fixed, and improved in Arcane Ledger.</p>

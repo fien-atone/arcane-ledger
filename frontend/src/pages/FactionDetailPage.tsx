@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useFactions, useFaction } from '@/features/factions/api';
+import { BackLink, GmNotesSection } from '@/shared/ui';
 function FactionHero({ name }: { name: string }) {
   const initials = name
     .split(' ')
@@ -144,13 +145,7 @@ export default function FactionDetailPage() {
     <main className="flex-1 min-h-screen bg-surface">
       {/* Breadcrumb */}
       <div className="px-10 pt-8">
-        <Link
-          to={`/campaigns/${campaignId}/factions`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Factions
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/factions`}>Factions</BackLink>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
@@ -234,27 +229,7 @@ export default function FactionDetailPage() {
             )}
 
             {/* GM Notes */}
-            <section className="bg-surface-container-low p-8 border border-primary/20 rounded-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className="material-symbols-outlined text-6xl text-primary">lock</span>
-              </div>
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <span
-                    className="material-symbols-outlined text-primary text-sm"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    lock
-                  </span>
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-primary">
-                    GM Notes
-                  </h3>
-                </div>
-                <p className="text-on-surface-variant text-sm leading-relaxed italic">
-                  Private GM notes for {displayFaction.name}. Editable in a future update.
-                </p>
-              </div>
-            </section>
+            <GmNotesSection notes={null} fallback={`Private GM notes for ${displayFaction.name}. Editable in a future update.`} />
           </div>
 
           {/* ── Right column (35%) ──────────────────────────────── */}

@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuest, useQuests } from '@/features/quests/api';
 import { useNpcs } from '@/features/npcs/api/queries';
+import { BackLink } from '@/shared/ui';
 import type { QuestStatus } from '@/entities/quest';
 
 const STATUS_CONFIG: Record<QuestStatus, { label: string; pill: string }> = {
@@ -52,13 +53,7 @@ export default function QuestDetailPage() {
   if (isError || !quest) {
     return (
       <main className="p-12">
-        <Link
-          to={`/campaigns/${campaignId}/quests`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest mb-8"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Quests
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/quests`}>Quests</BackLink>
         <p className="text-tertiary text-sm">Quest not found.</p>
       </main>
     );
@@ -78,13 +73,7 @@ export default function QuestDetailPage() {
     <main className="flex-1 min-h-screen bg-surface">
       {/* Breadcrumb */}
       <div className="px-10 pt-8">
-        <Link
-          to={`/campaigns/${campaignId}/quests`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          All Quests
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/quests`}>All Quests</BackLink>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">

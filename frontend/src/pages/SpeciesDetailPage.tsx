@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useSpeciesById } from '@/features/species/api';
 import { SpeciesEditDrawer } from '@/features/species/ui';
+import { BackLink } from '@/shared/ui';
 import type { SpeciesSize, SpeciesType } from '@/entities/species';
 
 const TYPE_LABEL: Record<SpeciesType, string> = {
@@ -42,13 +43,7 @@ export default function SpeciesDetailPage() {
     <main className="flex-1 min-h-screen bg-surface">
       {/* Breadcrumb */}
       <div className="px-10 pt-8">
-        <Link
-          to={`/campaigns/${campaignId}/species`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Species
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/species`}>Species</BackLink>
       </div>
 
       <div className="max-w-3xl px-10 py-8 pb-20">

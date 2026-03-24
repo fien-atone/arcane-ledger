@@ -3,3 +3,7 @@ export { ImageUpload } from './ImageUpload';
 export { Select } from './Select';
 export type { SelectOption } from './Select';
 export { D20Icon } from './D20Icon';
+export { LoadingSpinner } from './LoadingSpinner';
+export { BackLink } from './BackLink';
+export { GmNotesSection } from './GmNotesSection';
+export { SectionLabel } from './SectionLabel';

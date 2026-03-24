@@ -4,6 +4,7 @@ import { useLocation, useLocations, useSaveLocation } from '@/features/locations
 import { LocationEditDrawer } from '@/features/locations/ui';
 import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useSessions } from '@/features/sessions/api';
+import { GmNotesSection } from '@/shared/ui';
 import type { Location, LocationType, MapMarker, SettlementType, Climate } from '@/entities/location';
 import type { NPC } from '@/entities/npc';
 
@@ -1761,25 +1762,7 @@ export default function LocationDetailPage() {
             </div>
 
             {/* GM Notes */}
-            <div className="relative">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/40 shadow-[4px_0_12px_rgba(242,202,80,0.15)]" />
-              <div className="bg-surface-container p-6 space-y-4">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="material-symbols-outlined text-primary text-lg"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    lock
-                  </span>
-                  <h4 className="text-[10px] font-label uppercase tracking-widest text-primary">
-                    GM Notes
-                  </h4>
-                </div>
-                <p className="text-sm text-on-surface-variant/90 leading-relaxed italic">
-                  {location.gmNotes ?? 'No GM notes.'}
-                </p>
-              </div>
-            </div>
+            <GmNotesSection variant="sidebar" notes={location.gmNotes} fallback="No GM notes." />
 
           </div>
         </div>

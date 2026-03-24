@@ -5,7 +5,7 @@ import { GroupEditDrawer } from '@/features/groups/ui';
 import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload } from '@/shared/ui';
+import { ImageUpload, BackLink, GmNotesSection } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<string, { label: string; pill: string; icon: string }> = {
@@ -230,13 +230,7 @@ export default function GroupDetailPage() {
     <main className="flex-1 min-h-screen bg-surface">
       {/* Breadcrumb */}
       <div className="px-10 pt-8">
-        <Link
-          to={`/campaigns/${campaignId}/groups`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Groups
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/groups`}>Groups</BackLink>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
@@ -394,20 +388,7 @@ export default function GroupDetailPage() {
             </section>
 
             {/* GM Notes */}
-            <section className="bg-surface-container-low p-8 border border-primary/20 rounded-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className="material-symbols-outlined text-6xl text-primary">lock</span>
-              </div>
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-primary">GM Notes</h3>
-                </div>
-                <p className="text-on-surface-variant text-sm leading-relaxed italic">
-                  {group.gmNotes ?? `No GM notes for ${group.name} yet.`}
-                </p>
-              </div>
-            </section>
+            <GmNotesSection notes={group.gmNotes} fallback={`No GM notes for ${group.name} yet.`} />
 
             {/* Social Relations */}
             <SocialRelationsSection

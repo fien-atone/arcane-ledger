@@ -5,7 +5,7 @@ import { useGroups } from '@/features/groups/api';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload } from '@/shared/ui';
+import { ImageUpload, BackLink, GmNotesSection } from '@/shared/ui';
 import type { NpcStatus, NpcRelationType } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
@@ -86,13 +86,7 @@ export default function NpcDetailPage() {
     <main className="flex-1 min-h-screen bg-surface">
       {/* Back breadcrumb */}
       <div className="px-10 pt-8">
-        <Link
-          to={`/campaigns/${campaignId}/npcs`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          NPC Roster
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/npcs`}>NPC Roster</BackLink>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
@@ -479,25 +473,7 @@ export default function NpcDetailPage() {
             </div>
 
             {/* GM Notes */}
-            <div className="relative">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/40 shadow-[4px_0_12px_rgba(242,202,80,0.15)]" />
-              <div className="bg-surface-container p-6 space-y-4">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="material-symbols-outlined text-primary text-lg"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    lock
-                  </span>
-                  <h4 className="text-[10px] font-label uppercase tracking-widest text-primary">
-                    GM Notes
-                  </h4>
-                </div>
-                <p className="text-sm text-on-surface-variant/90 leading-relaxed italic">
-                  {npc.gmNotes ?? `No GM notes for ${npc.name} yet.`}
-                </p>
-              </div>
-            </div>
+            <GmNotesSection variant="sidebar" notes={npc.gmNotes} fallback={`No GM notes for ${npc.name} yet.`} />
 
             {/* Quick stat grid */}
             <div className="grid grid-cols-2 gap-2">

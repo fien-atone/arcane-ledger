@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useSessions } from '@/features/sessions/api/queries';
+import { BackLink } from '@/shared/ui';
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -25,13 +26,7 @@ export default function SessionDetailPage() {
   if (isError || !session) {
     return (
       <main className="p-12">
-        <Link
-          to={`/campaigns/${campaignId}/sessions`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest mb-8"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Sessions
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/sessions`}>Sessions</BackLink>
         <p className="text-tertiary text-sm">Session not found.</p>
       </main>
     );
@@ -52,13 +47,7 @@ export default function SessionDetailPage() {
     <main className="flex-1 min-h-screen bg-surface">
       {/* Back breadcrumb */}
       <div className="px-10 pt-8">
-        <Link
-          to={`/campaigns/${campaignId}/sessions`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          All Sessions
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/sessions`}>All Sessions</BackLink>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">

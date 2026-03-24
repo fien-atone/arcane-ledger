@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
@@ -7,7 +7,7 @@ import { useParty, useSaveCharacter } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload } from '@/shared/ui';
+import { ImageUpload, BackLink } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
 
 // ── WYSIWYG inline field ─────────────────────────────────────────────────────
@@ -220,11 +220,7 @@ export default function CharacterDetailPage() {
   if (isError || !character) {
     return (
       <main className="p-12">
-        <Link to={`/campaigns/${campaignId}/party`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest mb-8">
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Party
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/party`}>Party</BackLink>
         <p className="text-tertiary text-sm">Character not found.</p>
       </main>
     );
@@ -248,11 +244,7 @@ export default function CharacterDetailPage() {
   return (
     <main className="flex-1 min-h-screen bg-surface">
       <div className="px-10 pt-8">
-        <Link to={`/campaigns/${campaignId}/party`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors">
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Party
-        </Link>
+        <BackLink to={`/campaigns/${campaignId}/party`}>Party</BackLink>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
