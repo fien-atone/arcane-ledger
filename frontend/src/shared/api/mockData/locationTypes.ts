@@ -21,7 +21,7 @@ export const MOCK_LOCATION_TYPES: LocationTypeEntry[] = [
   { id: 'building',   name: 'Building',   icon: 'domain',         category: 'interior',   biomeOptions: [],                                                                     isSettlement: false, builtin: true, createdAt: ts },
   { id: 'dungeon',    name: 'Dungeon',    icon: 'skull',          category: 'explorable', biomeOptions: [],                                                                     isSettlement: false, builtin: true, createdAt: ts },
   { id: 'landmark',   name: 'Landmark',   icon: 'place',          category: 'explorable', biomeOptions: [],                                                                     isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'route',      name: 'Route',      icon: 'route',          category: 'linear',     biomeOptions: ['road', 'trade_route', 'river_route', 'sea_lane', 'mountain_pass', 'tunnel'], isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'route',      name: 'Route',      icon: 'route',          category: 'travel',     biomeOptions: ['road', 'trade_route', 'river_route', 'sea_lane', 'mountain_pass', 'tunnel'], isSettlement: false, builtin: true, createdAt: ts },
 ];
 
 // ── Containment rules (from the matrix in METAMODEL.md) ───────────────────────

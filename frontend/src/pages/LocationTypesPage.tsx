@@ -24,17 +24,17 @@ const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] 
   { value: 'geographic', label: 'Geographic',  dot: 'bg-emerald-400' },
   { value: 'interior',   label: 'Interior',    dot: 'bg-amber-400' },
   { value: 'explorable', label: 'Explorable',  dot: 'bg-rose-400' },
-  { value: 'linear',     label: 'Linear',      dot: 'bg-violet-400' },
+  { value: 'travel',     label: 'Travel',      dot: 'bg-violet-400' },
 ];
 
-const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'geographic', 'interior', 'explorable', 'linear'];
+const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'geographic', 'interior', 'explorable', 'travel'];
 
 const CATEGORY_BADGE: Record<LocationTypeCategory, string> = {
   world:      'text-blue-300 bg-blue-950/60 border-blue-400/25',
   geographic: 'text-emerald-300 bg-emerald-950/60 border-emerald-400/25',
   interior:   'text-amber-300 bg-amber-950/60 border-amber-400/25',
   explorable: 'text-rose-300 bg-rose-950/60 border-rose-400/25',
-  linear:     'text-violet-300 bg-violet-950/60 border-violet-400/25',
+  travel:     'text-violet-300 bg-violet-950/60 border-violet-400/25',
 };
 
 const CATEGORY_ICON: Record<LocationTypeCategory, string> = {
@@ -42,7 +42,7 @@ const CATEGORY_ICON: Record<LocationTypeCategory, string> = {
   geographic: 'text-emerald-400',
   interior:   'text-amber-400',
   explorable: 'text-rose-400',
-  linear:     'text-violet-400',
+  travel:     'text-violet-400',
 };
 
 const CONNECTION_TYPES = [

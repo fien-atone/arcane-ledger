@@ -17,7 +17,7 @@ const TYPES_KEY    = 'ttrpg_location_types';
 const CONTAIN_KEY  = 'ttrpg_location_containment_rules';
 const CONNECT_KEY  = 'ttrpg_location_connection_rules';
 const VERSION_KEY  = 'ttrpg_location_types_version';
-const VERSION      = '1';
+const VERSION      = '2'; // v2: renamed category 'linear' → 'travel'
 
 // ── Generic helpers ───────────────────────────────────────────────────────────
 
