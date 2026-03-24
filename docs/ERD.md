@@ -45,6 +45,20 @@ erDiagram
     string createdAt
   }
 
+  %% type values:
+  %%   plane, continent, ocean, region,
+  %%   wilderness, water, highland,
+  %%   settlement, district, building,
+  %%   dungeon, landmark, route
+  %%
+  %% biome values (by type):
+  %%   ocean  → ocean | sea | strait | gulf
+  %%   wilderness → forest | swamp | desert | plains | tundra | jungle | badlands | savanna
+  %%   highland   → mountain_range | peak | plateau | valley | pass
+  %%   region     → island | peninsula  (when in water context)
+  %%   route      → road | trade_route | river_route | sea_lane | mountain_pass | tunnel
+  %%   water      → lake | river | bay | delta | marsh
+
   MapMarker {
     string id PK
     string locationId FK
@@ -63,6 +77,13 @@ erDiagram
     string travelTime
     string note
   }
+
+  %% LocationConnection.type values:
+  %%   road | path | river | sea_route | border | portal | tunnel | mountain_pass
+  %%
+  %% LocationConnection is unrestricted — any location type can connect to any other.
+  %% A continent connects to an ocean. A town connects to a road (route).
+  %% The type field describes the nature of the link, not the endpoint types.
 
   Species {
     string id PK
@@ -263,43 +284,66 @@ erDiagram
 ## Location Type Taxonomy
 
 ```
-region
-├── wilderness   biome: forest | swamp | desert | plains | tundra | jungle | badlands | savanna
-│   └── landmark
-├── water        biome: lake | river | sea | bay | ocean | delta | marsh
-├── highland     biome: mountain_range | peak | plateau | valley | pass
-│   └── landmark
-├── settlement   settlementType: village | town | city | metropolis
-│   ├── district
-│   │   └── building
-│   └── dungeon
-├── dungeon      (standalone — cave system, ancient tomb)
-├── landmark     (singular feature — monument, ruined tower, shrine)
-└── route        biome: road | trade_route | river_route | sea_lane | mountain_pass | tunnel
+plane               (Material Plane, Feywild, Shadowfell — optional top level)
+├── continent       large landmass
+│   ├── region      kingdom, province, territory
+│   │   ├── wilderness   biome: forest|swamp|desert|plains|tundra|jungle|badlands|savanna
+│   │   │   └── landmark
+│   │   ├── highland     biome: mountain_range|peak|plateau|valley|pass
+│   │   │   └── landmark
+│   │   ├── water        biome: lake|river|bay|delta|marsh  (sub-regional)
+│   │   ├── settlement   size: village|town|city|metropolis
+│   │   │   ├── district
+│   │   │   │   └── building
+│   │   │   └── dungeon
+│   │   ├── dungeon      standalone (cave, tomb, ruin interior)
+│   │   ├── landmark     monument, ruined tower, shrine
+│   │   └── route        biome: road|trade_route|river_route|sea_lane|mountain_pass|tunnel
+│   │       └── landmark  wayshrine, toll gate, bridge
+│   └── ocean       biome: ocean|sea|strait|gulf
+│       └── region  biome: island  ← island = region in water context
+│           └── [full land hierarchy]
+└── ocean           top-level if no continent parent
 ```
-
-`biome` applies only to `wilderness`, `water`, `highland`, `route`. All other types ignore it.
 
 ### Containment Matrix
 
-Which location types can be children of which. `✓` = valid parent-child, `—` = invalid.
+`✓` = valid parent-child, `—` = invalid.
 
-| Parent ↓ · Child → | region | wilderness | water | highland | settlement | district | building | dungeon | landmark | route |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **region** | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
-| **wilderness** | — | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | ✓ |
-| **water** | — | — | ✓ | — | — | — | — | — | ✓ | — |
-| **highland** | — | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
-| **settlement** | — | — | — | — | — | ✓ | ✓ | ✓ | ✓ | — |
-| **district** | — | — | — | — | — | — | ✓ | ✓ | ✓ | — |
-| **building** | — | — | — | — | — | — | ✓ | ✓ | — | — |
-| **dungeon** | — | — | — | — | — | — | — | ✓ | ✓ | — |
-| **landmark** | — | — | — | — | — | — | ✓ | ✓ | — | — |
-| **route** | — | — | — | — | — | — | — | — | ✓ | — |
+| Parent ↓ · Child → | plane | continent | ocean | region | wilderness | water | highland | settlement | district | building | dungeon | landmark | route |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **plane** | — | ✓ | ✓ | ✓ | — | — | — | — | — | — | — | — | — |
+| **continent** | — | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **ocean** | — | — | ✓ | ✓ | — | — | — | — | — | — | — | ✓ | — |
+| **region** | — | — | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **wilderness** | — | — | — | — | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | ✓ |
+| **water** | — | — | — | — | — | ✓ | — | — | — | — | — | ✓ | — |
+| **highland** | — | — | — | — | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **settlement** | — | — | — | — | — | — | — | — | ✓ | ✓ | ✓ | ✓ | — |
+| **district** | — | — | — | — | — | — | — | — | — | ✓ | ✓ | ✓ | — |
+| **building** | — | — | — | — | — | — | — | — | — | ✓ | ✓ | — | — |
+| **dungeon** | — | — | — | — | — | — | — | — | — | — | ✓ | ✓ | — |
+| **landmark** | — | — | — | — | — | — | — | — | — | ✓ | ✓ | — | — |
+| **route** | — | — | — | — | — | — | — | — | — | — | — | ✓ | — |
 
-A location with no `parentLocationId` is top-level (typically `region` or standalone `dungeon`).
+Top-level locations (no parent): `plane`, `continent`, `ocean`, or standalone `region`/`dungeon`.
 
 ---
+
+## LocationConnection: unrestricted graph edges
+
+`LocationConnection` places no restrictions on which location types can be connected. Any location can connect to any other — the `type` field describes the nature of the link:
+
+| type | Example |
+|---|---|
+| `road` | Town ↔ Town via a named road |
+| `path` | Village ↔ Wilderness landmark |
+| `river` | Region ↔ Region along a river |
+| `sea_route` | Continent ↔ Ocean, Island ↔ Mainland |
+| `border` | Continent borders an ocean; two regions share a frontier |
+| `portal` | Dungeon ↔ Plane (magical gate) |
+| `tunnel` | Settlement ↔ Dungeon (underground passage) |
+| `mountain_pass` | Region ↔ Region through a highland |
 
 ## LocationConnection: dual-representation of named routes
 

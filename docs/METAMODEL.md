@@ -18,84 +18,125 @@ The top-level container. Every entity belongs to exactly one campaign.
 ### World Entities (the setting)
 
 #### Location
-A place in the game world. Locations are **hierarchical** — any location can have a parent — but the hierarchy is flexible by design: not all types must nest the same way.
+A place in the game world. The location model has two orthogonal structures:
 
-**Location geometry** — three fundamentally different kinds:
+- **Hierarchy** (`parentLocationId`) — containment tree, with rules on which types can contain which
+- **Graph** (`LocationConnection`) — unrestricted edges between any two locations
 
-| Geometry | Description | Types |
-|---|---|---|
-| **Containment** | A place with "inside" — can hold other locations and NPCs | `region`, `settlement`, `district`, `building`, `dungeon`, `landmark`, `wilderness`, `water`, `highland` |
-| **Linear** | Connects two points; has start and end | `route` |
+Both coexist. A continent is a child of a plane (hierarchy) and also connects to an ocean (graph).
 
-All types participate in the parent-child hierarchy. A `route` is a child of the region it passes through; its connection endpoints are expressed via `LocationConnection`.
+---
 
 **Type taxonomy:**
 
 ```
-region          — large political/geographic area (continent, country, province, island)
+plane               — multiverse container (Material Plane, Feywild, Shadowfell, Nine Hells)
+│                     optional — campaigns that stay in one world may omit this level
 │
-├── wilderness  — uninhabited zone (forest, swamp, desert, plains, tundra, jungle…)
-│   └── landmark — singular point of interest within a wilderness (shrine, ruin, cave entrance)
+├── continent       — large landmass (Faerûn, Khorvaire, a major island group)
+│   │
+│   ├── region      — political/geographic subdivision (kingdom, province, territory)
+│   │   │
+│   │   ├── wilderness   — uninhabited zone
+│   │   │   biome: forest | swamp | desert | plains | tundra | jungle | badlands | savanna
+│   │   │   └── landmark — singular point of interest (shrine, ruin, cave entrance)
+│   │   │
+│   │   ├── highland     — elevated terrain
+│   │   │   biome: mountain_range | peak | plateau | valley | pass
+│   │   │   └── landmark
+│   │   │
+│   │   ├── settlement   — populated place
+│   │   │   size: village | town | city | metropolis
+│   │   │   ├── district   — sub-area (the Docks, the Market Quarter)
+│   │   │   │   └── building — interior space (tavern, temple, keep)
+│   │   │   └── dungeon    — explorable interior (sewers, catacombs, vaults)
+│   │   │
+│   │   ├── dungeon      — standalone explorable (cave system, ancient tomb, bandit fort)
+│   │   ├── landmark     — notable point not inside a settlement (monument, ruined tower)
+│   │   └── route        — named linear feature
+│   │       biome: road | trade_route | river_route | sea_lane | mountain_pass | tunnel
+│   │       └── landmark — wayshrine, toll gate, bridge
+│   │
+│   └── [water, highland, wilderness can also be direct children of continent]
 │
-├── water       — body of water (lake, river, sea, bay, ocean, delta)
-│
-├── highland    — elevated terrain (mountain range, peak, plateau, valley, pass)
-│   └── landmark
-│
-├── settlement  — populated place (village / town / city / metropolis)
-│   ├── district  — sub-area of settlement (the Docks, the Market Quarter)
-│   │   └── building — interior space (tavern, temple, keep)
-│   └── dungeon   — explorable interior below/within (sewers, catacombs, vaults)
-│
-├── dungeon     — standalone explorable (cave system, ancient tomb, bandit keep)
-├── landmark    — notable singular feature not inside a settlement (monument, ruined tower)
-└── route       — named linear feature (road, river as route, trade route, mountain pass)
+└── ocean           — intercontinental body of water
+    biome: ocean | sea | strait | gulf
+    │
+    └── region      — island (a region whose context is water, not land)
+        biome: island
+        └── [full land hierarchy below: wilderness, settlement, dungeon, etc.]
 ```
 
-**Biome** — sub-classification for area and linear types (ignored for containment types):
+> **Islands** are `region` with `biome: island`, placed as children of an `ocean` or `sea` (`water`). No separate type needed.
+
+---
+
+**Biome field** — sub-classification for types that need it:
 
 | Type | Biome options |
 |---|---|
+| `ocean` (water) | ocean, sea, strait, gulf |
 | `wilderness` | forest, swamp, desert, plains, tundra, jungle, badlands, savanna |
-| `water` | lake, river, sea, bay, ocean, delta, marsh |
 | `highland` | mountain_range, peak, plateau, valley, pass |
+| `region` | *(optional)* island, peninsula — when geography matters |
 | `route` | road, trade_route, river_route, sea_lane, mountain_pass, tunnel |
 
-**Settlement** retains its own sub-fields: `settlementType` (village/town/city/metropolis) and `settlementPopulation`.
+`water` (lake/river scale — sub-regional) keeps the existing biome: lake, river, bay, delta, marsh.
 
-**Map support** — any Location can have an uploaded image with numbered `MapMarker`s. Markers link to child Locations or NPCs.
+---
 
-**Containment rules** — which types can be children of which. Enforced in the UI (parent selector filters by valid parents) and in backend validation.
+**Containment rules** — which types can be children of which. Enforced in the UI parent selector and backend validation.
 
-| Parent ↓ · Child → | region | wilderness | water | highland | settlement | district | building | dungeon | landmark | route |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **region** | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
-| **wilderness** | — | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | ✓ |
-| **water** | — | — | ✓ | — | — | — | — | — | ✓ | — |
-| **highland** | — | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
-| **settlement** | — | — | — | — | — | ✓ | ✓ | ✓ | ✓ | — |
-| **district** | — | — | — | — | — | — | ✓ | ✓ | ✓ | — |
-| **building** | — | — | — | — | — | — | ✓ | ✓ | — | — |
-| **dungeon** | — | — | — | — | — | — | — | ✓ | ✓ | — |
-| **landmark** | — | — | — | — | — | — | ✓ | ✓ | — | — |
-| **route** | — | — | — | — | — | — | — | — | ✓ | — |
+| Parent ↓ · Child → | plane | continent | ocean | region | wilderness | water | highland | settlement | district | building | dungeon | landmark | route |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **plane** | — | ✓ | ✓ | ✓ | — | — | — | — | — | — | — | — | — |
+| **continent** | — | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **ocean** | — | — | ✓ | ✓ | — | — | — | — | — | — | — | ✓ | — |
+| **region** | — | — | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **wilderness** | — | — | — | — | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | ✓ |
+| **water** | — | — | — | — | — | ✓ | — | — | — | — | — | ✓ | — |
+| **highland** | — | — | — | — | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **settlement** | — | — | — | — | — | — | — | — | ✓ | ✓ | ✓ | ✓ | — |
+| **district** | — | — | — | — | — | — | — | — | — | ✓ | ✓ | ✓ | — |
+| **building** | — | — | — | — | — | — | — | — | — | ✓ | ✓ | — | — |
+| **dungeon** | — | — | — | — | — | — | — | — | — | — | ✓ | ✓ | — |
+| **landmark** | — | — | — | — | — | — | — | — | — | ✓ | ✓ | — | — |
+| **route** | — | — | — | — | — | — | — | — | — | — | — | ✓ | — |
 
 Notable decisions:
-- `water` contains only other `water` (e.g. delta → river) or `landmark` (island, lighthouse). A port city is a child of the *region*, not the bay.
-- `route` contains only `landmark` (wayshrine, toll gate, bridge). Routes do not contain places.
-- `landmark` can contain `building` (a castle ruin has rooms) and `dungeon` (the ruin hides a crypt).
-- `wilderness` can contain `settlement` (village in a forest) — valid in world-building.
-- `district`, `building`, `dungeon` are settlement-interior types and cannot appear at geographic scope.
-- A location with no parent is a **top-level** location (typically `region` or `dungeon`).
+- `ocean` can contain `region` (biome: island) — islands are regions in water context
+- `plane` contains `continent`, `ocean`, and optionally top-level `region` (for campaigns that skip the continent level)
+- `water` (sub-regional — lake, river) cannot contain land — a port city is a child of its *region*, not the bay
+- `district`, `building`, `dungeon` are interior types — cannot appear at geographic scope
+- A location with no parent is top-level (`plane`, `continent`, `ocean`, or standalone `region`/`dungeon`)
+
+---
 
 #### LocationConnection
-Expresses that two locations are **reachable from each other**, independently of the parent-child hierarchy.
+A **graph edge** between any two locations, regardless of type or position in the hierarchy.
 
-- `type`: road, river, path, sea_route, portal, tunnel
-- `travelTime`: human-readable ("3 days on foot", "half a day by horse")
-- `routeLocationId`: optional FK to a `route`-type Location when the connection is a named road/river
+There are no type restrictions on which locations can be connected — the connection `type` describes the nature of the link:
 
-> **Dual representation for named routes:** a road like "The King's Road" is both a `Location` of type `route` (it has a name, lore, danger level, GM notes) **and** a `LocationConnection` between the two settlements it links. `routeLocationId` ties these together.
+| Connection type | Example |
+|---|---|
+| `road` | Town ↔ Town via the King's Road |
+| `path` | Village ↔ Wilderness shrine |
+| `river` | Region ↔ Region along a river course |
+| `sea_route` | Continent ↔ Ocean ↔ Island |
+| `border` | Continent borders an ocean; two regions share a frontier |
+| `portal` | Dungeon ↔ Plane (magical gate) |
+| `tunnel` | Settlement ↔ Dungeon via underground passage |
+| `mountain_pass` | Region ↔ Region through a highland |
+
+Additional fields:
+- `travelTime` — human-readable ("3 days on foot", "half a day by horse")
+- `routeLocationId` — optional FK to a `route`-type Location when the connection corresponds to a named road/river
+
+> **Dual representation for named routes:** "The King's Road" is both a `Location` of type `route` (it has a name, lore, danger level, GM notes) **and** a `LocationConnection` between the two settlements it links. `routeLocationId` ties them together.
+
+> **The location model is a graph, not just a tree.** The hierarchy (parentLocationId) defines containment. LocationConnection defines traversal and adjacency — independently of containment.
+
+---
 
 #### Species
 A global catalogue (not campaign-scoped). Humanoids, beasts, undead, constructs, fey, etc.
@@ -204,8 +245,10 @@ A managed vocabulary of group types (e.g. "Guild", "Cult", "Noble House").
 7. **Session ↔ Location is many-to-many** — `Session.locationIds: string[]` (list of FKs).
 8. **Quest giver is optional** — `Quest.giverId` references an NPC but may be null (anonymous quest).
 9. **GM Notes are private** — present on Location, NPC, Character, Group. Intended to be hidden from player view (player view is a planned feature).
-10. **Location type determines valid sub-fields** — `biome` applies only to `wilderness`, `water`, `highland`, `route`; `settlementType` / `settlementPopulation` apply only to `settlement`; `climate` is superseded by `biome` on `region`/`wilderness`.
-11. **Named routes are dual-represented** — a named road/river is both a `Location` (type `route`) for lore/GM notes and a `LocationConnection` for travel links; `routeLocationId` on the connection ties them together.
+10. **Location type determines valid sub-fields** — `biome` applies to `ocean`, `wilderness`, `highland`, `region` (when island), `route`; `settlementType`/`settlementPopulation` apply only to `settlement`.
+11. **Named routes are dual-represented** — a named road/river is both a `Location` (type `route`) for lore/GM notes and a `LocationConnection` for traversal; `routeLocationId` on the connection ties them together.
+12. **Islands are regions in water context** — an island is `type: region`, `biome: island`, `parentLocationId` pointing to an `ocean`/`sea` Location. No separate island type.
+13. **LocationConnection is unrestricted** — any location can connect to any other regardless of type. A continent connects to an ocean. A town connects to a road. Connection `type` describes the nature of the link, not the types of the endpoints.
 
 ---
 
@@ -214,7 +257,7 @@ A managed vocabulary of group types (e.g. "Guild", "Cult", "Noble House").
 | Concept | Status | Notes |
 |---|---|---|
 | **Relation Graph view** | Planned | Visual node-edge graph of all Relation records. Nodes = NPCs, Characters, Groups. Edges = Relations, coloured and weighted by friendliness score. Filterable by entity type and friendliness range. |
-| **Location Graph view** | Planned | Visual map of Locations as nodes and LocationConnections as edges. Useful for overland travel planning. |
+| **Location Graph view** | Planned | Visual map of Locations as nodes and LocationConnections as edges. Hierarchy edges (containment) + connection edges (traversal) rendered differently. Useful for overland travel planning. |
 | Items & Artifacts | Planned | Magical items, equipment, relics |
 | Campaign Timeline | Planned | Visual chronological map of sessions and events |
 | Player View | Planned | Separate access level for players |
