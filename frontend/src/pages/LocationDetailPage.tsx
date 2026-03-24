@@ -5,7 +5,7 @@ import { LocationEditDrawer } from '@/features/locations/ui';
 import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useSessions } from '@/features/sessions/api';
 import { useLocationTypes } from '@/features/locationTypes';
-import { GmNotesSection, RichContent } from '@/shared/ui';
+import { InlineRichField } from '@/shared/ui';
 import type { Location, MapMarker } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
 import { CATEGORY_ICON_COLOR, CATEGORY_BADGE_CLS, CATEGORY_TILE_CLS, CATEGORY_LABEL } from '@/entities/locationType';
@@ -984,15 +984,20 @@ export default function LocationDetailPage() {
             </header>
 
             {/* Description */}
-            <section className="space-y-4">
-              <div className="flex items-center gap-4">
-                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                  Description
-                </h2>
-                <div className="h-px flex-1 bg-outline-variant/20" />
-              </div>
-              <RichContent value={location.description} />
-            </section>
+            <InlineRichField
+              label="Description"
+              value={location.description}
+              onSave={(html) => saveMutation.mutate({ ...location, description: html })}
+              placeholder="Describe this location…"
+            />
+
+            {/* GM Notes */}
+            <InlineRichField
+              label="GM Notes"
+              value={location.gmNotes}
+              onSave={(html) => saveMutation.mutate({ ...location, gmNotes: html || undefined })}
+              isGmNotes
+            />
 
             {/* Adjacent / Reachable */}
             {adjacentLocations && adjacentLocations.length > 0 && (
@@ -1388,8 +1393,6 @@ export default function LocationDetailPage() {
                 </div>
             </div>
 
-            {/* GM Notes */}
-            <GmNotesSection variant="sidebar" notes={location.gmNotes} fallback="No GM notes." />
 
           </div>
         </div>

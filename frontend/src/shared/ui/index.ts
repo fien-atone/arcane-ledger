@@ -9,3 +9,4 @@ export { GmNotesSection } from './GmNotesSection';
 export { SectionLabel } from './SectionLabel';
 export { RichTextEditor } from './RichTextEditor';
 export { RichContent, toHtml } from './RichContent';
+export { InlineRichField } from './InlineRichField';
