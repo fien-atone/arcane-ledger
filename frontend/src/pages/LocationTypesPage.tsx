@@ -15,7 +15,6 @@ import type {
 } from '@/entities/locationType';
 import {
   CATEGORY_ICON_COLOR,
-  CATEGORY_BADGE_CLS,
   CATEGORY_DOT_CLS,
 } from '@/entities/locationType';
 
