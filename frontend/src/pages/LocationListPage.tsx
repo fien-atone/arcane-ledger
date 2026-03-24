@@ -261,7 +261,7 @@ export default function LocationListPage() {
       .filter((t): t is LocationTypeEntry => !!t && usedTypeIds.has(t.id));
     return [
       { value: 'all' as const, label: 'All' },
-      ...usedTypes.map((t) => ({ value: t.id, label: `${t.name}s` })),
+      ...usedTypes.map((t) => ({ value: t.id, label: t.name })),
     ];
   }, [locations, typeOrder, typeMap]);
 
