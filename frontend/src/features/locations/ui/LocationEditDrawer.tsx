@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { useSaveLocation, useLocations } from '@/features/locations/api/queries';
 import { useLocationTypes, useContainmentRules } from '@/features/locationTypes';
 import { Select } from '@/shared/ui/Select';
-import { RichTextEditor } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Location, LocationType } from '@/entities/location';
 import { CATEGORY_ICON_COLOR, CATEGORY_LABEL } from '@/entities/locationType';
@@ -13,9 +12,6 @@ function biomeLabel(value: string): string {
 
 const inputCls =
   'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-
-const textareaCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30 resize-none';
 
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
@@ -64,7 +60,6 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
     [selectedTypeEntry],
   );
 
-  // Valid parent locations: those whose type is listed as a parent for the current type in containment rules
   const validParentTypeIds = useMemo(
     () => new Set(containmentRules.filter((r) => r.childTypeId === type).map((r) => r.parentTypeId)),
     [containmentRules, type],
@@ -75,13 +70,11 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
       .filter((l) => validParentTypeIds.has(l.type) && l.id !== location?.id)
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((l) => ({ value: l.id, label: l.name })),
-    [allLocations, validParentTypeIds, locationTypes, location?.id],
+    [allLocations, validParentTypeIds, location?.id],
   );
 
   const [settlementPopulation, setSettlementPopulation] = useState('');
   const [biome, setBiome] = useState('');
-  const [description, setDescription] = useState('');
-  const [gmNotes, setGmNotes] = useState('');
   const [image, setImage] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -92,13 +85,11 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
       setParentLocationId(location.parentLocationId ?? '');
       setSettlementPopulation(location.settlementPopulation?.toString() ?? '');
       setBiome(location.biome ?? '');
-      setDescription(location.description);
-      setGmNotes(location.gmNotes ?? '');
       setImage(location.image);
     } else {
       setName(''); setType(locationTypes[0]?.id ?? 'building');
       setParentLocationId(initialParentId ?? ''); setSettlementPopulation(''); setBiome('');
-      setDescription(''); setGmNotes(''); setImage(undefined);
+      setImage(undefined);
     }
   }, [open, location]);
 
@@ -125,8 +116,6 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
       parentLocationId: parentLocationId || undefined,
       settlementPopulation: selectedTypeEntry?.isSettlement && !isNaN(pop) && pop > 0 ? pop : undefined,
       biome: biomeOptions.length > 0 && biome ? biome : undefined,
-      description: description.trim(),
-      gmNotes: gmNotes.trim() || undefined,
       image,
     };
     save.mutate(record, { onSuccess: () => { onSaved?.(record); onClose(); } });
@@ -175,7 +164,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
             />
           </div>
 
-          {/* Parent location — filtered by containment rules */}
+          {/* Parent location */}
           {parentOptions.length > 0 && (
             <div>
               <label className={labelCls}>Part of</label>
@@ -203,7 +192,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
             </div>
           )}
 
-          {/* Biome / terrain sub-type — driven by the selected type's biomeOptions */}
+          {/* Biome / terrain sub-type */}
           {biomeOptions.length > 0 && (
             <div>
               <label className={labelCls}>Terrain</label>
@@ -215,24 +204,6 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
               />
             </div>
           )}
-
-          {/* Description */}
-          <div>
-            <label className={labelCls}>Description</label>
-            <RichTextEditor value={description} onChange={setDescription} placeholder="Describe this location…" minHeight="7rem" />
-          </div>
-
-          {/* GM Notes */}
-          <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/40" />
-            <div className="pl-4">
-              <label className="block text-[10px] font-label uppercase tracking-widest text-primary mb-1.5 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-                GM Notes
-              </label>
-              <RichTextEditor value={gmNotes} onChange={setGmNotes} placeholder="Private notes — not visible to players…" minHeight="3rem" />
-            </div>
-          </div>
 
           {/* Map / Image */}
           <div>

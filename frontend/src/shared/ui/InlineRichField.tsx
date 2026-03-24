@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 
-// ── Bubble toolbar button ─────────────────────────────────────────────────────
+// ── Toolbar button ────────────────────────────────────────────────────────────
 
-function BubbleBtn({
+function ToolbarBtn({
   onClick, active, icon, title,
 }: { onClick: () => void; active?: boolean; icon: string; title: string }) {
   return (
@@ -13,10 +12,11 @@ function BubbleBtn({
       type="button"
       onMouseDown={(e) => { e.preventDefault(); onClick(); }}
       title={title}
-      className={`w-7 h-7 flex items-center justify-center rounded transition-colors
-        ${active
-          ? 'bg-primary text-on-primary'
-          : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'}`}
+      className={`w-7 h-7 flex items-center justify-center rounded-sm transition-colors flex-shrink-0 ${
+        active
+          ? 'bg-primary/15 text-primary'
+          : 'text-on-surface-variant/50 hover:text-on-surface hover:bg-surface-container-high'
+      }`}
     >
       {icon.startsWith('ms:')
         ? <span className="material-symbols-outlined text-[14px]">{icon.slice(3)}</span>
@@ -71,33 +71,29 @@ function EditingField({
   if (!editor) return null;
 
   return (
-    <div className="relative">
-      <BubbleMenu
-        editor={editor}
-        className="flex items-center gap-0.5 px-1.5 py-1 bg-surface-container-highest border border-outline-variant/30 rounded-sm shadow-xl"
-      >
-        <BubbleBtn onClick={() => editor.chain().focus().toggleBold().run()}
+    <div className="border border-primary/40 rounded-sm bg-surface-container-low transition-colors focus-within:border-primary">
+      {/* Always-visible toolbar */}
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-outline-variant/15">
+        <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')} icon="B" title="Bold" />
-        <BubbleBtn onClick={() => editor.chain().focus().toggleItalic().run()}
+        <ToolbarBtn onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive('italic')} icon="I" title="Italic" />
-        <BubbleBtn onClick={() => editor.chain().focus().toggleStrike().run()}
+        <ToolbarBtn onClick={() => editor.chain().focus().toggleStrike().run()}
           active={editor.isActive('strike')} icon="S̶" title="Strikethrough" />
-        <div className="w-px h-4 bg-outline-variant/30 mx-0.5" />
-        <BubbleBtn onClick={() => editor.chain().focus().toggleBulletList().run()}
+        <div className="w-px h-3.5 bg-outline-variant/25 mx-1 flex-shrink-0" />
+        <ToolbarBtn onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive('bulletList')} icon="ms:format_list_bulleted" title="Bullet list" />
-        <BubbleBtn onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        <ToolbarBtn onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive('orderedList')} icon="ms:format_list_numbered" title="Ordered list" />
-        <div className="w-px h-4 bg-outline-variant/30 mx-0.5" />
-        <BubbleBtn onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        <div className="w-px h-3.5 bg-outline-variant/25 mx-1 flex-shrink-0" />
+        <ToolbarBtn onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')} icon="ms:format_quote" title="Blockquote" />
-      </BubbleMenu>
-
-      <div className="border border-primary/40 rounded-sm px-3 py-2.5 bg-surface-container-low focus-within:border-primary transition-colors">
+        <div className="flex-1" />
+        <span className="text-[10px] text-on-surface-variant/25 pr-1 select-none">Esc to cancel</span>
+      </div>
+      <div className="px-3 py-2.5">
         <EditorContent editor={editor} />
       </div>
-      <p className="text-[10px] text-on-surface-variant/30 mt-1.5 text-right">
-        Select text to format · Esc to cancel
-      </p>
     </div>
   );
 }
