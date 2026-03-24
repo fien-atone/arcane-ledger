@@ -20,32 +20,32 @@ import type {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] = [
-  { value: 'world',      label: 'World-scale',       dot: 'bg-indigo-400' },
-  { value: 'geographic', label: 'Geographic',         dot: 'bg-emerald-400' },
-  { value: 'water',      label: 'Water Bodies',       dot: 'bg-sky-400' },
-  { value: 'interior',   label: 'Interior',           dot: 'bg-amber-400' },
-  { value: 'poi',        label: 'Points of Interest', dot: 'bg-rose-400' },
-  { value: 'travel',     label: 'Travel',             dot: 'bg-violet-400' },
+  { value: 'world',        label: 'World-scale',       dot: 'bg-indigo-400' },
+  { value: 'civilization', label: 'Civilization',      dot: 'bg-amber-400' },
+  { value: 'geographic',   label: 'Geographic',        dot: 'bg-emerald-400' },
+  { value: 'water',        label: 'Water Bodies',      dot: 'bg-sky-400' },
+  { value: 'poi',          label: 'Points of Interest',dot: 'bg-rose-400' },
+  { value: 'travel',       label: 'Travel',            dot: 'bg-violet-400' },
 ];
 
-const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'geographic', 'water', 'interior', 'poi', 'travel'];
+const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'civilization', 'geographic', 'water', 'poi', 'travel'];
 
 const CATEGORY_BADGE: Record<LocationTypeCategory, string> = {
-  world:      'text-indigo-300 bg-indigo-950/60 border-indigo-400/25',
-  geographic: 'text-emerald-300 bg-emerald-950/60 border-emerald-400/25',
-  water:      'text-sky-300 bg-sky-950/60 border-sky-400/25',
-  interior:   'text-amber-300 bg-amber-950/60 border-amber-400/25',
-  poi:        'text-rose-300 bg-rose-950/60 border-rose-400/25',
-  travel:     'text-violet-300 bg-violet-950/60 border-violet-400/25',
+  world:        'text-indigo-300 bg-indigo-950/60 border-indigo-400/25',
+  civilization: 'text-amber-300 bg-amber-950/60 border-amber-400/25',
+  geographic:   'text-emerald-300 bg-emerald-950/60 border-emerald-400/25',
+  water:        'text-sky-300 bg-sky-950/60 border-sky-400/25',
+  poi:          'text-rose-300 bg-rose-950/60 border-rose-400/25',
+  travel:       'text-violet-300 bg-violet-950/60 border-violet-400/25',
 };
 
 const CATEGORY_ICON: Record<LocationTypeCategory, string> = {
-  world:      'text-indigo-400',
-  geographic: 'text-emerald-400',
-  water:      'text-sky-400',
-  interior:   'text-amber-400',
-  poi:        'text-rose-400',
-  travel:     'text-violet-400',
+  world:        'text-indigo-400',
+  civilization: 'text-amber-400',
+  geographic:   'text-emerald-400',
+  water:        'text-sky-400',
+  poi:          'text-rose-400',
+  travel:       'text-violet-400',
 };
 
 const CONNECTION_TYPES = [
@@ -406,6 +406,42 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
   );
 }
 
+// ── Type row (left panel) ─────────────────────────────────────────────────────
+
+function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: boolean; onSelect: () => void }) {
+  return (
+    <button
+      onClick={onSelect}
+      className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
+        isActive
+          ? 'bg-primary/8 border-l-2 border-l-primary'
+          : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
+      }`}
+    >
+      <div className={`w-9 h-9 rounded-sm flex-shrink-0 flex items-center justify-center border ${
+        isActive ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'
+      }`}>
+        <span
+          className={`material-symbols-outlined text-[17px] ${isActive ? 'text-primary' : CATEGORY_ICON[t.category]}`}
+          style={{ fontVariationSettings: "'FILL' 1" }}
+        >
+          {t.icon}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm truncate transition-colors ${isActive ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>
+          {t.name}
+        </p>
+        {t.builtin && (
+          <p className={`text-[9px] mt-0.5 uppercase tracking-widest ${isActive ? 'text-primary/40' : 'text-on-surface-variant/30'}`}>
+            built-in
+          </p>
+        )}
+      </div>
+    </button>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LocationTypesPage() {
@@ -422,12 +458,17 @@ export default function LocationTypesPage() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [search, setSearch] = useState('');
 
   const isLoading = loadingTypes || loadingContain || loadingConnect;
 
   const sorted = [...(types ?? [])].sort(
     (a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category),
   );
+
+  const filtered = search.trim()
+    ? sorted.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()))
+    : sorted;
 
   const selected = types?.find((t) => t.id === selectedId) ?? sorted[0] ?? null;
 
@@ -462,58 +503,48 @@ export default function LocationTypesPage() {
         <div className="flex flex-1 overflow-hidden min-h-0">
 
           {/* Left panel — list */}
-          <div className="w-[320px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
-            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {CATEGORY_ORDER.map((cat) => {
-                const group = sorted.filter((t) => t.category === cat);
-                if (group.length === 0) return null;
-                const meta = CATEGORIES.find((c) => c.value === cat)!;
-                return (
-                  <div key={cat}>
-                    <div className="flex items-center gap-2 px-4 pt-4 pb-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${meta.dot}`} />
-                      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/35">
-                        {meta.label}
-                      </span>
+          <div className="w-[320px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest">
+
+            {/* Search */}
+            <div className="px-3 py-2.5 border-b border-outline-variant/10 flex-shrink-0">
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
+                <input
+                  type="text"
+                  placeholder="Search types…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-surface-container border-0 border-b border-outline-variant/20 focus:ring-0 focus:border-primary text-on-surface text-sm placeholder:text-on-surface-variant/30 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
+              {search.trim() && filtered.length === 0 && (
+                <p className="text-xs text-on-surface-variant/40 italic p-6">No types match.</p>
+              )}
+              {search.trim() ? (
+                // Flat list when searching
+                filtered.map((t) => <TypeRow key={t.id} t={t} isActive={!showNew && selected?.id === t.id} onSelect={() => { setSelectedId(t.id); setShowNew(false); }} />)
+              ) : (
+                // Grouped by category
+                CATEGORY_ORDER.map((cat) => {
+                  const group = filtered.filter((t) => t.category === cat);
+                  if (group.length === 0) return null;
+                  const meta = CATEGORIES.find((c) => c.value === cat)!;
+                  return (
+                    <div key={cat}>
+                      <div className="flex items-center gap-2 px-4 pt-4 pb-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${meta.dot}`} />
+                        <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/35">
+                          {meta.label}
+                        </span>
+                      </div>
+                      {group.map((t) => <TypeRow key={t.id} t={t} isActive={!showNew && selected?.id === t.id} onSelect={() => { setSelectedId(t.id); setShowNew(false); }} />)}
                     </div>
-                    {group.map((t) => {
-                      const isActive = !showNew && selected?.id === t.id;
-                      return (
-                        <button
-                          key={t.id}
-                          onClick={() => { setSelectedId(t.id); setShowNew(false); }}
-                          className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
-                            isActive
-                              ? 'bg-primary/8 border-l-2 border-l-primary'
-                              : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
-                          }`}
-                        >
-                          <div className={`w-9 h-9 rounded-sm flex-shrink-0 flex items-center justify-center border ${
-                            isActive ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'
-                          }`}>
-                            <span
-                              className={`material-symbols-outlined text-[17px] ${isActive ? 'text-primary' : CATEGORY_ICON[t.category]}`}
-                              style={{ fontVariationSettings: "'FILL' 1" }}
-                            >
-                              {t.icon}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm truncate transition-colors ${isActive ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>
-                              {t.name}
-                            </p>
-                            {t.builtin && (
-                              <p className={`text-[9px] mt-0.5 uppercase tracking-widest ${isActive ? 'text-primary/40' : 'text-on-surface-variant/30'}`}>
-                                built-in
-                              </p>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
             <div className="px-4 py-2 border-t border-outline-variant/10 flex-shrink-0">
               <p className="text-[10px] text-on-surface-variant/40">

@@ -17,7 +17,7 @@ const TYPES_KEY    = 'ttrpg_location_types';
 const CONTAIN_KEY  = 'ttrpg_location_containment_rules';
 const CONNECT_KEY  = 'ttrpg_location_connection_rules';
 const VERSION_KEY  = 'ttrpg_location_types_version';
-const VERSION      = '5'; // v5: new 'water' category, continent→geographic, delta icon fix
+const VERSION      = '6'; // v6: civilization category, village/town/city types, search
 
 // ── Generic helpers ───────────────────────────────────────────────────────────
 

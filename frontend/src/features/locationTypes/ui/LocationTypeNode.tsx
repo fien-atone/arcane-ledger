@@ -11,7 +11,7 @@ const CATEGORY_STYLES: Record<LocationTypeCategory, { ring: string; bg: string; 
   world:      { ring: 'border-indigo-400/60',  bg: 'bg-indigo-950/80',  text: 'text-indigo-200',  dot: 'bg-indigo-400' },
   geographic: { ring: 'border-emerald-400/60', bg: 'bg-emerald-950/80', text: 'text-emerald-200', dot: 'bg-emerald-400' },
   water:      { ring: 'border-sky-400/60',     bg: 'bg-sky-950/80',     text: 'text-sky-200',     dot: 'bg-sky-400' },
-  interior:   { ring: 'border-amber-400/60',   bg: 'bg-amber-950/80',   text: 'text-amber-200',   dot: 'bg-amber-400' },
+  civilization: { ring: 'border-amber-400/60',  bg: 'bg-amber-950/80',   text: 'text-amber-200',   dot: 'bg-amber-400' },
   poi:        { ring: 'border-rose-400/60',    bg: 'bg-rose-950/80',    text: 'text-rose-200',    dot: 'bg-rose-400' },
   travel:     { ring: 'border-violet-400/60',  bg: 'bg-violet-950/80',  text: 'text-violet-200',  dot: 'bg-violet-400' },
 };

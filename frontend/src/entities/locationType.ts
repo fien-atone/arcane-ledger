@@ -16,12 +16,12 @@ export type BuiltinLocationType =
 
 /** Visual category — determines node colour in the graph */
 export type LocationTypeCategory =
-  | 'world'       // plane
-  | 'geographic'  // continent, region, wilderness, highland
-  | 'water'       // ocean, river, lake, bay, marsh, delta
-  | 'interior'    // settlement, district, building
-  | 'poi'         // dungeon, landmark — points of interest
-  | 'travel';     // route
+  | 'world'         // plane
+  | 'civilization'  // village, town, city, settlement, district, building
+  | 'geographic'    // continent, region, wilderness, highland
+  | 'water'         // ocean, river, lake, bay, marsh, delta
+  | 'poi'           // dungeon, landmark — points of interest
+  | 'travel';       // route
 
 export interface LocationTypeEntry {
   id: string;

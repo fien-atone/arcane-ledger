@@ -10,28 +10,31 @@ const ts = '2026-01-01T00:00:00.000Z';
 
 export const MOCK_LOCATION_TYPES: LocationTypeEntry[] = [
   // World-scale (cosmic / planar)
-  { id: 'plane',      name: 'Plane',        icon: 'public',           category: 'world',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'plane',      name: 'Plane',        icon: 'public',           category: 'world',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  // Civilization
+  { id: 'city',       name: 'City',         icon: 'apartment',        category: 'civilization', biomeOptions: [],                                                                                    isSettlement: true,  builtin: true, createdAt: ts },
+  { id: 'town',       name: 'Town',         icon: 'location_city',    category: 'civilization', biomeOptions: [],                                                                                    isSettlement: true,  builtin: true, createdAt: ts },
+  { id: 'village',    name: 'Village',      icon: 'cottage',          category: 'civilization', biomeOptions: [],                                                                                    isSettlement: true,  builtin: true, createdAt: ts },
+  { id: 'settlement', name: 'Settlement',   icon: 'holiday_village',  category: 'civilization', biomeOptions: [],                                                                                    isSettlement: true,  builtin: true, createdAt: ts },
+  { id: 'district',   name: 'District',     icon: 'domain',           category: 'civilization', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'building',   name: 'Building',     icon: 'house',            category: 'civilization', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
   // Geographic — land
-  { id: 'continent',  name: 'Continent',    icon: 'map',              category: 'geographic', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'region',     name: 'Region',       icon: 'terrain',          category: 'geographic', biomeOptions: ['island', 'peninsula', 'cape'],                                                       isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'wilderness', name: 'Wilderness',   icon: 'forest',           category: 'geographic', biomeOptions: ['forest', 'desert', 'plains', 'tundra', 'jungle', 'badlands', 'savanna', 'steppe'], isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'highland',   name: 'Highland',     icon: 'landscape',        category: 'geographic', biomeOptions: ['mountain_range', 'peak', 'plateau', 'valley', 'pass', 'cliff'],                     isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'continent',  name: 'Continent',    icon: 'map',              category: 'geographic',   biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'region',     name: 'Region',       icon: 'terrain',          category: 'geographic',   biomeOptions: ['island', 'peninsula', 'cape'],                                                       isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'wilderness', name: 'Wilderness',   icon: 'forest',           category: 'geographic',   biomeOptions: ['forest', 'desert', 'plains', 'tundra', 'jungle', 'badlands', 'savanna', 'steppe'], isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'highland',   name: 'Highland',     icon: 'landscape',        category: 'geographic',   biomeOptions: ['mountain_range', 'peak', 'plateau', 'valley', 'pass', 'cliff'],                     isSettlement: false, builtin: true, createdAt: ts },
   // Water bodies
-  { id: 'ocean',      name: 'Ocean',        icon: 'waves',            category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'river',      name: 'River',        icon: 'stream',           category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'lake',       name: 'Lake',         icon: 'water',            category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'bay',        name: 'Bay / Gulf',   icon: 'water_full',       category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'marsh',      name: 'Marsh / Bog',  icon: 'grass',            category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'delta',      name: 'Delta',        icon: 'merge',            category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  // Interior
-  { id: 'settlement', name: 'Settlement',   icon: 'location_city',    category: 'interior',   biomeOptions: [],                                                                                    isSettlement: true,  builtin: true, createdAt: ts },
-  { id: 'district',   name: 'District',     icon: 'holiday_village',  category: 'interior',   biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'building',   name: 'Building',     icon: 'domain',           category: 'interior',   biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'ocean',      name: 'Ocean',        icon: 'waves',            category: 'water',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'river',      name: 'River',        icon: 'stream',           category: 'water',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'lake',       name: 'Lake',         icon: 'water',            category: 'water',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'bay',        name: 'Bay / Gulf',   icon: 'water_full',       category: 'water',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'marsh',      name: 'Marsh / Bog',  icon: 'grass',            category: 'water',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'delta',      name: 'Delta',        icon: 'merge',            category: 'water',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
   // Points of interest
-  { id: 'dungeon',    name: 'Dungeon',      icon: 'skull',            category: 'poi',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'landmark',   name: 'Landmark',     icon: 'place',            category: 'poi',        biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'dungeon',    name: 'Dungeon',      icon: 'skull',            category: 'poi',          biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'landmark',   name: 'Landmark',     icon: 'place',            category: 'poi',          biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
   // Travel
-  { id: 'route',      name: 'Route',        icon: 'route',            category: 'travel',     biomeOptions: ['road', 'trade_route', 'river_route', 'sea_lane', 'mountain_pass', 'tunnel'],        isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'route',      name: 'Route',        icon: 'route',            category: 'travel',       biomeOptions: ['road', 'trade_route', 'river_route', 'sea_lane', 'mountain_pass', 'tunnel'],        isSettlement: false, builtin: true, createdAt: ts },
 ];
 
 // ── Containment rules ─────────────────────────────────────────────────────────
@@ -39,6 +42,9 @@ export const MOCK_LOCATION_TYPES: LocationTypeEntry[] = [
 function cr(parentTypeId: string, childTypeId: string, idx: number): LocationTypeContainmentRule {
   return { id: `cr-${idx}`, parentTypeId, childTypeId };
 }
+
+// Settlements that behave as full settlement containers (can hold district/building/etc.)
+const SETTLEMENT_IDS = ['city', 'town', 'village', 'settlement'];
 
 let i = 0;
 export const MOCK_CONTAINMENT_RULES: LocationTypeContainmentRule[] = [
@@ -56,13 +62,13 @@ export const MOCK_CONTAINMENT_RULES: LocationTypeContainmentRule[] = [
   cr('continent', 'bay',        i++),
   cr('continent', 'marsh',      i++),
   cr('continent', 'delta',      i++),
-  cr('continent', 'settlement', i++),
+  ...SETTLEMENT_IDS.map((s) => cr('continent', s, i++)),
   cr('continent', 'dungeon',    i++),
   cr('continent', 'landmark',   i++),
   cr('continent', 'route',      i++),
   // ocean
   cr('ocean', 'ocean',    i++),
-  cr('ocean', 'region',   i++),  // islands
+  cr('ocean', 'region',   i++),
   cr('ocean', 'bay',      i++),
   cr('ocean', 'landmark', i++),
   // region
@@ -74,7 +80,7 @@ export const MOCK_CONTAINMENT_RULES: LocationTypeContainmentRule[] = [
   cr('region', 'bay',        i++),
   cr('region', 'marsh',      i++),
   cr('region', 'delta',      i++),
-  cr('region', 'settlement', i++),
+  ...SETTLEMENT_IDS.map((s) => cr('region', s, i++)),
   cr('region', 'dungeon',    i++),
   cr('region', 'landmark',   i++),
   cr('region', 'route',      i++),
@@ -83,6 +89,7 @@ export const MOCK_CONTAINMENT_RULES: LocationTypeContainmentRule[] = [
   cr('wilderness', 'river',      i++),
   cr('wilderness', 'lake',       i++),
   cr('wilderness', 'marsh',      i++),
+  cr('wilderness', 'village',    i++),
   cr('wilderness', 'settlement', i++),
   cr('wilderness', 'dungeon',    i++),
   cr('wilderness', 'landmark',   i++),
@@ -92,7 +99,7 @@ export const MOCK_CONTAINMENT_RULES: LocationTypeContainmentRule[] = [
   cr('highland', 'highland',   i++),
   cr('highland', 'river',      i++),
   cr('highland', 'lake',       i++),
-  cr('highland', 'settlement', i++),
+  ...SETTLEMENT_IDS.map((s) => cr('highland', s, i++)),
   cr('highland', 'dungeon',    i++),
   cr('highland', 'landmark',   i++),
   cr('highland', 'route',      i++),
@@ -100,14 +107,25 @@ export const MOCK_CONTAINMENT_RULES: LocationTypeContainmentRule[] = [
   cr('river',  'delta',    i++),
   cr('river',  'marsh',    i++),
   cr('river',  'landmark', i++),
-  cr('lake',   'river',    i++),  // lake outlet
+  cr('lake',   'river',    i++),
   cr('lake',   'landmark', i++),
   cr('bay',    'landmark', i++),
   cr('marsh',  'river',    i++),
   cr('marsh',  'landmark', i++),
   cr('delta',  'river',    i++),
   cr('delta',  'landmark', i++),
-  // settlement
+  // city / town / village / settlement
+  cr('city',       'district',  i++),
+  cr('city',       'building',  i++),
+  cr('city',       'dungeon',   i++),
+  cr('city',       'landmark',  i++),
+  cr('town',       'district',  i++),
+  cr('town',       'building',  i++),
+  cr('town',       'dungeon',   i++),
+  cr('town',       'landmark',  i++),
+  cr('village',    'building',  i++),
+  cr('village',    'dungeon',   i++),
+  cr('village',    'landmark',  i++),
   cr('settlement', 'district',  i++),
   cr('settlement', 'building',  i++),
   cr('settlement', 'dungeon',   i++),
@@ -164,27 +182,45 @@ export const MOCK_CONNECTION_RULES: LocationTypeConnectionRule[] = [
   conr('cnr-16', 'lake',       'river',      ['river']),
   conr('cnr-17', 'bay',        'ocean',      ['sea_route', 'border']),
   // settlement connections
-  conr('cnr-18', 'settlement', 'settlement', ['road', 'path', 'river']),
-  conr('cnr-19', 'settlement', 'wilderness', ['path', 'river']),
-  conr('cnr-20', 'settlement', 'river',      ['river', 'path', 'road']),
-  conr('cnr-21', 'settlement', 'lake',       ['path', 'road']),
-  conr('cnr-22', 'settlement', 'bay',        ['sea_route', 'road']),
-  conr('cnr-23', 'settlement', 'route',      ['road', 'path']),
-  conr('cnr-24', 'settlement', 'dungeon',    ['tunnel', 'path']),
-  // wilderness connections
-  conr('cnr-25', 'wilderness', 'wilderness', ['path', 'river']),
-  conr('cnr-26', 'wilderness', 'river',      ['river', 'path']),
-  conr('cnr-27', 'wilderness', 'lake',       ['path']),
-  conr('cnr-28', 'wilderness', 'marsh',      ['path']),
-  conr('cnr-29', 'wilderness', 'highland',   ['path', 'mountain_pass']),
+  conr('cnr-18', 'city',       'city',       ['road', 'sea_route', 'river']),
+  conr('cnr-19', 'city',       'town',       ['road', 'river', 'sea_route']),
+  conr('cnr-20', 'city',       'village',    ['road', 'path']),
+  conr('cnr-21', 'city',       'river',      ['river', 'road']),
+  conr('cnr-22', 'city',       'bay',        ['sea_route', 'road']),
+  conr('cnr-23', 'city',       'route',      ALL),
+  conr('cnr-24', 'town',       'town',       ['road', 'river', 'path']),
+  conr('cnr-25', 'town',       'village',    ['road', 'path']),
+  conr('cnr-26', 'town',       'river',      ['river', 'road', 'path']),
+  conr('cnr-27', 'town',       'lake',       ['path', 'road']),
+  conr('cnr-28', 'town',       'route',      ALL),
+  conr('cnr-29', 'village',    'village',    ['path', 'road']),
+  conr('cnr-30', 'village',    'river',      ['river', 'path']),
+  conr('cnr-31', 'village',    'wilderness', ['path']),
+  conr('cnr-32', 'village',    'route',      ['road', 'path']),
+  conr('cnr-33', 'settlement', 'settlement', ['road', 'path', 'river']),
+  conr('cnr-34', 'settlement', 'wilderness', ['path', 'river']),
+  conr('cnr-35', 'settlement', 'river',      ['river', 'path', 'road']),
+  conr('cnr-36', 'settlement', 'lake',       ['path', 'road']),
+  conr('cnr-37', 'settlement', 'bay',        ['sea_route', 'road']),
+  conr('cnr-38', 'settlement', 'route',      ['road', 'path']),
+  conr('cnr-39', 'settlement', 'dungeon',    ['tunnel', 'path']),
+  // wilderness
+  conr('cnr-40', 'wilderness', 'wilderness', ['path', 'river']),
+  conr('cnr-41', 'wilderness', 'river',      ['river', 'path']),
+  conr('cnr-42', 'wilderness', 'lake',       ['path']),
+  conr('cnr-43', 'wilderness', 'marsh',      ['path']),
+  conr('cnr-44', 'wilderness', 'highland',   ['path', 'mountain_pass']),
   // highland
-  conr('cnr-30', 'highland',   'highland',   ['path', 'mountain_pass', 'road']),
-  conr('cnr-31', 'highland',   'river',      ['river']),
+  conr('cnr-45', 'highland',   'highland',   ['path', 'mountain_pass', 'road']),
+  conr('cnr-46', 'highland',   'river',      ['river']),
   // dungeon / poi
-  conr('cnr-32', 'dungeon',    'dungeon',    ['tunnel', 'portal']),
-  conr('cnr-33', 'dungeon',    'plane',      ['portal']),
-  conr('cnr-34', 'building',   'dungeon',    ['tunnel']),
+  conr('cnr-47', 'dungeon',    'dungeon',    ['tunnel', 'portal']),
+  conr('cnr-48', 'dungeon',    'plane',      ['portal']),
+  conr('cnr-49', 'building',   'dungeon',    ['tunnel']),
   // route
-  conr('cnr-35', 'route',      'settlement', ALL),
-  conr('cnr-36', 'route',      'region',     ALL),
+  conr('cnr-50', 'route',      'city',       ALL),
+  conr('cnr-51', 'route',      'town',       ALL),
+  conr('cnr-52', 'route',      'village',    ALL),
+  conr('cnr-53', 'route',      'settlement', ALL),
+  conr('cnr-54', 'route',      'region',     ALL),
 ];
