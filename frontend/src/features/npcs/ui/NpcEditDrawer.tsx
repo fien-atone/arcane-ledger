@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveNpc } from '@/features/npcs/api';
 import { useSpecies } from '@/features/species/api';
+import { RichTextEditor } from '@/shared/ui';
 import type { NPC, NpcGender, NpcStatus } from '@/entities/npc';
 
 interface Props {
@@ -237,61 +238,31 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           {/* Appearance */}
           <div>
             <label className={labelCls}>Appearance</label>
-            <textarea
-              value={appearance}
-              onChange={(e) => setAppearance(e.target.value)}
-              rows={3}
-              placeholder="Physical description…"
-              className={textareaCls}
-            />
+            <RichTextEditor value={appearance} onChange={setAppearance} placeholder="Physical description…" />
           </div>
 
           {/* Personality */}
           <div>
             <label className={labelCls}>Personality</label>
-            <textarea
-              value={personality}
-              onChange={(e) => setPersonality(e.target.value)}
-              rows={3}
-              placeholder="Traits, mannerisms, motivation…"
-              className={textareaCls}
-            />
+            <RichTextEditor value={personality} onChange={setPersonality} placeholder="Traits, mannerisms, motivation…" />
           </div>
 
           {/* Motivation */}
           <div>
             <label className={labelCls}>Motivation & Ideals</label>
-            <textarea
-              value={motivation}
-              onChange={(e) => setMotivation(e.target.value)}
-              rows={2}
-              placeholder="What drives them, what they believe in…"
-              className={textareaCls}
-            />
+            <RichTextEditor value={motivation} onChange={setMotivation} placeholder="What drives them, what they believe in…" minHeight="3rem" />
           </div>
 
           {/* Flaws */}
           <div>
             <label className={labelCls}>Flaws</label>
-            <textarea
-              value={flaws}
-              onChange={(e) => setFlaws(e.target.value)}
-              rows={2}
-              placeholder="Weaknesses, vices, fears…"
-              className={textareaCls}
-            />
+            <RichTextEditor value={flaws} onChange={setFlaws} placeholder="Weaknesses, vices, fears…" minHeight="3rem" />
           </div>
 
           {/* Description */}
           <div>
             <label className={labelCls}>Background / Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              placeholder="History, role, key facts…"
-              className={textareaCls}
-            />
+            <RichTextEditor value={description} onChange={setDescription} placeholder="History, role, key facts…" minHeight="6rem" />
           </div>
 
           {/* Locations */}
@@ -324,13 +295,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
                   </span>
                   GM Notes
                 </label>
-                <textarea
-                  value={gmNotes}
-                  onChange={(e) => setGmNotes(e.target.value)}
-                  rows={3}
-                  placeholder="Private notes — not visible to players…"
-                  className={`${textareaCls} border-primary/20 focus:border-primary`}
-                />
+                <RichTextEditor value={gmNotes} onChange={setGmNotes} placeholder="Private notes — not visible to players…" minHeight="3rem" />
               </div>
             </div>
         </div>

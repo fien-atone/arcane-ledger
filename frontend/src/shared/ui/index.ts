@@ -7,3 +7,5 @@ export { LoadingSpinner } from './LoadingSpinner';
 export { BackLink } from './BackLink';
 export { GmNotesSection } from './GmNotesSection';
 export { SectionLabel } from './SectionLabel';
+export { RichTextEditor } from './RichTextEditor';
+export { RichContent, toHtml } from './RichContent';

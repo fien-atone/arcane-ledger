@@ -5,7 +5,7 @@ import { GroupEditDrawer } from '@/features/groups/ui';
 import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, GmNotesSection } from '@/shared/ui';
+import { ImageUpload, BackLink, GmNotesSection, RichContent } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<string, { label: string; pill: string; icon: string }> = {
@@ -280,7 +280,7 @@ export default function GroupDetailPage() {
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">About</h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
               </div>
-              <p className="text-on-surface-variant leading-loose text-base">{group.description}</p>
+              <RichContent value={group.description} />
             </section>
 
             {/* Goals */}
@@ -291,7 +291,7 @@ export default function GroupDetailPage() {
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>
                 <div className="bg-surface-container-low p-6 border-l-2 border-primary/30">
-                  <p className="text-on-surface-variant leading-relaxed italic">{group.goals}</p>
+                  <RichContent value={group.goals} className="prose-p:italic" />
                 </div>
               </section>
             )}

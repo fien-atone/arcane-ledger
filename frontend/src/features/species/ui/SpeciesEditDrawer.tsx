@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveSpecies } from '../api';
 import { Select } from '@/shared/ui/Select';
+import { RichTextEditor } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Species, SpeciesType, SpeciesSize } from '@/entities/species';
 
@@ -168,13 +169,7 @@ export function SpeciesEditDrawer({ open, onClose, species }: Props) {
           {/* Description */}
           <div>
             <label className={labelCls}>Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={5}
-              placeholder="Describe this species…"
-              className={textareaCls}
-            />
+            <RichTextEditor value={description} onChange={setDescription} placeholder="Describe this species…" minHeight="7rem" />
           </div>
 
           {/* Traits */}

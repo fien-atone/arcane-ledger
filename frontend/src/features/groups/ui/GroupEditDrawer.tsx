@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveGroup } from '@/features/groups/api';
 import { useGroupTypes } from '@/features/groupTypes';
+import { RichTextEditor } from '@/shared/ui';
 import type { Group } from '@/entities/group';
 
 interface Props {
@@ -181,15 +182,13 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
           {/* Description */}
           <div>
             <label className={labelCls}>Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-              rows={4} placeholder="Who they are, what they do…" className={textareaCls} />
+            <RichTextEditor value={description} onChange={setDescription} placeholder="Who they are, what they do…" minHeight="6rem" />
           </div>
 
           {/* Goals */}
           <div>
             <label className={labelCls}>Goals</label>
-            <textarea value={goals} onChange={(e) => setGoals(e.target.value)}
-              rows={3} placeholder="Objectives and motivations…" className={textareaCls} />
+            <RichTextEditor value={goals} onChange={setGoals} placeholder="Objectives and motivations…" />
           </div>
 
           {/* Symbols */}
@@ -207,9 +206,7 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
                 <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
                 GM Notes
               </label>
-              <textarea value={gmNotes} onChange={(e) => setGmNotes(e.target.value)}
-                rows={3} placeholder="Private notes — not visible to players…"
-                className={`${textareaCls} border-primary/20 focus:border-primary`} />
+              <RichTextEditor value={gmNotes} onChange={setGmNotes} placeholder="Private notes — not visible to players…" minHeight="3rem" />
             </div>
           </div>
         </div>

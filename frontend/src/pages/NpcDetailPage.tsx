@@ -5,7 +5,7 @@ import { useGroups } from '@/features/groups/api';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, GmNotesSection } from '@/shared/ui';
+import { ImageUpload, BackLink, GmNotesSection, RichContent } from '@/shared/ui';
 import type { NpcStatus, NpcRelationType } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
@@ -165,9 +165,7 @@ export default function NpcDetailPage() {
                     <h3 className="text-[10px] font-label uppercase tracking-widest text-primary mb-3">
                       Physical Presence
                     </h3>
-                    <p className="text-on-surface-variant text-sm leading-relaxed italic max-w-xl">
-                      {npc.appearance}
-                    </p>
+                    <RichContent value={npc.appearance} className="prose-p:italic prose-p:text-sm" />
                   </div>
                 )}
 
@@ -177,9 +175,7 @@ export default function NpcDetailPage() {
                     <h3 className="text-[10px] font-label uppercase tracking-widest text-primary mb-3">
                       Personality
                     </h3>
-                    <p className="text-on-surface-variant text-sm leading-relaxed max-w-xl">
-                      {npc.personality}
-                    </p>
+                    <RichContent value={npc.personality} className="prose-p:text-sm" />
                   </div>
                 )}
               </div>
@@ -194,9 +190,7 @@ export default function NpcDetailPage() {
                   </h2>
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>
-                <p className="text-on-surface-variant leading-loose text-base">
-                  {npc.description}
-                </p>
+                <RichContent value={npc.description} />
               </section>
             )}
 
@@ -210,7 +204,7 @@ export default function NpcDetailPage() {
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>
                 <div className="bg-surface-container-low border-l-2 border-secondary/30 px-5 py-4">
-                  <p className="text-on-surface-variant leading-relaxed text-sm italic">{npc.motivation}</p>
+                  <RichContent value={npc.motivation} className="prose-p:italic prose-p:text-sm" />
                 </div>
               </section>
             )}
@@ -225,7 +219,7 @@ export default function NpcDetailPage() {
                   <div className="h-px flex-1 bg-outline-variant/10" />
                 </div>
                 <div className="bg-surface-container-low border-l-2 border-outline-variant/30 px-5 py-4">
-                  <p className="text-on-surface-variant/70 leading-relaxed text-sm">{npc.flaws}</p>
+                  <RichContent value={npc.flaws} className="prose-p:text-on-surface-variant/70 prose-p:text-sm" />
                 </div>
               </section>
             )}

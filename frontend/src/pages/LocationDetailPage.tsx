@@ -5,7 +5,7 @@ import { LocationEditDrawer } from '@/features/locations/ui';
 import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useSessions } from '@/features/sessions/api';
 import { useLocationTypes } from '@/features/locationTypes';
-import { GmNotesSection } from '@/shared/ui';
+import { GmNotesSection, RichContent } from '@/shared/ui';
 import type { Location, MapMarker } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
 import { CATEGORY_ICON_COLOR, CATEGORY_BADGE_CLS, CATEGORY_TILE_CLS, CATEGORY_LABEL } from '@/entities/locationType';
@@ -991,9 +991,7 @@ export default function LocationDetailPage() {
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
               </div>
-              <p className="text-on-surface-variant leading-loose text-base">
-                {location.description}
-              </p>
+              <RichContent value={location.description} />
             </section>
 
             {/* Adjacent / Reachable */}

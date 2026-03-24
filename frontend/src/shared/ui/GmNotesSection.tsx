@@ -1,3 +1,5 @@
+import { RichContent, toHtml } from './RichContent';
+
 interface Props {
   notes?: string | null;
   /** Shown when notes is empty/null */
@@ -24,7 +26,9 @@ export function GmNotesSection({ notes, fallback = 'No GM notes yet.', variant =
             </span>
             <h4 className="text-[10px] font-label uppercase tracking-widest text-primary">GM Notes</h4>
           </div>
-          <p className="text-sm text-on-surface-variant/90 leading-relaxed italic">{notes ?? fallback}</p>
+          {notes
+            ? <RichContent value={notes} className="prose-p:text-on-surface-variant/90 prose-p:italic prose-p:text-sm" />
+            : <p className="text-sm text-on-surface-variant/40 italic">{fallback}</p>}
         </div>
       </div>
     );
@@ -45,7 +49,9 @@ export function GmNotesSection({ notes, fallback = 'No GM notes yet.', variant =
           </span>
           <h3 className="text-sm font-bold uppercase tracking-widest text-primary">GM Notes</h3>
         </div>
-        <p className="text-on-surface-variant text-sm leading-relaxed italic">{notes ?? fallback}</p>
+        {notes
+          ? <RichContent value={notes} className="prose-p:text-on-surface-variant prose-p:italic prose-p:text-sm" />
+          : <p className="text-sm text-on-surface-variant/40 italic">{fallback}</p>}
       </div>
     </section>
   );

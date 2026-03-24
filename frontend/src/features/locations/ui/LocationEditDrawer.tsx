@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { useSaveLocation, useLocations } from '@/features/locations/api/queries';
 import { useLocationTypes, useContainmentRules } from '@/features/locationTypes';
 import { Select } from '@/shared/ui/Select';
+import { RichTextEditor } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Location, LocationType } from '@/entities/location';
 import { CATEGORY_ICON_COLOR, CATEGORY_LABEL } from '@/entities/locationType';
@@ -218,13 +219,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           {/* Description */}
           <div>
             <label className={labelCls}>Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={5}
-              placeholder="Describe this location…"
-              className={textareaCls}
-            />
+            <RichTextEditor value={description} onChange={setDescription} placeholder="Describe this location…" minHeight="7rem" />
           </div>
 
           {/* GM Notes */}
@@ -235,13 +230,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
                 <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
                 GM Notes
               </label>
-              <textarea
-                value={gmNotes}
-                onChange={(e) => setGmNotes(e.target.value)}
-                rows={3}
-                placeholder="Private notes — not visible to players…"
-                className={`${textareaCls} border-primary/20 focus:border-primary`}
-              />
+              <RichTextEditor value={gmNotes} onChange={setGmNotes} placeholder="Private notes — not visible to players…" minHeight="3rem" />
             </div>
           </div>
 

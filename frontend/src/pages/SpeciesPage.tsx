@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSpecies } from '@/features/species/api';
 import { SpeciesEditDrawer } from '@/features/species/ui';
+import { RichContent } from '@/shared/ui';
 import type { Species, SpeciesType, SpeciesSize } from '@/entities/species';
 
 const TYPE_LABEL: Record<SpeciesType, string> = {
@@ -231,9 +232,7 @@ function SpeciesDetail({ species }: { species: Species }) {
               </h3>
               <div className="h-px flex-1 bg-outline-variant/20" />
             </div>
-            <p className="text-on-surface-variant leading-relaxed text-base">
-              {species.description}
-            </p>
+            <RichContent value={species.description} />
           </div>
         )}
 
