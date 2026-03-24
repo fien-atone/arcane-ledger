@@ -13,37 +13,28 @@ import type {
   LocationTypeCategory,
   LocationTypeContainmentRule,
 } from '@/entities/locationType';
+import {
+  CATEGORY_ICON_COLOR,
+  CATEGORY_BADGE_CLS,
+  CATEGORY_DOT_CLS,
+} from '@/entities/locationType';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] = [
-  { value: 'world',        label: 'World-scale',       dot: 'bg-indigo-400' },
-  { value: 'civilization', label: 'Civilization',      dot: 'bg-amber-400' },
-  { value: 'geographic',   label: 'Geographic',        dot: 'bg-emerald-400' },
-  { value: 'water',        label: 'Water Bodies',      dot: 'bg-sky-400' },
-  { value: 'poi',          label: 'Points of Interest',dot: 'bg-rose-400' },
-  { value: 'travel',       label: 'Travel',            dot: 'bg-violet-400' },
+  { value: 'world',        label: 'World-scale',        dot: CATEGORY_DOT_CLS.world },
+  { value: 'civilization', label: 'Civilization',       dot: CATEGORY_DOT_CLS.civilization },
+  { value: 'geographic',   label: 'Geographic',         dot: CATEGORY_DOT_CLS.geographic },
+  { value: 'water',        label: 'Water Bodies',       dot: CATEGORY_DOT_CLS.water },
+  { value: 'poi',          label: 'Points of Interest', dot: CATEGORY_DOT_CLS.poi },
+  { value: 'travel',       label: 'Travel',             dot: CATEGORY_DOT_CLS.travel },
 ];
 
 const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'civilization', 'geographic', 'water', 'poi', 'travel'];
 
-const CATEGORY_BADGE: Record<LocationTypeCategory, string> = {
-  world:        'text-indigo-300 bg-indigo-950/60 border-indigo-400/25',
-  civilization: 'text-amber-300 bg-amber-950/60 border-amber-400/25',
-  geographic:   'text-emerald-300 bg-emerald-950/60 border-emerald-400/25',
-  water:        'text-sky-300 bg-sky-950/60 border-sky-400/25',
-  poi:          'text-rose-300 bg-rose-950/60 border-rose-400/25',
-  travel:       'text-violet-300 bg-violet-950/60 border-violet-400/25',
-};
-
-const CATEGORY_ICON: Record<LocationTypeCategory, string> = {
-  world:        'text-indigo-400',
-  civilization: 'text-amber-400',
-  geographic:   'text-emerald-400',
-  water:        'text-sky-400',
-  poi:          'text-rose-400',
-  travel:       'text-violet-400',
-};
+// Re-alias for local convenience
+const CATEGORY_BADGE = CATEGORY_BADGE_CLS;
+const CATEGORY_ICON = CATEGORY_ICON_COLOR;
 
 const inputCls =
   'w-full bg-surface-container border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2 px-3 text-on-surface text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/30';

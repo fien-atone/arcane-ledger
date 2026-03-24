@@ -1,68 +1,17 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLocation, useLocations, useSaveLocation } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
 import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useSessions } from '@/features/sessions/api';
+import { useLocationTypes } from '@/features/locationTypes';
 import { GmNotesSection } from '@/shared/ui';
-import type { Location, LocationType, MapMarker, SettlementType, Climate } from '@/entities/location';
+import type { Location, MapMarker } from '@/entities/location';
+import type { LocationTypeEntry } from '@/entities/locationType';
+import { CATEGORY_ICON_COLOR, CATEGORY_BADGE_CLS, CATEGORY_TILE_CLS, CATEGORY_LABEL } from '@/entities/locationType';
 import type { NPC } from '@/entities/npc';
 
-const TYPE_ICON: Record<LocationType, string> = {
-  region: 'map',
-  settlement: 'location_city',
-  district: 'holiday_village',
-  building: 'domain',
-  dungeon: 'skull',
-};
-
-const TYPE_LABEL: Record<LocationType, string> = {
-  region: 'Region',
-  settlement: 'Settlement',
-  district: 'District',
-  building: 'Building',
-  dungeon: 'Dungeon',
-};
-
-const SETTLEMENT_TYPE_LABEL: Record<SettlementType, string> = {
-  village:    'Village',
-  town:       'Town',
-  city:       'City',
-  metropolis: 'Metropolis',
-};
-
-const SETTLEMENT_TYPE_ICON: Record<SettlementType, string> = {
-  village:    'cottage',
-  town:       'holiday_village',
-  city:       'apartment',
-  metropolis: 'corporate_fare',
-};
-
-const CLIMATE_LABEL: Record<Climate, string> = {
-  arctic: 'Arctic',
-  subarctic: 'Subarctic',
-  temperate: 'Temperate',
-  continental: 'Continental',
-  maritime: 'Maritime',
-  subtropical: 'Subtropical',
-  tropical: 'Tropical',
-  arid: 'Arid',
-  'semi-arid': 'Semi-Arid',
-  highland: 'Highland',
-};
-
-const CLIMATE_ICON: Record<Climate, string> = {
-  arctic: 'ac_unit',
-  subarctic: 'snowing',
-  temperate: 'partly_cloudy_day',
-  continental: 'wb_cloudy',
-  maritime: 'waves',
-  subtropical: 'wb_sunny',
-  tropical: 'local_florist',
-  arid: 'light_mode',
-  'semi-arid': 'wb_twilight',
-  highland: 'landscape',
-};
+type TypeMap = Map<string, LocationTypeEntry>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LocationPlaceholder
@@ -169,16 +118,21 @@ function MiniMapPreview({
   markerX,
   markerY,
   markerLabel,
-  markerNumber,
+  markerIcon,
+  markerIconColor,
+  markerBubbleCls,
 }: {
   imageUrl: string;
   markerX: number;
   markerY: number;
   markerLabel: string;
-  markerNumber: number;
+  markerIcon: string;
+  markerIconColor: string;
+  markerBubbleCls: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imgStyle, setImgStyle] = useState<React.CSSProperties>({ opacity: 0 });
+  const [pinPos, setPinPos] = useState<{ x: number; y: number } | null>(null);
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
@@ -190,21 +144,28 @@ function MiniMapPreview({
     const displayW = MINI_ZOOM * cW;
     const displayH = displayW * (img.naturalHeight / img.naturalWidth);
 
-    // Position image so that the marker % point is at the container center
-    const left = cW / 2 - (markerX / 100) * displayW;
-    const top = cH / 2 - (markerY / 100) * displayH;
+    // Clamp so image never shows dark edges
+    const rawLeft = cW / 2 - (markerX / 100) * displayW;
+    const rawTop  = cH / 2 - (markerY / 100) * displayH;
+    const left = Math.min(0, Math.max(cW - displayW, rawLeft));
+    const top  = Math.min(0, Math.max(cH - displayH, rawTop));
+
+    // Pin pixel position = image origin + marker % * image size
+    const pinX = left + (markerX / 100) * displayW;
+    const pinY = top  + (markerY / 100) * displayH;
 
     setImgStyle({ position: 'absolute', width: displayW, height: displayH, maxWidth: 'none', left, top, opacity: 1, transition: 'opacity 0.3s' });
+    setPinPos({ x: pinX, y: pinY });
   };
 
   return (
-    <div ref={containerRef} className="relative overflow-hidden h-44 rounded-sm bg-surface-container-low group">
+    <div ref={containerRef} className="relative overflow-hidden h-44 bg-surface-container-low">
       <img src={imageUrl} alt="" draggable={false} style={imgStyle} onLoad={handleLoad} />
-      {/* Pin at container center */}
-      <div className="absolute" style={{ left: '50%', top: '50%', transform: 'translate(-50%, -100%)', zIndex: 10 }}>
+      {/* Pin at computed marker position */}
+      <div className="absolute" style={{ left: pinPos?.x ?? '50%', top: pinPos?.y ?? '50%', transform: 'translate(-50%, -14px)', zIndex: 10 }}>
         <div className="flex flex-col items-center" style={{ userSelect: 'none' }}>
-          <div className="w-7 h-7 rounded-full border-2 border-primary bg-surface-container shadow-[0_2px_8px_rgba(0,0,0,0.8)] flex items-center justify-center text-primary text-[11px] font-bold leading-none">
-            {markerNumber}
+          <div className={`w-7 h-7 rounded-full border-2 ${markerBubbleCls} shadow-[0_2px_8px_rgba(0,0,0,0.8)] flex items-center justify-center`}>
+            <span className={`material-symbols-outlined text-[14px] ${markerIconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{markerIcon}</span>
           </div>
           <div className="mt-0.5 px-1.5 py-0.5 rounded-sm text-[10px] font-medium text-on-surface bg-surface-container border border-outline-variant/40 leading-tight whitespace-nowrap shadow-md">
             {markerLabel}
@@ -223,30 +184,44 @@ function MiniMapPreview({
 
 interface MapViewerProps {
   imageUrl: string;
+  locationId: string;
   locationName: string;
   initialMarkers: MapMarker[];
   childLocations: Location[];
   npcsHere: NPC[];
   campaignId: string;
+  typeMap: TypeMap;
   onClose: () => void;
   onSave: (markers: MapMarker[]) => void;
-  onCreateChildLocation: (name: string, type: LocationType, id: string) => void;
+  onRequestAddLocation: (point: { x: number; y: number }) => void;
+  externalMarkerToAdd?: MapMarker | null;
+  onExternalMarkerAdded?: () => void;
 }
 
-function markerColor(_m: MapMarker): string {
-  return 'bg-surface-container border-primary';
-}
+const CATEGORY_MARKER_CLS: Record<string, { bubble: string; icon: string }> = {
+  world:        { bubble: 'bg-indigo-950/80 border-indigo-400',  icon: 'text-indigo-300' },
+  civilization: { bubble: 'bg-amber-950/80 border-amber-400',    icon: 'text-amber-300' },
+  geographic:   { bubble: 'bg-emerald-950/80 border-emerald-400', icon: 'text-emerald-300' },
+  water:        { bubble: 'bg-sky-950/80 border-sky-400',        icon: 'text-sky-300' },
+  poi:          { bubble: 'bg-rose-950/80 border-rose-400',      icon: 'text-rose-300' },
+  travel:       { bubble: 'bg-violet-950/80 border-violet-400',  icon: 'text-violet-300' },
+};
+const MARKER_DEFAULT_CLS = { bubble: 'bg-surface-container border-primary', icon: 'text-primary' };
 
 function MapViewer({
   imageUrl,
+  locationId: _locationId,
   locationName,
   initialMarkers,
   childLocations,
   npcsHere,
   campaignId,
+  typeMap,
   onClose,
   onSave,
-  onCreateChildLocation,
+  onRequestAddLocation,
+  externalMarkerToAdd,
+  onExternalMarkerAdded,
 }: MapViewerProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -254,8 +229,9 @@ function MapViewer({
 
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [addMode, setAddMode] = useState(false);
   const [markers, setMarkers] = useState<MapMarker[]>(initialMarkers);
+  const markersRef = useRef(markers);
+  useEffect(() => { markersRef.current = markers; }, [markers]);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [dragging, setDragging] = useState<{
     id: string;
@@ -268,20 +244,23 @@ function MapViewer({
     startTx: number;
     startTy: number;
   } | null>(null);
-  const [hasMoved, setHasMoved] = useState(false);
-  const [pendingMarker, setPendingMarker] = useState<{ x: number; y: number } | null>(null);
-  const [pendingLabel, setPendingLabel] = useState('');
-  const [pendingLinkedLocationId, setPendingLinkedLocationId] = useState('');
-  const [pendingLinkedNpcId, setPendingLinkedNpcId] = useState('');
+  const hasMovedRef = useRef(false);
+  const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [addLocMode, setAddLocMode] = useState(false);
-  const [pendingLocPoint, setPendingLocPoint] = useState<{ x: number; y: number } | null>(null);
-  const [newLocName, setNewLocName] = useState('');
-  const [newLocType, setNewLocType] = useState<LocationType>('building');
-  const [quickLinkLocId, setQuickLinkLocId] = useState<string | null>(null);
-  const [editingMarkerId, setEditingMarkerId] = useState<string | null>(null);
-  const [editMarkerLabel, setEditMarkerLabel] = useState('');
-  const [editMarkerLinkedLocationId, setEditMarkerLinkedLocationId] = useState('');
+
+  // Escape cancels add mode
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setAddLocMode(false);
+        setGhostPos(null);
+        setSelectedMarkerId(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   // Keep refs for use inside event listeners without stale closures
   const scaleRef = useRef(scale);
@@ -351,41 +330,12 @@ function MapViewer({
     };
   }, []);
 
-  const addPendingMarker = useCallback(() => {
-    if (!pendingMarker) return;
-    // If label is empty but a location is linked, use the location name automatically
-    const autoLabel =
-      pendingLabel.trim() ||
-      (pendingLinkedLocationId
-        ? childLocations.find((l) => l.id === pendingLinkedLocationId)?.name ?? ''
-        : '') ||
-      (pendingLinkedNpcId
-        ? npcsHere.find((n) => n.id === pendingLinkedNpcId)?.name ?? ''
-        : '');
-    if (!autoLabel) return;
-    const newMarker: MapMarker = {
-      id: `marker-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      x: pendingMarker.x,
-      y: pendingMarker.y,
-      label: autoLabel,
-      linkedLocationId: pendingLinkedLocationId || undefined,
-      linkedNpcId: pendingLinkedNpcId || undefined,
-    };
-    const updated = [...markers, newMarker];
-    setMarkers(updated);
-    onSave(updated);
-    setPendingMarker(null);
-    setPendingLabel('');
-    setPendingLinkedLocationId('');
-    setPendingLinkedNpcId('');
-  }, [pendingMarker, pendingLabel, pendingLinkedLocationId, pendingLinkedNpcId, childLocations, npcsHere, markers, onSave]);
-
   // ── Mouse handlers ──────────────────────────────────────────────────────────
 
   const onViewportMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (target.closest('[data-marker]') || target.closest('[data-popup]')) return;
-    setHasMoved(false);
+    hasMovedRef.current = false;
     setPanning({
       startMx: e.clientX,
       startMy: e.clientY,
@@ -399,16 +349,15 @@ function MapViewer({
       const dx = e.clientX - panning.startMx;
       const dy = e.clientY - panning.startMy;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        setHasMoved(true);
+        hasMovedRef.current = true;
       }
       setTranslate({ x: panning.startTx + dx, y: panning.startTy + dy });
     }
     if (dragging) {
-      setHasMoved(true);
+      hasMovedRef.current = true;
       const container = containerRef.current;
       if (!container) return;
       const rect = container.getBoundingClientRect();
-      // Subtract the stored offset so the pin tip follows the cursor without jumping
       const pinScreenX = e.clientX - dragging.offsetX;
       const pinScreenY = e.clientY - dragging.offsetY;
       const imgX = (pinScreenX - rect.left) / scale;
@@ -419,13 +368,17 @@ function MapViewer({
         prev.map((m) => (m.id === dragging.id ? { ...m, x: pctX, y: pctY } : m)),
       );
     }
+    if (addLocMode) {
+      setGhostPos(toImageCoords(e.clientX, e.clientY));
+    } else if (ghostPos) {
+      setGhostPos(null);
+    }
   };
 
   const onViewportMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
-    const didMove = hasMoved;
+    const didMove = hasMovedRef.current;
     setPanning(null);
     setDragging(null);
-    setHasMoved(false);
 
     const target = e.target as HTMLElement;
     if (target.closest('[data-marker]') || target.closest('[data-popup]')) return;
@@ -434,49 +387,17 @@ function MapViewer({
       setSelectedMarkerId(null);
       return;
     }
-    if (pendingMarker) {
-      setPendingMarker(null);
-      return;
-    }
     if (addLocMode && !didMove) {
       const coords = toImageCoords(e.clientX, e.clientY);
-      setPendingLocPoint(coords);
       setAddLocMode(false);
-      setNewLocName('');
-      setNewLocType('building');
-      return;
-    }
-    if (addMode && !didMove) {
-      const coords = toImageCoords(e.clientX, e.clientY);
-      if (quickLinkLocId) {
-        const loc = childLocations.find((l) => l.id === quickLinkLocId);
-        if (loc) {
-          const newMarker: MapMarker = {
-            id: `marker-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            x: coords.x,
-            y: coords.y,
-            label: loc.name,
-            linkedLocationId: loc.id,
-          };
-          const updated = [...markers, newMarker];
-          setMarkers(updated);
-          onSave(updated);
-          setQuickLinkLocId(null);
-          setAddMode(false);
-          return;
-        }
-      }
-      setPendingMarker(coords);
-      setPendingLabel('');
-      setPendingLinkedLocationId('');
-      setPendingLinkedNpcId('');
-      setSelectedMarkerId(null);
+      onRequestAddLocation(coords);
     }
   };
 
   const onViewportMouseLeave = () => {
     setPanning(null);
     setDragging(null);
+    setGhostPos(null);
   };
 
   const onMarkerMouseDown = (e: React.MouseEvent, markerId: string) => {
@@ -484,20 +405,27 @@ function MapViewer({
     const marker = markers.find((m) => m.id === markerId);
     const container = containerRef.current;
     if (!marker || !container) return;
-    // Compute the pin-tip position in screen pixels, store offset so drag has no jump
     const rect = container.getBoundingClientRect();
     const pinScreenX = rect.left + (marker.x / 100) * rect.width;
     const pinScreenY = rect.top + (marker.y / 100) * rect.height;
     setDragging({ id: markerId, offsetX: e.clientX - pinScreenX, offsetY: e.clientY - pinScreenY });
-    setHasMoved(false);
+    hasMovedRef.current = false;
   };
 
   const selectedMarker = markers.find((m) => m.id === selectedMarkerId) ?? null;
-  // Close edit mode whenever selection changes
-  useEffect(() => { setEditingMarkerId(null); }, [selectedMarkerId]);
+
+  // Accept externally-created marker (from page-level LocationEditDrawer)
+  useEffect(() => {
+    if (!externalMarkerToAdd) return;
+    const updated = [...markersRef.current, externalMarkerToAdd];
+    setMarkers(updated);
+    onSave(updated);
+    onExternalMarkerAdded?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalMarkerToAdd]);
 
   const cursorStyle =
-    panning ? 'grabbing' : (addMode || addLocMode) ? 'crosshair' : 'grab';
+    panning ? 'grabbing' : addLocMode ? 'crosshair' : 'grab';
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-black">
@@ -516,14 +444,7 @@ function MapViewer({
         {/* Right */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { setAddMode((v) => !v); setAddLocMode(false); setPendingMarker(null); setPendingLocPoint(null); setSelectedMarkerId(null); setQuickLinkLocId(null); }}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-label uppercase tracking-widest rounded-sm border border-outline-variant/30 text-on-surface-variant hover:border-primary/50 hover:text-primary transition-colors"
-          >
-            <span className="material-symbols-outlined text-sm">add_location</span>
-            Add Marker
-          </button>
-          <button
-            onClick={() => { setAddLocMode((v) => !v); setAddMode(false); setPendingMarker(null); setPendingLocPoint(null); setSelectedMarkerId(null); setQuickLinkLocId(null); }}
+            onClick={() => { setAddLocMode((v) => !v); setGhostPos(null); setSelectedMarkerId(null); }}
             className="flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-label uppercase tracking-widest rounded-sm border border-outline-variant/30 text-on-surface-variant hover:border-primary/50 hover:text-primary transition-colors"
           >
             <span className="material-symbols-outlined text-sm">add_location_alt</span>
@@ -574,7 +495,7 @@ function MapViewer({
           />
 
           {/* Marker pins */}
-          {markers.map((m, index) => (
+          {markers.map((m) => (
             <div
               key={m.id}
               data-marker="true"
@@ -582,7 +503,7 @@ function MapViewer({
                 position: 'absolute',
                 left: `${m.x}%`,
                 top: `${m.y}%`,
-                transform: 'translate(-50%, -100%)',
+                transform: 'translate(-50%, -14px)',
                 cursor: 'pointer',
                 zIndex: 10,
               }}
@@ -591,16 +512,20 @@ function MapViewer({
               onMouseLeave={() => setHoveredMarkerId(null)}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!hasMoved) {
+                if (!hasMovedRef.current) {
                   setSelectedMarkerId((prev) => (prev === m.id ? null : m.id));
-                  setPendingMarker(null);
                 }
               }}
             >
-              <div className="flex flex-col items-center" style={{ userSelect: 'none' }}>
-                {/* Number bubble */}
+              {(() => {
+                const linkedType = childLocations.find((l) => l.id === m.linkedLocationId)?.type ?? '';
+                const te = typeMap.get(linkedType);
+                const cls = te ? (CATEGORY_MARKER_CLS[te.category] ?? MARKER_DEFAULT_CLS) : MARKER_DEFAULT_CLS;
+                return (
+                <div className="flex flex-col items-center" style={{ userSelect: 'none' }}>
+                {/* Icon bubble */}
                 <div
-                  className={`w-7 h-7 rounded-full border-2 ${markerColor(m)} flex items-center justify-center text-primary text-[11px] font-bold leading-none transition-all duration-150 ${
+                  className={`w-7 h-7 rounded-full border-2 ${cls.bubble} flex items-center justify-center text-[11px] font-bold leading-none transition-all duration-150 ${
                     selectedMarkerId === m.id
                       ? 'shadow-[0_2px_8px_rgba(0,0,0,0.8),0_0_16px_6px_rgba(var(--color-primary)/0.7)] ring-2 ring-primary ring-offset-2 ring-offset-black/50 scale-130'
                       : hoveredMarkerId === m.id
@@ -608,7 +533,9 @@ function MapViewer({
                       : 'shadow-[0_2px_8px_rgba(0,0,0,0.8)]'
                   }`}
                 >
-                  {index + 1}
+                  <span className={`material-symbols-outlined text-[14px] ${cls.icon}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {te?.icon ?? 'place'}
+                  </span>
                 </div>
                 {/* Label */}
                 <div className="mt-0.5 px-1.5 py-0.5 rounded-sm text-[10px] font-medium text-on-surface bg-surface-container border border-outline-variant/40 leading-tight whitespace-nowrap max-w-[128px] truncate shadow-md">
@@ -617,346 +544,105 @@ function MapViewer({
                 {/* Pin tail */}
                 <div className="w-px h-2 bg-outline-variant/60" />
               </div>
+                );
+              })()}
             </div>
           ))}
         </div>
 
-        {/* Selected marker popup — positioned relative to viewportRef */}
-        {selectedMarker &&
-          (() => {
-            const pos = getMarkerViewportPos(selectedMarker);
-            const linkedLocation = childLocations.find((l) => l.id === selectedMarker.linkedLocationId);
-            const linkedNpc = npcsHere.find((n) => n.id === selectedMarker.linkedNpcId);
-            const isEditing = editingMarkerId === selectedMarker.id;
-            // Locations available to link: exclude ones already linked to other markers
-            const availableForLink = childLocations.filter(
-              (l) => !markers.find((m) => m.linkedLocationId === l.id && m.id !== selectedMarker.id)
-            );
-            return (
-              <div
-                data-popup="true"
-                style={{
-                  position: 'absolute',
-                  left: pos.x,
-                  top: pos.y,
-                  transform: 'translate(-50%, calc(-100% - 14px))',
-                  zIndex: 50,
-                }}
-                className="bg-surface-container border border-outline-variant/30 rounded-sm shadow-xl p-3 w-56 pointer-events-auto"
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                {isEditing ? (
-                  <>
-                    <p className="text-[9px] uppercase tracking-widest text-primary mb-2">Edit Marker</p>
-                    <input
-                      autoFocus
-                      value={editMarkerLabel}
-                      onChange={(e) => setEditMarkerLabel(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') setEditingMarkerId(null);
-                      }}
-                      placeholder="Label…"
-                      className="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm px-2 py-1 rounded-sm outline-none focus:border-primary/60 mb-2"
-                    />
-                    {/* Location link selector */}
-                    {availableForLink.length > 0 && (
-                      <div className="mb-2">
-                        <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mb-1">Link to location</p>
-                        <div className="flex flex-col gap-0.5 max-h-32 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-                          {availableForLink.map((l) => (
-                            <button
-                              key={l.id}
-                              onClick={() =>
-                                setEditMarkerLinkedLocationId((prev) => (prev === l.id ? '' : l.id))
-                              }
-                              className={`text-left px-2 py-1 text-[11px] rounded-sm flex items-center gap-1.5 transition-all ${
-                                editMarkerLinkedLocationId === l.id
-                                  ? 'bg-primary/15 text-primary border-l-2 border-l-primary'
-                                  : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-l-2 border-l-transparent'
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-[11px] flex-shrink-0">{TYPE_ICON[l.type]}</span>
-                              <span className="truncate">{l.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          const autoLabel = editMarkerLabel.trim() ||
-                            (editMarkerLinkedLocationId
-                              ? childLocations.find((l) => l.id === editMarkerLinkedLocationId)?.name ?? ''
-                              : '');
-                          if (!autoLabel) return;
-                          const updated = markers.map((m) =>
-                            m.id === selectedMarker.id
-                              ? { ...m, label: autoLabel, linkedLocationId: editMarkerLinkedLocationId || undefined }
-                              : m
-                          );
-                          setMarkers(updated);
-                          onSave(updated);
-                          setEditingMarkerId(null);
-                        }}
-                        disabled={!editMarkerLabel.trim() && !editMarkerLinkedLocationId}
-                        className="flex-1 py-1 bg-primary text-on-primary text-[10px] uppercase tracking-wider rounded-sm disabled:opacity-40"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setEditingMarkerId(null)}
-                        className="px-2 py-1 border border-outline-variant/30 text-on-surface-variant text-[10px] rounded-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-start justify-between mb-2">
-                      {linkedLocation ? (
-                        <Link
-                          to={`/campaigns/${campaignId}/locations/${linkedLocation.id}`}
-                          onClick={onClose}
-                          className="text-sm font-headline font-bold text-primary hover:text-primary/80 truncate flex-1"
-                        >
-                          {linkedLocation.name}
-                        </Link>
-                      ) : (
-                        <span className="text-sm font-headline font-bold text-on-surface flex-1 truncate">{selectedMarker.label}</span>
-                      )}
-                      <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                        <button
-                          onClick={() => {
-                            setEditingMarkerId(selectedMarker.id);
-                            setEditMarkerLabel(selectedMarker.linkedLocationId ? '' : selectedMarker.label);
-                            setEditMarkerLinkedLocationId(selectedMarker.linkedLocationId ?? '');
-                          }}
-                          className="text-on-surface-variant/40 hover:text-primary transition-colors"
-                          title="Edit"
-                        >
-                          <span className="material-symbols-outlined text-sm">edit</span>
-                        </button>
-                        <button
-                          onClick={() => setSelectedMarkerId(null)}
-                          className="text-on-surface-variant/40 hover:text-on-surface transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-sm">close</span>
-                        </button>
-                      </div>
-                    </div>
-                    {linkedNpc && (
-                      <Link
-                        to={`/campaigns/${campaignId}/npcs/${linkedNpc.id}`}
-                        onClick={onClose}
-                        className="block text-[11px] text-emerald-400 hover:text-emerald-300 mb-1 truncate"
-                      >
-                        → {linkedNpc.name}
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => {
-                        const updated = markers.filter((m) => m.id !== selectedMarkerId);
-                        setMarkers(updated);
-                        onSave(updated);
-                        setSelectedMarkerId(null);
-                      }}
-                      className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-300 mt-2"
-                    >
-                      <span className="material-symbols-outlined text-xs">delete</span>
-                      Delete marker
-                    </button>
-                  </>
-                )}
-              </div>
-            );
-          })()}
-
-        {/* Pending marker popup */}
-        {pendingMarker &&
-          (() => {
-            const pos = getMarkerViewportPos(pendingMarker as MapMarker);
-            return (
-              <div
-                data-popup="true"
-                style={{
-                  position: 'absolute',
-                  left: pos.x,
-                  top: pos.y,
-                  transform: 'translate(-50%, calc(-100% - 14px))',
-                  zIndex: 50,
-                }}
-                className="bg-surface-container border border-primary/40 rounded-sm shadow-xl p-3 w-56 pointer-events-auto"
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <p className="text-[9px] uppercase tracking-widest text-primary mb-2">New Marker</p>
-                <input
-                  autoFocus
-                  value={pendingLabel}
-                  onChange={(e) => setPendingLabel(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') addPendingMarker();
-                    if (e.key === 'Escape') setPendingMarker(null);
-                  }}
-                  placeholder={pendingLinkedLocationId || pendingLinkedNpcId ? 'Label (optional)…' : 'Label…'}
-                  className="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm px-2 py-1 rounded-sm outline-none focus:border-primary/60 mb-2"
-                />
-                {(() => {
-                  const available = childLocations.filter(
-                    (l) => !markers.find((m) => m.linkedLocationId === l.id)
-                  );
-                  return available.length > 0 ? (
-                    <div className="mb-2">
-                      <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mb-1">Link to location</p>
-                      <div className="flex flex-col gap-0.5 max-h-32 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-                        {available.map((l) => (
-                          <button
-                            key={l.id}
-                            onClick={() => {
-                              setPendingLinkedLocationId((prev) => prev === l.id ? '' : l.id);
-                              setPendingLinkedNpcId('');
-                            }}
-                            className={`text-left px-2 py-1 text-[11px] rounded-sm flex items-center gap-1.5 transition-all ${
-                              pendingLinkedLocationId === l.id
-                                ? 'bg-primary/15 text-primary border-l-2 border-l-primary'
-                                : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-l-2 border-l-transparent'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[11px] flex-shrink-0">{TYPE_ICON[l.type]}</span>
-                            <span className="truncate">{l.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null;
-                })()}
-                {false && npcsHere.length > 0 && (
-                  <select
-                    value={pendingLinkedNpcId}
-                    onChange={(e) => {
-                      setPendingLinkedNpcId(e.target.value);
-                      if (e.target.value) setPendingLinkedLocationId('');
-                    }}
-                    className="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface text-[11px] px-2 py-1 rounded-sm mb-2"
-                  >
-                    <option value="">Link to NPC…</option>
-                    {npcsHere.map((n) => (
-                      <option key={n.id} value={n.id}>
-                        {n.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <div className="flex gap-2">
-                  <button
-                    onClick={addPendingMarker}
-                    disabled={!pendingLabel.trim() && !pendingLinkedLocationId && !pendingLinkedNpcId}
-                    className="flex-1 py-1 bg-primary text-on-primary text-[10px] uppercase tracking-wider rounded-sm disabled:opacity-40"
-                  >
-                    Add
-                  </button>
-                  <button
-                    onClick={() => setPendingMarker(null)}
-                    className="px-2 py-1 border border-outline-variant/30 text-on-surface-variant text-[10px] rounded-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
-
-        {/* Pending location popup */}
-        {pendingLocPoint && (() => {
-          const pos = getMarkerViewportPos(pendingLocPoint as MapMarker);
+        {/* Ghost cursor in add mode */}
+        {addLocMode && ghostPos && (() => {
+          const pos = getMarkerViewportPos(ghostPos as MapMarker);
           return (
             <div
-              data-popup="true"
-              style={{ position: 'absolute', left: pos.x, top: pos.y, transform: 'translate(-50%, calc(-100% - 14px))', zIndex: 50 }}
-              className="bg-surface-container border border-primary/40 rounded-sm shadow-xl p-3 w-60 pointer-events-auto"
-              onMouseDown={(e) => e.stopPropagation()}
+              style={{
+                position: 'absolute',
+                left: pos.x,
+                top: pos.y,
+                transform: 'translate(-50%, -14px)',
+                pointerEvents: 'none',
+                zIndex: 20,
+              }}
             >
-              <p className="text-[9px] uppercase tracking-widest text-primary mb-2">New Location</p>
-              <input
-                autoFocus
-                type="text"
-                value={newLocName}
-                onChange={(e) => setNewLocName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newLocName.trim()) {
-                    const locId = `loc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-                    onCreateChildLocation(newLocName.trim(), newLocType, locId);
-                    const newM: MapMarker = {
-                      id: `marker-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                      x: pendingLocPoint.x,
-                      y: pendingLocPoint.y,
-                      label: newLocName.trim(),
-                      linkedLocationId: locId,
-                    };
-                    const updated = [...markers, newM];
-                    setMarkers(updated);
-                    onSave(updated);
-                    setPendingLocPoint(null);
-                    setNewLocName('');
-                  }
-                  if (e.key === 'Escape') { setPendingLocPoint(null); }
-                }}
-                placeholder="Location name…"
-                className="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface text-sm px-2 py-1 rounded-sm outline-none focus:border-primary/60 mb-2"
-              />
-              <div className="flex flex-wrap gap-1 mb-2">
-                {(['region','settlement','district','building','dungeon'] as LocationType[]).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setNewLocType(t)}
-                    className={`flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wide rounded-sm transition-all ${
-                      newLocType === t ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[10px]">{TYPE_ICON[t]}</span>
-                    {TYPE_LABEL[t]}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    if (!newLocName.trim()) return;
-                    const locId = `loc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-                    onCreateChildLocation(newLocName.trim(), newLocType, locId);
-                    const newM: MapMarker = {
-                      id: `marker-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                      x: pendingLocPoint.x,
-                      y: pendingLocPoint.y,
-                      label: newLocName.trim(),
-                      linkedLocationId: locId,
-                    };
-                    const updated = [...markers, newM];
-                    setMarkers(updated);
-                    onSave(updated);
-                    setPendingLocPoint(null);
-                    setNewLocName('');
-                  }}
-                  disabled={!newLocName.trim()}
-                  className="flex-1 py-1 bg-primary text-on-primary text-[10px] uppercase tracking-wider rounded-sm disabled:opacity-40"
-                >
-                  Create
-                </button>
-                <button
-                  onClick={() => setPendingLocPoint(null)}
-                  className="px-2 py-1 border border-outline-variant/30 text-on-surface-variant text-[10px] rounded-sm"
-                >
-                  Cancel
-                </button>
+              <div className="w-7 h-7 rounded-full border-2 border-primary/70 bg-surface-container/60 flex items-center justify-center animate-pulse backdrop-blur-sm">
+                <span className="material-symbols-outlined text-[14px] text-primary/80">add_location_alt</span>
               </div>
             </div>
           );
         })()}
 
+        {/* Add mode instruction banner */}
+        {addLocMode && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+            <div className="flex items-center gap-2 px-4 py-2 bg-surface-container/90 backdrop-blur-sm border border-primary/30 rounded-sm shadow-lg">
+              <span className="material-symbols-outlined text-[14px] text-primary animate-pulse">add_location_alt</span>
+              <span className="text-[10px] font-label uppercase tracking-widest text-primary">Click on map to place a new location</span>
+              <span className="text-[10px] text-on-surface-variant/40 ml-1">Esc to cancel</span>
+            </div>
+          </div>
+        )}
+
+        {/* Selected marker popup */}
+        {selectedMarker &&
+          (() => {
+            const pos = getMarkerViewportPos(selectedMarker);
+            const linkedLocation = childLocations.find((l) => l.id === selectedMarker.linkedLocationId);
+            const linkedNpc = npcsHere.find((n) => n.id === selectedMarker.linkedNpcId);
+            return (
+              <div
+                data-popup="true"
+                style={{ position: 'absolute', left: pos.x, top: pos.y, transform: 'translate(-50%, calc(-100% - 14px))', zIndex: 50 }}
+                className="bg-surface-container border border-outline-variant/30 rounded-sm shadow-xl p-3 w-48 pointer-events-auto"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  {linkedLocation ? (
+                    <Link
+                      to={`/campaigns/${campaignId}/locations/${linkedLocation.id}`}
+                      onClick={onClose}
+                      className="text-sm font-headline font-bold text-primary hover:text-primary/80 truncate flex-1"
+                    >
+                      {linkedLocation.name}
+                    </Link>
+                  ) : (
+                    <span className="text-sm font-headline font-bold text-on-surface flex-1 truncate">{selectedMarker.label}</span>
+                  )}
+                  <button
+                    onClick={() => setSelectedMarkerId(null)}
+                    className="ml-2 flex-shrink-0 text-on-surface-variant/40 hover:text-on-surface transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+                {linkedNpc && (
+                  <Link
+                    to={`/campaigns/${campaignId}/npcs/${linkedNpc.id}`}
+                    onClick={onClose}
+                    className="block text-[11px] text-emerald-400 hover:text-emerald-300 mb-1 truncate"
+                  >
+                    → {linkedNpc.name}
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    const updated = markers.filter((m) => m.id !== selectedMarkerId);
+                    setMarkers(updated);
+                    onSave(updated);
+                    setSelectedMarkerId(null);
+                  }}
+                  className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-300 mt-1"
+                >
+                  <span className="material-symbols-outlined text-xs">delete</span>
+                  Delete marker
+                </button>
+              </div>
+            );
+          })()}
+
+
         {/* Zoom hint */}
         <div className="absolute bottom-4 left-4 text-[10px] text-white/30 pointer-events-none select-none">
-          Scroll to zoom · Drag to pan{(addMode || addLocMode || quickLinkLocId) ? ' · Click to place' : ''} · {Math.round(scale * 100)}%
+          Scroll to zoom · Drag to pan{addLocMode ? ' · Click to place' : ''} · {Math.round(scale * 100)}%
         </div>
       </div>
 
@@ -976,16 +662,24 @@ function MapViewer({
 
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
           {(() => {
-            // Locations sorted: with marker first (by marker order), then without
-            const locationsWithMarker = (childLocations
-              .map((loc) => ({ loc, marker: markers.find((m) => m.linkedLocationId === loc.id) ?? null }))
-              .filter(({ marker }) => marker !== null) as { loc: Location; marker: MapMarker }[])
-              .sort((a, b) => markers.indexOf(a.marker) - markers.indexOf(b.marker));
-            const locationsWithoutMarker = childLocations.filter(
-              (loc) => !markers.find((m) => m.linkedLocationId === loc.id)
+            const markerByLocId = new Map(
+              markers.filter((m) => m.linkedLocationId).map((m) => [m.linkedLocationId!, m])
             );
-            // Markers not linked to any location
             const unlinkedMarkers = markers.filter((m) => !m.linkedLocationId);
+
+            // Group child locations by category, sorted by CATEGORY_ORDER then name
+            const grouped = new Map<string, Location[]>();
+            const sortedLocs = [...childLocations].sort((a, b) => {
+              const catA = CATEGORY_ORDER.indexOf(typeMap.get(a.type)?.category ?? '');
+              const catB = CATEGORY_ORDER.indexOf(typeMap.get(b.type)?.category ?? '');
+              if (catA !== catB) return catA - catB;
+              return a.name.localeCompare(b.name);
+            });
+            for (const loc of sortedLocs) {
+              const cat = typeMap.get(loc.type)?.category ?? '';
+              if (!grouped.has(cat)) grouped.set(cat, []);
+              grouped.get(cat)!.push(loc);
+            }
 
             const isEmpty = childLocations.length === 0 && markers.length === 0;
             if (isEmpty) {
@@ -994,98 +688,68 @@ function MapViewer({
 
             return (
               <div className="py-1">
-                {/* Locations with marker */}
-                {locationsWithMarker.map(({ loc, marker }) => {
-                  const index = markers.indexOf(marker);
-                  const isHovered = hoveredMarkerId === marker.id;
-                  const isSelected = selectedMarkerId === marker.id;
-                  return (
-                    <button
-                      key={loc.id}
-                      type="button"
-                      onMouseEnter={() => setHoveredMarkerId(marker.id)}
-                      onMouseLeave={() => setHoveredMarkerId(null)}
-                      onClick={() => {
-                        setSelectedMarkerId((prev) => (prev === marker.id ? null : marker.id));
-                        setPendingMarker(null);
-                      }}
-                      className={`w-full text-left px-3 py-2 flex items-center gap-2 transition-all duration-150 outline-none ${
-                        isSelected
-                          ? 'bg-primary/15 border-l-2 border-l-primary text-primary'
-                          : isHovered
-                          ? 'bg-surface-container-high border-l-2 border-l-primary/60'
-                          : 'border-l-2 border-l-transparent hover:bg-surface-container-high hover:border-l-primary/40'
-                      }`}
-                    >
-                      <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[9px] font-bold border-2 transition-all ${isHovered || isSelected ? 'scale-125 ring-1 ring-primary/40' : ''} ${markerColor(marker)}`}>
-                        {index + 1}
-                      </span>
-                      <span className={`material-symbols-outlined text-[12px] flex-shrink-0 transition-colors ${isHovered || isSelected ? 'text-primary/60' : 'text-on-surface-variant/40'}`}>{TYPE_ICON[loc.type]}</span>
-                      <p className={`text-[11px] truncate flex-1 transition-colors ${isHovered || isSelected ? 'text-primary font-medium' : 'text-on-surface'}`}>{loc.name}</p>
-                    </button>
-                  );
-                })}
+                {/* Locations grouped by category */}
+                {[...grouped.entries()].map(([cat, locs], gi) => (
+                  <div key={cat || gi}>
+                    <div className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/30 flex items-center gap-2">
+                      <span>{CATEGORY_LABEL[cat as keyof typeof CATEGORY_LABEL] ?? cat}</span>
+                      <div className="flex-1 h-px bg-outline-variant/10" />
+                    </div>
+                    {locs.map((loc) => {
+                      const marker = markerByLocId.get(loc.id) ?? null;
+                      const te = typeMap.get(loc.type);
+                      const markerId = marker?.id ?? null;
+                      const isHovered = hoveredMarkerId === markerId && markerId !== null;
+                      const isSelected = selectedMarkerId === markerId && markerId !== null;
+                      if (!marker) {
+                        return (
+                          <div key={loc.id} className="px-3 py-2.5 flex items-center gap-2.5 border-l-2 border-l-transparent cursor-default">
+                            <span className={`material-symbols-outlined text-[15px] flex-shrink-0 ${te ? `${CATEGORY_ICON_COLOR[te.category]} opacity-30` : 'text-on-surface-variant/25'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                              {te?.icon ?? 'location_on'}
+                            </span>
+                            <p className="text-[11px] truncate flex-1 text-on-surface-variant/40">{loc.name}</p>
+                          </div>
+                        );
+                      }
 
-                {/* Locations without marker */}
-                {locationsWithoutMarker.length > 0 && (
-                  <>
-                    {locationsWithMarker.length > 0 && <div className="mx-3 mt-2 mb-1 h-px bg-outline-variant/15" />}
-                    {locationsWithoutMarker.map((loc) => {
-                      const isQuickTarget = quickLinkLocId === loc.id;
+                      // Location with a marker — interactive button
                       return (
-                        <div
+                        <button
                           key={loc.id}
-                          className={`group/unlinked px-3 py-2 flex items-center gap-2 border-l-2 transition-all duration-150 ${
-                            isQuickTarget
-                              ? 'border-l-primary bg-primary/8'
-                              : 'border-l-transparent hover:bg-surface-container-high/70'
+                          type="button"
+                          onMouseEnter={() => setHoveredMarkerId(markerId)}
+                          onMouseLeave={() => setHoveredMarkerId(null)}
+                          onClick={() => setSelectedMarkerId((prev) => (prev === markerId ? null : markerId))}
+                          className={`w-full text-left px-3 py-2.5 flex items-center gap-2.5 transition-all duration-150 outline-none border-l-2 ${
+                            isSelected
+                              ? 'bg-primary/10 border-l-primary'
+                              : isHovered
+                              ? 'bg-surface-container-high/60 border-l-primary/30'
+                              : 'border-l-transparent hover:bg-surface-container-high/40 hover:border-l-outline-variant/30'
                           }`}
                         >
-                          <button
-                            onClick={() => {
-                              if (isQuickTarget) {
-                                setQuickLinkLocId(null);
-                                setAddMode(false);
-                              } else {
-                                setQuickLinkLocId(loc.id);
-                                setAddMode(true);
-                                setPendingMarker(null);
-                                setSelectedMarkerId(null);
-                              }
-                            }}
-                            title={isQuickTarget ? 'Cancel' : 'Place marker on map'}
-                            className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                              isQuickTarget
-                                ? 'bg-primary text-on-primary'
-                                : 'opacity-0 group-hover/unlinked:opacity-100 bg-surface-container-high text-on-surface-variant hover:bg-primary hover:text-on-primary'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[12px]">
-                              {isQuickTarget ? 'close' : 'add'}
-                            </span>
-                          </button>
-                          <span className={`material-symbols-outlined text-[12px] flex-shrink-0 transition-colors ${
-                            isQuickTarget ? 'text-primary/60' : 'text-on-surface-variant/30'
-                          }`}>{TYPE_ICON[loc.type]}</span>
-                          <p className={`text-[11px] truncate flex-1 italic transition-colors ${
-                            isQuickTarget ? 'text-primary/80' : 'text-on-surface-variant/40'
+                          <span className={`material-symbols-outlined text-[15px] flex-shrink-0 transition-colors ${
+                            isSelected ? 'text-primary' : te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'
+                          }`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                            {te?.icon ?? 'location_on'}
+                          </span>
+                          <p className={`text-[11px] truncate flex-1 transition-colors ${
+                            isSelected ? 'text-primary font-semibold' : 'text-on-surface'
                           }`}>{loc.name}</p>
-                        </div>
+                        </button>
                       );
                     })}
-                  </>
-                )}
+                  </div>
+                ))}
 
-                {/* Unlinked markers */}
+                {/* Unlinked markers (NPC/free-text labels) */}
                 {unlinkedMarkers.length > 0 && (
-                  <>
-                    <div className="mx-3 mt-3 mb-1 h-px bg-outline-variant/20" />
-                    <p className="px-3 pt-1 pb-1 text-[9px] uppercase tracking-widest text-on-surface-variant/40 font-label flex items-center justify-between">
+                  <div>
+                    <div className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/30 flex items-center gap-2">
                       <span>Markers</span>
-                      <span className="text-primary font-bold">{unlinkedMarkers.length}</span>
-                    </p>
+                      <div className="flex-1 h-px bg-outline-variant/10" />
+                    </div>
                     {unlinkedMarkers.map((m) => {
-                      const index = markers.indexOf(m);
                       const linkedNpc = npcsHere.find((n) => n.id === m.linkedNpcId);
                       const isHovered = hoveredMarkerId === m.id;
                       const isSelected = selectedMarkerId === m.id;
@@ -1095,29 +759,28 @@ function MapViewer({
                           type="button"
                           onMouseEnter={() => setHoveredMarkerId(m.id)}
                           onMouseLeave={() => setHoveredMarkerId(null)}
-                          onClick={() => {
-                            setSelectedMarkerId((prev) => (prev === m.id ? null : m.id));
-                            setPendingMarker(null);
-                          }}
-                          className={`w-full text-left px-3 py-2 flex items-center gap-2 transition-all duration-150 outline-none ${
+                          onClick={() => setSelectedMarkerId((prev) => (prev === m.id ? null : m.id))}
+                          className={`w-full text-left px-3 py-2.5 flex items-center gap-2.5 transition-all duration-150 outline-none border-l-2 ${
                             isSelected
-                              ? 'bg-primary/15 border-l-2 border-l-primary'
+                              ? 'bg-primary/10 border-l-primary'
                               : isHovered
-                              ? 'bg-surface-container-high border-l-2 border-l-primary/60'
-                              : 'border-l-2 border-l-transparent hover:bg-surface-container-high hover:border-l-primary/40'
+                              ? 'bg-surface-container-high/60 border-l-primary/30'
+                              : 'border-l-transparent hover:bg-surface-container-high/40 hover:border-l-outline-variant/30'
                           }`}
                         >
-                          <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[9px] font-bold border-2 transition-all ${isHovered || isSelected ? 'scale-125 ring-1 ring-primary/40' : ''} ${markerColor(m)}`}>
-                            {index + 1}
-                          </span>
+                          <span className={`material-symbols-outlined text-[15px] flex-shrink-0 transition-colors ${
+                            isSelected ? 'text-primary' : 'text-on-surface-variant/40'
+                          }`} style={{ fontVariationSettings: "'FILL' 1" }}>place</span>
                           <div className="min-w-0 flex-1">
-                            <p className={`text-[11px] truncate leading-tight transition-colors ${isHovered || isSelected ? 'text-primary font-medium' : 'text-on-surface'}`}>{m.label}</p>
-                            {linkedNpc && <p className="text-[9px] text-emerald-400 truncate">{linkedNpc.name}</p>}
+                            <p className={`text-[11px] truncate leading-tight transition-colors ${
+                              isSelected ? 'text-primary font-semibold' : 'text-on-surface'
+                            }`}>{m.label}</p>
+                            {linkedNpc && <p className="text-[9px] text-emerald-400/70 truncate">{linkedNpc.name}</p>}
                           </div>
                         </button>
                       );
                     })}
-                  </>
+                  </div>
                 )}
               </div>
             );
@@ -1129,6 +792,8 @@ function MapViewer({
     </div>
   );
 }
+
+const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', 'travel'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LocationDetailPage
@@ -1144,15 +809,33 @@ export default function LocationDetailPage() {
   const [addNpcSearch, setAddNpcSearch] = useState('');
   const [confirmRemoveNpcId, setConfirmRemoveNpcId] = useState<string | null>(null);
   const [addChildLocOpen, setAddChildLocOpen] = useState(false);
-  const [newChildName, setNewChildName] = useState('');
-  const [newChildType, setNewChildType] = useState<LocationType>('building');
+  const [mapAddLocPoint, setMapAddLocPoint] = useState<{ x: number; y: number } | null>(null);
+  const [mapAddLocDrawerOpen, setMapAddLocDrawerOpen] = useState(false);
+  const [mapExternalMarker, setMapExternalMarker] = useState<MapMarker | null>(null);
 
   const { data: location, isLoading, isError } = useLocation(campaignId ?? '', locationId ?? '');
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
+  const { data: locationTypes = [] } = useLocationTypes();
   const saveMutation = useSaveLocation(campaignId ?? '');
   const saveNpc = useSaveNpc();
+
+  const typeMap = useMemo<TypeMap>(
+    () => new Map(locationTypes.map((t) => [t.id, t])),
+    [locationTypes],
+  );
+
+  const childLocations = useMemo(
+    () => (allLocations?.filter((l) => l.parentLocationId === location?.id) ?? [])
+      .sort((a, b) => {
+        const catA = CATEGORY_ORDER.indexOf(typeMap.get(a.type)?.category ?? '');
+        const catB = CATEGORY_ORDER.indexOf(typeMap.get(b.type)?.category ?? '');
+        if (catA !== catB) return catA - catB;
+        return a.name.localeCompare(b.name);
+      }),
+    [allLocations, location?.id, typeMap],
+  );
 
   if (isLoading) {
     return (
@@ -1183,15 +866,9 @@ export default function LocationDetailPage() {
     ? allLocations?.find((l) => l.id === location.parentLocationId)
     : undefined;
 
-  // Child locations
-  const childLocations = (allLocations?.filter((l) => l.parentLocationId === location.id) ?? [])
-    .sort((a, b) => a.name.localeCompare(b.name));
-
   // Marker for THIS location on the parent's map
   const parentMarker = parentLocation?.mapMarkers?.find((m) => m.linkedLocationId === location.id);
-  const parentMarkerIndex = parentMarker
-    ? (parentLocation?.mapMarkers?.indexOf(parentMarker) ?? -1)
-    : -1;
+
 
   // Adjacent locations
   const adjacentLocations =
@@ -1212,24 +889,6 @@ export default function LocationDetailPage() {
 
   const handleImageUpload = (dataUrl: string) => {
     saveMutation.mutate({ ...location, image: dataUrl });
-  };
-
-  const handleCreateChildLocation = () => {
-    if (!newChildName.trim()) return;
-    const now = new Date().toISOString();
-    saveMutation.mutate({
-      id: `loc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      campaignId: campaignId ?? '',
-      name: newChildName.trim(),
-      aliases: [],
-      type: newChildType,
-      description: '',
-      parentLocationId: location.id,
-      createdAt: now,
-      updatedAt: now,
-    } as Location, {
-      onSuccess: () => { setAddChildLocOpen(false); setNewChildName(''); setNewChildType('building'); },
-    });
   };
 
   const handleAddNpc = (npc: NPC) => {
@@ -1293,32 +952,29 @@ export default function LocationDetailPage() {
             {/* Header */}
             <header className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                  <span className="material-symbols-outlined text-[14px]">
-                    {TYPE_ICON[location.type]}
-                  </span>
-                  {TYPE_LABEL[location.type]}
-                </span>
-                {location.settlementType && (
-                  <span className="flex items-center gap-1.5 px-3 py-1 bg-secondary/5 text-secondary text-[10px] font-label tracking-widest uppercase rounded-sm border border-secondary/20">
-                    <span className="material-symbols-outlined text-[13px]">
-                      {SETTLEMENT_TYPE_ICON[location.settlementType]}
+                {(() => {
+                  const te = typeMap.get(location.type);
+                  return (
+                    <span className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-label tracking-widest uppercase rounded-sm border ${
+                      te ? CATEGORY_BADGE_CLS[te.category] : 'bg-surface-container text-on-surface-variant border-outline-variant/10'
+                    }`}>
+                      <span className="material-symbols-outlined text-[14px]">
+                        {te?.icon ?? 'location_on'}
+                      </span>
+                      {te?.name ?? location.type}
                     </span>
-                    {SETTLEMENT_TYPE_LABEL[location.settlementType]}
-                  </span>
-                )}
+                  );
+                })()}
                 {location.settlementPopulation != null && (
                   <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/20">
                     <span className="material-symbols-outlined text-[13px]">people</span>
                     {location.settlementPopulation.toLocaleString()}
                   </span>
                 )}
-                {location.climate && (
+                {location.biome && (
                   <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/20">
-                    <span className="material-symbols-outlined text-[13px]">
-                      {CLIMATE_ICON[location.climate]}
-                    </span>
-                    {CLIMATE_LABEL[location.climate]}
+                    <span className="material-symbols-outlined text-[13px]">terrain</span>
+                    {location.biome.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                   </span>
                 )}
               </div>
@@ -1356,15 +1012,17 @@ export default function LocationDetailPage() {
                       to={`/campaigns/${campaignId}/locations/${adj.id}`}
                       className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
                     >
-                      <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-secondary transition-colors text-[18px]">
-                        {TYPE_ICON[adj.type]}
+                      <span className={`material-symbols-outlined transition-colors text-[18px] group-hover:text-secondary ${
+                        (() => { const te = typeMap.get(adj.type); return te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'; })()
+                      }`}>
+                        {typeMap.get(adj.type)?.icon ?? 'location_on'}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-headline text-on-surface group-hover:text-secondary transition-colors truncate">
                           {adj.name}
                         </p>
                         <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
-                          {TYPE_LABEL[adj.type]}
+                          {typeMap.get(adj.type)?.name ?? adj.type}
                         </p>
                       </div>
                       <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-secondary/60 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1465,7 +1123,7 @@ export default function LocationDetailPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-headline text-on-surface group-hover:text-primary transition-colors truncate">
+                              <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">
                                 {npc.name}
                               </p>
                               {npc.species && (
@@ -1621,15 +1279,24 @@ export default function LocationDetailPage() {
                   to={`/campaigns/${campaignId}/locations/${parentLocation.id}`}
                   className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all rounded-sm"
                 >
-                  <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors text-[18px]">
-                    {TYPE_ICON[parentLocation.type]}
-                  </span>
+                  {(() => {
+                    const te = typeMap.get(parentLocation.type);
+                    return (
+                      <span className={`w-10 h-10 rounded-sm flex items-center justify-center border flex-shrink-0 transition-all ${
+                        te ? CATEGORY_TILE_CLS[te.category] : 'bg-surface-container-highest border-outline-variant/20'
+                      }`}>
+                        <span className={`material-symbols-outlined text-[18px] ${te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'}`}>
+                          {te?.icon ?? 'location_on'}
+                        </span>
+                      </span>
+                    );
+                  })()}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-headline text-on-surface group-hover:text-primary transition-colors truncate">
                       {parentLocation.name}
                     </p>
                     <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
-                      {TYPE_LABEL[parentLocation.type]}
+                      {typeMap.get(parentLocation.type)?.name ?? parentLocation.type}
                     </p>
                   </div>
                   <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1642,23 +1309,30 @@ export default function LocationDetailPage() {
             {/* Mini-map: this location's marker on the parent's map */}
             {parentLocation && parentLocation.image && parentMarker && (
               <div>
-                <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-3 flex items-center gap-2">
+                <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-2 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[13px] text-primary">my_location</span>
                   On the map of {parentLocation.name}
                 </h4>
-                <MiniMapPreview
-                  imageUrl={parentLocation.image}
-                  markerX={parentMarker.x}
-                  markerY={parentMarker.y}
-                  markerLabel={parentMarker.label}
-                  markerNumber={parentMarkerIndex + 1}
-                />
                 <Link
                   to={`/campaigns/${campaignId}/locations/${parentLocation.id}`}
-                  className="mt-1.5 flex items-center gap-1 text-[9px] text-on-surface-variant/50 hover:text-primary uppercase tracking-widest transition-colors"
+                  className="block relative group/minimap rounded-sm overflow-hidden"
                 >
-                  <span className="material-symbols-outlined text-[11px]">open_in_new</span>
-                  Open {parentLocation.name}
+                  <MiniMapPreview
+                    imageUrl={parentLocation.image}
+                    markerX={parentMarker.x}
+                    markerY={parentMarker.y}
+                    markerLabel={parentMarker.label}
+                    markerIcon={typeMap.get(location.type)?.icon ?? 'location_on'}
+                    markerIconColor={(() => { const te = typeMap.get(location.type); return te ? CATEGORY_ICON_COLOR[te.category] : 'text-primary'; })()}
+                    markerBubbleCls={(() => { const te = typeMap.get(location.type); return te ? (CATEGORY_MARKER_CLS[te.category]?.bubble ?? MARKER_DEFAULT_CLS.bubble) : MARKER_DEFAULT_CLS.bubble; })()}
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 flex items-end justify-end p-2.5 opacity-0 group-hover/minimap:opacity-100 transition-opacity pointer-events-none">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface/90 backdrop-blur-sm border border-outline-variant/30 rounded-sm text-[10px] font-label uppercase tracking-widest text-primary">
+                      <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                      Open {parentLocation.name}
+                    </div>
+                  </div>
                 </Link>
               </div>
             )}
@@ -1671,7 +1345,7 @@ export default function LocationDetailPage() {
                   </h4>
                   <div className="h-px flex-1 bg-outline-variant/10" />
                   <button
-                    onClick={() => { setAddChildLocOpen((v) => !v); setNewChildName(''); }}
+                    onClick={() => setAddChildLocOpen(true)}
                     className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                   >
                     <span className="material-symbols-outlined text-[13px]">add_location_alt</span>
@@ -1679,77 +1353,32 @@ export default function LocationDetailPage() {
                   </button>
                 </div>
 
-                {addChildLocOpen && (
-                  <div className="mb-3 border border-outline-variant/20 bg-surface-container-low p-3 space-y-2">
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="Location name…"
-                      value={newChildName}
-                      onChange={(e) => setNewChildName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleCreateChildLocation();
-                        if (e.key === 'Escape') setAddChildLocOpen(false);
-                      }}
-                      className="w-full bg-surface-container border border-outline-variant/25 focus:border-primary rounded-sm py-2 px-3 text-sm text-on-surface placeholder:text-on-surface-variant/30 focus:ring-0 focus:outline-none transition-colors"
-                    />
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1 flex-wrap flex-1">
-                        {(['region','settlement','district','building','dungeon'] as LocationType[]).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setNewChildType(t)}
-                            className={`flex items-center gap-1 px-2 py-1 text-[10px] font-label uppercase tracking-wider rounded-sm transition-all ${
-                              newChildType === t
-                                ? 'bg-primary text-on-primary'
-                                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[11px]">{TYPE_ICON[t]}</span>
-                            {TYPE_LABEL[t]}
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        onClick={handleCreateChildLocation}
-                        disabled={!newChildName.trim() || saveMutation.isPending}
-                        className="px-3 py-1.5 bg-primary text-on-primary text-[10px] font-label uppercase tracking-wider rounded-sm disabled:opacity-40 transition-opacity flex-shrink-0"
-                      >
-                        Create
-                      </button>
-                      <button
-                        onClick={() => setAddChildLocOpen(false)}
-                        className="p-1 text-on-surface-variant hover:text-on-surface transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-sm">close</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 <div className="space-y-1.5">
                   {childLocations.map((child) => {
-                    const markerIdx = location.mapMarkers?.findIndex((mk) => mk.linkedLocationId === child.id) ?? -1;
+                    const hasMarker = (location.mapMarkers ?? []).some((mk) => mk.linkedLocationId === child.id);
+                    const te = typeMap.get(child.type);
                     return (
                       <Link
                         key={child.id}
                         to={`/campaigns/${campaignId}/locations/${child.id}`}
                         className="group flex items-center gap-2.5 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all rounded-sm"
                       >
-                        <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors text-[16px]">
-                          {TYPE_ICON[child.type]}
+                        <span className={`material-symbols-outlined transition-colors text-[16px] group-hover:text-primary ${
+                          te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'
+                        }`}>
+                          {te?.icon ?? 'location_on'}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-headline text-on-surface group-hover:text-primary transition-colors truncate">
+                          <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">
                             {child.name}
                           </p>
                           <p className="text-[9px] uppercase tracking-wider text-on-surface-variant/40">
-                            {TYPE_LABEL[child.type]}
+                            {te?.name ?? child.type}
                           </p>
                         </div>
-                        {markerIdx >= 0 && (
-                          <span className="w-4 h-4 rounded-full bg-surface-container border border-primary flex items-center justify-center text-[8px] font-bold text-primary flex-shrink-0">
-                            {markerIdx + 1}
+                        {hasMarker && (
+                          <span className="material-symbols-outlined text-[13px] text-on-surface-variant/30 flex-shrink-0">
+                            location_on
                           </span>
                         )}
                         <span className="material-symbols-outlined text-[12px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1774,33 +1403,53 @@ export default function LocationDetailPage() {
         campaignId={campaignId ?? ''}
         location={location}
       />
+      <LocationEditDrawer
+        open={addChildLocOpen}
+        onClose={() => setAddChildLocOpen(false)}
+        campaignId={campaignId ?? ''}
+        initialParentId={location.id}
+      />
 
       {mapOpen && location.image && (
         <MapViewer
           imageUrl={location.image}
+          locationId={location.id}
           locationName={location.name}
           initialMarkers={location.mapMarkers ?? []}
           childLocations={childLocations}
           npcsHere={npcsHere}
           campaignId={campaignId ?? ''}
+          typeMap={typeMap}
           onClose={() => setMapOpen(false)}
           onSave={(markers) => saveMutation.mutate({ ...location, mapMarkers: markers })}
-          onCreateChildLocation={(name, type, id) => {
-            const now = new Date().toISOString();
-            saveMutation.mutate({
-              id,
-              campaignId: campaignId ?? '',
-              name,
-              aliases: [],
-              type,
-              description: '',
-              parentLocationId: location.id,
-              createdAt: now,
-              updatedAt: now,
-            } as Location);
+          onRequestAddLocation={(point) => {
+            setMapAddLocPoint(point);
+            setMapAddLocDrawerOpen(true);
           }}
+          externalMarkerToAdd={mapExternalMarker}
+          onExternalMarkerAdded={() => setMapExternalMarker(null)}
         />
       )}
+
+      {/* Page-level drawer for "Add Location from map" flow */}
+      <LocationEditDrawer
+        open={mapAddLocDrawerOpen}
+        onClose={() => { setMapAddLocDrawerOpen(false); setMapAddLocPoint(null); }}
+        campaignId={campaignId ?? ''}
+        initialParentId={location.id}
+        elevated
+        onSaved={(saved) => {
+          if (!mapAddLocPoint) return;
+          setMapExternalMarker({
+            id: `marker-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            x: mapAddLocPoint.x,
+            y: mapAddLocPoint.y,
+            label: saved.name,
+            linkedLocationId: saved.id,
+          });
+          setMapAddLocPoint(null);
+        }}
+      />
     </main>
   );
 }

@@ -192,7 +192,7 @@ Auth is mock — `user/user` logs in as GM. Stored in `sessionStorage`.
 
 ## Versioning
 
-Current version: **v0.1.9**
+Current version: **v0.2.0**
 
 Changelog entries live in `src/shared/changelog/entries.ts` as a typed array.
 When adding features, add a new entry at the top with the bumped version.

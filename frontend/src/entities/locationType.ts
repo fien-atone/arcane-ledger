@@ -37,6 +37,59 @@ export interface LocationTypeEntry {
   builtin?: boolean;
 }
 
+// ── Category colour maps ───────────────────────────────────────────────────────
+// Used by pages/components that render location type icons with colour coding.
+
+/** Human-readable label per category */
+export const CATEGORY_LABEL: Record<LocationTypeCategory, string> = {
+  world:        'World-scale',
+  civilization: 'Civilization',
+  geographic:   'Geographic',
+  water:        'Water Bodies',
+  poi:          'Points of Interest',
+  travel:       'Travel',
+};
+
+/** Dot colour class per category for Select dropdowns (bg-* Tailwind class) */
+export const CATEGORY_DOT_CLS: Record<LocationTypeCategory, string> = {
+  world:        'bg-indigo-400',
+  civilization: 'bg-amber-400',
+  geographic:   'bg-emerald-400',
+  water:        'bg-sky-400',
+  poi:          'bg-rose-400',
+  travel:       'bg-violet-400',
+};
+
+/** Icon colour class per category (e.g. text-amber-400) */
+export const CATEGORY_ICON_COLOR: Record<LocationTypeCategory, string> = {
+  world:        'text-indigo-400',
+  civilization: 'text-amber-400',
+  geographic:   'text-emerald-400',
+  water:        'text-sky-400',
+  poi:          'text-rose-400',
+  travel:       'text-violet-400',
+};
+
+/** Badge (tile bg + text + border) class set per category */
+export const CATEGORY_BADGE_CLS: Record<LocationTypeCategory, string> = {
+  world:        'text-indigo-300 bg-indigo-950/60 border-indigo-400/25',
+  civilization: 'text-amber-300 bg-amber-950/60 border-amber-400/25',
+  geographic:   'text-emerald-300 bg-emerald-950/60 border-emerald-400/25',
+  water:        'text-sky-300 bg-sky-950/60 border-sky-400/25',
+  poi:          'text-rose-300 bg-rose-950/60 border-rose-400/25',
+  travel:       'text-violet-300 bg-violet-950/60 border-violet-400/25',
+};
+
+/** Icon tile bg class per category */
+export const CATEGORY_TILE_CLS: Record<LocationTypeCategory, string> = {
+  world:        'bg-indigo-950/40 border-indigo-400/20',
+  civilization: 'bg-amber-950/40 border-amber-400/20',
+  geographic:   'bg-emerald-950/40 border-emerald-400/20',
+  water:        'bg-sky-950/40 border-sky-400/20',
+  poi:          'bg-rose-950/40 border-rose-400/20',
+  travel:       'bg-violet-950/40 border-violet-400/20',
+};
+
 /** A rule: locations of parentTypeId can contain locations of childTypeId */
 export interface LocationTypeContainmentRule {
   id: string;

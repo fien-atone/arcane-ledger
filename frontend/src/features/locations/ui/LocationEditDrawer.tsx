@@ -1,36 +1,14 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { useSaveLocation } from '@/features/locations/api/queries';
-import { useLocationTypes } from '@/features/locationTypes';
+import { useSaveLocation, useLocations } from '@/features/locations/api/queries';
+import { useLocationTypes, useContainmentRules } from '@/features/locationTypes';
 import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
-import type { Location, LocationType, SettlementType, Climate } from '@/entities/location';
+import type { Location, LocationType } from '@/entities/location';
+import { CATEGORY_ICON_COLOR, CATEGORY_LABEL } from '@/entities/locationType';
 
-const SETTLEMENT_TYPE_OPTIONS: SelectOption<SettlementType>[] = [
-  { value: 'village',    label: 'Village' },
-  { value: 'town',       label: 'Town' },
-  { value: 'city',       label: 'City' },
-  { value: 'metropolis', label: 'Metropolis' },
-];
-
-const SETTLEMENT_DEFAULT_POPULATION: Record<SettlementType, number> = {
-  village: 400,
-  town: 3000,
-  city: 12000,
-  metropolis: 75000,
-};
-
-const CLIMATE_OPTIONS: SelectOption<Climate>[] = [
-  { value: 'arctic',      label: 'Arctic' },
-  { value: 'subarctic',   label: 'Subarctic' },
-  { value: 'temperate',   label: 'Temperate' },
-  { value: 'continental', label: 'Continental' },
-  { value: 'maritime',    label: 'Maritime' },
-  { value: 'subtropical', label: 'Subtropical' },
-  { value: 'tropical',    label: 'Tropical' },
-  { value: 'arid',        label: 'Arid (Desert)' },
-  { value: 'semi-arid',   label: 'Semi-Arid' },
-  { value: 'highland',    label: 'Highland' },
-];
+function biomeLabel(value: string): string {
+  return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 const inputCls =
   'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
@@ -46,30 +24,61 @@ interface Props {
   onClose: () => void;
   campaignId: string;
   location?: Location;
+  initialParentId?: string;
+  onSaved?: (location: Location) => void;
+  /** When true, uses z-[110]/z-[120] to render above z-[100] overlays like MapViewer */
+  elevated?: boolean;
 }
 
 function generateId() {
   return `loc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-export function LocationEditDrawer({ open, onClose, campaignId, location }: Props) {
+export function LocationEditDrawer({ open, onClose, campaignId, location, initialParentId, onSaved, elevated }: Props) {
   const save = useSaveLocation(campaignId);
   const { data: locationTypes = [] } = useLocationTypes();
+  const { data: containmentRules = [] } = useContainmentRules();
+  const { data: allLocations = [] } = useLocations(campaignId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isNew = !location;
 
   const locationTypeOptions = useMemo<SelectOption<string>[]>(
-    () => locationTypes.map((t) => ({ value: t.id, label: t.name })),
+    () => locationTypes.map((t) => ({
+      value: t.id,
+      label: t.name,
+      icon: t.icon,
+      iconColor: CATEGORY_ICON_COLOR[t.category],
+      group: CATEGORY_LABEL[t.category],
+    })),
     [locationTypes],
   );
 
   const [name, setName] = useState('');
   const [type, setType] = useState<LocationType>('building');
+  const [parentLocationId, setParentLocationId] = useState('');
 
   const selectedTypeEntry = locationTypes.find((t) => t.id === type);
-  const [settlementType, setSettlementType] = useState<SettlementType | ''>('');
+  const biomeOptions = useMemo<SelectOption<string>[]>(
+    () => (selectedTypeEntry?.biomeOptions ?? []).map((v) => ({ value: v, label: biomeLabel(v) })),
+    [selectedTypeEntry],
+  );
+
+  // Valid parent locations: those whose type is listed as a parent for the current type in containment rules
+  const validParentTypeIds = useMemo(
+    () => new Set(containmentRules.filter((r) => r.childTypeId === type).map((r) => r.parentTypeId)),
+    [containmentRules, type],
+  );
+
+  const parentOptions = useMemo<SelectOption<string>[]>(
+    () => allLocations
+      .filter((l) => validParentTypeIds.has(l.type) && l.id !== location?.id)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((l) => ({ value: l.id, label: l.name })),
+    [allLocations, validParentTypeIds, locationTypes, location?.id],
+  );
+
   const [settlementPopulation, setSettlementPopulation] = useState('');
-  const [climate, setClimate] = useState<Climate | ''>('');
+  const [biome, setBiome] = useState('');
   const [description, setDescription] = useState('');
   const [gmNotes, setGmNotes] = useState('');
   const [image, setImage] = useState<string | undefined>(undefined);
@@ -79,16 +88,16 @@ export function LocationEditDrawer({ open, onClose, campaignId, location }: Prop
     if (location) {
       setName(location.name);
       setType(location.type);
-      setSettlementType(location.settlementType ?? '');
+      setParentLocationId(location.parentLocationId ?? '');
       setSettlementPopulation(location.settlementPopulation?.toString() ?? '');
-      setClimate(location.climate ?? '');
+      setBiome(location.biome ?? '');
       setDescription(location.description);
       setGmNotes(location.gmNotes ?? '');
       setImage(location.image);
     } else {
-      setName(''); setType(locationTypes[0]?.id ?? 'building'); setSettlementType('');
-      setSettlementPopulation(''); setClimate(''); setDescription('');
-      setGmNotes(''); setImage(undefined);
+      setName(''); setType(locationTypes[0]?.id ?? 'building');
+      setParentLocationId(initialParentId ?? ''); setSettlementPopulation(''); setBiome('');
+      setDescription(''); setGmNotes(''); setImage(undefined);
     }
   }, [open, location]);
 
@@ -112,22 +121,22 @@ export function LocationEditDrawer({ open, onClose, campaignId, location }: Prop
       ...(location ?? {}),
       name: name.trim(),
       type,
-      settlementType: selectedTypeEntry?.isSettlement && settlementType ? settlementType : undefined,
+      parentLocationId: parentLocationId || undefined,
       settlementPopulation: selectedTypeEntry?.isSettlement && !isNaN(pop) && pop > 0 ? pop : undefined,
-      climate: (selectedTypeEntry?.biomeOptions?.length ?? 0) > 0 && climate ? climate : undefined,
+      biome: biomeOptions.length > 0 && biome ? biome : undefined,
       description: description.trim(),
       gmNotes: gmNotes.trim() || undefined,
       image,
     };
-    save.mutate(record, { onSuccess: onClose });
+    save.mutate(record, { onSuccess: () => { onSaved?.(record); onClose(); } });
   };
 
   if (!open) return null;
 
   return (
     <>
-      <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-70 w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
+      <div className={`fixed inset-0 ${elevated ? 'z-[110]' : 'z-60'} bg-black/50 backdrop-blur-sm`} onClick={onClose} />
+      <div className={`fixed inset-y-0 right-0 ${elevated ? 'z-[120]' : 'z-70'} w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20`}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
@@ -160,52 +169,48 @@ export function LocationEditDrawer({ open, onClose, campaignId, location }: Prop
               value={type}
               options={locationTypeOptions}
               nullable={false}
-              onChange={(v) => setType(v || (locationTypes[0]?.id ?? 'building'))}
+              searchable
+              onChange={(v) => { setType(v || (locationTypes[0]?.id ?? 'building')); setParentLocationId(initialParentId ?? ''); }}
             />
           </div>
 
-          {/* Settlement fields — type + population side by side */}
-          {selectedTypeEntry?.isSettlement && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}>Settlement Type</label>
-                <Select
-                  value={settlementType}
-                  options={SETTLEMENT_TYPE_OPTIONS}
-                  placeholder="— not set —"
-                  onChange={(val) => {
-                    const prevDefault = settlementType ? SETTLEMENT_DEFAULT_POPULATION[settlementType as SettlementType] : null;
-                    const isDefaultOrEmpty = !settlementPopulation || (prevDefault !== null && settlementPopulation === String(prevDefault));
-                    setSettlementType(val);
-                    if (val && isDefaultOrEmpty) {
-                      setSettlementPopulation(String(SETTLEMENT_DEFAULT_POPULATION[val as SettlementType]));
-                    }
-                  }}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Population</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={settlementPopulation}
-                  onChange={(e) => setSettlementPopulation(e.target.value)}
-                  placeholder="e.g. 12 000"
-                  className={inputCls}
-                />
-              </div>
+          {/* Parent location — filtered by containment rules */}
+          {parentOptions.length > 0 && (
+            <div>
+              <label className={labelCls}>Part of</label>
+              <Select
+                value={parentLocationId}
+                options={parentOptions}
+                placeholder="— none —"
+                onChange={setParentLocationId}
+              />
             </div>
           )}
 
-          {/* Climate (only for geographic types with biome options) */}
-          {(selectedTypeEntry?.biomeOptions?.length ?? 0) > 0 && (
+          {/* Population — only for settlement types */}
+          {selectedTypeEntry?.isSettlement && (
             <div>
-              <label className={labelCls}>Climate</label>
+              <label className={labelCls}>Population</label>
+              <input
+                type="number"
+                min={0}
+                value={settlementPopulation}
+                onChange={(e) => setSettlementPopulation(e.target.value)}
+                placeholder="e.g. 12 000"
+                className={inputCls}
+              />
+            </div>
+          )}
+
+          {/* Biome / terrain sub-type — driven by the selected type's biomeOptions */}
+          {biomeOptions.length > 0 && (
+            <div>
+              <label className={labelCls}>Terrain</label>
               <Select
-                value={climate}
-                options={CLIMATE_OPTIONS}
+                value={biome}
+                options={biomeOptions}
                 placeholder="— not set —"
-                onChange={setClimate}
+                onChange={setBiome}
               />
             </div>
           )}

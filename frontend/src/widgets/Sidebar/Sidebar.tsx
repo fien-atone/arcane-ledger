@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
 import { useAuthStore } from '@/features/auth';
@@ -221,10 +222,13 @@ export function Sidebar() {
         </button>
       </div>
 
-      <ChangelogDrawer
-        open={changelogOpen}
-        onClose={() => setChangelogOpen(false)}
-      />
+      {createPortal(
+        <ChangelogDrawer
+          open={changelogOpen}
+          onClose={() => setChangelogOpen(false)}
+        />,
+        document.body,
+      )}
     </aside>
   );
 }

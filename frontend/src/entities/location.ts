@@ -1,21 +1,6 @@
 /** Broadened to string so the configurable LocationTypeEntry vocabulary is accepted */
 export type LocationType = string;
 
-/** Classification of a settlement by scale */
-export type SettlementType = 'village' | 'town' | 'city' | 'metropolis';
-
-export type Climate =
-  | 'arctic'
-  | 'subarctic'
-  | 'temperate'
-  | 'continental'
-  | 'maritime'
-  | 'subtropical'
-  | 'tropical'
-  | 'arid'
-  | 'semi-arid'
-  | 'highland';
-
 export interface LocationConnection {
   locationAId: string;
   locationBId: string;
@@ -38,12 +23,10 @@ export interface Location {
   name: string;
   aliases: string[];
   type: LocationType;
-  /** Only for type === 'settlement' */
-  settlementType?: SettlementType;
-  /** Population count — only for type === 'settlement' */
+  /** Population count — for settlement types (city, town, village, etc.) */
   settlementPopulation?: number;
-  /** Only for type === 'region' */
-  climate?: Climate;
+  /** Terrain/biome sub-type — from the selected LocationTypeEntry's biomeOptions */
+  biome?: string;
   parentLocationId?: string;
   adjacentLocationIds?: string[];
   description: string;

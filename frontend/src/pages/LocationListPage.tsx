@@ -3,48 +3,16 @@ import { useParams, Link } from 'react-router-dom';
 import { useLocations } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
-import type { Location, LocationType, SettlementType, Climate } from '@/entities/location';
+import { useLocationTypes } from '@/features/locationTypes';
+import type { Location, LocationType } from '@/entities/location';
+import type { LocationTypeEntry } from '@/entities/locationType';
+import { CATEGORY_ICON_COLOR, CATEGORY_BADGE_CLS } from '@/entities/locationType';
 
-const TYPE_ICON: Record<LocationType, string> = {
-  region: 'map',
-  settlement: 'location_city',
-  district: 'holiday_village',
-  building: 'domain',
-  dungeon: 'skull',
-};
-
-const TYPE_LABEL: Record<LocationType, string> = {
-  region: 'Region',
-  settlement: 'Settlement',
-  district: 'District',
-  building: 'Building',
-  dungeon: 'Dungeon',
-};
-
-const SETTLEMENT_LABEL: Record<SettlementType, string> = {
-  village: 'Village',
-  town: 'Town',
-  city: 'City',
-  metropolis: 'Metropolis',
-};
-
-const CLIMATE_LABEL: Record<Climate, string> = {
-  arctic: 'Arctic', subarctic: 'Subarctic', temperate: 'Temperate',
-  continental: 'Continental', maritime: 'Maritime', subtropical: 'Subtropical',
-  tropical: 'Tropical', arid: 'Arid', 'semi-arid': 'Semi-Arid', highland: 'Highland',
-};
+const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', 'travel'];
 
 const DEPTH_INDENT = ['', 'pl-8', 'pl-12', 'pl-16', 'pl-20'];
-const TYPE_ORDER: LocationType[] = ['region', 'settlement', 'district', 'building', 'dungeon'];
 
-const TYPE_FILTERS: Array<{ value: LocationType | 'all'; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'region', label: 'Regions' },
-  { value: 'settlement', label: 'Settlements' },
-  { value: 'district', label: 'Districts' },
-  { value: 'building', label: 'Buildings' },
-  { value: 'dungeon', label: 'Dungeons' },
-];
+type TypeMap = Map<string, LocationTypeEntry>;
 
 // ─── Left panel list item ────────────────────────────────────────────────────
 
@@ -54,15 +22,18 @@ function LocationRow({
   selected,
   onSelect,
   typeFilter,
+  typeMap,
 }: {
   loc: Location;
   depth: number;
   selected: boolean;
   onSelect: () => void;
   typeFilter: LocationType | 'all';
+  typeMap: TypeMap;
 }) {
   const isTopLevel = depth === 0;
   const indent = typeFilter === 'all' ? DEPTH_INDENT[Math.min(depth, DEPTH_INDENT.length - 1)] : '';
+  const typeEntry = typeMap.get(loc.type);
   return (
     <button
       type="button"
@@ -76,10 +47,18 @@ function LocationRow({
       }`}
     >
       <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border transition-colors ${
-        selected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'
+        selected
+          ? 'bg-primary/10 border-primary/30'
+          : 'bg-surface-container border-outline-variant/15'
       }`}>
-        <span className={`material-symbols-outlined text-[18px] ${selected ? 'text-primary' : isTopLevel ? 'text-primary/40' : 'text-on-surface-variant/30'}`}>
-          {TYPE_ICON[loc.type]}
+        <span className={`material-symbols-outlined text-[18px] ${
+          selected
+            ? 'text-primary'
+            : typeEntry
+            ? CATEGORY_ICON_COLOR[typeEntry.category]
+            : 'text-on-surface-variant/30'
+        }`}>
+          {typeEntry?.icon ?? 'location_on'}
         </span>
       </div>
       <div className="flex-1 min-w-0">
@@ -89,7 +68,7 @@ function LocationRow({
           {loc.name}
         </p>
         <p className={`text-[9px] uppercase tracking-widest mt-0.5 transition-colors ${selected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>
-          {TYPE_LABEL[loc.type]}
+          {typeEntry?.name ?? loc.type}
         </p>
       </div>
     </button>
@@ -98,15 +77,31 @@ function LocationRow({
 
 // ─── Right panel detail ───────────────────────────────────────────────────────
 
-function LocationDetail({ loc, allLocations, campaignId }: { loc: Location; allLocations: Location[]; campaignId: string }) {
+function LocationDetail({
+  loc,
+  allLocations,
+  campaignId,
+  typeMap,
+}: {
+  loc: Location;
+  allLocations: Location[];
+  campaignId: string;
+  typeMap: TypeMap;
+}) {
   const { data: allNpcs } = useNpcs(campaignId);
-  const children = allLocations.filter((l) => l.parentLocationId === loc.id).sort((a, b) => a.name.localeCompare(b.name));
+  const children = allLocations.filter((l) => l.parentLocationId === loc.id).sort((a, b) => {
+    const catA = CATEGORY_ORDER.indexOf(typeMap.get(a.type)?.category ?? '');
+    const catB = CATEGORY_ORDER.indexOf(typeMap.get(b.type)?.category ?? '');
+    if (catA !== catB) return catA - catB;
+    return a.name.localeCompare(b.name);
+  });
   const parent = allLocations.find((l) => l.id === loc.parentLocationId);
   const npcsHere = (allNpcs ?? []).filter((n) =>
     n.locationPresences?.some((p) => p.locationId === loc.id) ||
     n.locations.some((name) => name === loc.name)
   ).sort((a, b) => a.name.localeCompare(b.name));
 
+  const typeEntry = typeMap.get(loc.type);
   const initials = loc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
   return (
@@ -125,10 +120,11 @@ function LocationDetail({ loc, allLocations, campaignId }: { loc: Location; allL
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent pointer-events-none" />
         {/* Type badge */}
         <div className="absolute top-4 left-4 flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container/90 backdrop-blur-sm border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-            <span className="material-symbols-outlined text-[13px]">{TYPE_ICON[loc.type]}</span>
-            {TYPE_LABEL[loc.type]}
-            {loc.settlementType && ` · ${SETTLEMENT_LABEL[loc.settlementType]}`}
+          <span className={`flex items-center gap-1.5 px-2.5 py-1 backdrop-blur-sm border rounded-sm text-[10px] font-bold uppercase tracking-widest ${
+            typeEntry ? CATEGORY_BADGE_CLS[typeEntry.category] : 'bg-surface-container/90 border-outline-variant/20 text-on-surface-variant'
+          }`}>
+            <span className="material-symbols-outlined text-[13px]">{typeEntry?.icon ?? 'location_on'}</span>
+            {typeEntry?.name ?? loc.type}
           </span>
         </div>
       </div>
@@ -138,7 +134,7 @@ function LocationDetail({ loc, allLocations, campaignId }: { loc: Location; allL
         <div>
           {parent && (
             <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 mb-1 flex items-center gap-1">
-              <span className="material-symbols-outlined text-[11px]">{TYPE_ICON[parent.type]}</span>
+              {(() => { const te = typeMap.get(parent.type); return <span className={`material-symbols-outlined text-[11px] ${te ? CATEGORY_ICON_COLOR[te.category] : ''}`}>{te?.icon ?? 'location_on'}</span>; })()}
               {parent.name}
             </p>
           )}
@@ -149,7 +145,7 @@ function LocationDetail({ loc, allLocations, campaignId }: { loc: Location; allL
         </div>
 
         {/* Stats row */}
-        {(loc.settlementPopulation || loc.climate) && (
+        {(loc.settlementPopulation || loc.biome) && (
           <div className="flex flex-wrap gap-4">
             {loc.settlementPopulation && (
               <div>
@@ -157,10 +153,12 @@ function LocationDetail({ loc, allLocations, campaignId }: { loc: Location; allL
                 <p className="text-sm font-bold text-on-surface">{loc.settlementPopulation.toLocaleString()}</p>
               </div>
             )}
-            {loc.climate && (
+            {loc.biome && (
               <div>
-                <p className="text-[9px] uppercase tracking-[0.18em] text-on-surface-variant/40 font-bold">Climate</p>
-                <p className="text-sm font-bold text-on-surface">{CLIMATE_LABEL[loc.climate]}</p>
+                <p className="text-[9px] uppercase tracking-[0.18em] text-on-surface-variant/40 font-bold">Terrain</p>
+                <p className="text-sm font-bold text-on-surface">
+                  {loc.biome.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                </p>
               </div>
             )}
           </div>
@@ -182,7 +180,7 @@ function LocationDetail({ loc, allLocations, campaignId }: { loc: Location; allL
           <div>
             <div className="flex items-center gap-4 mb-3">
               <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">
-                Locations <span className="text-primary/60">({children.length})</span>
+                Notable Places <span className="text-primary/60">({children.length})</span>
               </h3>
               <div className="h-px flex-1 bg-outline-variant/20" />
             </div>
@@ -193,7 +191,7 @@ function LocationDetail({ loc, allLocations, campaignId }: { loc: Location; allL
                   to={`/campaigns/${campaignId}/locations/${child.id}`}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[13px] text-on-surface-variant/40">{TYPE_ICON[child.type]}</span>
+                  {(() => { const te = typeMap.get(child.type); return <span className={`material-symbols-outlined text-[13px] ${te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'}`}>{te?.icon ?? 'location_on'}</span>; })()}
                   {child.name}
                 </Link>
               ))}
@@ -235,10 +233,37 @@ function LocationDetail({ loc, allLocations, campaignId }: { loc: Location; allL
 export default function LocationListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const { data: locations, isLoading, isError } = useLocations(campaignId ?? '');
+  const { data: locationTypes = [] } = useLocationTypes();
   const [typeFilter, setTypeFilter] = useState<LocationType | 'all'>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+
+  // Build id → entry lookup for fast access in sub-components
+  const typeMap = useMemo<TypeMap>(
+    () => new Map(locationTypes.map((t) => [t.id, t])),
+    [locationTypes],
+  );
+
+  // Type order based on category hierarchy
+  const typeOrder = useMemo(
+    () => [...locationTypes].sort(
+      (a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category)
+    ).map((t) => t.id),
+    [locationTypes],
+  );
+
+  // Filters: All + only types that appear in this campaign's locations
+  const typeFilters = useMemo(() => {
+    const usedTypeIds = new Set(locations?.map((l) => l.type) ?? []);
+    const usedTypes = typeOrder
+      .map((id) => typeMap.get(id))
+      .filter((t): t is LocationTypeEntry => !!t && usedTypeIds.has(t.id));
+    return [
+      { value: 'all' as const, label: 'All' },
+      ...usedTypes.map((t) => ({ value: t.id, label: `${t.name}s` })),
+    ];
+  }, [locations, typeOrder, typeMap]);
 
   const depthMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -257,8 +282,15 @@ export default function LocationListPage() {
     return map;
   }, [locations]);
 
-  const filtered = useMemo(() => locations
-    ?.filter((l) => {
+  const sortByCategory = useMemo(() => (a: Location, b: Location) => {
+    const catA = CATEGORY_ORDER.indexOf(typeMap.get(a.type)?.category ?? '');
+    const catB = CATEGORY_ORDER.indexOf(typeMap.get(b.type)?.category ?? '');
+    if (catA !== catB) return catA - catB;
+    return a.name.localeCompare(b.name);
+  }, [typeMap]);
+
+  const filtered = useMemo(() => {
+    const list = locations?.filter((l) => {
       const matchesType = typeFilter === 'all' || l.type === typeFilter;
       const matchesSearch =
         !search ||
@@ -266,12 +298,34 @@ export default function LocationListPage() {
         l.aliases.some((a) => a.toLowerCase().includes(search.toLowerCase())) ||
         l.description.toLowerCase().includes(search.toLowerCase());
       return matchesType && matchesSearch;
-    })
-    .sort((a, b) => {
-      const order = TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type);
-      if (order !== 0) return order;
-      return a.name.localeCompare(b.name);
-    }) ?? [], [locations, typeFilter, search]);
+    }) ?? [];
+
+    // In "all" mode without search: hierarchical sort (parents → children)
+    if (typeFilter === 'all' && !search) {
+      const byParent = new Map<string, Location[]>();
+      const roots: Location[] = [];
+      for (const loc of list) {
+        if (!loc.parentLocationId) {
+          roots.push(loc);
+        } else {
+          if (!byParent.has(loc.parentLocationId)) byParent.set(loc.parentLocationId, []);
+          byParent.get(loc.parentLocationId)!.push(loc);
+        }
+      }
+      const result: Location[] = [];
+      const walk = (loc: Location) => {
+        result.push(loc);
+        (byParent.get(loc.id) ?? []).sort(sortByCategory).forEach(walk);
+      };
+      roots.sort(sortByCategory).forEach(walk);
+      // Orphans (parent not in filtered list): append at end
+      const seen = new Set(result.map((l) => l.id));
+      list.filter((l) => !seen.has(l.id)).sort(sortByCategory).forEach((l) => result.push(l));
+      return result;
+    }
+
+    return [...list].sort(sortByCategory);
+  }, [locations, typeFilter, search, sortByCategory]);
 
   const selected = locations?.find((l) => l.id === selectedId) ?? filtered[0] ?? null;
 
@@ -325,7 +379,7 @@ export default function LocationListPage() {
 
             {/* Type filter pills */}
             <div className="px-4 pb-3 flex flex-wrap gap-1.5 flex-shrink-0">
-              {TYPE_FILTERS.map(({ value, label }) => {
+              {typeFilters.map(({ value, label }) => {
                 const count = value === 'all'
                   ? (locations?.length ?? 0)
                   : (locations?.filter((l) => l.type === value).length ?? 0);
@@ -363,6 +417,7 @@ export default function LocationListPage() {
                   selected={selected?.id === loc.id}
                   onSelect={() => setSelectedId(loc.id)}
                   typeFilter={typeFilter}
+                  typeMap={typeMap}
                 />
               ))}
             </div>
@@ -376,6 +431,7 @@ export default function LocationListPage() {
                   loc={selected}
                   allLocations={locations ?? []}
                   campaignId={campaignId ?? ''}
+                  typeMap={typeMap}
                 />
                 <Link
                   to={`/campaigns/${campaignId}/locations/${selected.id}`}
