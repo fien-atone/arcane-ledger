@@ -280,6 +280,25 @@ region
 
 `biome` applies only to `wilderness`, `water`, `highland`, `route`. All other types ignore it.
 
+### Containment Matrix
+
+Which location types can be children of which. `✓` = valid parent-child, `—` = invalid.
+
+| Parent ↓ · Child → | region | wilderness | water | highland | settlement | district | building | dungeon | landmark | route |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **region** | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **wilderness** | — | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | ✓ |
+| **water** | — | — | ✓ | — | — | — | — | — | ✓ | — |
+| **highland** | — | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **settlement** | — | — | — | — | — | ✓ | ✓ | ✓ | ✓ | — |
+| **district** | — | — | — | — | — | — | ✓ | ✓ | ✓ | — |
+| **building** | — | — | — | — | — | — | ✓ | ✓ | — | — |
+| **dungeon** | — | — | — | — | — | — | — | ✓ | ✓ | — |
+| **landmark** | — | — | — | — | — | — | ✓ | ✓ | — | — |
+| **route** | — | — | — | — | — | — | — | — | ✓ | — |
+
+A location with no `parentLocationId` is top-level (typically `region` or standalone `dungeon`).
+
 ---
 
 ## LocationConnection: dual-representation of named routes

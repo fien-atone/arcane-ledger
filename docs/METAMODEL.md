@@ -65,6 +65,29 @@ region          — large political/geographic area (continent, country, provinc
 
 **Map support** — any Location can have an uploaded image with numbered `MapMarker`s. Markers link to child Locations or NPCs.
 
+**Containment rules** — which types can be children of which. Enforced in the UI (parent selector filters by valid parents) and in backend validation.
+
+| Parent ↓ · Child → | region | wilderness | water | highland | settlement | district | building | dungeon | landmark | route |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **region** | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **wilderness** | — | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | ✓ |
+| **water** | — | — | ✓ | — | — | — | — | — | ✓ | — |
+| **highland** | — | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | ✓ |
+| **settlement** | — | — | — | — | — | ✓ | ✓ | ✓ | ✓ | — |
+| **district** | — | — | — | — | — | — | ✓ | ✓ | ✓ | — |
+| **building** | — | — | — | — | — | — | ✓ | ✓ | — | — |
+| **dungeon** | — | — | — | — | — | — | — | ✓ | ✓ | — |
+| **landmark** | — | — | — | — | — | — | ✓ | ✓ | — | — |
+| **route** | — | — | — | — | — | — | — | — | ✓ | — |
+
+Notable decisions:
+- `water` contains only other `water` (e.g. delta → river) or `landmark` (island, lighthouse). A port city is a child of the *region*, not the bay.
+- `route` contains only `landmark` (wayshrine, toll gate, bridge). Routes do not contain places.
+- `landmark` can contain `building` (a castle ruin has rooms) and `dungeon` (the ruin hides a crypt).
+- `wilderness` can contain `settlement` (village in a forest) — valid in world-building.
+- `district`, `building`, `dungeon` are settlement-interior types and cannot appear at geographic scope.
+- A location with no parent is a **top-level** location (typically `region` or `dungeon`).
+
 #### LocationConnection
 Expresses that two locations are **reachable from each other**, independently of the parent-child hierarchy.
 
