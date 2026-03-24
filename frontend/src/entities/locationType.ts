@@ -19,7 +19,7 @@ export type LocationTypeCategory =
   | 'world'       // plane, continent, ocean
   | 'geographic'  // region, wilderness, water, highland
   | 'interior'    // settlement, district, building
-  | 'explorable'  // dungeon, landmark
+  | 'poi'         // dungeon, landmark — points of interest
   | 'travel';     // route
 
 export interface LocationTypeEntry {
