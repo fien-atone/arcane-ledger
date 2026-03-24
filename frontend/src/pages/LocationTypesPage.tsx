@@ -503,7 +503,7 @@ export default function LocationTypesPage() {
         <div className="flex flex-1 overflow-hidden min-h-0">
 
           {/* Left panel — list */}
-          <div className="w-[320px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest">
+          <div className="w-[320px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
 
             {/* Search */}
             <div className="px-3 py-2.5 border-b border-outline-variant/10 flex-shrink-0">
