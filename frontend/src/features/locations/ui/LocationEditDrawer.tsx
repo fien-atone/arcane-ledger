@@ -1,16 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useSaveLocation } from '@/features/locations/api/queries';
+import { useLocationTypes } from '@/features/locationTypes';
 import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Location, LocationType, SettlementType, Climate } from '@/entities/location';
-
-const LOCATION_TYPE_OPTIONS: SelectOption<LocationType>[] = [
-  { value: 'region',     label: 'Region' },
-  { value: 'settlement', label: 'Settlement' },
-  { value: 'district',   label: 'District' },
-  { value: 'building',   label: 'Building' },
-  { value: 'dungeon',    label: 'Dungeon' },
-];
 
 const SETTLEMENT_TYPE_OPTIONS: SelectOption<SettlementType>[] = [
   { value: 'village',    label: 'Village' },
@@ -61,11 +54,19 @@ function generateId() {
 
 export function LocationEditDrawer({ open, onClose, campaignId, location }: Props) {
   const save = useSaveLocation(campaignId);
+  const { data: locationTypes = [] } = useLocationTypes();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isNew = !location;
 
+  const locationTypeOptions = useMemo<SelectOption<string>[]>(
+    () => locationTypes.map((t) => ({ value: t.id, label: t.name })),
+    [locationTypes],
+  );
+
   const [name, setName] = useState('');
   const [type, setType] = useState<LocationType>('building');
+
+  const selectedTypeEntry = locationTypes.find((t) => t.id === type);
   const [settlementType, setSettlementType] = useState<SettlementType | ''>('');
   const [settlementPopulation, setSettlementPopulation] = useState('');
   const [climate, setClimate] = useState<Climate | ''>('');
@@ -85,7 +86,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location }: Prop
       setGmNotes(location.gmNotes ?? '');
       setImage(location.image);
     } else {
-      setName(''); setType('building'); setSettlementType('');
+      setName(''); setType(locationTypes[0]?.id ?? 'building'); setSettlementType('');
       setSettlementPopulation(''); setClimate(''); setDescription('');
       setGmNotes(''); setImage(undefined);
     }
@@ -111,9 +112,9 @@ export function LocationEditDrawer({ open, onClose, campaignId, location }: Prop
       ...(location ?? {}),
       name: name.trim(),
       type,
-      settlementType: type === 'settlement' && settlementType ? settlementType : undefined,
-      settlementPopulation: type === 'settlement' && !isNaN(pop) && pop > 0 ? pop : undefined,
-      climate: type === 'region' && climate ? climate : undefined,
+      settlementType: selectedTypeEntry?.isSettlement && settlementType ? settlementType : undefined,
+      settlementPopulation: selectedTypeEntry?.isSettlement && !isNaN(pop) && pop > 0 ? pop : undefined,
+      climate: (selectedTypeEntry?.biomeOptions?.length ?? 0) > 0 && climate ? climate : undefined,
       description: description.trim(),
       gmNotes: gmNotes.trim() || undefined,
       image,
@@ -157,14 +158,14 @@ export function LocationEditDrawer({ open, onClose, campaignId, location }: Prop
             <label className={labelCls}>Type</label>
             <Select
               value={type}
-              options={LOCATION_TYPE_OPTIONS}
+              options={locationTypeOptions}
               nullable={false}
-              onChange={(v) => setType((v || 'building') as LocationType)}
+              onChange={(v) => setType(v || (locationTypes[0]?.id ?? 'building'))}
             />
           </div>
 
           {/* Settlement fields — type + population side by side */}
-          {type === 'settlement' && (
+          {selectedTypeEntry?.isSettlement && (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Settlement Type</label>
@@ -196,8 +197,8 @@ export function LocationEditDrawer({ open, onClose, campaignId, location }: Prop
             </div>
           )}
 
-          {/* Climate (only for region) */}
-          {type === 'region' && (
+          {/* Climate (only for geographic types with biome options) */}
+          {(selectedTypeEntry?.biomeOptions?.length ?? 0) > 0 && (
             <div>
               <label className={labelCls}>Climate</label>
               <Select

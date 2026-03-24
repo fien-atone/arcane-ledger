@@ -1,4 +1,5 @@
-export type LocationType = 'region' | 'settlement' | 'district' | 'building' | 'dungeon';
+/** Broadened to string so the configurable LocationTypeEntry vocabulary is accepted */
+export type LocationType = string;
 
 /** Classification of a settlement by scale */
 export type SettlementType = 'village' | 'town' | 'city' | 'metropolis';
