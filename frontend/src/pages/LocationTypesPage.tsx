@@ -33,7 +33,6 @@ const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] 
 const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'civilization', 'geographic', 'water', 'poi', 'travel'];
 
 // Re-alias for local convenience
-const CATEGORY_BADGE = CATEGORY_BADGE_CLS;
 const CATEGORY_ICON = CATEGORY_ICON_COLOR;
 
 const inputCls =
