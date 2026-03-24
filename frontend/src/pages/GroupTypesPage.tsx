@@ -33,7 +33,7 @@ export default function GroupTypesPage() {
   };
 
   return (
-    <main className="flex-1 min-h-screen bg-surface flex flex-col">
+    <main className="flex-1 h-full bg-surface flex flex-col overflow-hidden">
       {/* Sticky header */}
       <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5 flex-shrink-0">
         <div className="flex items-start justify-between">

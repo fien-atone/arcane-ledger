@@ -6,10 +6,10 @@ import { useCampaignUiStore } from '@/features/campaigns/model/store';
 export function CampaignShell() {
   const collapsed = useCampaignUiStore((s) => s.sidebarCollapsed);
   return (
-    <div className="flex min-h-screen bg-surface text-on-surface">
+    <div className="flex h-screen bg-surface text-on-surface overflow-hidden">
       <Sidebar />
       <main
-        className={`flex-1 min-h-screen transition-all duration-300 ${
+        className={`flex-1 overflow-auto transition-all duration-300 ${
           collapsed ? 'ml-16' : 'ml-64'
         }`}
       >

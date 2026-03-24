@@ -473,7 +473,7 @@ export default function LocationTypesPage() {
   const selected = types?.find((t) => t.id === selectedId) ?? sorted[0] ?? null;
 
   return (
-    <main className="flex-1 flex flex-col min-h-screen bg-surface overflow-hidden">
+    <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
 
       {/* Sticky header */}
       <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5">
