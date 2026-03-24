@@ -44,11 +44,3 @@ export interface LocationTypeContainmentRule {
   childTypeId: string;
 }
 
-/** A rule: locations of typeAId and typeBId can be linked via LocationConnection */
-export interface LocationTypeConnectionRule {
-  id: string;
-  typeAId: string;
-  typeBId: string;
-  /** Which connection type labels are valid for this pair */
-  allowedConnectionTypes: string[];
-}

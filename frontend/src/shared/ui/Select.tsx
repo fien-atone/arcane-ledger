@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 export interface SelectOption<T extends string> {
   value: T;
   label: string;
+  dot?: string; // optional Tailwind bg-* class for a colour dot
 }
 
 interface Props<T extends string> {
@@ -40,7 +41,8 @@ export function Select<T extends string>({
         onClick={() => setOpen((v) => !v)}
         className={`w-full flex items-center justify-between bg-surface-container-low border rounded-sm py-2.5 px-3 text-sm focus:ring-0 focus:outline-none transition-colors ${open ? 'border-primary' : 'border-outline-variant/25 hover:border-outline-variant/50'}`}
       >
-        <span className={selected ? 'text-on-surface' : 'text-on-surface-variant/30'}>
+          <span className={`flex items-center gap-2 ${selected ? 'text-on-surface' : 'text-on-surface-variant/30'}`}>
+          {selected?.dot && <span className={`w-2 h-2 rounded-full flex-shrink-0 ${selected.dot}`} />}
           {selected ? selected.label : placeholder}
         </span>
         <span
@@ -72,7 +74,10 @@ export function Select<T extends string>({
                   : 'text-on-surface hover:bg-surface-container-high'
               }`}
             >
-              {opt.label}
+              <span className="flex items-center gap-2">
+                {opt.dot && <span className={`w-2 h-2 rounded-full flex-shrink-0 ${opt.dot}`} />}
+                {opt.label}
+              </span>
               {opt.value === value && (
                 <span className="material-symbols-outlined text-[14px] text-primary">check</span>
               )}

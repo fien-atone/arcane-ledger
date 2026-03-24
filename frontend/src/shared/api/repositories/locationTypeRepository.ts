@@ -1,34 +1,26 @@
 import type {
   LocationTypeEntry,
   LocationTypeContainmentRule,
-  LocationTypeConnectionRule,
 } from '@/entities/locationType';
 import {
   MOCK_LOCATION_TYPES,
   MOCK_CONTAINMENT_RULES,
-  MOCK_CONNECTION_RULES,
 } from '../mockData/locationTypes';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // ── Storage keys ──────────────────────────────────────────────────────────────
 
-const TYPES_KEY    = 'ttrpg_location_types';
-const CONTAIN_KEY  = 'ttrpg_location_containment_rules';
-const CONNECT_KEY  = 'ttrpg_location_connection_rules';
-const VERSION_KEY  = 'ttrpg_location_types_version';
-const VERSION      = '6'; // v6: civilization category, village/town/city types, search
+const TYPES_KEY   = 'ttrpg_location_types';
+const CONTAIN_KEY = 'ttrpg_location_containment_rules';
+const VERSION_KEY = 'ttrpg_location_types_version';
+const VERSION     = '10'; // v10: removed connection rules entirely
 
 // ── Generic helpers ───────────────────────────────────────────────────────────
 
-function loadCollection<T extends { id: string }>(
-  key: string,
-  seed: T[]
-): T[] {
+function loadCollection<T extends { id: string }>(key: string, seed: T[]): T[] {
   const version = localStorage.getItem(VERSION_KEY);
   if (version !== VERSION) {
-    // First run or version bump — write seed, return it
-    // (version is written once after all three are seeded)
     const raw = localStorage.getItem(key);
     const existing: T[] = raw ? JSON.parse(raw) : [];
     const seedIds = new Set(seed.map((s) => s.id));
@@ -81,11 +73,8 @@ export const locationTypeRepository = {
     const type = types.find((t) => t.id === id);
     if (type?.builtin) throw new Error('Cannot delete a built-in location type');
     persistCollection(TYPES_KEY, types.filter((t) => t.id !== id));
-    // Also remove all rules referencing this type
     const contain = loadCollection<LocationTypeContainmentRule>(CONTAIN_KEY, MOCK_CONTAINMENT_RULES);
     persistCollection(CONTAIN_KEY, contain.filter((r) => r.parentTypeId !== id && r.childTypeId !== id));
-    const connect = loadCollection<LocationTypeConnectionRule>(CONNECT_KEY, MOCK_CONNECTION_RULES);
-    persistCollection(CONNECT_KEY, connect.filter((r) => r.typeAId !== id && r.typeBId !== id));
     ensureVersion();
   },
 
@@ -113,33 +102,6 @@ export const locationTypeRepository = {
     await delay(60);
     const all = loadCollection<LocationTypeContainmentRule>(CONTAIN_KEY, MOCK_CONTAINMENT_RULES);
     persistCollection(CONTAIN_KEY, all.filter((r) => r.id !== id));
-    ensureVersion();
-  },
-
-  // ── Connection rules ───────────────────────────────────────────────────────
-
-  listConnectionRules: async (): Promise<LocationTypeConnectionRule[]> => {
-    await delay(100);
-    const result = loadCollection(CONNECT_KEY, MOCK_CONNECTION_RULES);
-    ensureVersion();
-    return result;
-  },
-
-  saveConnectionRule: async (rule: LocationTypeConnectionRule): Promise<LocationTypeConnectionRule> => {
-    await delay(60);
-    const all = loadCollection<LocationTypeConnectionRule>(CONNECT_KEY, MOCK_CONNECTION_RULES);
-    const idx = all.findIndex((r) => r.id === rule.id);
-    if (idx >= 0) all[idx] = rule;
-    else all.push(rule);
-    persistCollection(CONNECT_KEY, all);
-    ensureVersion();
-    return rule;
-  },
-
-  deleteConnectionRule: async (id: string): Promise<void> => {
-    await delay(60);
-    const all = loadCollection<LocationTypeConnectionRule>(CONNECT_KEY, MOCK_CONNECTION_RULES);
-    persistCollection(CONNECT_KEY, all.filter((r) => r.id !== id));
     ensureVersion();
   },
 };

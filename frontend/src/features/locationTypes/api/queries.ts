@@ -3,12 +3,10 @@ import { locationTypeRepository } from '@/shared/api/repositories/locationTypeRe
 import type {
   LocationTypeEntry,
   LocationTypeContainmentRule,
-  LocationTypeConnectionRule,
 } from '@/entities/locationType';
 
-const TYPES_KEY    = ['locationTypes'] as const;
-const CONTAIN_KEY  = ['locationContainmentRules'] as const;
-const CONNECT_KEY  = ['locationConnectionRules'] as const;
+const TYPES_KEY   = ['locationTypes'] as const;
+const CONTAIN_KEY = ['locationContainmentRules'] as const;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -34,7 +32,6 @@ export function useDeleteLocationType() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TYPES_KEY });
       qc.invalidateQueries({ queryKey: CONTAIN_KEY });
-      qc.invalidateQueries({ queryKey: CONNECT_KEY });
     },
   });
 }
@@ -61,30 +58,5 @@ export function useDeleteContainmentRule() {
   return useMutation({
     mutationFn: (id: string) => locationTypeRepository.deleteContainmentRule(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: CONTAIN_KEY }),
-  });
-}
-
-// ── Connection rules ──────────────────────────────────────────────────────────
-
-export function useConnectionRules() {
-  return useQuery({
-    queryKey: CONNECT_KEY,
-    queryFn: locationTypeRepository.listConnectionRules,
-  });
-}
-
-export function useSaveConnectionRule() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (rule: LocationTypeConnectionRule) => locationTypeRepository.saveConnectionRule(rule),
-    onSuccess: () => qc.invalidateQueries({ queryKey: CONNECT_KEY }),
-  });
-}
-
-export function useDeleteConnectionRule() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => locationTypeRepository.deleteConnectionRule(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: CONNECT_KEY }),
   });
 }
