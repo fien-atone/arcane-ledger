@@ -20,28 +20,31 @@ import type {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] = [
-  { value: 'world',      label: 'World-scale', dot: 'bg-blue-400' },
-  { value: 'geographic', label: 'Geographic',  dot: 'bg-emerald-400' },
-  { value: 'interior',   label: 'Interior',    dot: 'bg-amber-400' },
-  { value: 'poi', label: 'Points of Interest',  dot: 'bg-rose-400' },
-  { value: 'travel',     label: 'Travel',      dot: 'bg-violet-400' },
+  { value: 'world',      label: 'World-scale',       dot: 'bg-indigo-400' },
+  { value: 'geographic', label: 'Geographic',         dot: 'bg-emerald-400' },
+  { value: 'water',      label: 'Water Bodies',       dot: 'bg-sky-400' },
+  { value: 'interior',   label: 'Interior',           dot: 'bg-amber-400' },
+  { value: 'poi',        label: 'Points of Interest', dot: 'bg-rose-400' },
+  { value: 'travel',     label: 'Travel',             dot: 'bg-violet-400' },
 ];
 
-const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'geographic', 'interior', 'poi', 'travel'];
+const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'geographic', 'water', 'interior', 'poi', 'travel'];
 
 const CATEGORY_BADGE: Record<LocationTypeCategory, string> = {
-  world:      'text-blue-300 bg-blue-950/60 border-blue-400/25',
+  world:      'text-indigo-300 bg-indigo-950/60 border-indigo-400/25',
   geographic: 'text-emerald-300 bg-emerald-950/60 border-emerald-400/25',
+  water:      'text-sky-300 bg-sky-950/60 border-sky-400/25',
   interior:   'text-amber-300 bg-amber-950/60 border-amber-400/25',
-  poi: 'text-rose-300 bg-rose-950/60 border-rose-400/25',
+  poi:        'text-rose-300 bg-rose-950/60 border-rose-400/25',
   travel:     'text-violet-300 bg-violet-950/60 border-violet-400/25',
 };
 
 const CATEGORY_ICON: Record<LocationTypeCategory, string> = {
-  world:      'text-blue-400',
+  world:      'text-indigo-400',
   geographic: 'text-emerald-400',
+  water:      'text-sky-400',
   interior:   'text-amber-400',
-  poi: 'text-rose-400',
+  poi:        'text-rose-400',
   travel:     'text-violet-400',
 };
 

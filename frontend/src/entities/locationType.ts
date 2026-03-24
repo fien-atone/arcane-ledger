@@ -16,8 +16,9 @@ export type BuiltinLocationType =
 
 /** Visual category — determines node colour in the graph */
 export type LocationTypeCategory =
-  | 'world'       // plane, continent, ocean
-  | 'geographic'  // region, wilderness, water, highland
+  | 'world'       // plane
+  | 'geographic'  // continent, region, wilderness, highland
+  | 'water'       // ocean, river, lake, bay, marsh, delta
   | 'interior'    // settlement, district, building
   | 'poi'         // dungeon, landmark — points of interest
   | 'travel';     // route

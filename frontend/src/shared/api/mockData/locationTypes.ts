@@ -9,20 +9,20 @@ const ts = '2026-01-01T00:00:00.000Z';
 // ── Type entries ──────────────────────────────────────────────────────────────
 
 export const MOCK_LOCATION_TYPES: LocationTypeEntry[] = [
-  // World-scale
+  // World-scale (cosmic / planar)
   { id: 'plane',      name: 'Plane',        icon: 'public',           category: 'world',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'continent',  name: 'Continent',    icon: 'map',              category: 'world',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'ocean',      name: 'Ocean',        icon: 'waves',            category: 'world',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
   // Geographic — land
+  { id: 'continent',  name: 'Continent',    icon: 'map',              category: 'geographic', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
   { id: 'region',     name: 'Region',       icon: 'terrain',          category: 'geographic', biomeOptions: ['island', 'peninsula', 'cape'],                                                       isSettlement: false, builtin: true, createdAt: ts },
   { id: 'wilderness', name: 'Wilderness',   icon: 'forest',           category: 'geographic', biomeOptions: ['forest', 'desert', 'plains', 'tundra', 'jungle', 'badlands', 'savanna', 'steppe'], isSettlement: false, builtin: true, createdAt: ts },
   { id: 'highland',   name: 'Highland',     icon: 'landscape',        category: 'geographic', biomeOptions: ['mountain_range', 'peak', 'plateau', 'valley', 'pass', 'cliff'],                     isSettlement: false, builtin: true, createdAt: ts },
-  // Geographic — water bodies
-  { id: 'river',      name: 'River',        icon: 'stream',           category: 'geographic', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'lake',       name: 'Lake',         icon: 'water',            category: 'geographic', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'bay',        name: 'Bay / Gulf',   icon: 'water_full',       category: 'geographic', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'marsh',      name: 'Marsh / Bog',  icon: 'grass',            category: 'geographic', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
-  { id: 'delta',      name: 'Delta',        icon: 'delta',            category: 'geographic', biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  // Water bodies
+  { id: 'ocean',      name: 'Ocean',        icon: 'waves',            category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'river',      name: 'River',        icon: 'stream',           category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'lake',       name: 'Lake',         icon: 'water',            category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'bay',        name: 'Bay / Gulf',   icon: 'water_full',       category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'marsh',      name: 'Marsh / Bog',  icon: 'grass',            category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
+  { id: 'delta',      name: 'Delta',        icon: 'merge',            category: 'water',      biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
   // Interior
   { id: 'settlement', name: 'Settlement',   icon: 'location_city',    category: 'interior',   biomeOptions: [],                                                                                    isSettlement: true,  builtin: true, createdAt: ts },
   { id: 'district',   name: 'District',     icon: 'holiday_village',  category: 'interior',   biomeOptions: [],                                                                                    isSettlement: false, builtin: true, createdAt: ts },
