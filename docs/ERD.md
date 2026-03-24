@@ -36,9 +36,9 @@ erDiagram
     string name
     string[] aliases
     string type
+    string biome
     string settlementType
     number settlementPopulation
-    string climate
     string description
     string gmNotes
     string image
@@ -58,7 +58,9 @@ erDiagram
   LocationConnection {
     string locationAId FK
     string locationBId FK
+    string routeLocationId FK
     string type
+    string travelTime
     string note
   }
 
@@ -141,6 +143,8 @@ erDiagram
   }
 
   %% ── Social graph ─────────────────────────────────────────────────────────
+  %% Nodes: NPC, PlayerCharacter, Group
+  %% Edges: Relation (directional, asymmetric, -100 to +100 friendliness)
 
   Relation {
     string id PK
@@ -226,14 +230,16 @@ erDiagram
 
   Location        ||--o{ Location            : "parent of"
   Location        ||--o{ MapMarker           : "has markers"
-  Location        }o--o{ Location            : "connected to (LocationConnection)"
+  Location        }o--o{ LocationConnection  : "endpoint A"
+  Location        }o--o{ LocationConnection  : "endpoint B"
+  Location        |o--o{ LocationConnection  : "named route (routeLocationId)"
 
   Species         ||--o{ NPC                 : "species of"
   Species         ||--o{ PlayerCharacter     : "species of"
 
   NPC             ||--o{ NPCLocationPresence : "present at"
   NPC             ||--o{ NPCGroupMembership  : "member of"
-  NPC             ||--o{ NPCRelation         : "related to (NPC)"
+  NPC             ||--o{ NPCRelation         : "related to NPC"
   NPCLocationPresence }o--|| Location        : "at location"
   NPCGroupMembership  }o--|| Group           : "in group"
   MapMarker       }o--o| Location            : "links to location"
@@ -254,11 +260,61 @@ erDiagram
 
 ---
 
-## Notes
+## Location Type Taxonomy
 
-- **Relation** is polymorphic — `fromEntityType` / `toEntityType` can be `npc`, `character`, or `group`. In a relational DB this would be implemented as a polymorphic FK or a union of nullable FKs.
-- **NPCGroupMembership** and **NPCLocationPresence** are currently embedded arrays on the NPC document (not separate tables in the localStorage mock). The ERD shows them as logical join tables for clarity.
-- **SessionLocation** is `Session.locationIds: string[]` embedded on the Session — shown as a join table for ERD readability.
-- **Species** is **not** campaign-scoped — it's a global catalogue shared across all campaigns.
-- **GroupTypeEntry** is also global (not per-campaign).
+```
+region
+├── wilderness   biome: forest | swamp | desert | plains | tundra | jungle | badlands | savanna
+│   └── landmark
+├── water        biome: lake | river | sea | bay | ocean | delta | marsh
+├── highland     biome: mountain_range | peak | plateau | valley | pass
+│   └── landmark
+├── settlement   settlementType: village | town | city | metropolis
+│   ├── district
+│   │   └── building
+│   └── dungeon
+├── dungeon      (standalone — cave system, ancient tomb)
+├── landmark     (singular feature — monument, ruined tower, shrine)
+└── route        biome: road | trade_route | river_route | sea_lane | mountain_pass | tunnel
+```
+
+`biome` applies only to `wilderness`, `water`, `highland`, `route`. All other types ignore it.
+
+---
+
+## LocationConnection: dual-representation of named routes
+
+A named road or river can appear in two ways simultaneously:
+
+| As... | Purpose |
+|---|---|
+| `Location` (type `route`) | Has a name, lore, GM notes, danger level — it's a thing in the world |
+| `LocationConnection` | Expresses that Town A and Town B are reachable from each other via this route |
+
+`LocationConnection.routeLocationId` links the connection back to the named Location, keeping both in sync.
+
+---
+
+## Social Graph (Relation)
+
+`Relation` is the edge set of the **Relation Graph**:
+
+```
+Nodes  — NPC, PlayerCharacter, Group
+Edges  — Relation (directed, weighted by friendliness -100..+100)
+```
+
+- Directed: A→B and B→A are independent records (asymmetric feelings)
+- Weight bands: Allied ≥61, Friendly 21–60, Neutral −20–20, Unfriendly −60– −21, Hostile ≤−61
+- Planned graph view: force-directed canvas, edge colour by friendliness, filterable by entity type and relationship band
+
+---
+
+## Implementation Notes
+
+- **Relation** is polymorphic — `fromEntityType` / `toEntityType` discriminate between `npc`, `character`, `group`. In a relational DB: polymorphic FK or a union of nullable FKs.
+- **NPCGroupMembership** and **NPCLocationPresence** are embedded arrays on the NPC document in the current localStorage mock. The ERD shows them as logical join entities for clarity.
+- **SessionLocation** is `Session.locationIds: string[]` embedded on Session — shown as a join entity for ERD readability.
+- **Species** and **GroupTypeEntry** are global (not campaign-scoped).
 - **MapMarker** is embedded in `Location.mapMarkers[]` in the current implementation.
+- **LocationConnection** has no surrogate PK in the current implementation — it is embedded or keyed by `(locationAId, locationBId)`.
