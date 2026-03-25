@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSaveNpc } from '@/features/npcs/api';
 import { useSpecies } from '@/features/species/api';
-import { RichTextEditor } from '@/shared/ui';
+import { Select } from '@/shared/ui';
+import type { SelectOption } from '@/shared/ui/Select';
 import type { NPC, NpcGender, NpcStatus } from '@/entities/npc';
 
 interface Props {
@@ -12,6 +13,12 @@ interface Props {
 }
 
 const STATUS_OPTIONS: NpcStatus[] = ['alive', 'dead', 'missing', 'unknown', 'hostile'];
+
+const GENDER_OPTIONS: SelectOption<NpcGender | ''>[] = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'nonbinary', label: 'Non-binary' },
+];
 
 function generateId() {
   return `npc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -30,9 +37,6 @@ function fromArray(arr: string[]): string {
 const inputCls =
   'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
 
-const textareaCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30 resize-none';
-
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
@@ -43,19 +47,22 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   const { data: allSpecies } = useSpecies();
   const isEdit = !!npc;
 
+  const statusOptions = useMemo<SelectOption<NpcStatus>[]>(
+    () => STATUS_OPTIONS.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
+    [],
+  );
+
+  const speciesOptions = useMemo<SelectOption<string>[]>(
+    () => (allSpecies ?? []).sort((a, b) => a.name.localeCompare(b.name)).map((s) => ({ value: s.id, label: s.name })),
+    [allSpecies],
+  );
+
   const [name, setName] = useState('');
   const [aliases, setAliases] = useState('');
   const [status, setStatus] = useState<NpcStatus>('alive');
   const [speciesId, setSpeciesId] = useState('');
   const [gender, setGender] = useState<NpcGender | ''>('');
   const [age, setAge] = useState('');
-  const [appearance, setAppearance] = useState('');
-  const [personality, setPersonality] = useState('');
-  const [description, setDescription] = useState('');
-  const [motivation, setMotivation] = useState('');
-  const [flaws, setFlaws] = useState('');
-  const [gmNotes, setGmNotes] = useState('');
-  const [locations, setLocations] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -66,17 +73,8 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
       setSpeciesId(npc.speciesId ?? '');
       setGender(npc.gender ?? '');
       setAge(npc.age?.toString() ?? '');
-      setAppearance(npc.appearance ?? '');
-      setPersonality(npc.personality ?? '');
-      setDescription(npc.description);
-      setMotivation(npc.motivation ?? '');
-      setFlaws(npc.flaws ?? '');
-      setGmNotes(npc.gmNotes ?? '');
-      setLocations(fromArray(npc.locations));
     } else {
       setName(''); setAliases(''); setStatus('alive'); setSpeciesId(''); setGender(''); setAge('');
-      setAppearance(''); setPersonality(''); setDescription('');
-      setMotivation(''); setFlaws(''); setGmNotes(''); setLocations('');
     }
   }, [open, npc]);
 
@@ -94,13 +92,13 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
       age: age ? parseInt(age, 10) : undefined,
       speciesId: selectedSpecies?.id,
       species: selectedSpecies?.name,
-      appearance: appearance.trim() || undefined,
-      personality: personality.trim() || undefined,
-      description: description.trim(),
-      motivation: motivation.trim() || undefined,
-      flaws: flaws.trim() || undefined,
-      gmNotes: gmNotes.trim() || undefined,
-      locations: toArray(locations),
+      appearance: npc?.appearance,
+      personality: npc?.personality,
+      description: npc?.description ?? '',
+      motivation: npc?.motivation,
+      flaws: npc?.flaws,
+      gmNotes: npc?.gmNotes,
+      locationPresences: npc?.locationPresences ?? [],
       image: npc?.image,
       groupMemberships: npc?.groupMemberships ?? [],
       relations: npc?.relations ?? [],
@@ -173,38 +171,25 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
             />
           </div>
 
-          {/* Status / Gender / Age / Species row */}
-          <div className="grid grid-cols-4 gap-3">
+          {/* Status / Gender / Age row */}
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label className={labelCls}>Status</label>
-              <div className="relative">
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as NpcStatus)}
-                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}
-                >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">unfold_more</span>
-              </div>
+              <Select
+                value={status}
+                options={statusOptions}
+                nullable={false}
+                onChange={(v) => setStatus(v ?? 'alive')}
+              />
             </div>
             <div>
               <label className={labelCls}>Gender</label>
-              <div className="relative">
-                <select
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value as NpcGender | '')}
-                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}
-                >
-                  <option value="">—</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="nonbinary">Non-binary</option>
-                </select>
-                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">unfold_more</span>
-              </div>
+              <Select<NpcGender | ''>
+                value={gender}
+                options={GENDER_OPTIONS}
+                placeholder="—"
+                onChange={(v) => setGender(v ?? '')}
+              />
             </div>
             <div>
               <label className={labelCls}>Age</label>
@@ -217,87 +202,20 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
                 className={inputCls}
               />
             </div>
-            <div>
-              <label className={labelCls}>Species</label>
-              <div className="relative">
-                <select
-                  value={speciesId}
-                  onChange={(e) => setSpeciesId(e.target.value)}
-                  className={`${inputCls} appearance-none pr-8 cursor-pointer`}
-                >
-                  <option value="">— None —</option>
-                  {(allSpecies ?? []).sort((a, b) => a.name.localeCompare(b.name)).map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50 text-[18px]">unfold_more</span>
-              </div>
-            </div>
           </div>
 
-          {/* Appearance */}
+          {/* Species */}
           <div>
-            <label className={labelCls}>Appearance</label>
-            <RichTextEditor value={appearance} onChange={setAppearance} placeholder="Physical description…" />
-          </div>
-
-          {/* Personality */}
-          <div>
-            <label className={labelCls}>Personality</label>
-            <RichTextEditor value={personality} onChange={setPersonality} placeholder="Traits, mannerisms, motivation…" />
-          </div>
-
-          {/* Motivation */}
-          <div>
-            <label className={labelCls}>Motivation & Ideals</label>
-            <RichTextEditor value={motivation} onChange={setMotivation} placeholder="What drives them, what they believe in…" minHeight="3rem" />
-          </div>
-
-          {/* Flaws */}
-          <div>
-            <label className={labelCls}>Flaws</label>
-            <RichTextEditor value={flaws} onChange={setFlaws} placeholder="Weaknesses, vices, fears…" minHeight="3rem" />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className={labelCls}>Background / Description</label>
-            <RichTextEditor value={description} onChange={setDescription} placeholder="History, role, key facts…" minHeight="6rem" />
-          </div>
-
-          {/* Locations */}
-          <div>
-            <label className={labelCls}>
-              Known Locations
-              <span className="normal-case tracking-normal text-on-surface-variant/40 ml-2 font-normal text-[10px]">
-                comma-separated
-              </span>
-            </label>
-            <input
-              type="text"
-              value={locations}
-              onChange={(e) => setLocations(e.target.value)}
-              placeholder="Emberwood Village, Bent Row…"
-              className={inputCls}
+            <label className={labelCls}>Species</label>
+            <Select
+              value={speciesId}
+              options={speciesOptions}
+              placeholder="— None —"
+              searchable
+              onChange={(v) => setSpeciesId(v ?? '')}
             />
           </div>
 
-          {/* GM Notes */}
-          <div className="relative">
-              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/40" />
-              <div className="pl-4">
-                <label className="block text-[10px] font-label uppercase tracking-widest text-primary mb-1.5 flex items-center gap-1.5">
-                  <span
-                    className="material-symbols-outlined text-[13px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    lock
-                  </span>
-                  GM Notes
-                </label>
-                <RichTextEditor value={gmNotes} onChange={setGmNotes} placeholder="Private notes — not visible to players…" minHeight="3rem" />
-              </div>
-            </div>
         </div>
 
         {/* Footer */}

@@ -43,8 +43,7 @@ export interface NPC {
   appearance?: string;
   personality?: string;
   lastSeenLocationId?: string;
-  locations: string[];
-  locationPresences?: NPCLocationPresence[];
+  locationPresences: NPCLocationPresence[];
   description: string;
   gmNotes?: string;
   image?: string;

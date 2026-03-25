@@ -8,5 +8,6 @@ export interface Session {
   summary: string;
   nextSessionNotes?: string;
   locationIds?: string[];
+  npcIds?: string[];
   createdAt: string;
 }

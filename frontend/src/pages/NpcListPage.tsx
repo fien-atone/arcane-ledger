@@ -112,19 +112,10 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
           </div>
         )}
 
-        {npc.locations.length > 0 && (
-          <div>
-            <div className="flex items-center gap-4 mb-2">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Locations</h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {npc.locations.map((loc) => (
-                <span key={loc} className="px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface-variant">
-                  {loc}
-                </span>
-              ))}
-            </div>
+        {(npc.locationPresences ?? []).length > 0 && (
+          <div className="flex items-center gap-2 text-[10px] text-on-surface-variant/50">
+            <span className="material-symbols-outlined text-[13px]">location_on</span>
+            {(npc.locationPresences ?? []).length} location{(npc.locationPresences ?? []).length !== 1 ? 's' : ''}
           </div>
         )}
 

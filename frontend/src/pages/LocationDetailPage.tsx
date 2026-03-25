@@ -876,10 +876,9 @@ export default function LocationDetailPage() {
       ? allLocations?.filter((l) => location.adjacentLocationIds!.includes(l.id))
       : [];
 
-  // NPCs at this location — match by locationPresences (ID) or by location name in legacy locations[]
+  // NPCs at this location
   const npcsHere = (allNpcs?.filter((npc) =>
-    npc.locationPresences?.some((p) => p.locationId === location.id) ||
-    npc.locations.some((name) => name === location.name)
+    (npc.locationPresences ?? []).some((p) => p.locationId === location.id)
   ) ?? []).sort((a, b) => a.name.localeCompare(b.name));
 
   // Sessions that include this location, sorted descending
@@ -892,7 +891,7 @@ export default function LocationDetailPage() {
   };
 
   const handleAddNpc = (npc: NPC) => {
-    const presences = npc.locationPresences ? [...npc.locationPresences] : [];
+    const presences = [...(npc.locationPresences ?? [])];
     if (!presences.find((p) => p.locationId === location.id)) {
       presences.push({ locationId: location.id });
     }
@@ -902,9 +901,7 @@ export default function LocationDetailPage() {
   };
 
   const handleRemoveNpc = (npc: NPC) => {
-    const presences = (npc.locationPresences ?? []).filter((p) => p.locationId !== location.id);
-    const locations = npc.locations.filter((name) => name !== location.name);
-    saveNpc.mutate({ ...npc, locationPresences: presences, locations });
+    saveNpc.mutate({ ...npc, locationPresences: (npc.locationPresences ?? []).filter((p) => p.locationId !== location.id) });
   };
 
   const handleSaveNote = (npc: NPC, note: string) => {

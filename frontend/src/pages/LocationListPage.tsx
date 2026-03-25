@@ -97,8 +97,7 @@ function LocationDetail({
   });
   const parent = allLocations.find((l) => l.id === loc.parentLocationId);
   const npcsHere = (allNpcs ?? []).filter((n) =>
-    n.locationPresences?.some((p) => p.locationId === loc.id) ||
-    n.locations.some((name) => name === loc.name)
+    (n.locationPresences ?? []).some((p) => p.locationId === loc.id)
   ).sort((a, b) => a.name.localeCompare(b.name));
 
   const typeEntry = typeMap.get(loc.type);

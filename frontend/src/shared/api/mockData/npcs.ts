@@ -21,7 +21,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Маркграф Степной Марки. Объявил сухой закон и комендантский час. Открыто презирает эльфов и степные народы. Утверждает, что партия — первые приезжие с момента его назначения. Просил найти особый алкоголь у Йорверта.',
     gmNotes: 'Возможно является причиной пересыхания реки через Тутса. Знает больше, чем говорит.',
-    locations: ['Резиденция Кронхейава', 'Фарчестер'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-kronheyv', groupId: 'faction-fc-red', relation: 'Leader' },
     ],
@@ -46,7 +46,7 @@ export const MOCK_NPCS: NPC[] = [
       'Бургомистр Фарчестера. Изначально из свободолюбивых. Нанял партию за 50 gp за каждое имя агента Ордена Гефары. Выдал документы — обязывают горожан помогать предъявителю. Казна в недостаче на 5000 золотых.',
     gmNotes:
       'КЛЮЧЕВОЙ ВОПРОС: партия И ЕСТЬ агенты Гефары. Вариант А — не знает. Вариант Б — знает, но держит под контролем. Фраза «все боятся бургомистра» (Тутс) — намёк.',
-    locations: ['Ратуша', 'Фарчестер'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-stoungriv', groupId: 'faction-fc-blue', relation: 'Leader' },
     ],
@@ -66,7 +66,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     appearance: 'Смуглая кожа, тёмные волосы. Чёрно-красный табард поверх кольчуги, красный плащ, меч у пояса.',
     description: 'Связная и представитель Кронхейава. Приглашала партию к Лорд-Адмиралу.',
-    locations: ['Резиденция Кронхейава'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-edit-hargrave', groupId: 'faction-fc-red', relation: 'Member' },
     ],
@@ -87,7 +87,7 @@ export const MOCK_NPCS: NPC[] = [
     appearance:
       'Мужчина средних лет, седоватые волосы, уверенный взгляд. Синий жилет со звёздчатым узором, кольчуга, изогнутый меч.',
     description: 'Местный житель. Привёл партию к ратуше. Поставил 5gp на смерть полурослика.',
-    locations: ['Фарчестер'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2026-02-24T00:00:00Z',
     updatedAt: '2026-02-24T00:00:00Z',
@@ -108,7 +108,7 @@ export const MOCK_NPCS: NPC[] = [
     personality: 'Тёплый и незлобивый. Медленно составляет мнение о людях — зато надолго. Избегает конфликтов, но не трус. Немного старомоден: верит, что хорошее пиво решает больше проблем, чем политика.',
     description:
       'Тавернщик таверны «Ы Куру Айр». Центрист. Недолюбливает эльфов. Признался, что сейчас не варит алкоголь — нет оборудования. Помог партии сварить 2 бутылки особого алкоголя.',
-    locations: ['Таверна Ы Куру Айр'],
+    locationPresences: [],
     groupMemberships: [],
     relations: [{ npcId: 'npc-mirian', type: 'child', note: 'Мириан верч Йорверт — дочь' }],
     createdAt: '2026-02-24T00:00:00Z',
@@ -130,7 +130,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Маг, хозяин башни в Фарчестере. Башня охраняется каменным терьером-стражем с загадками. Первый этаж для очень крупных существ, второй — огромное количество часов. Имеет какую-то связь с Стоунгривом.',
     gmNotes: 'Возможно тот самый гном, который «сделал магию с рекой» у гоблинов и заключил договор с Гнурком.',
-    locations: ['Башня мага'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2026-03-02T00:00:00Z',
     updatedAt: '2026-03-12T00:00:00Z',
@@ -150,7 +150,7 @@ export const MOCK_NPCS: NPC[] = [
       'Невысокий молодой парень с буйными рыжими вьющимися волосами и широкой искренней улыбкой. Светло-карие глаза. Льняная рубашка, коричневый жилет. Рассеянный.',
     description:
       'Ученик мага Тутса в башне. Уже полгода не может нормально освоить Mage Hand — Тутс бесится. Тот самый паренёк из первой сессии, которому Эсме помогала в таверне.',
-    locations: ['Башня мага'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2026-02-20T00:00:00Z',
     updatedAt: '2026-03-12T00:00:00Z',
@@ -169,7 +169,7 @@ export const MOCK_NPCS: NPC[] = [
     appearance:
       'Эльфийка с длинными серебристо-белыми волосами с серым отливом. Красные/розовые глаза с тёмными веками. Острые уши, серьга-кинжал. Тёмно-зелёная броня. Загадочная полуулыбка — выглядит опасной.',
     description: 'Упомянута в сессии 4. Подробности неизвестны. Кажется опасной.',
-    locations: ['Фарчестер'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2026-03-12T00:00:00Z',
     updatedAt: '2026-03-12T00:00:00Z',
@@ -187,7 +187,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-elf',
     description:
       'Предводитель эльфийского лагеря за воротами Фарчестера. Город загрязняет лес — эльфы готовы к сотрудничеству в обмен на решение проблемы.',
-    locations: ['За воротами Фарчестера'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2026-03-12T00:00:00Z',
     updatedAt: '2026-03-12T00:00:00Z',
@@ -206,7 +206,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Шаман и лидер гоблинского лагеря за воротами. Пещеры гоблинов затапливает. Заключил договор с гномом, который «сделал магию с рекой» (возможно Тутс). После — у гоблинов начали расти грибы. В сессии 5 попросил принести особую плесень из города.',
     gmNotes: 'Договор с Тутсом — ключевая зацепка. Что именно договорились?',
-    locations: ['За воротами Фарчестера'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2026-03-12T00:00:00Z',
     updatedAt: '2026-03-18T00:00:00Z',
@@ -224,7 +224,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     appearance: 'Молодая женщина с тёмно-каштановыми вьющимися волосами, зелёные ленты. Веснушки, зелёные глаза. Зелёный корсет, белый фартук.',
     description: 'Возможно родственница тавернщика Йорверта. Пока не встречена лично.',
-    locations: ['Таверна Ы Куру Айр'],
+    locationPresences: [],
     groupMemberships: [],
     relations: [{ npcId: 'npc-yorvert', type: 'parent', note: 'Verch — daughter of Iorwerth' }],
     createdAt: '2026-02-24T00:00:00Z',
@@ -242,7 +242,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Dwarf',
     speciesId: 'species-dwarf',
     description: 'Глава каравана дварфов. Самый важный из дварфов группы. Один из них владел картой местности. Возможно умеют варить алкоголь.',
-    locations: ['Фарчестер'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2026-03-02T00:00:00Z',
     updatedAt: '2026-03-02T00:00:00Z',
@@ -267,7 +267,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     personality: 'Военный до мозга костей: дисциплинирован, лаконичен, миссия прежде всего. Не говорит лишнего — каждое слово взвешено. Уважает тех, кто держит слово. Усталость от войны скрывает за строгим лицом.',
     description: 'Командор Фонарей (The Hooded Lanterns). Союзник партии.',
-    locations: ['Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-drexel', groupId: 'faction-dk-lanterns', relation: 'Leader' },
     ],
@@ -287,7 +287,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Член Фонарей. Хочет восстановить старый город, столицу и нацию. Брат Петры Лэнг. В сессии 5 попросил спасти сестру — выполнено в сессии 7.',
-    locations: ['Emberwood Watchtower'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-ansom-lang', groupId: 'faction-dk-lanterns', relation: 'Member' },
     ],
@@ -308,7 +308,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Сестра Ансома Лэнга. Пропала в патруле, захвачена крысами. Спасена партией из Крысиного гнезда (сессия 7). Рассказала, что Аметисты скрывают секрет про Оскара Йорена.',
-    locations: ['Emberwood Watchtower'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-petra-lang', groupId: 'faction-dk-lanterns', relation: 'Member' },
     ],
@@ -328,7 +328,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Human',
     speciesId: 'species-human',
     description: 'Капитан дозора Фонарей в Часовой башне Эмбервуда. Первая встреча в сессии 1.',
-    locations: ['Emberwood Watchtower'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-raine', groupId: 'faction-dk-lanterns', relation: 'Member' },
     ],
@@ -351,7 +351,7 @@ export const MOCK_NPCS: NPC[] = [
     appearance: 'Рыжеволосая женщина-воин в тёмной броне.',
     personality: 'Деловая и беспощадная — без лишних слов. Улыбается ровно столько, сколько нужно для сделки. Уважает силу и ненавидит сантименты. Никогда не угрожает дважды.',
     description: 'Босс «Розы и Шипов» — подгруппы Людей Королевы. База в Старом Имперском Пабе и Прогнутом ряду.',
-    locations: ['Old Imperial Pub', 'Bent Row'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-rosa-carver', groupId: 'faction-dk-queens', relation: 'Leader', subfaction: 'Rose and Thorns' },
     ],
@@ -370,7 +370,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Human',
     speciesId: 'species-human',
     description: 'Босс «Раненых сердец» — подгруппы Людей Королевы. База в Дворце Сми и Прогнутом ряду. Полная фамилия неизвестна.',
-    locations: ["Smi's Palace", 'Bent Row'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-kristian-lam', groupId: 'faction-dk-queens', relation: 'Leader', subfaction: 'Wounded Hearts' },
     ],
@@ -391,7 +391,7 @@ export const MOCK_NPCS: NPC[] = [
     appearance: 'Мрачная женщина с тёмными волосами.',
     description:
       'Босс «Канализационных кобр» — подгруппы Людей Королевы. База в Прогнутом ряду. Встречена в сессии 17 в Потном Багбире.',
-    locations: ['Bent Row', 'Sweaty Bugbear'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-veronika-yad', groupId: 'faction-dk-queens', relation: 'Leader', subfaction: 'Sewer Cobras' },
     ],
@@ -411,7 +411,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     appearance: 'Молодая женщина в чёрном плаще с капюшоном.',
     description: 'Канализационные кобры. Знакомая Вермиры.',
-    locations: ['Bent Row'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-serpenta', groupId: 'faction-dk-queens', relation: 'Member', subfaction: 'Sewer Cobras' },
     ],
@@ -429,7 +429,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Unknown',
     description:
       'Канализационные кобры. В сессии 11 в Прогнутом ряду — глаза загораются красным, видит невидимое.',
-    locations: ['Bent Row'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-bufotenia', groupId: 'faction-dk-queens', relation: 'Member', subfaction: 'Sewer Cobras' },
     ],
@@ -446,7 +446,7 @@ export const MOCK_NPCS: NPC[] = [
     gender: 'female',
     species: 'Unknown',
     description: 'Канализационные кобры. Детали неизвестны.',
-    locations: ['Bent Row'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-muskarina', groupId: 'faction-dk-queens', relation: 'Member', subfaction: 'Sewer Cobras' },
     ],
@@ -465,7 +465,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Human',
     speciesId: 'species-human',
     description: 'Бармен в Старом Имперском Пабе. Роза и Шипы.',
-    locations: ['Old Imperial Pub', 'Bent Row'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-izrael', groupId: 'faction-dk-queens', relation: 'Member', subfaction: 'Rose and Thorns' },
     ],
@@ -484,7 +484,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Elf',
     speciesId: 'species-elf',
     description: 'Эльфийка-официантка в Дворце Сми. Раненые сердца.',
-    locations: ["Smi's Palace", 'Bent Row'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-tilda', groupId: 'faction-dk-queens', relation: 'Member', subfaction: 'Wounded Hearts' },
     ],
@@ -504,7 +504,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-tiefling',
     appearance: 'Рогатый, темноватый персонаж.',
     description: 'Боец на арене в Прогнутом ряду. Базируется в Потном Багбире. Группа неизвестна.',
-    locations: ['Sweaty Bugbear', 'Bent Row', 'Arena'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-bloodhound', groupId: 'faction-dk-queens', relation: 'Member' },
     ],
@@ -524,7 +524,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     appearance: 'Пожилой мужчина с седой бородой, видавший виды.',
     description: 'Боец на арене в Прогнутом ряду. Раненые сердца.',
-    locations: ["Smi's Palace", 'Bent Row', 'Arena'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-dorian', groupId: 'faction-dk-queens', relation: 'Member', subfaction: 'Wounded Hearts' },
     ],
@@ -544,7 +544,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     appearance: 'Массивный, грузный, страшноватый на вид.',
     description: '«Вечно спящий охранник Тига» — охраняет кого-то по имени Тига. Прогнутый ряд. Группа неизвестна.',
-    locations: ['Bent Row'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-tony', groupId: 'faction-dk-queens', relation: 'Member' },
     ],
@@ -567,7 +567,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Руководит местным конклавом Аметистовой Академии. В башне во время падения метеорита находился главный маг с посохом (тем самым). Скрывает информацию об Оскаре Йорене.',
     gmNotes: 'Ключевая фигура тайны с Оскаром. Что он знает?',
-    locations: ['Drakkenheim'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-eldric', groupId: 'faction-dk-amethyst', relation: 'Leader' },
     ],
@@ -589,7 +589,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Тифлинг-варлок. Управляет отделением Аметистов в Эмбервуде. По ночам зависает в отдельной библиотеке Красного Льва. Прагматична как чёрт. Странно реагирует на имя Оскар Йорен. Поделилась точкой про Мельницу Эккермена. Отправляла телепатические сообщения.',
     gmNotes: 'Почему неприязнь к Йорену? Она что-то знает или сама замешана?',
-    locations: ['Red Lion Hotel', 'Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-river', groupId: 'faction-dk-amethyst', relation: 'Member' },
     ],
@@ -610,7 +610,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Ученик Оскара Йорена. Ушёл из Аметистовой Академии. Украл тома по вызову, некромантии и, возможно, трансмутации. Его перестали финансировать. Группа: Марко, Джемма, Таррин, Болтер, Копперпот.',
     gmNotes: 'Связан ли с заражёнными зельями? Куда ушёл после Академии?',
-    locations: ['Drakkenheim'],
+    locationPresences: [],
     groupMemberships: [],
     relations: [{ npcId: 'npc-oscar-yoren', type: 'mentor' }],
     createdAt: '2025-10-01T00:00:00Z',
@@ -633,7 +633,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Бывший? член Аметистовой Академии. Река знает где он — но молчит. Элдрик Руноткач скрывает информацию. Себастьян — его ученик. Иоганн Призроткач имел с ним дела. Связан с заражёнными зельями чистоты (квест Фонарей).',
     gmNotes: 'ЦЕНТРАЛЬНАЯ ТАЙНА КАМПАНИИ. Что скрывают Аметисты? Жив ли он вообще?',
-    locations: ['Unknown'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-oscar-yoren', groupId: 'faction-dk-amethyst', relation: 'Member' },
     ],
@@ -655,7 +655,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Научил Зою лечению от делириума. Имел дела с Оскаром Йореном. Партия его ещё не встречала — нужно найти.',
     gmNotes: 'Ключ к пониманию связи Зоя → Йорен. Где он сейчас?',
-    locations: ['Unknown'],
+    locationPresences: [],
     groupMemberships: [],
     relations: [
       { npcId: 'npc-zoya', type: 'pupil', note: 'Научил лечению от делириума' },
@@ -679,7 +679,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Сокурсница Вермиры. Раньше была в Священном Пламени, но переметнулась к культистам после Резни Магов 15 лет назад. Культистка у Врат Чемпионов. В сессии 13 — отобрала с фанатиками Bag of Holding.',
-    locations: ["Champion's Gate"],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-katya-brown', groupId: 'faction-dk-flame', relation: 'Member' },
     ],
@@ -698,7 +698,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Human',
     speciesId: 'species-human',
     description: 'Возможно управляет культистами Падшего Пламени у Врат Чемпионов. Встречена в сессии 10.',
-    locations: ["Champion's Gate"],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-lucretia', groupId: 'faction-dk-flame', relation: 'Leader' },
     ],
@@ -720,7 +720,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Рыцарь Серебряного Ордена. Захарис его искал — нашли. Корвин попал ему Magic Missile в оба коленных чашечки (сессия 14).',
-    locations: ['Drakkenheim'],
+    locationPresences: [],
     groupMemberships: [
       { npcId: 'npc-bryce-landry', groupId: 'faction-dk-silver', relation: 'Member' },
     ],
@@ -741,7 +741,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Human',
     speciesId: 'species-human',
     description: 'Владеет кузней Crowe and Sons в Эмбервуде. Вероятно отец Эммы Кроу. Дорого, но делают на заказ.',
-    locations: ['Crowe and Sons Smithy', 'Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [],
     relations: [{ npcId: 'npc-emma-crowe', type: 'child' }],
     createdAt: '2025-09-01T00:00:00Z',
@@ -760,7 +760,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     appearance: 'Рыжеволосая маленькая девочка. Супер энергичная.',
     description: 'Дочка кузнеца Тобиаса. За 1 gp проводит экскурсии по Эмбервуду. Знает слухи.',
-    locations: ['Crowe and Sons Smithy', 'Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [],
     relations: [{ npcId: 'npc-tobias-crowe', type: 'parent' }],
     createdAt: '2025-09-01T00:00:00Z',
@@ -779,7 +779,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     personality: 'Практична и гостеприимна — без лишней теплоты. Всегда занята, редко сидит. Быстро распознаёт проблемы и решает их до того, как те выросли. Защищает гостей, но не терпит дебоширов.',
     description: 'Владелица Bark and Buzzard (Коршун и Ищейка). Есть муж Holger.',
-    locations: ['Bark and Buzzard', 'Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-09-01T00:00:00Z',
@@ -799,7 +799,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Старушка-отшельница, поклоняется Старым богам. Не любима в Эмбервуде. Продаёт янтарные шарики. Подруга Патрикеевны. Знает лечение от делириума (научил Иоганн Призроткач). В сессии 17 оказалась допельгангером Крадущего Мысли — настоящая Зоя неизвестно где.',
     gmNotes: 'Где настоящая Зоя? Зачем Крадущий Мысли за ней? Связь с Йореном через Призроткача.',
-    locations: ['Zoya House'],
+    locationPresences: [],
     groupMemberships: [],
     relations: [{ npcId: 'npc-ghostweaver', type: 'mentor', note: 'Научил лечению от делириума' }],
     createdAt: '2025-09-01T00:00:00Z',
@@ -819,7 +819,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Джинн. Продаёт магические предметы на ночном рынке. Долг Корвина 500 gp за уничтоженный Bag of Holding — погашен в сессии 17 проклятым огненным мечом. Находится в астрале, нашёл скипетр — предложил обмен. По словам Людей Королевы — заточён в этом месте.',
     gmNotes: 'Скипетр в астрале — что это? Выгодна ли сделка?',
-    locations: ['Marketplace'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2026-03-16T00:00:00Z',
@@ -837,7 +837,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Торговец делириумом на ночном рынке. Маленький контейнер 4 gp, средний 10 gp, большой 20 gp. Партия продала ему делириум за 27 gp (сессия 5).',
-    locations: ['Marketplace', 'Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-10-01T00:00:00Z',
@@ -854,7 +854,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Human',
     speciesId: 'species-human',
     description: 'Торгует экипировкой для приключений на рынке Эмбервуда.',
-    locations: ['Marketplace', 'Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-09-01T00:00:00Z',
@@ -872,7 +872,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Довёз партию до Эмбервуда в сессии 1. Продаёт базовые припасы на рынке. Работает ночью. Может познакомить с Армином Гейнсбери.',
-    locations: ['Marketplace', 'Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-09-01T00:00:00Z',
@@ -890,7 +890,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     personality: 'Рафинированная и наблюдательная. Видит всё, говорит — ничего лишнего. Держит нейтралитет как защитный щит. Умеет создать ощущение, что вы её единственный важный гость.',
     description: 'Управляет Gilded Lily (Позолоченная Лилия). Вечера открытых выступлений.',
-    locations: ['Gilded Lily', 'Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-09-01T00:00:00Z',
@@ -908,7 +908,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Богатый дворянин. Последователь Священного Пламени (не в составе фракции). Прибыл в Дракенхейм по заданию. Партия забрала у него 30 gp (сессия 12). Команда «Прекраснейший Дом Мегара».',
-    locations: ['Drakkenheim'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-10-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
@@ -926,7 +926,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Из группы Рикарда Воса и Людвика вон Графа. Выжила после превращения Рикарда в монстра.',
-    locations: ['Road to Emberwood'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-09-01T00:00:00Z',
@@ -944,7 +944,7 @@ export const MOCK_NPCS: NPC[] = [
     speciesId: 'species-human',
     description:
       'Первый монстр, которого встретила партия. Потрогал делириум на дороге и начал превращаться в монстра — ночью трансформировался окончательно. Из группы Людвика вон Графа и Эндры Дженсен.',
-    locations: ['Road to Emberwood'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-09-01T00:00:00Z',
@@ -961,7 +961,7 @@ export const MOCK_NPCS: NPC[] = [
     species: 'Human',
     speciesId: 'species-human',
     description: 'Из группы Рикарда Воса и Эндры Дженсен. Погиб на Дороге к Эмбервуду.',
-    locations: ['Road to Emberwood'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-09-01T00:00:00Z',
@@ -980,7 +980,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Бывший владелец Red Lion Hotel. Убит допельгангером — подтверждено. В сессии 11 обнаружено, что он труп.',
     gmNotes: 'Допельгангер занял его место — кто-то ещё может быть заменён?',
-    locations: ['Red Lion Hotel'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-11-01T00:00:00Z',
@@ -999,7 +999,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Глава шайки, которая напала на партию в сессии 1. Сбежал во время встречи с монстром на дороге — забрал у кого-то кинжал. Где-то скрывается.',
     gmNotes: 'У кого кинжал? Что планирует?',
-    locations: ['Road to Emberwood'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2025-09-01T00:00:00Z',
@@ -1016,7 +1016,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Допельгангер. Выдавал себя за Зою в Прогнутом ряду. Спугнут малой иллюзией — сбежал (сессия 17). Зачем притворялся Зоей? Связан ли с фракциями?',
     gmNotes: 'Кто его контролирует? Цель — похитить лечение от делириума?',
-    locations: ['Bent Row'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2026-03-16T00:00:00Z',
     updatedAt: '2026-03-16T00:00:00Z',
@@ -1034,7 +1034,7 @@ export const MOCK_NPCS: NPC[] = [
     description:
       'Конь Сая. С партией с первой сессии. Долго не приручался, но потеплел после часовни. Почти наверняка заражён дымкой Дракенхейма — долгое время провёл в/около города. В сессии 17 отпущен на север от Прогнутого ряда перед побегом. Местонахождение неизвестно.',
     gmNotes: '⚠️ Вероятно заражён делириумом. Что с ним будет? Мутирует?',
-    locations: ['Emberwood Village'],
+    locationPresences: [],
     groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
     updatedAt: '2026-03-16T00:00:00Z',

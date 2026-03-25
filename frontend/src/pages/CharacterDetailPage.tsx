@@ -73,30 +73,36 @@ export default function CharacterDetailPage() {
           {/* ── Left column ─────────────────────────────────────── */}
           <div className="lg:w-[65%] space-y-12">
 
-            <ImageUpload
-              image={character.image}
-              name={character.name}
-              className="w-full aspect-[21/9]"
-              onUpload={handleImageUpload}
-              onView={character.image ? () => setLightbox(true) : undefined}
-            />
+            <section className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="relative group flex-shrink-0">
+                <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+                <ImageUpload
+                  image={character.image}
+                  name={character.name}
+                  className="relative w-48 h-64"
+                  onUpload={handleImageUpload}
+                  onView={character.image ? () => setLightbox(true) : undefined}
+                />
+              </div>
 
-            <header className="space-y-4">
-              {demoBadge && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
-                  <span className="material-symbols-outlined text-[13px]">person</span>
-                  {demoBadge}
-                </span>
-              )}
-              <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
-                {character.name}
-              </h1>
-            </header>
+              <div className="flex-1 pt-4 space-y-4">
+                {demoBadge && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
+                    <span className="material-symbols-outlined text-[13px]">person</span>
+                    {demoBadge}
+                  </span>
+                )}
+                <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
+                  {character.name}
+                </h1>
+              </div>
+            </section>
 
             <InlineRichField label="GM Notes" value={character.gmNotes} isGmNotes
               onSave={(html) => saveField('gmNotes', html)} />
             <InlineRichField label="Backstory" value={character.background}
-              onSave={(html) => saveField('background', html)} />
+              onSave={(html) => saveField('background', html)}
+              placeholder="History, origin, key events…" />
 
             <SocialRelationsSection campaignId={campaignId ?? ''} entityId={charId ?? ''} />
           </div>
@@ -113,15 +119,20 @@ export default function CharacterDetailPage() {
             </div>
 
             <InlineRichField label="Appearance" value={character.appearance}
-              onSave={(html) => saveField('appearance', html)} />
+              onSave={(html) => saveField('appearance', html)}
+              placeholder="Physical description…" />
             <InlineRichField label="Personality" value={character.personality}
-              onSave={(html) => saveField('personality', html)} />
+              onSave={(html) => saveField('personality', html)}
+              placeholder="Traits, mannerisms, quirks…" />
             <InlineRichField label="Motivation & Ideals" value={character.motivation}
-              onSave={(html) => saveField('motivation', html)} />
+              onSave={(html) => saveField('motivation', html)}
+              placeholder="What drives them, what they believe in…" />
             <InlineRichField label="Bonds" value={character.bonds}
-              onSave={(html) => saveField('bonds', html)} />
+              onSave={(html) => saveField('bonds', html)}
+              placeholder="People, places, things they hold dear…" />
             <InlineRichField label="Flaws" value={character.flaws}
-              onSave={(html) => saveField('flaws', html)} />
+              onSave={(html) => saveField('flaws', html)}
+              placeholder="Weaknesses, vices, fears…" />
 
           </div>
         </div>

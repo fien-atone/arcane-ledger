@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useNpc, useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useGroups } from '@/features/groups/api';
+import { useLocations } from '@/features/locations/api';
+import { useSessions } from '@/features/sessions/api';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, GmNotesSection, RichContent } from '@/shared/ui';
-import type { NpcStatus, NpcRelationType } from '@/entities/npc';
+import { ImageUpload, BackLink, InlineRichField } from '@/shared/ui';
+import type { NPC, NpcStatus, NpcRelationType } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
   sibling:      { label: 'Sibling',      icon: 'people' },
@@ -21,28 +23,12 @@ const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> 
 };
 
 const STATUS_STYLES: Record<NpcStatus, { pill: string; label: string }> = {
-  alive: {
-    pill: 'bg-secondary-container/30 text-secondary border border-secondary/20',
-    label: 'Alive',
-  },
-  dead: {
-    pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20',
-    label: 'Dead',
-  },
-  missing: {
-    pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20',
-    label: 'Missing',
-  },
-  unknown: {
-    pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10',
-    label: 'Unknown',
-  },
-  hostile: {
-    pill: 'bg-primary/10 text-primary border border-primary/20',
-    label: 'Hostile',
-  },
+  alive:   { pill: 'bg-secondary-container/30 text-secondary border border-secondary/20',                          label: 'Alive'   },
+  dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20',     label: 'Dead'    },
+  missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20',        label: 'Missing' },
+  unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10',                  label: 'Unknown' },
+  hostile: { pill: 'bg-primary/10 text-primary border border-primary/20',                                          label: 'Hostile' },
 };
-
 
 export default function NpcDetailPage() {
   const { id: campaignId, npcId } = useParams<{ id: string; npcId: string }>();
@@ -50,15 +36,25 @@ export default function NpcDetailPage() {
   const { data: groups } = useGroups(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allSpecies } = useSpecies();
-
+  const { data: allLocations } = useLocations(campaignId ?? '');
+  const { data: allSessions } = useSessions(campaignId ?? '');
   const saveNpc = useSaveNpc();
+  const [editOpen, setEditOpen] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
+  const [addLocSearch, setAddLocSearch] = useState('');
+  const [addLocOpen, setAddLocOpen] = useState(false);
+
+  const saveField = useCallback((field: keyof NPC, html: string) => {
+    if (!npc) return;
+    if (html.trim() === (String(npc[field] ?? '')).trim()) return;
+    saveNpc.mutate({ ...npc, [field]: html || undefined, updatedAt: new Date().toISOString() });
+  }, [npc, saveNpc]);
+
   const handleImageUpload = (dataUrl: string) => {
     saveNpc.mutate({ ...npc!, image: dataUrl, updatedAt: new Date().toISOString() });
   };
 
-  const groupNameById = (id: string) =>
-    groups?.find((g) => g.id === id)?.name ?? id;
-  const [editOpen, setEditOpen] = useState(false);
+  const groupNameById = (id: string) => groups?.find((g) => g.id === id)?.name ?? id;
 
   if (isLoading) {
     return (
@@ -84,7 +80,6 @@ export default function NpcDetailPage() {
 
   return (
     <main className="flex-1 min-h-screen bg-surface">
-      {/* Back breadcrumb */}
       <div className="px-10 pt-8">
         <BackLink to={`/campaigns/${campaignId}/npcs`}>NPC Roster</BackLink>
       </div>
@@ -104,125 +99,66 @@ export default function NpcDetailPage() {
                   name={npc.name}
                   className="relative w-48 h-64"
                   onUpload={handleImageUpload}
+                  onView={npc.image ? () => setLightbox(true) : undefined}
                 />
               </div>
 
-              <div className="flex-1 pt-4 space-y-6">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${st.pill}`}>
-                      {st.label}
+              <div className="flex-1 pt-4 space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${st.pill}`}>
+                    {st.label}
+                  </span>
+                  {npc.gender && (
+                    <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                      {npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1)}
                     </span>
-                    {npc.gender && (
-                      <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                        {npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1)}
-                      </span>
-                    )}
-                    {npc.age != null && (
-                      <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                        Age {npc.age}
-                      </span>
-                    )}
-                    {npc.species && (() => {
-                      const matchedSpecies = allSpecies?.find(
-                        (s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase()
-                      );
-                      const displayName = matchedSpecies?.name ?? npc.species;
-                      return matchedSpecies ? (
-                        <Link
-                          to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
-                          className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10 hover:border-primary/30 hover:text-primary transition-colors"
-                        >
-                          {displayName}
-                        </Link>
-                      ) : (
-                        <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                          {displayName}
-                        </span>
-                      );
-                    })()}
-                  </div>
-                  <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
-                    {npc.name}
-                  </h1>
-                  {npc.aliases.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {npc.aliases.map((alias) => (
-                        <span
-                          key={alias}
-                          className="text-xs text-on-surface-variant bg-surface-container px-3 py-1 border border-outline-variant/20 italic"
-                        >
-                          "{alias}"
-                        </span>
-                      ))}
-                    </div>
                   )}
+                  {npc.age != null && (
+                    <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                      Age {npc.age}
+                    </span>
+                  )}
+                  {npc.species && (() => {
+                    const matchedSpecies = allSpecies?.find(
+                      (s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase()
+                    );
+                    const displayName = matchedSpecies?.name ?? npc.species;
+                    return matchedSpecies ? (
+                      <Link
+                        to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
+                        className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10 hover:border-primary/30 hover:text-primary transition-colors"
+                      >
+                        {displayName}
+                      </Link>
+                    ) : (
+                      <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                        {displayName}
+                      </span>
+                    );
+                  })()}
                 </div>
-
-                {/* Appearance */}
-                {npc.appearance && (
-                  <div className="pt-4 border-t border-outline-variant/10">
-                    <h3 className="text-[10px] font-label uppercase tracking-widest text-primary mb-3">
-                      Physical Presence
-                    </h3>
-                    <RichContent value={npc.appearance} className="prose-p:italic prose-p:text-sm" />
-                  </div>
-                )}
-
-                {/* Personality */}
-                {npc.personality && (
-                  <div className="pt-4 border-t border-outline-variant/10">
-                    <h3 className="text-[10px] font-label uppercase tracking-widest text-primary mb-3">
-                      Personality
-                    </h3>
-                    <RichContent value={npc.personality} className="prose-p:text-sm" />
+                <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
+                  {npc.name}
+                </h1>
+                {npc.aliases.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {npc.aliases.map((alias) => (
+                      <span key={alias} className="text-xs text-on-surface-variant bg-surface-container px-3 py-1 border border-outline-variant/20 italic">
+                        "{alias}"
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
             </section>
 
-            {/* Description / background */}
-            {npc.description && (
-              <section className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                    Background
-                  </h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                </div>
-                <RichContent value={npc.description} />
-              </section>
-            )}
+            <InlineRichField label="GM Notes" value={npc.gmNotes}
+              onSave={(html) => saveField('gmNotes', html)}
+              isGmNotes />
 
-            {/* Motivation */}
-            {npc.motivation && (
-              <section className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                    Motivation
-                  </h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                </div>
-                <div className="bg-surface-container-low border-l-2 border-secondary/30 px-5 py-4">
-                  <RichContent value={npc.motivation} className="prose-p:italic prose-p:text-sm" />
-                </div>
-              </section>
-            )}
-
-            {/* Flaws */}
-            {npc.flaws && (
-              <section className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-on-surface-variant/60 whitespace-nowrap">
-                    Flaws
-                  </h2>
-                  <div className="h-px flex-1 bg-outline-variant/10" />
-                </div>
-                <div className="bg-surface-container-low border-l-2 border-outline-variant/30 px-5 py-4">
-                  <RichContent value={npc.flaws} className="prose-p:text-on-surface-variant/70 prose-p:text-sm" />
-                </div>
-              </section>
-            )}
+            <InlineRichField label="Background" value={npc.description}
+              onSave={(html) => saveField('description', html)}
+              placeholder="History, role, key facts…" />
 
             {/* Group Memberships */}
             {npc.groupMemberships.length > 0 && (
@@ -305,24 +241,18 @@ export default function NpcDetailPage() {
             )}
 
             {/* Social Relations */}
-            <SocialRelationsSection
-              campaignId={campaignId ?? ''}
-              entityId={npcId ?? ''}
-            />
+            <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />
 
             {/* Connections via shared groups */}
             {(() => {
               if (!allNpcs || npc.groupMemberships.length === 0) return null;
               const myGroupIds = new Set(npc.groupMemberships.map((m) => m.groupId));
-
-              // For each other NPC, find shared groups
               const connections = allNpcs
                 .filter((other) => other.id !== npc.id)
                 .flatMap((other) => {
                   const shared = other.groupMemberships.filter((m) => myGroupIds.has(m.groupId));
                   return shared.length > 0 ? [{ npc: other, sharedGroups: shared }] : [];
                 });
-
               if (connections.length === 0) return null;
               return (
                 <section className="space-y-4">
@@ -349,8 +279,7 @@ export default function NpcDetailPage() {
                               {other.name}
                             </p>
                             <p className="text-[10px] text-on-surface-variant/60 mt-0.5">
-                              via{' '}
-                              {sharedGroups.map((m) => groupNameById(m.groupId)).join(', ')}
+                              via {sharedGroups.map((m) => groupNameById(m.groupId)).join(', ')}
                             </p>
                           </div>
                           {other.species && (
@@ -367,60 +296,47 @@ export default function NpcDetailPage() {
               );
             })()}
 
-            {/* Unfilled fields summary */}
+            {/* Session Appearances */}
             {(() => {
-              const missing = [
-                { key: 'appearance', label: 'Appearance' },
-                { key: 'personality', label: 'Personality' },
-                { key: 'description', label: 'Background' },
-                { key: 'motivation', label: 'Motivation' },
-                { key: 'flaws', label: 'Flaws' },
-              ].filter(({ key }) => !npc[key as keyof typeof npc]);
-              if (missing.length === 0) return null;
+              const sessionAppearances = (allSessions ?? [])
+                .filter((s) => s.npcIds?.includes(npcId ?? ''))
+                .sort((a, b) => b.number - a.number);
               return (
-                <section className="border-t border-outline-variant/10 pt-6">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/30 font-bold">
-                      Not recorded:
-                    </span>
-                    {missing.map(({ label }) => (
-                      <span
-                        key={label}
-                        className="px-2.5 py-1 border border-dashed border-outline-variant/20 text-[10px] text-on-surface-variant/30 uppercase tracking-widest rounded-sm"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                    <button
-                      onClick={() => setEditOpen(true)}
-                      className="ml-auto text-[10px] text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center gap-1"
-                    >
-                      <span className="material-symbols-outlined text-[12px]">edit</span>
-                      Fill in
-                    </button>
+                <section className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                      Session Appearances
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
                   </div>
+                  {sessionAppearances.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant/40 italic">No sessions tagged yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {sessionAppearances.map((session) => (
+                        <Link
+                          key={session.id}
+                          to={`/campaigns/${campaignId}/sessions/${session.id}`}
+                          className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
+                        >
+                          <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors text-[18px]">auto_stories</span>
+                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors flex-1 truncate">
+                            Session {session.number} — {session.title}
+                          </p>
+                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </section>
               );
             })()}
 
-            {/* Appeared in sessions — placeholder */}
-            <section className="pt-8 opacity-60">
-              <div className="flex items-center gap-4 mb-4">
-                <h2 className="text-xs font-label font-bold tracking-[0.2em] uppercase text-on-surface-variant whitespace-nowrap">
-                  Recorded Encounters
-                </h2>
-                <div className="h-px flex-1 bg-outline-variant/10" />
-              </div>
-              <p className="text-xs text-on-surface-variant italic">
-                Session log will appear here once linked.
-              </p>
-            </section>
           </div>
 
           {/* ── Right column (35%) ─────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            {/* Edit button */}
             <div className="flex justify-end">
               <button
                 onClick={() => setEditOpen(true)}
@@ -431,73 +347,162 @@ export default function NpcDetailPage() {
               </button>
             </div>
 
-            {/* Location card */}
-            <div className="bg-surface-container-low p-6 rounded-sm ring-1 ring-outline-variant/10 space-y-6">
-              <div>
-                <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-3">
-                  Last Known Location
-                </h4>
-                {npc.locations[0] ? (
-                  <div className="flex items-center gap-3 text-lg font-headline text-primary-container">
-                    <span className="material-symbols-outlined text-primary">location_on</span>
-                    <span>{npc.locations[0]}</span>
+            <InlineRichField label="Appearance" value={npc.appearance}
+              onSave={(html) => saveField('appearance', html)}
+              placeholder="Physical description…" />
+
+            <InlineRichField label="Personality" value={npc.personality}
+              onSave={(html) => saveField('personality', html)}
+              placeholder="Traits, mannerisms, quirks…" />
+
+            <InlineRichField label="Motivation & Ideals" value={npc.motivation}
+              onSave={(html) => saveField('motivation', html)}
+              placeholder="What drives them, what they believe in…" />
+
+            <InlineRichField label="Flaws" value={npc.flaws}
+              onSave={(html) => saveField('flaws', html)}
+              placeholder="Weaknesses, vices, fears…" />
+
+            {/* Locations section */}
+            {(() => {
+              const presences = npc.locationPresences ?? [];
+              const linkedLocations = presences
+                .map((p) => allLocations?.find((l) => l.id === p.locationId))
+                .filter(Boolean) as NonNullable<typeof allLocations>[number][];
+
+              const availableToAdd = (allLocations ?? [])
+                .filter((l) => !presences.some((p) => p.locationId === l.id))
+                .filter((l) => !addLocSearch.trim() || l.name.toLowerCase().includes(addLocSearch.toLowerCase()))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+              const handleAddLocation = (locId: string) => {
+                saveNpc.mutate({
+                  ...npc,
+                  locationPresences: [...presences, { locationId: locId }],
+                  updatedAt: new Date().toISOString(),
+                });
+                setAddLocOpen(false);
+                setAddLocSearch('');
+              };
+
+              const handleRemoveLocation = (locId: string, locName: string) => {
+                if (!confirm(`Remove "${locName}" from this NPC's locations?`)) return;
+                saveNpc.mutate({
+                  ...npc,
+                  locationPresences: presences.filter((p) => p.locationId !== locId),
+                  updatedAt: new Date().toISOString(),
+                });
+              };
+
+              return (
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+                      Locations
+                    </h4>
+                    <button
+                      onClick={() => setAddLocOpen((v) => !v)}
+                      className="flex items-center gap-1 text-[10px] font-label uppercase tracking-widest text-primary/60 hover:text-primary transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">add</span>
+                      Add
+                    </button>
                   </div>
-                ) : (
-                  <p className="text-sm text-on-surface-variant italic">Unknown</p>
-                )}
-              </div>
 
-              {npc.locations.length > 1 && (
-                <div className="space-y-3 border-t border-outline-variant/10 pt-4">
-                  <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
-                    Frequent Haunts
-                  </h4>
-                  <ul className="space-y-2">
-                    {npc.locations.slice(1).map((loc) => (
-                      <li key={loc} className="flex items-center gap-3 text-sm text-on-surface group">
-                        <span className="material-symbols-outlined text-xs text-on-surface-variant group-hover:text-primary transition-colors">
-                          near_me
-                        </span>
-                        <span>{loc}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+                  {addLocOpen && (
+                    <div className="border border-outline-variant/20 rounded-sm bg-surface-container-low">
+                      <div className="p-2 border-b border-outline-variant/15">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={addLocSearch}
+                          onChange={(e) => setAddLocSearch(e.target.value)}
+                          placeholder="Search locations…"
+                          className="w-full bg-transparent text-sm text-on-surface placeholder:text-on-surface-variant/30 outline-none px-1"
+                        />
+                      </div>
+                      <ul className="max-h-48 overflow-y-auto">
+                        {availableToAdd.length === 0 ? (
+                          <li className="px-3 py-2 text-xs text-on-surface-variant/40 italic">No locations found</li>
+                        ) : availableToAdd.map((l) => (
+                          <li key={l.id}>
+                            <button
+                              onClick={() => handleAddLocation(l.id)}
+                              className="w-full text-left px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2"
+                            >
+                              <span className="material-symbols-outlined text-[13px] text-primary/60">location_on</span>
+                              {l.name}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-            {/* GM Notes */}
-            <GmNotesSection variant="sidebar" notes={npc.gmNotes} fallback={`No GM notes for ${npc.name} yet.`} />
+                  {linkedLocations.length === 0 && !addLocOpen ? (
+                    <p className="text-xs text-on-surface-variant/40 italic">No locations linked.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {linkedLocations.map((loc) => {
+                        const note = presences.find((p) => p.locationId === loc.id)?.note;
+                        return (
+                          <li key={loc.id} className="flex items-center gap-2 group/loc">
+                            <Link
+                              to={`/campaigns/${campaignId}/locations/${loc.id}`}
+                              className="flex-1 flex items-start gap-2 p-2.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant/15 hover:border-outline-variant/30 rounded-sm transition-colors group"
+                            >
+                              <span className="material-symbols-outlined text-[14px] text-primary/60 mt-0.5">location_on</span>
+                              <div className="min-w-0">
+                                <span className="text-sm text-on-surface group-hover:text-primary transition-colors block">{loc.name}</span>
+                                {note && <span className="text-[10px] text-on-surface-variant/50 italic">{note}</span>}
+                              </div>
+                            </Link>
+                            <button
+                              onClick={() => handleRemoveLocation(loc.id, loc.name)}
+                              className="opacity-0 group-hover/loc:opacity-100 p-1.5 text-on-surface-variant/30 hover:text-error transition-all flex-shrink-0"
+                              title="Remove"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              );
+            })()}
 
-            {/* Quick stat grid */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-surface-container-high/50 p-3 rounded-sm border border-outline-variant/10">
-                <p className="text-[9px] font-label uppercase tracking-tighter text-on-surface-variant mb-1">
-                  Disposition
-                </p>
-                <p className="text-sm font-headline text-on-surface capitalize">{npc.status}</p>
-              </div>
-              <div className="bg-surface-container-high/50 p-3 rounded-sm border border-outline-variant/10">
-                <p className="text-[9px] font-label uppercase tracking-tighter text-on-surface-variant mb-1">
-                  Groups
-                </p>
-                <p className="text-sm font-headline text-secondary">
-                  {npc.groupMemberships.length}
-                </p>
-              </div>
-            </div>
           </div>
 
         </div>
       </div>
 
-      {/* Edit drawer */}
       <NpcEditDrawer
         open={editOpen}
         onClose={() => setEditOpen(false)}
         campaignId={campaignId ?? ''}
         npc={npc}
       />
+
+      {lightbox && npc.image && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out"
+          onClick={() => setLightbox(false)}
+        >
+          <img
+            src={npc.image}
+            alt={npc.name}
+            className="max-w-full max-h-full object-contain drop-shadow-2xl"
+          />
+          <button
+            onClick={() => setLightbox(false)}
+            className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-3xl">close</span>
+          </button>
+        </div>
+      )}
     </main>
   );
 }

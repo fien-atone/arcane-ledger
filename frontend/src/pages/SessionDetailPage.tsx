@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useSessions } from '@/features/sessions/api/queries';
+import { useSessions, useSaveSession } from '@/features/sessions/api/queries';
+import { useNpcs } from '@/features/npcs/api/queries';
+import { useLocations } from '@/features/locations/api';
 import { BackLink } from '@/shared/ui';
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -13,6 +16,13 @@ export default function SessionDetailPage() {
   const { id: campaignId, sessionId } = useParams<{ id: string; sessionId: string }>();
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
   const session = sessions?.find((s) => s.id === sessionId);
+  const { data: allNpcs } = useNpcs(campaignId ?? '');
+  const { data: allLocations } = useLocations(campaignId ?? '');
+  const saveSession = useSaveSession(campaignId ?? '');
+  const [npcSearch, setNpcSearch] = useState('');
+  const [npcSearchOpen, setNpcSearchOpen] = useState(false);
+  const [locSearch, setLocSearch] = useState('');
+  const [locSearchOpen, setLocSearchOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -175,39 +185,143 @@ export default function SessionDetailPage() {
           {/* ── Right column (35%) ─────────────────────────── */}
           <div className="lg:w-[35%] space-y-10 lg:sticky lg:top-8 self-start">
 
-            {/* Edit button */}
-            <div className="flex justify-end">
-              <button
-                disabled
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm opacity-50 cursor-not-allowed"
-                title="Coming soon"
-              >
-                <span className="material-symbols-outlined text-sm">edit</span>
-                Edit Session
-              </button>
-            </div>
+            {/* NPCs in this session */}
+            {(() => {
+              const npcIds = session.npcIds ?? [];
+              const linked = npcIds.map((id) => allNpcs?.find((n) => n.id === id)).filter(Boolean) as NonNullable<typeof allNpcs>[number][];
+              const available = (allNpcs ?? [])
+                .filter((n) => !npcIds.includes(n.id))
+                .filter((n) => !npcSearch.trim() || n.name.toLowerCase().includes(npcSearch.toLowerCase()))
+                .sort((a, b) => a.name.localeCompare(b.name));
 
-            {/* NPCs in this session (placeholder) */}
-            <section>
-              <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">group</span>
-                NPCs in this session
-              </h4>
-              <p className="text-xs text-on-surface-variant/40 italic">
-                NPC links will appear here once sessions are tagged.
-              </p>
-            </section>
+              const addNpc = (id: string) => {
+                saveSession.mutate({ ...session, npcIds: [...npcIds, id] });
+                setNpcSearchOpen(false); setNpcSearch('');
+              };
+              const removeNpc = (id: string) =>
+                saveSession.mutate({ ...session, npcIds: npcIds.filter((x) => x !== id) });
 
-            {/* Locations in this session (placeholder) */}
-            <section>
-              <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">location_on</span>
-                Locations in this session
-              </h4>
-              <p className="text-xs text-on-surface-variant/40 italic">
-                Location links will appear here once sessions are tagged.
-              </p>
-            </section>
+              return (
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">NPCs</h4>
+                    <button onClick={() => setNpcSearchOpen((v) => !v)}
+                      className="flex items-center gap-1 text-[10px] font-label uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">
+                      <span className="material-symbols-outlined text-[13px]">add</span>Add
+                    </button>
+                  </div>
+                  {npcSearchOpen && (
+                    <div className="border border-outline-variant/20 rounded-sm bg-surface-container-low">
+                      <div className="p-2 border-b border-outline-variant/15">
+                        <input autoFocus type="text" value={npcSearch} onChange={(e) => setNpcSearch(e.target.value)}
+                          placeholder="Search NPCs…"
+                          className="w-full bg-transparent text-sm text-on-surface placeholder:text-on-surface-variant/30 outline-none px-1" />
+                      </div>
+                      <ul className="max-h-48 overflow-y-auto">
+                        {available.length === 0
+                          ? <li className="px-3 py-2 text-xs text-on-surface-variant/40 italic">No NPCs found</li>
+                          : available.map((n) => (
+                            <li key={n.id}>
+                              <button onClick={() => addNpc(n.id)}
+                                className="w-full text-left px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[13px] text-primary/60">person</span>
+                                {n.name}
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                  {linked.length === 0 && !npcSearchOpen
+                    ? <p className="text-xs text-on-surface-variant/40 italic">No NPCs tagged yet.</p>
+                    : <ul className="space-y-1.5">
+                        {linked.map((n) => (
+                          <li key={n.id} className="flex items-center gap-2 group/item">
+                            <Link to={`/campaigns/${campaignId}/npcs/${n.id}`}
+                              className="flex-1 flex items-center gap-2 p-2.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant/15 hover:border-outline-variant/30 rounded-sm transition-colors group">
+                              <span className="material-symbols-outlined text-[14px] text-primary/60">person</span>
+                              <span className="text-sm text-on-surface group-hover:text-primary transition-colors">{n.name}</span>
+                            </Link>
+                            <button onClick={() => removeNpc(n.id)}
+                              className="opacity-0 group-hover/item:opacity-100 p-1.5 text-on-surface-variant/30 hover:text-error transition-all" title="Remove">
+                              <span className="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                  }
+                </section>
+              );
+            })()}
+
+            {/* Locations in this session */}
+            {(() => {
+              const locationIds = session.locationIds ?? [];
+              const linked = locationIds.map((id) => allLocations?.find((l) => l.id === id)).filter(Boolean) as NonNullable<typeof allLocations>[number][];
+              const available = (allLocations ?? [])
+                .filter((l) => !locationIds.includes(l.id))
+                .filter((l) => !locSearch.trim() || l.name.toLowerCase().includes(locSearch.toLowerCase()))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+              const addLoc = (id: string) => {
+                saveSession.mutate({ ...session, locationIds: [...locationIds, id] });
+                setLocSearchOpen(false); setLocSearch('');
+              };
+              const removeLoc = (id: string) =>
+                saveSession.mutate({ ...session, locationIds: locationIds.filter((x) => x !== id) });
+
+              return (
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Locations</h4>
+                    <button onClick={() => setLocSearchOpen((v) => !v)}
+                      className="flex items-center gap-1 text-[10px] font-label uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">
+                      <span className="material-symbols-outlined text-[13px]">add</span>Add
+                    </button>
+                  </div>
+                  {locSearchOpen && (
+                    <div className="border border-outline-variant/20 rounded-sm bg-surface-container-low">
+                      <div className="p-2 border-b border-outline-variant/15">
+                        <input autoFocus type="text" value={locSearch} onChange={(e) => setLocSearch(e.target.value)}
+                          placeholder="Search locations…"
+                          className="w-full bg-transparent text-sm text-on-surface placeholder:text-on-surface-variant/30 outline-none px-1" />
+                      </div>
+                      <ul className="max-h-48 overflow-y-auto">
+                        {available.length === 0
+                          ? <li className="px-3 py-2 text-xs text-on-surface-variant/40 italic">No locations found</li>
+                          : available.map((l) => (
+                            <li key={l.id}>
+                              <button onClick={() => addLoc(l.id)}
+                                className="w-full text-left px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[13px] text-primary/60">location_on</span>
+                                {l.name}
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                  {linked.length === 0 && !locSearchOpen
+                    ? <p className="text-xs text-on-surface-variant/40 italic">No locations tagged yet.</p>
+                    : <ul className="space-y-1.5">
+                        {linked.map((l) => (
+                          <li key={l.id} className="flex items-center gap-2 group/item">
+                            <Link to={`/campaigns/${campaignId}/locations/${l.id}`}
+                              className="flex-1 flex items-center gap-2 p-2.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant/15 hover:border-outline-variant/30 rounded-sm transition-colors group">
+                              <span className="material-symbols-outlined text-[14px] text-primary/60">location_on</span>
+                              <span className="text-sm text-on-surface group-hover:text-primary transition-colors">{l.name}</span>
+                            </Link>
+                            <button onClick={() => removeLoc(l.id)}
+                              className="opacity-0 group-hover/item:opacity-100 p-1.5 text-on-surface-variant/30 hover:text-error transition-all" title="Remove">
+                              <span className="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                  }
+                </section>
+              );
+            })()}
 
             {/* Quests mentioned */}
             <section>

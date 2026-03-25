@@ -14,6 +14,7 @@ export const MOCK_SESSIONS: Session[] = [
     nextSessionNotes:
       'Will 1 bottle be enough for Kronhev? What does Gnurk need the mold for? What do the elves want?',
     locationIds: ['loc-fc-farchester', 'loc-fc-tavern', 'loc-fc-rathusha'],
+    npcIds: ['npc-gnurk', 'npc-yorvert', 'npc-stoungriv'],
     createdAt: '2026-03-18T00:00:00Z',
   },
   {
@@ -25,6 +26,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Meeting with Tuts',
     summary: "The party met Tuts and learned more about the city's political situation.",
     locationIds: ['loc-fc-farchester', 'loc-fc-tower'],
+    npcIds: ['npc-tuts', 'npc-gvilim', 'npc-vaysiriel'],
     createdAt: '2026-03-12T00:00:00Z',
   },
   {
@@ -36,6 +38,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Mage Tower, negotiations',
     summary: 'The party explored the Mage Tower and engaged in delicate negotiations.',
     locationIds: ['loc-fc-farchester', 'loc-fc-tower'],
+    npcIds: ['npc-tuts', 'npc-gvilim'],
     createdAt: '2026-03-02T00:00:00Z',
   },
   {
@@ -47,6 +50,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Town Hall, Lord-Admiral Kronhev',
     summary: 'Getting to know the city, meeting at Town Hall, introduction to Lord-Admiral Kronhev.',
     locationIds: ['loc-fc-farchester', 'loc-fc-rathusha', 'loc-fc-residence'],
+    npcIds: ['npc-stoungriv', 'npc-kronheyv', 'npc-edit-hargrave', 'npc-eshborn'],
     createdAt: '2026-02-24T00:00:00Z',
   },
   {
@@ -58,6 +62,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Road from Brinwick, arrival in Farchester',
     summary: 'The party travelled from Brinwick and arrived at the city of Farchester.',
     locationIds: ['loc-fc-farchester'],
+    npcIds: ['npc-gvilim'],
     createdAt: '2026-02-20T00:00:00Z',
   },
 
@@ -73,6 +78,7 @@ export const MOCK_SESSIONS: Session[] = [
       "Aldor appeared demanding the 500gp debt — Korvin paid with the cursed fire sword. A doppelganger impersonating Zoya was scared off. Veronika Yad was found at the Sweaty Bugbear. The party escaped Bent Row through the sewers, fighting a Gelatinous Cube. Chertyaka was released and ran north.",
     nextSessionNotes:
       "Party is stuck in the sewers. Where is Chertyaka? What is Aldor's scepter? Find Black Jack at the Hanging Lock tavern.",
+    npcIds: ['npc-aldor', 'npc-mind-reaper', 'npc-veronika-yad', 'npc-chertyaka'],
     createdAt: '2026-03-16T00:00:00Z',
   },
   {
@@ -86,6 +92,7 @@ export const MOCK_SESSIONS: Session[] = [
       "The party discovered a large underground arena in the sewers beneath Bent Row. Sai and Patrikeyevna signed up as \"Elf and Granny\". Fights organized by Bull — scarred face, one blind eye. Korvin chased by Queen's Men through tunnels and found a cursed fire sword. The whole party was locked in cages in the morning. Aldor appeared in the dungeon demanding the 500gp debt.",
     nextSessionNotes:
       "Arena fights — Elf and Granny go in. Patrikeyevna owes Marv the gnome 20gp (3 days). Chertyaka left at the stables. Close the 500gp debt to Aldor.",
+    npcIds: ['npc-aldor', 'npc-bloodhound', 'npc-dorian', 'npc-chertyaka'],
     createdAt: '2026-03-09T00:00:00Z',
   },
   {
@@ -110,6 +117,7 @@ export const MOCK_SESSIONS: Session[] = [
       "Re-summoned owl Nix. Zakaris found Sir Bryce Landry — Korvin hit him with Magic Missile in the kneecaps. Gathered ingredients for Zoya's delirium cure: temple slime (50gp, 2 found) and mandrake roots x5 (8 found). Zoya is heading to Bent Row. Learned of Johann Ghostweaver who taught Zoya the cure and had dealings with Oscar. Aldor caught the party — Korvin left the delirium shard as collateral. The Trio killed the Manticore Gorota.",
     nextSessionNotes:
       "Korvin owes Aldor the Giant 500gp for the destroyed Bag of Holding.",
+    npcIds: ['npc-zoya', 'npc-bryce-landry', 'npc-aldor'],
     createdAt: '2026-02-19T00:00:00Z',
   },
   {
@@ -121,6 +129,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: "Bag of Holding destroyed, Katya revealed as cultist fanatic",
     summary:
       "Stress triggers contamination checks. Korvin destroyed the Bag of Holding when Katya and other fanatics tried to take it — Katya turned out to be a Followers of the Falling Fire fanatic. Loss of the Bag of Holding means a 500gp debt to Aldor.",
+    npcIds: ['npc-katya-brown'],
     createdAt: '2026-02-05T00:00:00Z',
   },
   {
@@ -132,6 +141,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: "River's debt, Sebastian's past, Knight-Lieutenant Wyatt",
     summary:
       "River sent a telepathic message on departure: return the bag to Giant Aldor within 24 hours. Korvin tossed a coin into the Skull and Sword, bought 2 sets of familiar summoning ingredients. Met Knight-Lieutenant Cassandra Wyatt on a griffon. Learned Sebastian left the Academy — he was Oscar's student, stole tomes on summoning and necromancy. Patrikeyevna gained 1 level of contamination. Party looted 30gp from a nobleman and a 100gp delirium fragment.",
+    npcIds: ['npc-river', 'npc-sebastian', 'npc-antoine-megara'],
     createdAt: '2026-01-22T00:00:00Z',
   },
   {
@@ -143,6 +153,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: "Poisoners Muskorina & Bufotenia, Lanterns quest, Red Lion, Bent Row discovered",
     summary:
       "Encountered poisoners Muskorina and Bufotenia — Bufotenia's eyes glow red and seem to grant true sight. The Hooded Lanterns want to meet. Rented a room at the Red Lion Hotel. Negotiated one day's delay. Discovered Bent Row — a new underground location in the Spire District beyond the Rat Nest. River was reading 'Antidotes and Poisons'. Kosta Stavros found dead. Lanterns quest: their purification potions purchased from a suspicious figure are contaminated. Meeting point: Shepherd's Gate. Suspect operates from a mansion near Eckerman Mill. OSCAR YOREN is connected.",
+    npcIds: ['npc-muskarina', 'npc-bufotenia', 'npc-river', 'npc-kosta-stavros'],
     createdAt: '2026-01-15T00:00:00Z',
   },
   {
@@ -154,6 +165,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: "Champion's Gate, cultists, Korvin's backstory revealed",
     summary:
       "Found 8 more citrines (~25gp each). Met cultists — Tanya Brown, a former classmate of Vermira who defected after the Sacred Flame Massacre. Swapped wands (Korvin's wand now in the bag). Major revelation: Patrikeyevna has no crystal inside her — why? Korvin is the only surviving child from the Sacred Flame Massacre where children with awakening magical abilities were killed. The sword found by the party comes from Sai's dreams. Reached Champion's Gate — Lucretia Mathias is there.",
+    npcIds: ['npc-katya-brown', 'npc-lucretia'],
     createdAt: '2026-01-08T00:00:00Z',
   },
   {
@@ -187,6 +199,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Petra rescued from the Rat Nest, contamination cured',
     summary:
       "Rescued Petra Lang from the Rat Nest. A white rat with huge delirium chunks found inside. Petra offered to ask the Amethyst Academy about Oscar Yoren's location. Cured contamination with a purification syringe. Couldn't reach Eckerman Mill.",
+    npcIds: ['npc-petra-lang'],
     createdAt: '2025-11-24T00:00:00Z',
   },
   {
@@ -198,6 +211,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Gilded Lily, rat fight, Korvin warms to Vermira',
     summary:
       "Re-summoned familiar Nix. Visited the Gilded Lily — owned by Madam Rochelle, grogs for 1gp, live music evening. Fought rats in the ruins. Korvin began treating Vermira better after she healed him and cast Shield.",
+    npcIds: ['npc-madam-rochelle'],
     createdAt: '2025-11-18T00:00:00Z',
   },
   {
@@ -209,6 +223,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: "Met Zoya, Orson's shop, River's tip about Eckerman Mill, reached level 3",
     summary:
       "Found Zoya's house — an old woman selling amber beads who worships the Old Gods and knows Patrikeyevna. Visited Orson Fairweather's delirium shop — bought a small lead container (4gp). River shared a new point of interest: Eckerman Mill, outside both Drakkenheim and Emberwood. Quest received from Ansom to rescue Petra Lang. Sold delirium for 27gp. Officially reached Level 3.",
+    npcIds: ['npc-zoya', 'npc-orson', 'npc-river', 'npc-ansom-lang', 'npc-armin'],
     createdAt: '2025-11-07T00:00:00Z',
   },
   {
@@ -242,6 +257,7 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Emberwood explored, Skull and Sword, Lanterns, River at Red Lion',
     summary:
       "Explored Emberwood Village. Spotted a large carriage pulled by two steel bulls radiating magic — its passenger reeked of delirium. Skull and Sword Taphouse confirmed as Queen's Men territory. Night market: Eren Marlow, Aldor (magic items), and Orson Fairweather (delirium trader). River — a tiefling warlock — spends evenings in the Red Lion Hotel library. Tainted cannot cross the river but can walk bridges. The Amethyst Academy's conclave is led by Eldric Runeweaver.",
+    npcIds: ['npc-eren-marlow', 'npc-aldor', 'npc-orson', 'npc-river', 'npc-eldric'],
     createdAt: '2025-09-09T00:00:00Z',
   },
   {
@@ -255,6 +271,7 @@ export const MOCK_SESSIONS: Session[] = [
       "Met Eren Marlow — a caravan driver who brought the party to Emberwood. A masked woman with a dagger gave a copper coin. On the road: a corpse with a coin near the Dran river, surrounded by two humans and 'something made of meat and bone'. Rikard Vos touched delirium and began transforming. By night he was fully monstrous. Bogdan fled with the dagger. Party arrived in Emberwood.",
     nextSessionNotes:
       "Eren is at the square and can introduce Armin Gainsbury.",
+    npcIds: ['npc-eren-marlow', 'npc-rikard-vos', 'npc-bogdan', 'npc-raine', 'npc-endra-jansen', 'npc-ludwig'],
     createdAt: '2025-09-02T00:00:00Z',
   },
   {
