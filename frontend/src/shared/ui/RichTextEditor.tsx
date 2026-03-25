@@ -72,7 +72,7 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = '5rem
     if (!editor) return;
     const incoming = value || '';
     if (incoming !== lastEmitted.current) {
-      editor.commands.setContent(incoming, false);
+      editor.commands.setContent(incoming, { emitUpdate: false });
       lastEmitted.current = incoming;
     }
   }, [value, editor]);

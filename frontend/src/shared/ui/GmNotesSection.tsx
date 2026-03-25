@@ -1,4 +1,4 @@
-import { RichContent, toHtml } from './RichContent';
+import { RichContent } from './RichContent';
 
 interface Props {
   notes?: string | null;

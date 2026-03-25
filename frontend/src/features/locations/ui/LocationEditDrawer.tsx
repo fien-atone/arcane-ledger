@@ -116,6 +116,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
       parentLocationId: parentLocationId || undefined,
       settlementPopulation: selectedTypeEntry?.isSettlement && !isNaN(pop) && pop > 0 ? pop : undefined,
       biome: biomeOptions.length > 0 && biome ? biome : undefined,
+      description: location?.description ?? '',
       image,
     };
     save.mutate(record, { onSuccess: () => { onSaved?.(record); onClose(); } });

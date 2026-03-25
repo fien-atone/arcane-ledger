@@ -179,7 +179,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
                 value={status}
                 options={statusOptions}
                 nullable={false}
-                onChange={(v) => setStatus(v ?? 'alive')}
+                onChange={(v) => setStatus(v || 'alive')}
               />
             </div>
             <div>
