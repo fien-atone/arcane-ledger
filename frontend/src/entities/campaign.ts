@@ -2,7 +2,6 @@ export interface Campaign {
   id: string;
   title: string;
   description?: string;
-  coverImage?: string;
   createdAt: string;
   archivedAt?: string;
 }
@@ -24,6 +23,4 @@ export interface CampaignSummary extends Campaign {
   myRole: 'gm' | 'player';
   /** Populated when myRole === 'player' */
   myCharacterName?: string;
-  /** CSS background value for cover placeholder */
-  coverGradient: string;
 }

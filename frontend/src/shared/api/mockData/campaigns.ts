@@ -15,8 +15,6 @@ export const MOCK_CAMPAIGNS: CampaignSummary[] = [
       datetime: '2026-03-18T18:00:00Z',
     },
     myRole: 'gm',
-    coverGradient:
-      'linear-gradient(135deg, #0a1628 0%, #1a2744 40%, #0d2233 70%, #121317 100%)',
   },
   {
     id: 'campaign-drakkenheim',
@@ -32,7 +30,5 @@ export const MOCK_CAMPAIGNS: CampaignSummary[] = [
       datetime: '2026-03-16T18:00:00Z',
     },
     myRole: 'gm',
-    coverGradient:
-      'linear-gradient(135deg, #1a0a2e 0%, #3b1255 40%, #2a0d1e 70%, #121317 100%)',
   },
 ];

@@ -1,262 +1,451 @@
+import { useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useCampaign } from '@/features/campaigns/api/queries';
-import { useLastSession } from '@/features/sessions/api/queries';
+import { useCampaign, useSaveCampaign } from '@/features/campaigns/api/queries';
+import { useSessions } from '@/features/sessions/api/queries';
 import { useActiveQuests } from '@/features/quests/api/queries';
 import { useParty } from '@/features/characters/api/queries';
-import type { PlayerCharacter } from '@/entities/character';
-import type { Quest } from '@/entities/quest';
+import { useNpcs } from '@/features/npcs/api/queries';
+import { useLocations } from '@/features/locations/api';
+import { useGroups } from '@/features/groups/api';
+import { InlineRichField } from '@/shared/ui';
+import type { CampaignSummary } from '@/entities/campaign';
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
-function CharacterAvatar({ character }: { character: PlayerCharacter }) {
-  const initials = character.name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-  return (
-    <div className="w-9 h-9 rounded-full bg-surface-container-highest border border-primary/30 flex items-center justify-center text-primary font-semibold text-xs flex-shrink-0">
-      {initials}
-    </div>
-  );
-}
-
-function QuestItem({ quest, campaignId }: { quest: Quest; campaignId: string }) {
-  const isActive = quest.status === 'active';
-  return (
-    <Link
-      to={`/campaigns/${campaignId}/quests/${quest.id}`}
-      className="group block bg-surface-container p-5 rounded-sm border-l-2 hover:bg-surface-container-high transition-all duration-200"
-      style={{ borderLeftColor: isActive ? 'rgb(123 214 209)' : 'rgb(77 70 53)' }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-on-surface text-sm font-medium">{quest.title}</span>
-            <span
-              className={`text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-sm font-label ${
-                isActive
-                  ? 'bg-secondary/20 text-secondary'
-                  : 'bg-outline-variant/20 text-on-surface-variant'
-              }`}
-            >
-              {quest.status}
-            </span>
-          </div>
-          <p className="text-on-surface-variant text-xs leading-relaxed">
-            {quest.description.slice(0, 80)}
-            {quest.description.length > 80 ? '…' : ''}
-          </p>
-        </div>
-        <span className="material-symbols-outlined text-on-surface-variant/0 group-hover:text-on-surface-variant text-base transition-all duration-200 flex-shrink-0">
-          arrow_forward
-        </span>
-      </div>
-    </Link>
-  );
-}
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 export default function CampaignDashboardPage() {
   const { id } = useParams<{ id: string }>();
   const campaignId = id ?? '';
 
   const { data: campaign, isLoading: campaignLoading } = useCampaign(campaignId);
-  const { data: lastSession, isLoading: sessionLoading } = useLastSession(campaignId);
-  const { data: activeQuests, isLoading: questsLoading } = useActiveQuests(campaignId);
-  const { data: party, isLoading: partyLoading } = useParty(campaignId);
+  const { data: sessions } = useSessions(campaignId);
+  const { data: activeQuests } = useActiveQuests(campaignId);
+  const { data: party } = useParty(campaignId);
+  const { data: allNpcs } = useNpcs(campaignId);
+  const { data: allLocations } = useLocations(campaignId);
+  const { data: allGroups } = useGroups(campaignId);
+  const saveCampaign = useSaveCampaign();
+
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [confirmArchive, setConfirmArchive] = useState(false);
+
+  const saveDescription = useCallback((html: string) => {
+    if (!campaign) return;
+    saveCampaign.mutate({ ...campaign as CampaignSummary, description: html || undefined });
+  }, [campaign, saveCampaign]);
 
   if (campaignLoading) {
     return (
       <div className="flex h-screen items-center justify-center text-on-surface-variant">
+        <span className="material-symbols-outlined animate-spin mr-3">progress_activity</span>
         Loading campaign…
       </div>
     );
   }
 
   if (!campaign) {
-    return (
-      <div className="p-12 text-on-surface-variant">Campaign not found.</div>
-    );
+    return <div className="p-12 text-on-surface-variant">Campaign not found.</div>;
   }
 
+  const sorted = [...(sessions ?? [])].sort((a, b) => b.number - a.number);
+  const lastSessions = sorted.slice(0, 5);
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Nearest upcoming: today or future, sorted ascending by date
+  const upcoming = [...(sessions ?? [])]
+    .filter((s) => s.datetime && new Date(s.datetime) >= todayStart)
+    .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+  const nextSession = upcoming[0] ?? null;
+
+  // Stats
+  const npcCount = allNpcs?.length ?? 0;
+  const locationCount = allLocations?.length ?? 0;
+  const groupCount = allGroups?.length ?? 0;
+  const sessionCount = sessions?.length ?? 0;
+  const questCount = activeQuests?.length ?? 0;
+
+  // Recent NPCs (last 5 updated)
+  const recentNpcs = [...(allNpcs ?? [])]
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, 5);
+
+
   return (
-    <div className="p-10 max-w-screen-xl mx-auto">
-      {/* Campaign header */}
-      <div className="mb-10">
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary block mb-2">
-          Game Master
-        </span>
-        <h1 className="font-headline text-6xl font-bold text-on-surface mb-2">
-          {campaign.title}
-        </h1>
-        <p className="text-on-surface-variant text-sm max-w-2xl leading-relaxed">
-          {campaign.description}
-        </p>
-      </div>
+    <div className="flex-1 min-h-screen bg-surface overflow-y-auto">
+      <div className="max-w-[1400px] mx-auto px-10 py-10 pb-20">
 
-      {/* Main grid */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left column */}
-        <div className="col-span-8 space-y-6">
-          {/* Last Session Hero Card */}
-          <div className="bg-surface-container-low rounded-lg p-10 border border-outline-variant/10">
-            {sessionLoading ? (
-              <p className="text-on-surface-variant text-sm">Loading session…</p>
-            ) : lastSession ? (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary">
-                    Session {lastSession.number}
-                  </span>
-                  <span className="text-on-surface-variant/40 text-xs">·</span>
-                  <span className="text-on-surface-variant text-xs">
-                    {formatDate(lastSession.datetime)}
-                  </span>
-                </div>
-                <h2 className="font-headline text-5xl font-bold text-on-surface mb-4 leading-tight">
-                  {lastSession.title}
-                </h2>
-                {lastSession.brief && (
-                  <p className="text-on-surface-variant text-sm mb-2 italic">
-                    {lastSession.brief}
-                  </p>
-                )}
-                <p className="text-on-surface-variant text-sm leading-relaxed mb-8">
-                  {lastSession.summary}
-                </p>
-                <div className="flex items-center gap-3">
-                  <Link
-                    to={`/campaigns/${campaignId}/sessions/${lastSession.id}`}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-surface bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 rounded-sm"
-                  >
-                    <span className="material-symbols-outlined text-base">history_edu</span>
-                    View full session
-                  </Link>
-                  <Link
-                    to={`/campaigns/${campaignId}/sessions`}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-primary border border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all duration-200 rounded-sm"
-                  >
-                    <span className="material-symbols-outlined text-base">add</span>
-                    Add new session
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p className="text-on-surface-variant text-sm">No sessions yet.</p>
-            )}
-          </div>
-
-          {/* Active Quests */}
-          <div>
-            <div className="flex items-end justify-between mb-5">
-              <div>
-                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary block mb-1">
-                  Campaign Progress
+        {/* Campaign header */}
+        <header className="mb-8">
+          <div className="flex items-center justify-end mb-2">
+            {confirmArchive ? (
+              <div className="flex items-center gap-2 px-3 py-2 border border-outline-variant/20 bg-surface-container rounded-sm">
+                <span className="text-[10px] text-on-surface-variant">
+                  {campaign.archivedAt ? 'Restore this campaign?' : 'Archive this campaign?'}
                 </span>
-                <h2 className="font-headline text-3xl font-bold text-on-surface">
-                  Active Quests
-                </h2>
-              </div>
-              <Link
-                to={`/campaigns/${campaignId}/quests`}
-                className="text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors duration-200"
-              >
-                View all quests →
-              </Link>
-            </div>
-
-            {questsLoading ? (
-              <p className="text-on-surface-variant text-sm">Loading quests…</p>
-            ) : activeQuests && activeQuests.length > 0 ? (
-              <div className="space-y-3">
-                {activeQuests.map((quest) => (
-                  <QuestItem key={quest.id} quest={quest} campaignId={campaignId} />
-                ))}
+                <button
+                  onClick={() => {
+                    saveCampaign.mutate({
+                      ...campaign as CampaignSummary,
+                      archivedAt: campaign.archivedAt ? undefined : new Date().toISOString(),
+                    });
+                    setConfirmArchive(false);
+                  }}
+                  className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-primary hover:text-on-surface transition-colors"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setConfirmArchive(false)}
+                  className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+                >
+                  No
+                </button>
               </div>
             ) : (
-              <p className="text-on-surface-variant text-sm">No active quests.</p>
+              <button
+                onClick={() => setConfirmArchive(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant/40 text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-outline-variant/40 hover:text-on-surface-variant transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {campaign.archivedAt ? 'unarchive' : 'archive'}
+                </span>
+                {campaign.archivedAt ? 'Restore' : 'Archive'}
+              </button>
             )}
           </div>
+          {editingTitle ? (
+            <div className="flex items-center gap-3 mb-2">
+              <input
+                autoFocus
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && titleDraft.trim()) {
+                    saveCampaign.mutate({ ...campaign as CampaignSummary, title: titleDraft.trim() });
+                    setEditingTitle(false);
+                  }
+                  if (e.key === 'Escape') setEditingTitle(false);
+                }}
+                className="font-headline text-5xl lg:text-6xl font-bold text-on-surface bg-transparent border-b-2 border-primary/40 focus:border-primary outline-none flex-1 min-w-0"
+              />
+              <button
+                onClick={() => {
+                  if (titleDraft.trim()) {
+                    saveCampaign.mutate({ ...campaign as CampaignSummary, title: titleDraft.trim() });
+                  }
+                  setEditingTitle(false);
+                }}
+                className="p-2 text-primary hover:bg-primary/10 rounded-sm transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">check</span>
+              </button>
+              <button
+                onClick={() => setEditingTitle(false)}
+                className="p-2 text-on-surface-variant/40 hover:text-on-surface transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+          ) : (
+            <h1
+              className="font-headline text-5xl lg:text-6xl font-bold text-on-surface mb-2 cursor-pointer hover:text-primary/80 transition-colors group"
+              onClick={() => { setTitleDraft(campaign.title); setEditingTitle(true); }}
+              title="Click to edit"
+            >
+              {campaign.title}
+              <span className="material-symbols-outlined text-lg text-on-surface-variant/0 group-hover:text-primary/40 transition-colors ml-3 align-middle">edit</span>
+            </h1>
+          )}
+          <div>
+            <InlineRichField
+              label=""
+              value={campaign.description}
+              onSave={saveDescription}
+              placeholder="Campaign description…"
+            />
+          </div>
+        </header>
+
+        {/* Quick Nav */}
+        <div className="grid grid-cols-5 gap-3 mb-8 pb-8 border-b border-outline-variant/10">
+          {[
+            { label: 'Sessions', count: sessionCount, icon: 'auto_stories', to: 'sessions' },
+            { label: 'NPCs', count: npcCount, icon: 'person', to: 'npcs' },
+            { label: 'Locations', count: locationCount, icon: 'location_on', to: 'locations' },
+            { label: 'Groups', count: groupCount, icon: 'groups', to: 'groups' },
+            { label: 'Quests', count: questCount, icon: 'auto_awesome', to: 'quests' },
+          ].map(({ label, count, icon, to }) => (
+            <Link
+              key={to}
+              to={`/campaigns/${campaignId}/${to}`}
+              className="group flex items-center gap-3 p-4 bg-primary/5 border border-primary/10 hover:border-primary/30 hover:bg-primary/8 rounded-sm transition-colors"
+            >
+              <span className="material-symbols-outlined text-primary/30 group-hover:text-primary/60 transition-colors text-xl">{icon}</span>
+              <div>
+                <p className="text-xl font-bold text-primary leading-none">{count}</p>
+                <p className="text-[9px] font-label uppercase tracking-widest text-primary/50">{label}</p>
+              </div>
+            </Link>
+          ))}
         </div>
 
-        {/* Right column */}
-        <div className="col-span-4 space-y-6">
-          {/* Next Session + GM Notes */}
-          <div className="bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant/10">
-            <div className="px-6 py-5 border-b border-outline-variant/10">
-              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant block mb-1">
-                Next Session
-              </span>
-              <p className="text-on-surface text-sm font-medium">Schedule TBD</p>
-            </div>
-          </div>
+        <div className="grid grid-cols-12 gap-8">
 
-          {/* The Party */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-headline text-xl font-bold text-on-surface">The Party</h3>
-              <Link
-                to={`/campaigns/${campaignId}/party`}
-                className="text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors duration-200"
-              >
-                Manage party →
-              </Link>
-            </div>
-            {partyLoading ? (
-              <p className="text-on-surface-variant text-xs">Loading…</p>
-            ) : party && party.length > 0 ? (
-              <div className="space-y-2">
-                {party.map((character) => (
-                  <div
-                    key={character.id}
-                    className="flex items-center gap-3 bg-surface-container px-4 py-3 rounded-sm"
+          {/* ── Left column (8/12) ─────────────────────────── */}
+          <div className="col-span-12 lg:col-span-8 space-y-8">
+
+            {/* Next Session */}
+            {(() => {
+              if (!nextSession) {
+                return (
+                  <Link
+                    to={`/campaigns/${campaignId}/sessions`}
+                    className="group flex items-center gap-4 p-5 bg-surface-container-low border border-dashed border-outline-variant/20 hover:border-primary/30 rounded-sm transition-colors"
                   >
-                    <CharacterAvatar character={character} />
-                    <div className="min-w-0">
-                      <p className="text-on-surface text-sm font-medium truncate">
-                        {character.name}
-                      </p>
-                      <p className="text-on-surface-variant text-xs truncate">
-                        {[character.species, character.class]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </p>
+                    <span className="material-symbols-outlined text-on-surface-variant/30 group-hover:text-primary transition-colors text-xl">add</span>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 group-hover:text-primary transition-colors">No upcoming session</p>
+                      <p className="text-sm text-on-surface-variant/40 group-hover:text-on-surface transition-colors">Schedule the next session →</p>
                     </div>
+                  </Link>
+                );
+              }
+
+              const sessionDate = nextSession.datetime ? new Date(nextSession.datetime) : null;
+              const today = new Date();
+              const todayStr = today.toDateString();
+              const tomorrowDate = new Date(today);
+              tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+              const tomorrowStr = tomorrowDate.toDateString();
+
+              const isToday = sessionDate && sessionDate.toDateString() === todayStr;
+              const isTomorrow = sessionDate && sessionDate.toDateString() === tomorrowStr;
+
+              let whenLabel = '';
+              let whenDetail = '';
+              if (isToday) {
+                whenLabel = 'Session Today!';
+                const h = sessionDate!.getHours();
+                const m = sessionDate!.getMinutes();
+                if (h !== 0 || m !== 0) {
+                  whenDetail = `Starts at ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                }
+              } else if (isTomorrow) {
+                whenLabel = 'Session Tomorrow';
+                const h = sessionDate!.getHours();
+                const m = sessionDate!.getMinutes();
+                if (h !== 0 || m !== 0) {
+                  whenDetail = `Starts at ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                }
+              } else {
+                whenLabel = 'Next Session';
+                if (sessionDate) whenDetail = formatDate(nextSession.datetime);
+              }
+
+              const bgCls = isToday ? 'bg-primary/8 border-primary/30 hover:bg-primary/12' : 'bg-secondary/5 border-secondary/20 hover:bg-secondary/10';
+              const textCls = isToday ? 'text-primary' : 'text-secondary';
+
+              return (
+                <Link
+                  to={`/campaigns/${campaignId}/sessions/${nextSession.id}`}
+                  className={`group flex items-center gap-4 p-5 border rounded-sm transition-colors ${bgCls}`}
+                >
+                  <span className={`material-symbols-outlined text-xl ${textCls}`}>
+                    {isToday ? 'notifications_active' : 'event'}
+                  </span>
+                  <div className="flex-1">
+                    <p className={`text-[10px] font-label uppercase tracking-widest font-bold ${textCls}`}>
+                      {whenLabel}
+                    </p>
+                    <p className={`text-sm text-on-surface group-hover:${textCls} transition-colors`}>
+                      #{String(nextSession.number).padStart(2, '0')} — {nextSession.title}
+                      {whenDetail && <span className="text-on-surface-variant/50 ml-2">{whenDetail}</span>}
+                    </p>
                   </div>
-                ))}
+                  <span className={`material-symbols-outlined ${textCls}/40 group-hover:${textCls} transition-colors`}>arrow_forward</span>
+                </Link>
+              );
+            })()}
+
+            {/* Recent Sessions */}
+            <section>
+              <div className="flex items-center gap-4 mb-5">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                  Recent Sessions
+                </h2>
+                <div className="h-px flex-1 bg-outline-variant/20" />
+                <Link
+                  to={`/campaigns/${campaignId}/sessions`}
+                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors"
+                >
+                  All sessions →
+                </Link>
               </div>
-            ) : (
-              <p className="text-on-surface-variant text-xs">No characters yet.</p>
-            )}
+              {lastSessions.length > 0 ? (
+                <div className="space-y-2">
+                  {lastSessions.map((session) => (
+                    <Link
+                      key={session.id}
+                      to={`/campaigns/${campaignId}/sessions/${session.id}`}
+                      className="group flex items-center gap-4 p-4 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0 border border-outline-variant/15">
+                        <span className="font-headline text-sm font-bold italic text-on-surface-variant/50">
+                          {String(session.number).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{session.title}</p>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          {session.datetime && (
+                            <span className="text-[10px] text-on-surface-variant/40">{formatDate(session.datetime)}</span>
+                          )}
+                          {session.brief && (
+                            <span className="text-[10px] text-on-surface-variant/30 truncate">{session.brief}</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-on-surface-variant/40 italic">No sessions recorded yet.</p>
+              )}
+            </section>
+
+            {/* Active Quests */}
+            <section>
+              <div className="flex items-center gap-4 mb-5">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                  Active Quests
+                </h2>
+                <div className="h-px flex-1 bg-outline-variant/20" />
+                <Link
+                  to={`/campaigns/${campaignId}/quests`}
+                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors"
+                >
+                  All quests →
+                </Link>
+              </div>
+              {activeQuests && activeQuests.length > 0 ? (
+                <div className="space-y-2">
+                  {activeQuests.slice(0, 5).map((quest) => (
+                    <Link
+                      key={quest.id}
+                      to={`/campaigns/${campaignId}/quests/${quest.id}`}
+                      className="group flex items-center gap-3 p-4 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-secondary/60 text-[18px]">auto_awesome</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{quest.title}</p>
+                        {quest.description && (
+                          <p className="text-[11px] text-on-surface-variant/50 truncate">{quest.description.slice(0, 80)}{quest.description.length > 80 ? '…' : ''}</p>
+                        )}
+                      </div>
+                      <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-on-surface-variant/40 italic">No active quests.</p>
+              )}
+            </section>
+
           </div>
 
-          {/* Quick Actions */}
-          <div>
-            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant block mb-4">
-              Quick Actions
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: 'NPC', icon: 'person_add', to: `/campaigns/${campaignId}/npcs` },
-                { label: 'Session', icon: 'history_edu', to: `/campaigns/${campaignId}/sessions` },
-                { label: 'Quest', icon: 'auto_awesome', to: `/campaigns/${campaignId}/quests` },
-              ].map(({ label, icon, to }) => (
+          {/* ── Right column (4/12) ────────────────────────── */}
+          <div className="col-span-12 lg:col-span-4 space-y-8">
+
+            {/* The Party */}
+            <section>
+              <div className="flex items-center gap-4 mb-4">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                  The Party
+                </h2>
+                <div className="h-px flex-1 bg-outline-variant/20" />
                 <Link
-                  key={label}
-                  to={to}
-                  className="flex flex-col items-center gap-2 bg-surface-container hover:bg-surface-container-high p-4 rounded-sm transition-all duration-200 text-on-surface-variant hover:text-on-surface"
+                  to={`/campaigns/${campaignId}/party`}
+                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors"
                 >
-                  <span className="material-symbols-outlined text-2xl">{icon}</span>
-                  <span className="text-xs font-label uppercase tracking-widest">{label}</span>
+                  Manage →
                 </Link>
-              ))}
-            </div>
+              </div>
+              {party && party.length > 0 ? (
+                <div className="space-y-2">
+                  {party.map((character) => {
+                    const initials = character.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+                    return (
+                      <Link
+                        key={character.id}
+                        to={`/campaigns/${campaignId}/characters/${character.id}`}
+                        className="group flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
+                      >
+                        <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
+                          {character.image ? (
+                            <img src={character.image} alt={character.name} className="w-full h-full object-cover rounded-sm" />
+                          ) : (
+                            <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{character.name}</p>
+                          <p className="text-[10px] text-on-surface-variant/40 truncate">
+                            {[character.species, character.class].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-on-surface-variant/40 italic">No characters yet.</p>
+              )}
+            </section>
+
+            {/* Recently Updated NPCs */}
+            {recentNpcs.length > 0 && (
+              <section>
+                <div className="flex items-center gap-4 mb-4">
+                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                    Recent NPCs
+                  </h2>
+                  <div className="h-px flex-1 bg-outline-variant/20" />
+                  <Link
+                    to={`/campaigns/${campaignId}/npcs`}
+                    className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors"
+                  >
+                    All →
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  {recentNpcs.map((npc) => {
+                    const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+                    return (
+                      <Link
+                        key={npc.id}
+                        to={`/campaigns/${campaignId}/npcs/${npc.id}`}
+                        className="group flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
+                          {npc.image ? (
+                            <img src={npc.image} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
+                          ) : (
+                            <span className="text-[10px] font-bold text-on-surface-variant/60">{initials}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{npc.name}</p>
+                          <p className="text-[10px] text-on-surface-variant/40">{npc.species ?? npc.status}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
           </div>
         </div>
       </div>

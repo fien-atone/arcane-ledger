@@ -160,17 +160,42 @@ export default function SessionListPage() {
               )}
               {(() => {
                 const now = new Date();
-                // Find the nearest upcoming session (first future session by date)
-                const nextSessionId = filtered.find((s) => s.datetime && new Date(s.datetime) > now)?.id
-                  ?? filtered.find((s) => !s.datetime)?.id; // no-date sessions are "upcoming"
-                // The most recent past session
-                const pastSessions = filtered.filter((s) => s.datetime && new Date(s.datetime) <= now);
+                const todayStr = now.toDateString();
+                const tomorrowDate = new Date(now);
+                tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+                const tomorrowStr = tomorrowDate.toDateString();
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                // Future sessions (from tomorrow onwards), sorted ascending
+                const futureStart = new Date(todayStart);
+                futureStart.setDate(futureStart.getDate() + 1);
+                const futureSessions = [...filtered]
+                  .filter((s) => s.datetime && new Date(s.datetime) >= futureStart)
+                  .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+                const nextSessionId = futureSessions[0]?.id ?? null;
+
+                // Most recent past (before today)
+                const pastSessions = filtered.filter((s) => s.datetime && new Date(s.datetime) < todayStart);
                 const lastSessionId = pastSessions.length > 0 ? pastSessions[0]?.id : null;
 
                 return filtered.map((session) => {
                   const isSelected = selected?.id === session.id;
-                  const isNext = session.id === nextSessionId;
+                  const sessionDate = session.datetime ? new Date(session.datetime) : null;
+                  const isToday = sessionDate && sessionDate.toDateString() === todayStr;
+                  const isTomorrow = sessionDate && sessionDate.toDateString() === tomorrowStr;
+                  const isNext = session.id === nextSessionId && !isToday && !isTomorrow;
                   const isLast = session.id === lastSessionId;
+
+                  let badge: { label: string; cls: string; pulse?: boolean } | null = null;
+                  if (isToday) {
+                    badge = { label: 'Today', cls: 'bg-primary/15 text-primary border-primary/30', pulse: true };
+                  } else if (isTomorrow) {
+                    badge = { label: 'Tomorrow', cls: 'bg-secondary/10 text-secondary border-secondary/20', pulse: true };
+                  } else if (isNext) {
+                    badge = { label: 'Next', cls: 'bg-secondary/10 text-secondary border-secondary/20' };
+                  } else if (isLast) {
+                    badge = { label: 'Previous', cls: 'bg-primary/10 text-primary border-primary/20' };
+                  }
 
                   return (
                     <button
@@ -182,7 +207,7 @@ export default function SessionListPage() {
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border ${isSelected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
-                        <span className={`font-headline text-sm font-bold italic ${isSelected ? 'text-primary' : (isNext || isLast) ? 'text-primary/70' : 'text-on-surface-variant/50'}`}>
+                        <span className={`font-headline text-sm font-bold italic ${isSelected ? 'text-primary' : badge ? 'text-primary/70' : 'text-on-surface-variant/50'}`}>
                           {String(session.number).padStart(2, '0')}
                         </span>
                       </div>
@@ -190,15 +215,10 @@ export default function SessionListPage() {
                         <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>{session.title}</p>
                         <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>{session.datetime ? formatDate(session.datetime) : 'Date TBD'}</p>
                       </div>
-                      {isNext && (
-                        <span className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[8px] font-bold uppercase tracking-wider border border-secondary/20">
-                          <span className="w-1 h-1 rounded-full bg-secondary animate-pulse" />
-                          Next
-                        </span>
-                      )}
-                      {isLast && !isNext && (
-                        <span className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-wider border border-primary/20">
-                          Previous
+                      {badge && (
+                        <span className={`flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider border ${badge.cls}`}>
+                          {badge.pulse && <span className={`w-1 h-1 rounded-full ${isToday ? 'bg-primary' : 'bg-secondary'} animate-pulse`} />}
+                          {badge.label}
                         </span>
                       )}
                     </button>

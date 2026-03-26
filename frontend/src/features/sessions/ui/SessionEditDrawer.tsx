@@ -71,7 +71,7 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
       save.mutate({
         ...session,
         title: title.trim() || session.title,
-        datetime: iso || session.datetime,
+        datetime: iso,
         number,
       }, { onSuccess: onClose });
     } else {

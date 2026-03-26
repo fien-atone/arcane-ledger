@@ -14,6 +14,18 @@ export const useCampaign = (id: string) =>
     enabled: !!id,
   });
 
+export const useSaveCampaign = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (campaign: import('@/entities/campaign').CampaignSummary) =>
+      campaignRepository.save(campaign),
+    onSuccess: (_, campaign) => {
+      qc.invalidateQueries({ queryKey: ['campaigns'] });
+      qc.invalidateQueries({ queryKey: ['campaigns', campaign.id] });
+    },
+  });
+};
+
 export const useCreateCampaign = () => {
   const qc = useQueryClient();
   return useMutation({

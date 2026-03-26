@@ -95,6 +95,18 @@ export function Sidebar() {
         </button>
       </div>
 
+      {/* All Campaigns */}
+      <div className="px-2 pt-3 pb-1">
+        <Link
+          to="/campaigns"
+          title={collapsed ? 'All Campaigns' : undefined}
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-xs text-on-surface-variant/60 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
+        >
+          <span className="material-symbols-outlined flex-shrink-0 text-[18px]">arrow_back</span>
+          {!collapsed && <span className="whitespace-nowrap font-label uppercase tracking-widest">All Campaigns</span>}
+        </Link>
+      </div>
+
       {/* Nav */}
       <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
         <ul className="px-2 space-y-0.5">
@@ -176,17 +188,6 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-outline-variant/10 px-2 py-3 space-y-0.5">
-        <Link
-          to="/campaigns"
-          title={collapsed ? 'All Campaigns' : undefined}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
-        >
-          <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
-            auto_stories
-          </span>
-          {!collapsed && <span className="whitespace-nowrap">All Campaigns</span>}
-        </Link>
-
         {/* What's New */}
         <button
           onClick={() => { setChangelogOpen(true); setHasUnread(false); }}
