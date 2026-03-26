@@ -39,12 +39,6 @@ const NAV: Array<NavItem | NavSection> = [
       { label: 'Quests', icon: 'assignment', to: (id) => `/campaigns/${id}/quests`, exact: false },
     ],
   },
-  {
-    section: 'GM Screen',
-    items: [
-      { label: 'Materials', icon: 'menu_book', to: (id) => `/campaigns/${id}/materials`, exact: false },
-    ],
-  },
 ];
 
 export function Sidebar() {

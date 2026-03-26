@@ -8,7 +8,7 @@ import { useLocationTypes } from '@/features/locationTypes';
 import { InlineRichField } from '@/shared/ui';
 import type { Location, MapMarker } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
-import { CATEGORY_ICON_COLOR, CATEGORY_BADGE_CLS, CATEGORY_TILE_CLS, CATEGORY_LABEL } from '@/entities/locationType';
+import { CATEGORY_ICON_COLOR, CATEGORY_HEX_COLOR, CATEGORY_BADGE_CLS, CATEGORY_TILE_CLS, CATEGORY_LABEL } from '@/entities/locationType';
 import type { NPC } from '@/entities/npc';
 
 type TypeMap = Map<string, LocationTypeEntry>;
@@ -248,6 +248,7 @@ function MapViewer({
   const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [addLocMode, setAddLocMode] = useState(false);
+  const [pendingLinkLocId, setPendingLinkLocId] = useState<string | null>(null);
 
   // Escape cancels add mode
   useEffect(() => {
@@ -256,6 +257,7 @@ function MapViewer({
         setAddLocMode(false);
         setGhostPos(null);
         setSelectedMarkerId(null);
+        setPendingLinkLocId(null);
       }
     };
     window.addEventListener('keydown', handler);
@@ -390,7 +392,23 @@ function MapViewer({
     if (addLocMode && !didMove) {
       const coords = toImageCoords(e.clientX, e.clientY);
       setAddLocMode(false);
-      onRequestAddLocation(coords);
+      if (pendingLinkLocId) {
+        // Auto-create marker linked to the specific location
+        const loc = childLocations.find((l) => l.id === pendingLinkLocId);
+        const newMarker: MapMarker = {
+          id: `marker-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          x: coords.x,
+          y: coords.y,
+          label: loc?.name ?? 'Marker',
+          linkedLocationId: pendingLinkLocId,
+        };
+        const updated = [...markersRef.current, newMarker];
+        setMarkers(updated);
+        onSave(updated);
+        setPendingLinkLocId(null);
+      } else {
+        onRequestAddLocation(coords);
+      }
     }
   };
 
@@ -703,11 +721,23 @@ function MapViewer({
                       const isSelected = selectedMarkerId === markerId && markerId !== null;
                       if (!marker) {
                         return (
-                          <div key={loc.id} className="px-3 py-2.5 flex items-center gap-2.5 border-l-2 border-l-transparent cursor-default">
-                            <span className={`material-symbols-outlined text-[15px] flex-shrink-0 ${te ? `${CATEGORY_ICON_COLOR[te.category]} opacity-30` : 'text-on-surface-variant/25'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                          <div key={loc.id} className="px-3 py-2.5 flex items-center gap-2.5 border-l-2 border-l-transparent group/unplaced">
+                            <span className={`material-symbols-outlined text-[15px] flex-shrink-0 opacity-30`} style={{ fontVariationSettings: "'FILL' 1", color: te ? CATEGORY_HEX_COLOR[te.category] : undefined }}>
                               {te?.icon ?? 'location_on'}
                             </span>
                             <p className="text-[11px] truncate flex-1 text-on-surface-variant/40">{loc.name}</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAddLocMode(true);
+                                setPendingLinkLocId(loc.id);
+                                setSelectedMarkerId(null);
+                              }}
+                              title="Place on map"
+                              className="opacity-0 group-hover/unplaced:opacity-100 p-1 text-on-surface-variant/30 hover:text-primary transition-all"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">add_location_alt</span>
+                            </button>
                           </div>
                         );
                       }
@@ -728,8 +758,8 @@ function MapViewer({
                               : 'border-l-transparent hover:bg-surface-container-high/40 hover:border-l-outline-variant/30'
                           }`}
                         >
-                          <span className={`material-symbols-outlined text-[15px] flex-shrink-0 transition-colors ${
-                            isSelected ? 'text-primary' : te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'
+                          <span className={`material-symbols-outlined text-[15px] flex-shrink-0 ${
+                            te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'
                           }`} style={{ fontVariationSettings: "'FILL' 1" }}>
                             {te?.icon ?? 'location_on'}
                           </span>
@@ -1012,9 +1042,9 @@ export default function LocationDetailPage() {
                       to={`/campaigns/${campaignId}/locations/${adj.id}`}
                       className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
                     >
-                      <span className={`material-symbols-outlined transition-colors text-[18px] group-hover:text-secondary ${
-                        (() => { const te = typeMap.get(adj.type); return te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'; })()
-                      }`}>
+                      <span className={`material-symbols-outlined text-[18px] ${
+                        (() => { const te = typeMap.get(adj.type); return te ? '' : 'text-on-surface-variant/40'; })()
+                      }`} style={(() => { const te = typeMap.get(adj.type); return te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined; })()}>
                         {typeMap.get(adj.type)?.icon ?? 'location_on'}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -1363,9 +1393,8 @@ export default function LocationDetailPage() {
                         to={`/campaigns/${campaignId}/locations/${child.id}`}
                         className="group flex items-center gap-2.5 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all rounded-sm"
                       >
-                        <span className={`material-symbols-outlined transition-colors text-[16px] group-hover:text-primary ${
-                          te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'
-                        }`}>
+                        <span className={`material-symbols-outlined text-[16px] ${te ? '' : 'text-on-surface-variant/40'}`}
+                          style={te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined}>
                           {te?.icon ?? 'location_on'}
                         </span>
                         <div className="flex-1 min-w-0">

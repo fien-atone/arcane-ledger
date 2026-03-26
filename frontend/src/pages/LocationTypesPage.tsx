@@ -15,6 +15,7 @@ import type {
 } from '@/entities/locationType';
 import {
   CATEGORY_ICON_COLOR,
+  CATEGORY_HEX_COLOR,
   CATEGORY_DOT_CLS,
 } from '@/entities/locationType';
 
@@ -130,7 +131,7 @@ function RelationSection({
                 onClick={() => onAdd(t.id)}
                 className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-label uppercase tracking-widest rounded-sm border border-outline-variant/20 text-on-surface-variant/60 hover:border-primary/40 hover:text-primary transition-colors"
               >
-                <span className={`material-symbols-outlined text-[14px] flex-shrink-0 ${CATEGORY_ICON[t.category]}`} style={{ fontVariationSettings: "'FILL' 1" }}>{t.icon}</span>
+                <span className="material-symbols-outlined text-[14px] flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1", color: CATEGORY_HEX_COLOR[t.category] }}>{t.icon}</span>
                 {t.name}
               </button>
             ))}
@@ -482,7 +483,7 @@ function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: bo
         isActive ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'
       }`}>
         <span
-          className={`material-symbols-outlined text-[17px] ${isActive ? 'text-primary' : CATEGORY_ICON[t.category]}`}
+          className={`material-symbols-outlined text-[17px] ${CATEGORY_ICON[t.category]}`}
           style={{ fontVariationSettings: "'FILL' 1" }}
         >
           {t.icon}

@@ -11,8 +11,6 @@ export const MOCK_SESSIONS: Session[] = [
     brief: "Gnurk's mold request, brewing with Yorvert, Alvin falls down stairs",
     summary:
       'The party continued talks with the protesters. Gnurk asked for a special mold from the city. Yorvert helped brew the special alcohol — only 1 bottle survived after Alvin drunkenly smashed one falling down stairs.',
-    nextSessionNotes:
-      'Will 1 bottle be enough for Kronhev? What does Gnurk need the mold for? What do the elves want?',
     locationIds: ['loc-fc-farchester', 'loc-fc-tavern', 'loc-fc-rathusha'],
     npcIds: ['npc-gnurk', 'npc-yorvert', 'npc-stoungriv'],
     createdAt: '2026-03-18T00:00:00Z',
@@ -76,8 +74,6 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Aldor, Doppelganger, Escape through the sewers',
     summary:
       "Aldor appeared demanding the 500gp debt — Korvin paid with the cursed fire sword. A doppelganger impersonating Zoya was scared off. Veronika Yad was found at the Sweaty Bugbear. The party escaped Bent Row through the sewers, fighting a Gelatinous Cube. Chertyaka was released and ran north.",
-    nextSessionNotes:
-      "Party is stuck in the sewers. Where is Chertyaka? What is Aldor's scepter? Find Black Jack at the Hanging Lock tavern.",
     npcIds: ['npc-aldor', 'npc-mind-reaper', 'npc-veronika-yad', 'npc-chertyaka'],
     createdAt: '2026-03-16T00:00:00Z',
   },
@@ -90,8 +86,6 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Underground Arena, Sai & Patrikeyevna as "Elf and Granny", Aldor demands debt',
     summary:
       "The party discovered a large underground arena in the sewers beneath Bent Row. Sai and Patrikeyevna signed up as \"Elf and Granny\". Fights organized by Bull — scarred face, one blind eye. Korvin chased by Queen's Men through tunnels and found a cursed fire sword. The whole party was locked in cages in the morning. Aldor appeared in the dungeon demanding the 500gp debt.",
-    nextSessionNotes:
-      "Arena fights — Elf and Granny go in. Patrikeyevna owes Marv the gnome 20gp (3 days). Chertyaka left at the stables. Close the 500gp debt to Aldor.",
     npcIds: ['npc-aldor', 'npc-bloodhound', 'npc-dorian', 'npc-chertyaka'],
     createdAt: '2026-03-09T00:00:00Z',
   },
@@ -115,8 +109,6 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Ingredients for Zoya, Bryce Landry found, Aldor catches up',
     summary:
       "Re-summoned owl Nix. Zakaris found Sir Bryce Landry — Korvin hit him with Magic Missile in the kneecaps. Gathered ingredients for Zoya's delirium cure: temple slime (50gp, 2 found) and mandrake roots x5 (8 found). Zoya is heading to Bent Row. Learned of Johann Ghostweaver who taught Zoya the cure and had dealings with Oscar. Aldor caught the party — Korvin left the delirium shard as collateral. The Trio killed the Manticore Gorota.",
-    nextSessionNotes:
-      "Korvin owes Aldor the Giant 500gp for the destroyed Bag of Holding.",
     npcIds: ['npc-zoya', 'npc-bryce-landry', 'npc-aldor'],
     createdAt: '2026-02-19T00:00:00Z',
   },
@@ -269,8 +261,6 @@ export const MOCK_SESSIONS: Session[] = [
     brief: 'Road to Emberwood, Rikard turns into a monster, Bogdan flees',
     summary:
       "Met Eren Marlow — a caravan driver who brought the party to Emberwood. A masked woman with a dagger gave a copper coin. On the road: a corpse with a coin near the Dran river, surrounded by two humans and 'something made of meat and bone'. Rikard Vos touched delirium and began transforming. By night he was fully monstrous. Bogdan fled with the dagger. Party arrived in Emberwood.",
-    nextSessionNotes:
-      "Eren is at the square and can introduce Armin Gainsbury.",
     npcIds: ['npc-eren-marlow', 'npc-rikard-vos', 'npc-bogdan', 'npc-raine', 'npc-endra-jansen', 'npc-ludwig'],
     createdAt: '2025-09-02T00:00:00Z',
   },

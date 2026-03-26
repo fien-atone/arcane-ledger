@@ -11,6 +11,53 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.2.1',
+    date: '2026-03-26',
+    title: 'Сессии, связи и единый стиль',
+    items: [
+      {
+        icon: 'auto_stories',
+        text: 'Полноценное управление сессиями — создание, редактирование, удаление. Brief (публичный) и GM Notes (только для мастера) с inline-редактированием.',
+        tag: 'new',
+      },
+      {
+        icon: 'calendar_today',
+        text: 'Кастомный DatePicker с тёмной темой, навигацией по месяцам, подсветкой выходных и кнопкой «Today».',
+        tag: 'new',
+      },
+      {
+        icon: 'link',
+        text: 'Привязки NPC ↔ Локации ↔ Сессии ↔ Квесты — управление связями на всех экранах с inline-подтверждением удаления.',
+        tag: 'new',
+      },
+      {
+        icon: 'place',
+        text: 'LocationIcon — единый компонент иконки локации с правильным цветом категории, защищённым от CSS-каскада (inline style).',
+        tag: 'improved',
+      },
+      {
+        icon: 'palette',
+        text: 'Иконки локаций больше не меняют цвет при наведении/выделении — всегда сохраняют цвет категории.',
+        tag: 'fixed',
+      },
+      {
+        icon: 'person',
+        text: 'Обогащённое превью NPC — Appearance, Personality, Background, Motivation, группы и локации.',
+        tag: 'improved',
+      },
+      {
+        icon: 'delete',
+        text: 'Удаление групп и типов групп — с inline-подтверждением вместо системного диалога.',
+        tag: 'new',
+      },
+      {
+        icon: 'cleaning_services',
+        text: 'Удалены Materials (модель и UI), image из групп, nextSessionNotes из сессий.',
+        tag: 'improved',
+      },
+    ],
+  },
+  {
     version: '0.2.0',
     date: '2026-03-25',
     title: 'Типы локаций: категории, цвета и управление',

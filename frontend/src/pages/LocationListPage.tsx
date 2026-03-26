@@ -6,7 +6,7 @@ import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
 import type { Location, LocationType } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
-import { CATEGORY_ICON_COLOR, CATEGORY_BADGE_CLS } from '@/entities/locationType';
+import { CATEGORY_ICON_COLOR, CATEGORY_HEX_COLOR, CATEGORY_BADGE_CLS } from '@/entities/locationType';
 
 const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', 'travel'];
 
@@ -52,9 +52,7 @@ function LocationRow({
           : 'bg-surface-container border-outline-variant/15'
       }`}>
         <span className={`material-symbols-outlined text-[18px] ${
-          selected
-            ? 'text-primary'
-            : typeEntry
+          typeEntry
             ? CATEGORY_ICON_COLOR[typeEntry.category]
             : 'text-on-surface-variant/30'
         }`}>
@@ -190,7 +188,7 @@ function LocationDetail({
                   to={`/campaigns/${campaignId}/locations/${child.id}`}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
                 >
-                  {(() => { const te = typeMap.get(child.type); return <span className={`material-symbols-outlined text-[13px] ${te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'}`}>{te?.icon ?? 'location_on'}</span>; })()}
+                  {(() => { const te = typeMap.get(child.type); return <span className={`material-symbols-outlined text-[13px] ${te ? '' : 'text-on-surface-variant/40'}`} style={te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined}>{te?.icon ?? 'location_on'}</span>; })()}
                   {child.name}
                 </Link>
               ))}

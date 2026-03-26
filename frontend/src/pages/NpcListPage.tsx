@@ -1,8 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useNpcs } from '@/features/npcs/api/queries';
+import { useLocations } from '@/features/locations/api';
+import { useGroups } from '@/features/groups/api';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
+import { LocationIcon, RichContent } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
 
 type StatusFilter = 'all' | NpcStatus;
@@ -33,13 +36,33 @@ function NpcInitials({ name }: { name: string }) {
   );
 }
 
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <div className="flex items-center gap-4 mb-3">
+      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">{title}</h3>
+      <div className="h-px flex-1 bg-outline-variant/20" />
+    </div>
+  );
+}
+
 function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
   const st = STATUS_STYLES[npc.status];
   const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const { data: allSpecies } = useSpecies();
+  const { data: allLocations } = useLocations(campaignId);
+  const { data: allGroups } = useGroups(campaignId);
   const matchedSpecies = npc.species
     ? allSpecies?.find((s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase())
     : undefined;
+
+  const presences = npc.locationPresences ?? [];
+  const linkedLocations = presences
+    .map((p) => {
+      const loc = allLocations?.find((l) => l.id === p.locationId);
+      return loc ? { loc, note: p.note } : null;
+    })
+    .filter(Boolean) as { loc: NonNullable<typeof allLocations>[number]; note?: string }[];
+
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header image / placeholder */}
@@ -53,7 +76,6 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent pointer-events-none" />
         <div className="absolute top-4 left-4 flex items-center gap-1.5">
-          {/* Species · Gender · Age in one badge */}
           {(() => {
             const displayName = matchedSpecies?.name ?? npc.species;
             const genderLabel = npc.gender
@@ -76,7 +98,6 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
               <span className={cls}>{icon}{text}</span>
             );
           })()}
-          {/* Status */}
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container/90 backdrop-blur-sm border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
             <span className="material-symbols-outlined text-[13px]">{st.icon}</span>
             {st.label}
@@ -92,30 +113,76 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
           )}
         </div>
 
-        {npc.description && (
+        {npc.appearance && (
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Overview</h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{npc.description}</p>
+            <SectionHeader title="Appearance" />
+            <RichContent value={npc.appearance} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
 
         {npc.personality && (
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Personality</h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{npc.personality}</p>
+            <SectionHeader title="Personality" />
+            <RichContent value={npc.personality} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
 
-        {(npc.locationPresences ?? []).length > 0 && (
-          <div className="flex items-center gap-2 text-[10px] text-on-surface-variant/50">
-            <span className="material-symbols-outlined text-[13px]">location_on</span>
-            {(npc.locationPresences ?? []).length} location{(npc.locationPresences ?? []).length !== 1 ? 's' : ''}
+        {npc.description && (
+          <div>
+            <SectionHeader title="Background" />
+            <RichContent value={npc.description} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
+          </div>
+        )}
+
+        {npc.motivation && (
+          <div>
+            <SectionHeader title="Motivation & Ideals" />
+            <RichContent value={npc.motivation} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
+          </div>
+        )}
+
+        {/* Group Memberships */}
+        {npc.groupMemberships.length > 0 && (
+          <div>
+            <SectionHeader title="Groups" />
+            <div className="flex flex-wrap gap-2">
+              {npc.groupMemberships.map((m) => {
+                const group = allGroups?.find((g) => g.id === m.groupId);
+                const label = m.subfaction ?? group?.name ?? m.groupId;
+                return (
+                  <Link
+                    key={m.groupId}
+                    to={`/campaigns/${campaignId}/groups/${m.groupId}`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant/15 hover:border-primary/30 rounded-sm transition-colors group"
+                  >
+                    <span className="material-symbols-outlined text-primary/60 text-[13px]">groups</span>
+                    <span className="text-xs text-on-surface group-hover:text-primary transition-colors">{label}</span>
+                    {m.relation && (
+                      <span className="text-[9px] text-on-surface-variant/40 uppercase tracking-wider">{m.relation}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Locations */}
+        {linkedLocations.length > 0 && (
+          <div>
+            <SectionHeader title={`Locations (${linkedLocations.length})`} />
+            <div className="flex flex-wrap gap-2">
+              {linkedLocations.map(({ loc }) => (
+                <Link
+                  key={loc.id}
+                  to={`/campaigns/${campaignId}/locations/${loc.id}`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
+                >
+                  <LocationIcon locationType={loc.type} size="text-[13px]" />
+                  {loc.name}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 
@@ -186,17 +253,20 @@ export default function NpcListPage() {
                 />
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {STATUS_PILLS.map(({ label, value }) => (
-                  <button
-                    key={value}
-                    onClick={() => setStatusFilter(value)}
-                    className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
-                      statusFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+                {STATUS_PILLS.map(({ label, value }) => {
+                  const count = value === 'all' ? (npcs?.length ?? 0) : (npcs?.filter((n) => n.status === value).length ?? 0);
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => setStatusFilter(value)}
+                      className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
+                        statusFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                      }`}
+                    >
+                      {label} <span className={statusFilter === value ? 'text-on-primary/70' : 'text-on-surface-variant/40'}>{count}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

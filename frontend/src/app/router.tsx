@@ -21,7 +21,6 @@ const QuestListPage = lazy(() => import('@/pages/QuestListPage'));
 const QuestDetailPage = lazy(() => import('@/pages/QuestDetailPage'));
 const PartyPage = lazy(() => import('@/pages/PartyPage'));
 const CharacterDetailPage = lazy(() => import('@/pages/CharacterDetailPage'));
-const MaterialsPage = lazy(() => import('@/pages/MaterialsPage'));
 const SpeciesPage = lazy(() => import('@/pages/SpeciesPage'));
 const SpeciesDetailPage = lazy(() => import('@/pages/SpeciesDetailPage'));
 const GroupTypesPage = lazy(() => import('@/pages/GroupTypesPage'));
@@ -75,7 +74,6 @@ export const router = createBrowserRouter(
             { path: 'quests/:questId', element: withSuspense(QuestDetailPage) },
             { path: 'party', element: withSuspense(PartyPage) },
             { path: 'characters/:charId', element: withSuspense(CharacterDetailPage) },
-            { path: 'materials', element: withSuspense(MaterialsPage) },
             { path: 'species', element: withSuspense(SpeciesPage) },
             { path: 'species/:speciesId', element: withSuspense(SpeciesDetailPage) },
             { path: 'group-types', element: withSuspense(GroupTypesPage) },

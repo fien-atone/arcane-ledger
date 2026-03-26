@@ -7,5 +7,4 @@ export * from './sessionNote';
 export * from './location';
 export * from './group';
 export * from './quest';
-export * from './material';
 export * from './diceRoll';

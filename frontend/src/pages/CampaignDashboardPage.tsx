@@ -195,16 +195,6 @@ export default function CampaignDashboardPage() {
               </span>
               <p className="text-on-surface text-sm font-medium">Schedule TBD</p>
             </div>
-            {lastSession?.nextSessionNotes && (
-              <div className="px-6 py-5">
-                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary block mb-3">
-                  GM Notes
-                </span>
-                <p className="text-on-surface-variant text-sm leading-relaxed border-l-2 border-primary/40 pl-4">
-                  {lastSession.nextSessionNotes}
-                </p>
-              </div>
-            )}
           </div>
 
           {/* The Party */}

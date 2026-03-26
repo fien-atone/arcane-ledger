@@ -10,3 +10,5 @@ export { SectionLabel } from './SectionLabel';
 export { RichTextEditor } from './RichTextEditor';
 export { RichContent, toHtml } from './RichContent';
 export { InlineRichField } from './InlineRichField';
+export { LocationIcon } from './LocationIcon';
+export { DatePicker } from './DatePicker';

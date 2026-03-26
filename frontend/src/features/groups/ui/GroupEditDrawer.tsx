@@ -82,7 +82,6 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
       symbols: symbols.trim() || undefined,
       partyRelation: partyRelation || undefined,
       gmNotes: gmNotes.trim() || undefined,
-      image: group?.image,
       createdAt: group?.createdAt ?? ts,
       updatedAt: ts,
     };

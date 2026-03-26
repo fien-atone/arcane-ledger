@@ -16,6 +16,14 @@ export const useSaveSession = (campaignId: string) => {
   });
 };
 
+export const useDeleteSession = (campaignId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => sessionRepository.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sessions', campaignId] }),
+  });
+};
+
 export const useLastSession = (campaignId: string) =>
   useQuery({
     queryKey: ['sessions', campaignId, 'last'],

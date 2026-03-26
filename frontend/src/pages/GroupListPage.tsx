@@ -36,32 +36,22 @@ function GroupPreview({
 }) {
   const tc = resolveType(group.type, groupTypes);
   const rel = group.partyRelation ? (RELATION_CONFIG[group.partyRelation] ?? RELATION_CONFIG.unknown) : null;
-  const initials = group.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      {/* Hero / initials */}
-      <div className="relative w-full h-52 flex-shrink-0 bg-surface-container-low flex items-center justify-center overflow-hidden">
-        <span className="font-headline text-[8rem] font-bold text-on-surface-variant/8 select-none leading-none">
-          {initials}
-        </span>
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent pointer-events-none" />
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container/90 backdrop-blur-sm border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-            <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
-            {tc.name}
-          </span>
-          {rel && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container/90 backdrop-blur-sm border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              <span className="material-symbols-outlined text-[13px]">{rel.icon}</span>
-              {rel.label}
-            </span>
-          )}
-        </div>
-      </div>
-
       <div className="px-8 py-6 flex flex-col gap-5">
         <div>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+              <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
+              {tc.name}
+            </span>
+            {rel && (
+              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                <span className="material-symbols-outlined text-[13px]">{rel.icon}</span>
+                {rel.label}
+              </span>
+            )}
+          </div>
           <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{group.name}</h2>
           {group.aliases.length > 0 && (
             <p className="text-xs text-on-surface-variant/40 italic mt-0.5">{group.aliases.join(', ')}</p>

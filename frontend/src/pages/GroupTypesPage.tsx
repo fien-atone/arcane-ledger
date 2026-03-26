@@ -24,7 +24,6 @@ export default function GroupTypesPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Delete this group type? Groups using it will keep their current type value.')) return;
     deleteGroupType.mutate(id, {
       onSuccess: () => {
         if (selectedId === id) setSelectedId(null);
@@ -142,40 +141,44 @@ function GroupTypeDetail({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <div className="flex flex-col flex-1">
-      {/* Hero */}
-      <div className="relative w-full h-52 flex-shrink-0 bg-surface-container-low flex items-center justify-center overflow-hidden">
-        <span className="material-symbols-outlined text-[6rem] text-on-surface-variant/8 select-none leading-none">
-          {entry.icon}
-        </span>
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent pointer-events-none" />
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container/90 backdrop-blur-sm border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-            <span className="material-symbols-outlined text-[13px]">category</span>
-            Group Type
-          </span>
-        </div>
+      <div className="px-12 py-8 flex flex-col gap-8">
         {/* Action buttons */}
-        <div className="absolute top-3 right-4 flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
+          {confirmDelete ? (
+            <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+              <span className="text-[10px] text-on-surface-variant">Delete this type?</span>
+              <button
+                onClick={() => { onDelete(); setConfirmDelete(false); }}
+                className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 border border-outline-variant/20 text-on-surface-variant/40 text-[10px] font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[14px]">delete</span>
+            </button>
+          )}
           <button
             onClick={onEdit}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-surface/80 backdrop-blur-sm border border-outline-variant/20 text-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 border border-outline-variant/20 text-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
           >
             <span className="material-symbols-outlined text-[14px]">edit</span>
             Edit
           </button>
-          <button
-            onClick={onDelete}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-surface/80 backdrop-blur-sm border border-outline-variant/20 text-tertiary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-tertiary/5 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[14px]">delete</span>
-            Delete
-          </button>
         </div>
-      </div>
-
-      <div className="px-12 py-8 max-w-3xl flex flex-col gap-8">
         {/* Name + icon badge */}
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-sm flex items-center justify-center bg-primary/10 border border-primary/20 flex-shrink-0">

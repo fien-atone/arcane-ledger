@@ -6,8 +6,8 @@ export interface Session {
   datetime: string;
   brief?: string;
   summary: string;
-  nextSessionNotes?: string;
   locationIds?: string[];
   npcIds?: string[];
+  questIds?: string[];
   createdAt: string;
 }

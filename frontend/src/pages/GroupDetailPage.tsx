@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useGroup, useSaveGroup } from '@/features/groups/api';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useGroup, useDeleteGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, GmNotesSection, RichContent } from '@/shared/ui';
+import { BackLink, GmNotesSection, RichContent } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<string, { label: string; pill: string; icon: string }> = {
@@ -191,15 +191,13 @@ export default function GroupDetailPage() {
     .filter((n) => !n.groupMemberships.some((m) => m.groupId === groupId))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const saveGroup = useSaveGroup();
-
-  const handleGroupImageUpload = (dataUrl: string) => {
-    saveGroup.mutate({ ...group!, image: dataUrl, updatedAt: new Date().toISOString() });
-  };
+  const deleteGroup = useDeleteGroup();
+  const navigate = useNavigate();
 
   const [editOpen, setEditOpen] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleRemoveMember = (npc: NPC) => {
     const updated: NPC = {
@@ -238,13 +236,6 @@ export default function GroupDetailPage() {
 
           {/* ── Left column (65%) ──────────────────────────────── */}
           <div className="lg:w-[65%] space-y-12">
-
-            <ImageUpload
-              image={group.image}
-              name={group.name}
-              className="w-full aspect-[21/9]"
-              onUpload={handleGroupImageUpload}
-            />
 
             {/* Header */}
             <header className="space-y-4">
@@ -400,10 +391,34 @@ export default function GroupDetailPage() {
           {/* ── Right column (35%) ──────────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[10px] text-on-surface-variant">Delete this group?</span>
+                  <button
+                    onClick={() => deleteGroup.mutate({ campaignId: campaignId ?? '', groupId: group.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/groups`) })}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
               <button
                 onClick={() => setEditOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">edit</span>
                 Edit Group

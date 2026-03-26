@@ -70,6 +70,16 @@ export const CATEGORY_ICON_COLOR: Record<LocationTypeCategory, string> = {
   travel:       'text-violet-400',
 };
 
+/** Hex colour per category — for inline styles that can't be overridden by CSS cascade */
+export const CATEGORY_HEX_COLOR: Record<LocationTypeCategory, string> = {
+  world:        '#818cf8', // indigo-400
+  civilization: '#fbbf24', // amber-400
+  geographic:   '#34d399', // emerald-400
+  water:        '#38bdf8', // sky-400
+  poi:          '#fb7185', // rose-400
+  travel:       '#a78bfa', // violet-400
+};
+
 /** Badge (tile bg + text + border) class set per category */
 export const CATEGORY_BADGE_CLS: Record<LocationTypeCategory, string> = {
   world:        'text-indigo-300 bg-indigo-950/60 border-indigo-400/25',

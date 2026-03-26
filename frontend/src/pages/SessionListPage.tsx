@@ -1,53 +1,101 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSessions } from '@/features/sessions/api/queries';
+import { useNpcs } from '@/features/npcs/api/queries';
+import { useLocations } from '@/features/locations/api';
+import { SessionEditDrawer } from '@/features/sessions/ui';
+import { LocationIcon, RichContent } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function SessionDetail({ session }: { session: Session }) {
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <div className="flex items-center gap-4 mb-3">
+      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">{title}</h3>
+      <div className="h-px flex-1 bg-outline-variant/20" />
+    </div>
+  );
+}
+
+function SessionDetail({ session, campaignId }: { session: Session; campaignId: string }) {
+  const { data: allNpcs } = useNpcs(campaignId);
+  const { data: allLocations } = useLocations(campaignId);
+
+  const linkedNpcs = (session.npcIds ?? [])
+    .map((id) => allNpcs?.find((n) => n.id === id))
+    .filter(Boolean) as NonNullable<typeof allNpcs>[number][];
+
+  const linkedLocations = (session.locationIds ?? [])
+    .map((id) => allLocations?.find((l) => l.id === id))
+    .filter(Boolean) as NonNullable<typeof allLocations>[number][];
+
   return (
     <div className="flex flex-col overflow-y-auto h-full px-10 py-8">
       <div className="mb-6">
         <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{session.title}</h2>
-        <p className="text-xs text-on-surface-variant/50 mt-2 flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[13px]">calendar_today</span>
-          {formatDate(session.datetime)}
-        </p>
+        {session.datetime && (
+          <p className="text-xs text-on-surface-variant/50 mt-2 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[13px]">calendar_today</span>
+            {formatDate(session.datetime)}
+          </p>
+        )}
       </div>
 
       {session.brief && (
         <div className="mb-6">
-          <div className="flex items-center gap-4 mb-3">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Brief</h3>
-            <div className="h-px flex-1 bg-outline-variant/20" />
-          </div>
+          <SectionHeader title="Brief" />
           <p className="text-sm text-on-surface-variant leading-relaxed italic">{session.brief}</p>
         </div>
       )}
 
       {session.summary && (
         <div className="mb-6">
-          <div className="flex items-center gap-4 mb-3">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Summary</h3>
-            <div className="h-px flex-1 bg-outline-variant/20" />
-          </div>
-          <p className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-line">{session.summary}</p>
+          <SectionHeader title="Summary" />
+          <RichContent value={session.summary} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
         </div>
       )}
 
-      {session.nextSessionNotes && (
-        <div className="mb-6 relative pl-4">
-          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/40" />
-          <div className="flex items-center gap-3 mb-2">
-            <span className="material-symbols-outlined text-[13px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Next Session Notes</h3>
+      {/* NPCs */}
+      {linkedNpcs.length > 0 && (
+        <div className="mb-6">
+          <SectionHeader title={`NPCs (${linkedNpcs.length})`} />
+          <div className="flex flex-wrap gap-2">
+            {linkedNpcs.map((npc) => (
+              <Link
+                key={npc.id}
+                to={`/campaigns/${campaignId}/npcs/${npc.id}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[13px] !text-on-surface-variant/40">person</span>
+                {npc.name}
+              </Link>
+            ))}
           </div>
-          <p className="text-sm text-on-surface-variant leading-relaxed">{session.nextSessionNotes}</p>
         </div>
       )}
+
+      {/* Locations */}
+      {linkedLocations.length > 0 && (
+        <div className="mb-6">
+          <SectionHeader title={`Locations (${linkedLocations.length})`} />
+          <div className="flex flex-wrap gap-2">
+            {linkedLocations.map((loc) => (
+              <Link
+                key={loc.id}
+                to={`/campaigns/${campaignId}/locations/${loc.id}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
+              >
+                <LocationIcon locationType={loc.type} size="text-[13px]" />
+                {loc.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
 
     </div>
   );
@@ -58,6 +106,7 @@ export default function SessionListPage() {
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [addOpen, setAddOpen] = useState(false);
 
   const filtered = sessions?.filter((s) =>
     !search ||
@@ -75,7 +124,10 @@ export default function SessionListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Sessions</h1>
             <p className="text-on-surface-variant text-sm mt-1">Chronicle of all gathered sessions, newest first.</p>
           </div>
-          <button disabled className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 opacity-50 cursor-not-allowed" title="Coming soon">
+          <button
+            onClick={() => setAddOpen(true)}
+            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+          >
             <span className="material-symbols-outlined text-[18px]">add</span>
             <span className="font-label text-xs uppercase tracking-widest">New Session</span>
           </button>
@@ -106,36 +158,53 @@ export default function SessionListPage() {
               {filtered.length === 0 && (
                 <p className="text-xs text-on-surface-variant/40 italic p-6">No sessions found.</p>
               )}
-              {filtered.map((session, idx) => {
-                const isLatest = idx === 0;
-                const isSelected = selected?.id === session.id;
-                return (
-                  <button
-                    key={session.id}
-                    type="button"
-                    onClick={() => setSelectedId(session.id)}
-                    className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
-                      isSelected ? 'bg-primary/8 border-l-2 border-l-primary' : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border ${isSelected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
-                      <span className={`font-headline text-sm font-bold italic ${isSelected ? 'text-primary' : isLatest ? 'text-primary/70' : 'text-on-surface-variant/50'}`}>
-                        {String(session.number).padStart(2, '0')}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>{session.title}</p>
-                      <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>{formatDate(session.datetime)}</p>
-                    </div>
-                    {isLatest && (
-                      <span className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-wider">
-                        <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                        Latest
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {(() => {
+                const now = new Date();
+                // Find the nearest upcoming session (first future session by date)
+                const nextSessionId = filtered.find((s) => s.datetime && new Date(s.datetime) > now)?.id
+                  ?? filtered.find((s) => !s.datetime)?.id; // no-date sessions are "upcoming"
+                // The most recent past session
+                const pastSessions = filtered.filter((s) => s.datetime && new Date(s.datetime) <= now);
+                const lastSessionId = pastSessions.length > 0 ? pastSessions[0]?.id : null;
+
+                return filtered.map((session) => {
+                  const isSelected = selected?.id === session.id;
+                  const isNext = session.id === nextSessionId;
+                  const isLast = session.id === lastSessionId;
+
+                  return (
+                    <button
+                      key={session.id}
+                      type="button"
+                      onClick={() => setSelectedId(session.id)}
+                      className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
+                        isSelected ? 'bg-primary/8 border-l-2 border-l-primary' : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border ${isSelected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
+                        <span className={`font-headline text-sm font-bold italic ${isSelected ? 'text-primary' : (isNext || isLast) ? 'text-primary/70' : 'text-on-surface-variant/50'}`}>
+                          {String(session.number).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>{session.title}</p>
+                        <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>{session.datetime ? formatDate(session.datetime) : 'Date TBD'}</p>
+                      </div>
+                      {isNext && (
+                        <span className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[8px] font-bold uppercase tracking-wider border border-secondary/20">
+                          <span className="w-1 h-1 rounded-full bg-secondary animate-pulse" />
+                          Next
+                        </span>
+                      )}
+                      {isLast && !isNext && (
+                        <span className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-wider border border-primary/20">
+                          Previous
+                        </span>
+                      )}
+                    </button>
+                  );
+                });
+              })()}
             </div>
 
             {sessions && sessions.length > 0 && (
@@ -153,7 +222,7 @@ export default function SessionListPage() {
           <div className="flex-1 overflow-hidden relative">
             {selected ? (
               <>
-                <SessionDetail session={selected} />
+                <SessionDetail session={selected} campaignId={campaignId ?? ''} />
                 <Link
                   to={`/campaigns/${campaignId}/sessions/${selected.id}`}
                   className="absolute top-3 right-4 z-20 inline-flex items-center gap-1.5 px-3 py-2 bg-surface/80 backdrop-blur-sm border border-outline-variant/20 text-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
@@ -168,6 +237,12 @@ export default function SessionListPage() {
           </div>
         </div>
       )}
+
+      <SessionEditDrawer
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        campaignId={campaignId ?? ''}
+      />
     </main>
   );
 }
