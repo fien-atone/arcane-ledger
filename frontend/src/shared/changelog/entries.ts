@@ -11,6 +11,43 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.2.2',
+    date: '2026-03-27',
+    title: 'Дашборд, кампании и навигация',
+    items: [
+      {
+        icon: 'dashboard',
+        text: 'Переработанный дашборд кампании — быстрая навигация со счётчиками, умный блок следующей сессии (Today/Tomorrow/Next), последние сессии, партия, недавние NPC.',
+        tag: 'new',
+      },
+      {
+        icon: 'edit',
+        text: 'Редактирование кампании — inline-редактирование названия и описания (rich text) прямо на дашборде.',
+        tag: 'new',
+      },
+      {
+        icon: 'archive',
+        text: 'Архивация кампаний — перемещение между Active и Archive с inline-подтверждением.',
+        tag: 'new',
+      },
+      {
+        icon: 'list',
+        text: 'Упрощённый список кампаний — компактные строки с бейджами сессий (Today/Tomorrow/Next), разделы Active и Archive.',
+        tag: 'improved',
+      },
+      {
+        icon: 'event',
+        text: 'Бейджи сессий в списке — Today, Tomorrow, Next, Previous — на всех экранах (дашборд, список сессий, список кампаний).',
+        tag: 'improved',
+      },
+      {
+        icon: 'menu',
+        text: 'Минимальный Topbar на экране кампаний — только логотип и профиль. All Campaigns в сайдбаре кампании.',
+        tag: 'improved',
+      },
+    ],
+  },
+  {
     version: '0.2.1',
     date: '2026-03-26',
     title: 'Сессии, связи и единый стиль',
