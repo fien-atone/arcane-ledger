@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Footer, D20Icon } from '@/shared/ui';
+import { CHANGELOG } from '@/shared/changelog/entries';
 
 // ── Feature data ─────────────────────────────────────────────────────────────
 
@@ -153,7 +154,7 @@ export default function LandingPage() {
         <section className="pt-48 pb-32 flex flex-col items-center text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-full text-[10px] font-label uppercase tracking-widest text-primary mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            Demo · v0.2.0
+            Demo · v{CHANGELOG[0]?.version ?? '0.0.0'}
           </div>
 
           <h1 className="font-headline text-6xl md:text-8xl font-bold text-on-surface tracking-tight leading-[1.05] mb-8">
