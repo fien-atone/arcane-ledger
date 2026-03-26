@@ -27,8 +27,8 @@ src/
   pages/        — one file per route (fat, composed from features + shared)
   widgets/      — Sidebar, Topbar, DiceRoller, ChangelogDrawer
   features/     — domain slices: characters, npcs, locations, groups,
-                  groupTypes, species, relations, sessions, quests,
-                  campaigns, factions, auth
+                  groupTypes, locationTypes, species, relations,
+                  sessions, quests, campaigns, factions, auth
   shared/
     ui/         — reusable presentational components (see below)
     api/
@@ -84,8 +84,15 @@ Import from `@/shared/ui`. All exported from `shared/ui/index.ts`.
 | `ImageUpload` | `value`, `onChange`, `onView?` | Portrait/image upload with lightbox support |
 | `D20Icon` | `className?` | SVG d20 die icon |
 | `Footer` | — | Public page footer |
+| `LocationIcon` | `locationType`, `size?`, `className?` | Location type icon with category colour (inline style, cascade-proof) |
+| `DatePicker` | `value` (YYYY-MM-DD), `onChange`, `placeholder?` | Custom dark-theme calendar picker with month nav, weekend highlighting |
+| `InlineRichField` | `label`, `value`, `onSave`, `placeholder?`, `isGmNotes?` | Inline-editable TipTap field (click to edit, blur/buttons to save) |
+| `RichTextEditor` | `value`, `onChange`, `placeholder?`, `minHeight?` | TipTap editor with always-visible toolbar |
+| `RichContent` | `value`, `className?` | Read-only TipTap HTML renderer with prose styling |
 
-**Never use native `<select>` for styled dropdowns** — macOS ignores option styles. Use `Select` from shared/ui.
+**Never use native `<select>`** — use `Select` from shared/ui.
+**Never use native `<input type="date">`** — use `DatePicker` from shared/ui.
+**Never render location type icons inline** — use `LocationIcon` which auto-resolves icon + category colour.
 
 ---
 
@@ -165,11 +172,13 @@ For d20 use `<D20Icon />` from shared/ui — never the `casino` Material Symbol.
 
 ## TipTap (Rich Text)
 
-Used in CharacterDetailPage for inline WYSIWYG editing of text fields.
+Used across all detail pages via `InlineRichField` (inline edit) and `RichTextEditor` (drawer forms).
 
 ```ts
 import { BubbleMenu } from '@tiptap/react/menus'; // NOT from '@tiptap/react'
 // tippyOptions prop does not exist in v3 — do not use it
+// setContent second arg must be SetContentOptions object, NOT boolean:
+editor.commands.setContent(html, { emitUpdate: false }); // correct
 ```
 
 Prose container classes:
@@ -192,10 +201,10 @@ Auth is mock — `user/user` logs in as GM. Stored in `sessionStorage`.
 
 ## Versioning
 
-Current version: **v0.2.0**
+Version is derived automatically from `CHANGELOG[0].version` in `src/shared/changelog/entries.ts`.
+Landing page reads it at build time — **never hardcode version strings**.
 
-Changelog entries live in `src/shared/changelog/entries.ts` as a typed array.
-When adding features, add a new entry at the top with the bumped version.
+When adding features, add a new entry at the top of the array with the bumped version.
 Public changelog page: `/changelog`.
 In-app changelog: drawer accessible from the sidebar.
 
@@ -205,6 +214,8 @@ In-app changelog: drawer accessible from the sidebar.
 
 - **No backend calls** — everything goes through `*Repository` → localStorage
 - **No native `<select>`** — always use `Select` from shared/ui
+- **No native `<input type="date">`** — always use `DatePicker` from shared/ui
+- **No inline location icons** — always use `LocationIcon` from shared/ui
 - **Drawer z-index**: backdrop `z-60`, panel `z-70`
 - **IDs**: generated as `` `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}` ``
 - **Timestamps**: `new Date().toISOString()` for `createdAt` / `updatedAt`
@@ -213,3 +224,6 @@ In-app changelog: drawer accessible from the sidebar.
 - **prose + TipTap**: always add `font-sans` to prevent serif bleed-through
 - **Empty states**: inline `<p className="text-xs text-on-surface-variant/40 italic p-6">No X found.</p>`
 - **Loading states**: `<LoadingSpinner as="main" />` for page-level, `<LoadingSpinner />` for inline
+- **Destructive actions**: always inline confirm (Yes/No) — **never use browser `confirm()`**
+- **Location type colours**: use `CATEGORY_HEX_COLOR` with inline `style={{ color }}` — Tailwind classes get overridden by parent hover cascade in v4
+- **Defensive fallbacks**: always `(entity.arrayField ?? [])` for optional arrays from localStorage (old data may lack the field)
