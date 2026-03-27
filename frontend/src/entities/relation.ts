@@ -22,26 +22,26 @@ export interface Relation {
   updatedAt: string;
 }
 
+/** Snap any score to the nearest of the 5 canonical levels */
+export function snapFriendliness(score: number): number {
+  const levels = [-80, -40, 0, 40, 80];
+  return levels.reduce((prev, curr) => Math.abs(curr - score) < Math.abs(prev - score) ? curr : prev);
+}
+
 export function friendlinessLabel(score: number): string {
-  if (score >= 61) return 'Allied';
-  if (score >= 21) return 'Friendly';
-  if (score >= -20) return 'Neutral';
-  if (score >= -60) return 'Unfriendly';
+  const s = snapFriendliness(score);
+  if (s >= 80) return 'Allied';
+  if (s >= 40) return 'Friendly';
+  if (s >= 0) return 'Neutral';
+  if (s >= -40) return 'Unfriendly';
   return 'Hostile';
 }
 
 export function friendlinessColor(score: number): string {
-  if (score >= 61) return 'text-secondary';
-  if (score >= 21) return 'text-secondary/70';
-  if (score >= -20) return 'text-on-surface-variant';
-  if (score >= -60) return 'text-tertiary';
-  return 'text-primary';
-}
-
-export function friendlinessBarColor(score: number): string {
-  if (score >= 61) return 'bg-secondary';
-  if (score >= 21) return 'bg-secondary/60';
-  if (score >= -20) return 'bg-outline-variant';
-  if (score >= -60) return 'bg-tertiary/60';
-  return 'bg-primary/80';
+  const s = snapFriendliness(score);
+  if (s >= 80) return 'text-emerald-400';
+  if (s >= 40) return 'text-emerald-400/70';
+  if (s >= 0) return 'text-amber-400';
+  if (s >= -40) return 'text-rose-400/70';
+  return 'text-rose-400';
 }

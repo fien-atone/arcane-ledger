@@ -21,7 +21,7 @@ export const questRepository = {
       await delay(100);
       return store
         .list(campaignId)
-        .filter((q) => q.status === 'active' || q.status === 'unknown');
+        .filter((q) => q.status === 'active' || q.status === 'undiscovered');
     }
     const { apiClient } = await import('../client');
     return apiClient.get<Quest[]>(`/campaigns/${campaignId}/quests?status=active`);

@@ -11,6 +11,33 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.2.3',
+    date: '2026-03-27',
+    title: 'Квесты, социальные связи и доработки',
+    items: [
+      {
+        icon: 'auto_awesome',
+        text: 'Квесты — полный CRUD: создание, редактирование (drawer), удаление. Статус edit-in-place с dropdown. Description, Reward и GM Notes — inline rich text.',
+        tag: 'new',
+      },
+      {
+        icon: 'visibility_off',
+        text: 'Новый статус квеста Undiscovered, цвета статусов: Completed — зелёный, Failed — красный, иконки по статусам.',
+        tag: 'improved',
+      },
+      {
+        icon: 'handshake',
+        text: 'Социальные связи NPC — добавление, редактирование (5 уровней: Hostile → Allied), удаление. Сегментированный бар в стиле BG3.',
+        tag: 'new',
+      },
+      {
+        icon: 'palette',
+        text: 'Цвета отношений — от красного через жёлтый до зелёного (Hostile → Neutral → Allied).',
+        tag: 'improved',
+      },
+    ],
+  },
+  {
     version: '0.2.2',
     date: '2026-03-27',
     title: 'Дашборд, кампании и навигация',

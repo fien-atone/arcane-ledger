@@ -20,10 +20,10 @@ function formatDateTime(iso: string) {
 
 const QUEST_STATUS_PILL: Record<QuestStatus, string> = {
   active:      'bg-secondary/10 text-secondary border-secondary/20',
-  completed:   'bg-surface-container text-on-surface-variant border-outline-variant/20',
-  failed:      'bg-primary/5 text-primary/60 border-primary/20',
+  completed:   'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  failed:      'bg-rose-500/10 text-rose-400 border-rose-500/20',
   unavailable: 'bg-surface-container-highest text-on-surface-variant/50 border-outline-variant/20',
-  unknown:     'bg-surface-variant text-on-surface-variant border-outline-variant/10',
+  undiscovered: 'bg-surface-variant text-on-surface-variant border-outline-variant/10',
 };
 
 export default function SessionDetailPage() {

@@ -1,1 +1,1 @@
-export { useRelationsForEntity, useRelationsForCampaign } from './queries';
+export { useRelationsForEntity, useRelationsForCampaign, useSaveRelation, useDeleteRelation } from './queries';

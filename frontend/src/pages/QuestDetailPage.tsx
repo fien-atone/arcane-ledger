@@ -1,45 +1,35 @@
-import { useParams, Link } from 'react-router-dom';
-import { useQuest, useQuests } from '@/features/quests/api';
+import { useState, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuest, useSaveQuest, useDeleteQuest } from '@/features/quests/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
-import { BackLink } from '@/shared/ui';
-import type { QuestStatus } from '@/entities/quest';
+import { QuestEditDrawer } from '@/features/quests/ui';
+import { BackLink, InlineRichField } from '@/shared/ui';
+import type { Quest, QuestStatus } from '@/entities/quest';
 
-const STATUS_CONFIG: Record<QuestStatus, { label: string; pill: string }> = {
-  active: {
-    label: 'Active',
-    pill: 'bg-secondary/10 text-secondary border border-secondary/20',
-  },
-  completed: {
-    label: 'Completed',
-    pill: 'bg-surface-container text-on-surface-variant border border-outline-variant/20',
-  },
-  failed: {
-    label: 'Failed',
-    pill: 'bg-primary/5 text-primary/60 border border-primary/20',
-  },
-  unavailable: {
-    label: 'Unavailable',
-    pill: 'bg-surface-container-highest text-on-surface-variant/50 border border-outline-variant/20',
-  },
-  unknown: {
-    label: 'Unknown',
-    pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10',
-  },
+const STATUS_CONFIG: Record<QuestStatus, { label: string; icon: string; pill: string }> = {
+  active:       { label: 'Active',       icon: 'bolt',          pill: 'bg-secondary/10 text-secondary border border-secondary/20' },
+  completed:    { label: 'Completed',    icon: 'check_circle',  pill: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
+  failed:       { label: 'Failed',       icon: 'cancel',        pill: 'bg-rose-500/10 text-rose-400 border border-rose-500/20' },
+  unavailable:  { label: 'Unavailable',  icon: 'block',         pill: 'bg-surface-container-highest text-on-surface-variant/50 border border-outline-variant/20' },
+  undiscovered: { label: 'Undiscovered',  icon: 'visibility_off', pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10' },
 };
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
-}
 
 export default function QuestDetailPage() {
   const { id: campaignId, questId } = useParams<{ id: string; questId: string }>();
   const { data: quest, isLoading, isError } = useQuest(campaignId ?? '', questId ?? '');
-  const { data: quests } = useQuests(campaignId ?? '');
   const { data: npcs } = useNpcs(campaignId ?? '');
+  const saveQuest = useSaveQuest(campaignId ?? '');
+  const deleteQuest = useDeleteQuest(campaignId ?? '');
+  const navigate = useNavigate();
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
+
+  const saveField = useCallback((field: keyof Quest, html: string) => {
+    if (!quest) return;
+    saveQuest.mutate({ ...quest, [field]: html || undefined });
+  }, [quest, saveQuest]);
 
   if (isLoading) {
     return (
@@ -60,18 +50,10 @@ export default function QuestDetailPage() {
   }
 
   const st = STATUS_CONFIG[quest.status];
-  const isUnavailable = quest.status === 'unavailable';
-
   const giver = quest.giverId ? npcs?.find((n) => n.id === quest.giverId) : undefined;
-
-  // Related quests (same campaign, not this quest)
-  const relatedQuests = quests
-    ?.filter((q) => q.id !== quest.id && (q.status === 'active' || q.status === 'unknown'))
-    .slice(0, 3);
 
   return (
     <main className="flex-1 min-h-screen bg-surface">
-      {/* Breadcrumb */}
       <div className="px-10 pt-8">
         <BackLink to={`/campaigns/${campaignId}/quests`}>All Quests</BackLink>
       </div>
@@ -84,73 +66,87 @@ export default function QuestDetailPage() {
 
             {/* Quest header */}
             <header className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${st.pill}`}>
+              <div className="flex flex-wrap items-center gap-3 relative">
+                <button
+                  onClick={() => setStatusOpen((v) => !v)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:opacity-80 transition-opacity ${st.pill}`}
+                >
+                  <span className="material-symbols-outlined text-[13px]">{st.icon}</span>
                   {st.label}
-                </span>
-                <span className="text-[10px] text-on-surface-variant/40 uppercase tracking-widest">
-                  {formatDate(quest.createdAt)}
-                </span>
+                  <span className="material-symbols-outlined text-[11px] ml-0.5">expand_more</span>
+                </button>
+                {statusOpen && (
+                  <div className="absolute top-full left-0 mt-1 z-50 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl py-1 min-w-[160px]">
+                    {(Object.entries(STATUS_CONFIG) as [QuestStatus, typeof st][]).map(([key, cfg]) => (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          saveQuest.mutate({ ...quest, status: key });
+                          setStatusOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 flex items-center gap-2 text-xs hover:bg-surface-container-high transition-colors ${quest.status === key ? 'text-primary font-bold' : 'text-on-surface-variant'}`}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">{cfg.icon}</span>
+                        {cfg.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <h1 className={`font-headline text-5xl font-bold text-on-surface tracking-tight leading-tight ${isUnavailable ? 'opacity-50' : ''}`}>
+              <h1 className={`font-headline text-5xl font-bold text-on-surface tracking-tight leading-tight ${quest.status === 'unavailable' ? 'opacity-50' : ''}`}>
                 {quest.title}
               </h1>
-              {isUnavailable && (
-                <p className="text-xs text-on-surface-variant/50 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">block</span>
-                  This quest is no longer accessible — the circumstances that made it possible no longer exist.
-                </p>
-              )}
             </header>
 
-            {/* Description */}
-            <section className="space-y-4">
-              <div className="flex items-center gap-4">
-                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                  Description
-                </h2>
-                <div className="h-px flex-1 bg-outline-variant/20" />
-              </div>
-              <p className="text-on-surface-variant leading-loose text-base">
-                {quest.description}
-              </p>
-            </section>
+            {/* Description — inline editable */}
+            <InlineRichField
+              label="Description"
+              value={quest.description}
+              onSave={(html) => saveField('description', html)}
+              placeholder="What is this quest about…"
+            />
 
-            {/* GM Notes */}
-            {quest.notes && (
-              <section className="bg-surface-container-low p-8 border border-primary/20 rounded-sm relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <span className="material-symbols-outlined text-6xl text-primary">lock</span>
-                </div>
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span
-                      className="material-symbols-outlined text-primary text-sm"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      lock
-                    </span>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-primary">
-                      GM Notes
-                    </h3>
-                  </div>
-                  <p className="text-on-surface-variant text-sm leading-relaxed italic">
-                    {quest.notes}
-                  </p>
-                </div>
-              </section>
-            )}
+            {/* GM Notes — inline editable */}
+            <InlineRichField
+              label="GM Notes"
+              value={quest.notes}
+              onSave={(html) => saveField('notes', html)}
+              isGmNotes
+            />
           </div>
 
           {/* ── Right column (35%) ──────────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            {/* Edit button */}
-            <div className="flex justify-end">
+            {/* Actions */}
+            <div className="flex justify-end gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[10px] text-on-surface-variant">Delete this quest?</span>
+                  <button
+                    onClick={() => deleteQuest.mutate(quest.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/quests`) })}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
               <button
-                disabled
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm opacity-50 cursor-not-allowed"
-                title="Coming soon"
+                onClick={() => setEditOpen(true)}
+                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">edit</span>
                 Edit Quest
@@ -158,105 +154,67 @@ export default function QuestDetailPage() {
             </div>
 
             {/* Quest giver */}
-            {giver ? (
-              <div className="bg-surface-container-low p-5 rounded-sm ring-1 ring-outline-variant/10">
-                <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-3">
+            <section>
+              <div className="flex items-center gap-4 mb-4">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
                   Quest Giver
-                </h4>
+                </h2>
+                <div className="h-px flex-1 bg-outline-variant/20" />
+              </div>
+              {giver ? (
                 <Link
                   to={`/campaigns/${campaignId}/npcs/${giver.id}`}
-                  className="group flex items-center gap-3 hover:text-primary transition-colors"
+                  className="group flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
                 >
-                  <div className="w-9 h-9 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-on-surface-variant/60">
-                      {giver.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-                      {giver.name}
-                    </p>
-                    {giver.species && (
-                      <p className="text-[10px] text-on-surface-variant uppercase tracking-wide">{giver.species}</p>
+                  <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
+                    {giver.image ? (
+                      <img src={giver.image} alt={giver.name} className="w-full h-full object-cover rounded-sm" />
+                    ) : (
+                      <span className="text-xs font-bold text-on-surface-variant/60">
+                        {giver.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
+                      </span>
                     )}
                   </div>
-                  <span className="material-symbols-outlined text-[14px] text-on-surface-variant/30 group-hover:text-primary/60 ml-auto">
-                    arrow_forward
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{giver.name}</p>
+                    {giver.species && (
+                      <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-wider">{giver.species}</p>
+                    )}
+                  </div>
+                  <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
                 </Link>
-              </div>
-            ) : (
-              <section>
-                <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">person</span>
-                  Quest Giver
-                </h4>
-                <p className="text-xs text-on-surface-variant/40 italic">
-                  NPC link will appear here once tagged.
-                </p>
-              </section>
-            )}
+              ) : (
+                <p className="text-xs text-on-surface-variant/40 italic">No quest giver set.</p>
+              )}
+            </section>
 
-            {/* Quick status card */}
-            <div className="bg-surface-container-low p-6 rounded-sm ring-1 ring-outline-variant/10 space-y-4">
-              <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
-                Quest Details
-              </h4>
-              <div className="space-y-3">
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-on-surface-variant/60 italic">Status</span>
-                  <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-widest ${st.pill}`}>
-                    {st.label}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-on-surface-variant/60 italic">Created</span>
-                  <span className="text-on-surface">{formatDate(quest.createdAt)}</span>
-                </div>
-                {quest.completedAt && (
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-on-surface-variant/60 italic">Resolved</span>
-                    <span className="text-on-surface">{formatDate(quest.completedAt)}</span>
-                  </div>
-                )}
-                {quest.reward && (
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-on-surface-variant/60 italic">Reward</span>
-                    <span className="text-secondary font-bold">{quest.reward}</span>
-                  </div>
-                )}
+            {/* Reward */}
+            <section>
+              <div className="flex items-center gap-4 mb-4">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                  Reward
+                </h2>
+                <div className="h-px flex-1 bg-outline-variant/20" />
               </div>
-            </div>
+              <InlineRichField
+                label=""
+                value={quest.reward}
+                onSave={(html) => saveField('reward', html)}
+                placeholder="Gold, items, reputation…"
+              />
+            </section>
 
-            {/* Related active quests */}
-            {relatedQuests && relatedQuests.length > 0 && (
-              <section className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40">
-                  Other Active Quests
-                </h4>
-                <div className="space-y-2">
-                  {relatedQuests.map((q) => (
-                    <Link
-                      key={q.id}
-                      to={`/campaigns/${campaignId}/quests/${q.id}`}
-                      className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container transition-colors group"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-secondary flex-shrink-0" />
-                      <span className="text-xs text-on-surface group-hover:text-primary transition-colors flex-1 truncate">
-                        {q.title}
-                      </span>
-                      <span className="material-symbols-outlined text-[14px] text-on-surface-variant/30 group-hover:text-primary/60">
-                        chevron_right
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
 
         </div>
       </div>
+
+      <QuestEditDrawer
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        campaignId={campaignId ?? ''}
+        quest={quest}
+      />
     </main>
   );
 }

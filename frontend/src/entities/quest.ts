@@ -1,4 +1,4 @@
-export type QuestStatus = 'active' | 'completed' | 'failed' | 'unavailable' | 'unknown';
+export type QuestStatus = 'active' | 'completed' | 'failed' | 'unavailable' | 'undiscovered';
 
 export interface Quest {
   id: string;
@@ -10,5 +10,4 @@ export interface Quest {
   status: QuestStatus;
   notes: string;
   createdAt: string;
-  completedAt?: string;
 }
