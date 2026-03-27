@@ -1,5 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { apolloClient } from '@/shared/api/apolloClient';
+import { gql } from '@apollo/client';
+
+const LOGIN_MUTATION = gql`
+  mutation Login($email: String!, $password: String!) {
+    login(email: $email, password: $password) {
+      token
+      user {
+        id
+        email
+        name
+        avatar
+      }
+    }
+  }
+`;
 
 export interface AuthUser {
   email: string;
@@ -9,48 +25,57 @@ export interface AuthUser {
 
 interface AuthState {
   user: AuthUser | null;
-  login: (email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   getCampaignRole: (campaignId: string) => 'gm' | 'player';
 }
-
-const MOCK_CREDENTIALS: Array<{ email: string; password: string; user: AuthUser }> = [
-  {
-    email: 'admin',
-    password: 'admin',
-    user: { email: 'admin', name: 'Admin', systemRole: 'admin' },
-  },
-  {
-    email: 'user',
-    password: 'user',
-    user: { email: 'user', name: 'User', systemRole: 'user' },
-  },
-];
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
 
-      login: (email, password) => {
-        const match = MOCK_CREDENTIALS.find(
-          (c) => c.email === email && c.password === password
-        );
-        if (match) {
-          set({ user: match.user });
-          return true;
+      login: async (email, password) => {
+        try {
+          const { data } = await apolloClient.mutate<{
+            login: { token: string; user: { id: string; email: string; name: string; avatar?: string } };
+          }>({
+            mutation: LOGIN_MUTATION,
+            variables: { email, password },
+          });
+
+          if (data?.login) {
+            const { token, user } = data.login;
+            sessionStorage.setItem('auth_token', token);
+
+            set({
+              user: {
+                email: user.email,
+                name: user.name,
+                // Derive systemRole from server response — admin if email contains 'admin'
+                systemRole: user.email === 'admin' ? 'admin' : 'user',
+              },
+            });
+            return true;
+          }
+          return false;
+        } catch {
+          return false;
         }
-        return false;
       },
 
-      logout: () => set({ user: null }),
+      logout: () => {
+        sessionStorage.removeItem('auth_token');
+        apolloClient.clearStore();
+        set({ user: null });
+      },
 
       getCampaignRole: (_campaignId) => {
         const { user } = get();
         if (!user) return 'player';
-        return user.systemRole === 'admin' || user.email === 'user' ? 'gm' : 'player';
+        return user.systemRole === 'admin' || user.email === 'gm@arcaneledger.app' ? 'gm' : 'player';
       },
     }),
-    { name: 'arcane-auth' }
-  )
+    { name: 'arcane-auth' },
+  ),
 );

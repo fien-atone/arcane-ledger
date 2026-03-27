@@ -1,34 +1,79 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { speciesRepository } from '@/shared/api/repositories/speciesRepository';
+import { gql } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client/react';
 import type { Species } from '@/entities/species';
 
-export const useSpecies = () =>
-  useQuery({
-    queryKey: ['species'],
-    queryFn: () => speciesRepository.list(),
-    staleTime: Infinity,
-  });
+// ── Queries ──────────────────────────────────────────────────────────────────
 
-export const useSpeciesById = (id?: string) =>
-  useQuery({
-    queryKey: ['species', id],
-    queryFn: () => speciesRepository.getById(id!),
-    enabled: !!id,
-    staleTime: Infinity,
-  });
+const SPECIES_QUERY = gql`
+  query Species {
+    species {
+      id name pluralName type size description traits image
+    }
+  }
+`;
+
+// ── Mutations ────────────────────────────────────────────────────────────────
+
+const SAVE_SPECIES = gql`
+  mutation SaveSpecies(
+    $id: ID, $name: String!, $pluralName: String, $type: String!,
+    $size: String!, $description: String, $traits: [String!], $image: String
+  ) {
+    saveSpecies(
+      id: $id, name: $name, pluralName: $pluralName, type: $type,
+      size: $size, description: $description, traits: $traits, image: $image
+    ) {
+      id name pluralName type size description traits image
+    }
+  }
+`;
+
+const DELETE_SPECIES = gql`
+  mutation DeleteSpecies($id: ID!) {
+    deleteSpecies(id: $id)
+  }
+`;
+
+// ── Hooks ────────────────────────────────────────────────────────────────────
+
+export const useSpecies = () => {
+  const { data, loading, error } = useQuery<any>(SPECIES_QUERY);
+  return { data: data?.species as Species[] | undefined, isLoading: loading, isError: !!error, error };
+};
+
+export const useSpeciesById = (id?: string) => {
+  const { data, loading, error } = useQuery<any>(SPECIES_QUERY, { skip: !id });
+  const species = id ? (data?.species as Species[] | undefined)?.find((s: Species) => s.id === id) : undefined;
+  return { data: species, isLoading: loading, isError: !!error, error };
+};
 
 export const useSaveSpecies = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (species: Species) => speciesRepository.save(species),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['species'] }),
-  });
+  const [execute, { loading, error }] = useMutation(SAVE_SPECIES);
+  return {
+    mutate: (species: Species, opts?: { onSuccess?: () => void }) => {
+      const { id, createdAt, ...rest } = species;
+      execute({
+        variables: { id, ...rest },
+        refetchQueries: [{ query: SPECIES_QUERY }],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
 };
 
 export const useDeleteSpecies = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => speciesRepository.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['species'] }),
-  });
+  const [execute, { loading, error }] = useMutation(DELETE_SPECIES);
+  return {
+    mutate: (id: string, opts?: { onSuccess?: () => void }) => {
+      execute({
+        variables: { id },
+        refetchQueries: [{ query: SPECIES_QUERY }],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
 };

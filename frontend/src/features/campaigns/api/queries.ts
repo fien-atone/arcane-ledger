@@ -1,36 +1,146 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { campaignRepository } from '@/shared/api/repositories/campaignRepository';
+import { gql } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client/react';
 
-export const useCampaigns = () =>
-  useQuery({
-    queryKey: ['campaigns'],
-    queryFn: () => campaignRepository.list(),
-  });
+// ── GraphQL documents ─────────────────────────────────────────────
 
-export const useCampaign = (id: string) =>
-  useQuery({
-    queryKey: ['campaigns', id],
-    queryFn: () => campaignRepository.getById(id),
-    enabled: !!id,
+const CAMPAIGNS_QUERY = gql`
+  query Campaigns {
+    campaigns {
+      id
+      title
+      description
+      createdAt
+      archivedAt
+      myRole
+      sessionCount
+      memberCount
+      lastSession {
+        title
+        datetime
+      }
+    }
+  }
+`;
+
+const CAMPAIGN_QUERY = gql`
+  query Campaign($id: ID!) {
+    campaign(id: $id) {
+      id
+      title
+      description
+      createdAt
+      archivedAt
+      myRole
+      sessionCount
+      memberCount
+      lastSession {
+        title
+        datetime
+      }
+    }
+  }
+`;
+
+const CREATE_CAMPAIGN = gql`
+  mutation CreateCampaign($title: String!, $description: String) {
+    createCampaign(title: $title, description: $description) {
+      id
+      title
+      description
+      createdAt
+      archivedAt
+      myRole
+      sessionCount
+      memberCount
+    }
+  }
+`;
+
+const UPDATE_CAMPAIGN = gql`
+  mutation UpdateCampaign($id: ID!, $title: String, $description: String, $archivedAt: String) {
+    updateCampaign(id: $id, title: $title, description: $description, archivedAt: $archivedAt) {
+      id
+      title
+      description
+      createdAt
+      archivedAt
+      myRole
+      sessionCount
+      memberCount
+      lastSession {
+        title
+        datetime
+      }
+    }
+  }
+`;
+
+// ── Hooks ─────────────────────────────────────────────────────────
+
+export const useCampaigns = () => {
+  const { data, loading, error } = useQuery<any>(CAMPAIGNS_QUERY);
+  return {
+    data: data?.campaigns as import('@/entities/campaign').CampaignSummary[] | undefined,
+    isLoading: loading,
+    isError: !!error,
+  };
+};
+
+export const useCampaign = (id: string) => {
+  const { data, loading, error } = useQuery<any>(CAMPAIGN_QUERY, {
+    variables: { id },
+    skip: !id,
   });
+  return {
+    data: data?.campaign as import('@/entities/campaign').CampaignSummary | undefined,
+    isLoading: loading,
+    isError: !!error,
+  };
+};
 
 export const useSaveCampaign = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (campaign: import('@/entities/campaign').CampaignSummary) =>
-      campaignRepository.save(campaign),
-    onSuccess: (_, campaign) => {
-      qc.invalidateQueries({ queryKey: ['campaigns'] });
-      qc.invalidateQueries({ queryKey: ['campaigns', campaign.id] });
-    },
+  const [updateCampaign, { loading }] = useMutation(UPDATE_CAMPAIGN, {
+    refetchQueries: [{ query: CAMPAIGNS_QUERY }],
   });
+
+  return {
+    mutate: (
+      campaign: import('@/entities/campaign').CampaignSummary,
+      options?: { onSuccess?: () => void },
+    ) => {
+      updateCampaign({
+        variables: {
+          id: campaign.id,
+          title: campaign.title,
+          description: campaign.description,
+          archivedAt: campaign.archivedAt,
+        },
+      }).then(() => options?.onSuccess?.());
+    },
+    isPending: loading,
+  };
 };
 
 export const useCreateCampaign = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (campaign: import('@/entities/campaign').CampaignSummary) =>
-      campaignRepository.save(campaign),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['campaigns'] }),
+  const [createCampaign, { loading }] = useMutation(CREATE_CAMPAIGN, {
+    refetchQueries: [{ query: CAMPAIGNS_QUERY }],
   });
+
+  return {
+    mutate: (
+      campaign: import('@/entities/campaign').CampaignSummary,
+      options?: { onSuccess?: (data: import('@/entities/campaign').CampaignSummary) => void },
+    ) => {
+      createCampaign({
+        variables: {
+          title: campaign.title,
+          description: campaign.description,
+        },
+      }).then((result) => {
+        const created = (result.data as any)?.createCampaign;
+        options?.onSuccess?.(created);
+      });
+    },
+    isPending: loading,
+  };
 };

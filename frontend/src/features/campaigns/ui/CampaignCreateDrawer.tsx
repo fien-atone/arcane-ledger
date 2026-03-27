@@ -24,9 +24,8 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
 
   const handleSave = () => {
     if (!title.trim()) return;
-    const id = `campaign-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const campaign: CampaignSummary = {
-      id,
+      id: '',
       title: title.trim(),
       description: description.trim() || undefined,
       createdAt: new Date().toISOString(),
@@ -35,11 +34,11 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
       myRole: 'gm',
     };
     create.mutate(campaign, {
-      onSuccess: () => {
+      onSuccess: (created) => {
         onClose();
         setTitle('');
         setDescription('');
-        navigate(`/campaigns/${id}`);
+        navigate(`/campaigns/${created?.id ?? ''}`);
       },
     });
   };

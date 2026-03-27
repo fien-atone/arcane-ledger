@@ -11,17 +11,23 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Уже залогинен — редирект
+  // Already logged in — redirect
   if (user) return <Navigate to="/campaigns" replace />;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = login(email, password);
-    if (ok) {
-      navigate('/campaigns', { replace: true });
-    } else {
-      setError(true);
+    setSubmitting(true);
+    try {
+      const ok = await login(email, password);
+      if (ok) {
+        navigate('/campaigns', { replace: true });
+      } else {
+        setError(true);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -117,7 +123,8 @@ export default function LoginPage() {
             <div className="pt-4">
               <button
                 type="submit"
-                className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-semibold rounded-sm hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/10 flex items-center justify-center gap-2 group"
+                disabled={submitting}
+                className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-semibold rounded-sm hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/10 flex items-center justify-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Sign In
                 <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
@@ -134,13 +141,13 @@ export default function LoginPage() {
               <div className="text-xs text-on-surface-variant font-mono">
                 <div className="flex justify-between gap-4">
                   <span className="text-on-surface-variant/50">Game Master</span>
-                  <span><span className="text-on-surface">user</span> / <span className="text-on-surface">user</span></span>
+                  <span><span className="text-on-surface">gm@arcaneledger.app</span> / <span className="text-on-surface">user</span></span>
                 </div>
               </div>
             </div>
             <p className="text-on-surface-variant/40 text-[11px] leading-relaxed text-center flex items-start gap-1.5 justify-center">
               <span className="material-symbols-outlined text-[13px] mt-px flex-shrink-0">info</span>
-              All data is stored locally in your browser. Nothing is sent to any server.
+              Your session is stored locally. Campaign data syncs with your server.
             </p>
           </div>
         </div>

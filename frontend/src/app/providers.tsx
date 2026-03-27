@@ -1,18 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ApolloProvider } from '@apollo/client/react';
 import { RouterProvider } from 'react-router-dom';
+import { apolloClient } from '@/shared/api/apolloClient';
 import { router } from './router';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      retry: 1,
-    },
-  },
-});
-
 export const Providers = () => (
-  <QueryClientProvider client={queryClient}>
+  <ApolloProvider client={apolloClient}>
     <RouterProvider router={router} />
-  </QueryClientProvider>
+  </ApolloProvider>
 );

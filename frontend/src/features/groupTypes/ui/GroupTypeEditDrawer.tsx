@@ -254,10 +254,10 @@ export function GroupTypeEditDrawer({ open, onClose, groupType }: Props) {
           </button>
           <button
             onClick={handleSave}
-            disabled={!name.trim() || !icon.trim() || save.isPending}
+            disabled={!name.trim() || !icon.trim() || save.isLoading}
             className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
-            {save.isPending ? (
+            {save.isLoading ? (
               <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
             ) : (
               <span className="material-symbols-outlined text-sm">save</span>

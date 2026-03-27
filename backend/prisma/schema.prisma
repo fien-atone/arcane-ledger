@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+
+  campaignMembers CampaignMember[]
+  characters      PlayerCharacter[]
+}
+
+// ── Campaigns ────────────────────────────────────────────────────────────────
+
+model Campaign {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime  @default(now())
+  archivedAt  DateTime?
+
+  members    CampaignMember[]
+  sessions   Session[]
+  npcs       NPC[]
+  quests     Quest[]
+  groups     Group[]
+  locations  Location[]
+  relations  Relation[]
+  characters PlayerCharacter[]
+}
+
+model CampaignMember {
+  id         String   @id @default(uuid())
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  role       Role     @default(PLAYER)
+  joinedAt   DateTime @default(now())
+
+  @@unique([campaignId, userId])
+}
+
+enum Role {
+  GM
+  PLAYER
+}
+
+// ── Sessions ─────────────────────────────────────────────────────────────────
+
+model Session {
+  id         String   @id @default(uuid())
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  number     Int
+  title      String
+  datetime   String   @default("") // ISO string, empty = no date
+  brief      String?
+  summary    String   @default("")
+  createdAt  DateTime @default(now())
+
+  npcLinks      SessionNPC[]
+  locationLinks SessionLocation[]
+  questLinks    SessionQuest[]
+}
+
+model SessionNPC {
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  npc       NPC     @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  npcId     String
+
+  @@id([sessionId, npcId])
+}
+
+model SessionLocation {
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId  String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  locationId String
+
+  @@id([sessionId, locationId])
+}
+
+model SessionQuest {
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  quest     Quest   @relation(fields: [questId], references: [id], onDelete: Cascade)
+  questId   String
+
+  @@id([sessionId, questId])
+}
+
+// ── NPCs ─────────────────────────────────────────────────────────────────────
+
+model NPC {
+  id          String    @id @default(uuid())
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  name        String
+  aliases     String[]  @default([])
+  status      NPCStatus @default(ALIVE)
+  gender      Gender?
+  age         Int?
+  species     String?
+  speciesId   String?
+  appearance  String?
+  personality String?
+  description String    @default("")
+  motivation  String?
+  flaws       String?
+  gmNotes     String?
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  locationPresences NPCLocationPresence[]
+  groupMemberships  NPCGroupMembership[]
+  sessionLinks      SessionNPC[]
+
+  // Relations where this NPC is the quest giver
+  questsGiven Quest[]
+}
+
+enum NPCStatus {
+  ALIVE
+  DEAD
+  MISSING
+  UNKNOWN
+  HOSTILE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NONBINARY
+}
+
+model NPCLocationPresence {
+  id         String   @id @default(uuid())
+  npc        NPC      @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  npcId      String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  locationId String
+  note       String?
+
+  @@unique([npcId, locationId])
+}
+
+model NPCGroupMembership {
+  id         String  @id @default(uuid())
+  npc        NPC     @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  npcId      String
+  group      Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId    String
+  relation   String?
+  subfaction String?
+
+  @@unique([npcId, groupId])
+}
+
+// ── Player Characters ────────────────────────────────────────────────────────
+
+model PlayerCharacter {
+  id          String   @id @default(uuid())
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  name        String
+  gender      Gender?
+  age         Int?
+  species     String?
+  speciesId   String?
+  class       String?
+  appearance  String?
+  background  String?
+  personality String?
+  motivation  String?
+  bonds       String?
+  flaws       String?
+  gmNotes     String   @default("")
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ── Quests ────────────────────────────────────────────────────────────────────
+
+model Quest {
+  id          String      @id @default(uuid())
+  campaign    Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  title       String
+  description String      @default("")
+  giver       NPC?        @relation(fields: [giverId], references: [id], onDelete: SetNull)
+  giverId     String?
+  reward      String?
+  status      QuestStatus @default(UNDISCOVERED)
+  notes       String      @default("")
+  createdAt   DateTime    @default(now())
+
+  sessionLinks SessionQuest[]
+}
+
+enum QuestStatus {
+  ACTIVE
+  COMPLETED
+  FAILED
+  UNAVAILABLE
+  UNDISCOVERED
+}
+
+// ── Groups ───────────────────────────────────────────────────────────────────
+
+model Group {
+  id            String   @id @default(uuid())
+  campaign      Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId    String
+  name          String
+  type          String
+  aliases       String[] @default([])
+  description   String   @default("")
+  goals         String?
+  symbols       String?
+  gmNotes       String?
+  partyRelation String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members NPCGroupMembership[]
+}
+
+// ── Locations ────────────────────────────────────────────────────────────────
+
+model Location {
+  id                   String    @id @default(uuid())
+  campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId           String
+  name                 String
+  aliases              String[]  @default([])
+  type                 String
+  settlementPopulation Int?
+  biome                String?
+  parentLocation       Location? @relation("LocationHierarchy", fields: [parentLocationId], references: [id], onDelete: SetNull)
+  parentLocationId     String?
+  description          String    @default("")
+  image                String?
+  gmNotes              String?
+  mapMarkers           Json      @default("[]") // MapMarker[]
+  createdAt            DateTime  @default(now())
+
+  children      Location[]            @relation("LocationHierarchy")
+  npcPresences  NPCLocationPresence[]
+  sessionLinks  SessionLocation[]
+}
+
+// ── Location Types (global, not per-campaign) ────────────────────────────────
+
+model LocationType {
+  id           String   @id @default(uuid())
+  name         String
+  icon         String
+  category     String   // world, civilization, geographic, water, poi, travel
+  biomeOptions String[] @default([])
+  isSettlement Boolean  @default(false)
+  builtin      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model LocationTypeContainmentRule {
+  id           String @id @default(uuid())
+  parentTypeId String
+  childTypeId  String
+
+  @@unique([parentTypeId, childTypeId])
+}
+
+// ── Group Types (global) ─────────────────────────────────────────────────────
+
+model GroupType {
+  id          String   @id @default(uuid())
+  name        String
+  icon        String   @default("groups")
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+// ── Species (global) ─────────────────────────────────────────────────────────
+
+model Species {
+  id          String   @id @default(uuid())
+  name        String
+  pluralName  String?
+  type        String   // humanoid, beast, undead, etc.
+  size        String   // tiny, small, medium, large, huge, gargantuan
+  description String?
+  traits      String[] @default([])
+  image       String?
+  createdAt   DateTime @default(now())
+}
+
+// ── Social Relations ─────────────────────────────────────────────────────────
+
+model Relation {
+  id             String   @id @default(uuid())
+  campaign       Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId     String
+  fromEntityType String   // npc, character, group
+  fromEntityId   String
+  toEntityType   String   // npc, character, group
+  toEntityId     String
+  friendliness   Int      @default(0) // -80, -40, 0, 40, 80
+  note           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([campaignId, fromEntityType, fromEntityId, toEntityType, toEntityId])
+}
