@@ -10,7 +10,7 @@ const GRAPHQL_WS_URL = import.meta.env.VITE_GRAPHQL_WS_URL || 'ws://localhost:40
 const httpLink = createHttpLink({ uri: GRAPHQL_URL });
 
 const authLink = setContext((_, { headers }) => {
-  const token = sessionStorage.getItem('auth_token');
+  const token = localStorage.getItem('auth_token');
   return {
     headers: {
       ...headers,
@@ -23,7 +23,7 @@ const wsLink = new GraphQLWsLink(
   createClient({
     url: GRAPHQL_WS_URL,
     connectionParams: () => {
-      const token = sessionStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token');
       return token ? { authorization: `Bearer ${token}` } : {};
     },
   }),

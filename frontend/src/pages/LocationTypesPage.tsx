@@ -198,13 +198,13 @@ function LocationTypeDetail({
   const toggleContain = (childId: string) => {
     const rule = containRules.find((r) => r.parentTypeId === entry.id && r.childTypeId === childId);
     if (rule) deleteContain.mutate(rule.id);
-    else saveContain.mutate({ id: `cr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, parentTypeId: entry.id, childTypeId: childId });
+    else saveContain.mutate({ id: '', parentTypeId: entry.id, childTypeId: childId });
   };
 
   const toggleChildOf = (parentId: string) => {
     const rule = containRules.find((r) => r.parentTypeId === parentId && r.childTypeId === entry.id);
     if (rule) deleteContain.mutate(rule.id);
-    else saveContain.mutate({ id: `cr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, parentTypeId: parentId, childTypeId: entry.id });
+    else saveContain.mutate({ id: '', parentTypeId: parentId, childTypeId: entry.id });
   };
 
   // Active relations
@@ -360,10 +360,9 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
 
   const handleCreate = () => {
     if (!name.trim()) return;
-    const id = `lt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     saveType.mutate(
-      { id, name: name.trim(), icon, category: cat, biomeOptions: [], isSettlement: false, createdAt: new Date().toISOString() },
-      { onSuccess: () => onCreated(id) },
+      { id: '', name: name.trim(), icon, category: cat, biomeOptions: [], isSettlement: false, createdAt: new Date().toISOString() },
+      { onSuccess: () => onCreated('') },
     );
   };
 
@@ -511,7 +510,7 @@ export default function LocationTypesPage() {
   const { data: types,        isLoading: loadingTypes }   = useLocationTypes(campaignId);
   const { data: containRules, isLoading: loadingContain } = useContainmentRules();
 
-  const saveType    = useSaveLocationType();
+  const saveType    = useSaveLocationType(campaignId ?? '');
   const deleteType  = useDeleteLocationType();
   const saveContain = useSaveContainmentRule();
   const delContain  = useDeleteContainmentRule();

@@ -39,8 +39,9 @@ export const campaignResolvers = {
       return { ...campaign, myRole: 'GM' };
     },
 
-    updateCampaign: async (_: unknown, args: { id: string; title?: string; description?: string; archivedAt?: string }, { prisma }: Context) => {
-      return prisma.campaign.update({
+    updateCampaign: async (_: unknown, args: { id: string; title?: string; description?: string; archivedAt?: string }, { prisma, user }: Context) => {
+      if (!user) throw new Error('Not authenticated');
+      const campaign = await prisma.campaign.update({
         where: { id: args.id },
         data: {
           ...(args.title !== undefined && { title: args.title }),
@@ -48,6 +49,10 @@ export const campaignResolvers = {
           ...(args.archivedAt !== undefined && { archivedAt: args.archivedAt ? new Date(args.archivedAt) : null }),
         },
       });
+      const member = await prisma.campaignMember.findUnique({
+        where: { campaignId_userId: { campaignId: args.id, userId: user.id } },
+      });
+      return { ...campaign, myRole: member?.role ?? 'PLAYER' };
     },
 
     saveCharacter: async (

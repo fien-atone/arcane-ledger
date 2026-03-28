@@ -99,9 +99,7 @@ export const useCampaign = (id: string) => {
 };
 
 export const useSaveCampaign = () => {
-  const [updateCampaign, { loading }] = useMutation(UPDATE_CAMPAIGN, {
-    refetchQueries: [{ query: CAMPAIGNS_QUERY }],
-  });
+  const [updateCampaign, { loading }] = useMutation(UPDATE_CAMPAIGN);
 
   return {
     mutate: (
@@ -113,8 +111,12 @@ export const useSaveCampaign = () => {
           id: campaign.id,
           title: campaign.title,
           description: campaign.description,
-          archivedAt: campaign.archivedAt,
+          archivedAt: campaign.archivedAt ?? null,
         },
+        refetchQueries: [
+          { query: CAMPAIGN_QUERY, variables: { id: campaign.id } },
+        ],
+        awaitRefetchQueries: true,
       }).then(() => options?.onSuccess?.());
     },
     isPending: loading,

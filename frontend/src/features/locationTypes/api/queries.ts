@@ -70,14 +70,15 @@ export function useLocationTypes(campaignId?: string) {
   return { data: data?.locationTypes as LocationTypeEntry[] | undefined, isLoading: loading, isError: !!error, error };
 }
 
-export function useSaveLocationType() {
+export function useSaveLocationType(campaignId: string) {
   const [execute, { loading, error }] = useMutation(SAVE_LOCATION_TYPE);
   return {
     mutate: (entry: LocationTypeEntry, opts?: { onSuccess?: () => void }) => {
       const { id, createdAt, builtin, ...rest } = entry;
       execute({
-        variables: { id, ...rest },
-        refetchQueries: [{ query: LOCATION_TYPES_QUERY }],
+        variables: { campaignId, id: id || undefined, ...rest },
+        refetchQueries: ['LocationTypes'],
+        awaitRefetchQueries: true,
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,
@@ -92,10 +93,8 @@ export function useDeleteLocationType() {
     mutate: (id: string, opts?: { onSuccess?: () => void }) => {
       execute({
         variables: { id },
-        refetchQueries: [
-          { query: LOCATION_TYPES_QUERY },
-          { query: CONTAINMENT_RULES_QUERY },
-        ],
+        refetchQueries: ['LocationTypes', 'ContainmentRules'],
+        awaitRefetchQueries: true,
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,
@@ -116,8 +115,9 @@ export function useSaveContainmentRule() {
   return {
     mutate: (rule: LocationTypeContainmentRule, opts?: { onSuccess?: () => void }) => {
       execute({
-        variables: { id: rule.id, parentTypeId: rule.parentTypeId, childTypeId: rule.childTypeId },
-        refetchQueries: [{ query: CONTAINMENT_RULES_QUERY }],
+        variables: { id: rule.id || undefined, parentTypeId: rule.parentTypeId, childTypeId: rule.childTypeId },
+        refetchQueries: ['ContainmentRules'],
+        awaitRefetchQueries: true,
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,

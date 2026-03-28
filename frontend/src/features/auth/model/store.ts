@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (data?.login) {
             const { token, user } = data.login;
-            sessionStorage.setItem('auth_token', token);
+            localStorage.setItem('auth_token', token);
 
             set({
               user: {
@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        sessionStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_token');
         apolloClient.clearStore();
         set({ user: null });
       },
