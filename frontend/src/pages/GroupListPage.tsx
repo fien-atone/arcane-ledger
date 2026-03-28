@@ -4,7 +4,7 @@ import { useGroups } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
-import { RichContent } from '@/shared/ui';
+import { RichContent, EmptyState } from '@/shared/ui';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import type { Group } from '@/entities/group';
 import type { GroupTypeEntry } from '@/entities/groupType';
@@ -155,10 +155,7 @@ export default function GroupListPage() {
 
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
               {(!groups || groups.length === 0) ? (
-                <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
-                  <span className="material-symbols-outlined text-on-surface-variant/20 text-5xl">groups</span>
-                  <p className="font-headline text-lg text-on-surface-variant">No groups found.</p>
-                </div>
+                <EmptyState icon="groups" title="No groups found." />
               ) : groups.map((g) => {
                 const tc = resolveType(g.type, groupTypes);
                 const isSelected = selected?.id === g.id;

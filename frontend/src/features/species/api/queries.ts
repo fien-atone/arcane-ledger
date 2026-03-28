@@ -5,7 +5,7 @@ import type { Species } from '@/entities/species';
 const SPECIES_QUERY = gql`
   query Species($campaignId: ID!) {
     species(campaignId: $campaignId) {
-      id campaignId name pluralName type size description traits image
+      id campaignId name pluralName type size description traits
     }
   }
 `;
@@ -13,13 +13,13 @@ const SPECIES_QUERY = gql`
 const SAVE_SPECIES = gql`
   mutation SaveSpecies(
     $campaignId: ID!, $id: ID, $name: String!, $pluralName: String, $type: String!,
-    $size: String!, $description: String, $traits: [String!], $image: String
+    $size: String!, $description: String, $traits: [String!]
   ) {
     saveSpecies(
       campaignId: $campaignId, id: $id, name: $name, pluralName: $pluralName, type: $type,
-      size: $size, description: $description, traits: $traits, image: $image
+      size: $size, description: $description, traits: $traits
     ) {
-      id campaignId name pluralName type size description traits image
+      id campaignId name pluralName type size description traits
     }
   }
 `;

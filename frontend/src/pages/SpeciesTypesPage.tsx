@@ -1,46 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSpeciesTypes, useSaveSpeciesType, useDeleteSpeciesType } from '@/features/speciesTypes/api';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, IconPicker, EmptyState } from '@/shared/ui';
 import type { SpeciesTypeEntry } from '@/entities/speciesType';
 
-// ── Icon picker (same as GroupTypes) ─────────────────────────────────────────
-const ICONS = [
-  'blur_on', 'person', 'group', 'pets', 'bug_report', 'forest', 'waves', 'local_fire_department',
-  'auto_awesome', 'dark_mode', 'light_mode', 'psychology', 'skull', 'spa', 'energy_savings_leaf',
-  'thunderstorm', 'water_drop', 'air', 'public', 'diamond', 'science', 'biotech',
-  'coronavirus', 'egg', 'cruelty_free', 'hive', 'nature', 'grass', 'volcano',
-  'castle', 'flight', 'sailing', 'anchor', 'shield', 'military_tech',
-];
-
-function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div>
-      <button type="button" onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-3 py-2.5 bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 rounded-sm transition-colors text-left">
-        <div className="w-8 h-8 flex items-center justify-center bg-surface-container border border-outline-variant/20 rounded-sm">
-          <span className="material-symbols-outlined text-[20px] text-on-surface-variant">{value || 'blur_on'}</span>
-        </div>
-        <span className="flex-1 text-sm text-on-surface font-mono">{value || 'Choose…'}</span>
-        <span className="material-symbols-outlined text-[16px] text-on-surface-variant/40">{open ? 'expand_less' : 'expand_more'}</span>
-      </button>
-      {open && (
-        <div className="mt-1 border border-outline-variant/20 rounded-sm bg-surface-container-low p-2">
-          <div className="grid grid-cols-8 gap-0.5 max-h-40 overflow-y-auto">
-            {ICONS.map((ic) => (
-              <button key={ic} type="button" onClick={() => { onChange(ic); setOpen(false); }} title={ic}
-                className={`flex items-center justify-center p-1.5 rounded-sm transition-colors ${value === ic ? 'bg-primary/15 text-primary' : 'hover:bg-surface-container text-on-surface-variant'}`}>
-                <span className="material-symbols-outlined text-[18px]">{ic}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ── Drawer ───────────────────────────────────────────────────────────────────
 const inputCls = 'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
@@ -50,14 +14,14 @@ function SpeciesTypeDrawer({ open, onClose, campaignId, entry }: { open: boolean
   const save = useSaveSpeciesType(campaignId);
   const isNew = !entry;
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState('blur_on');
+  const [icon, setIcon] = useState('');
 
-  useState(() => {
+  useEffect(() => {
+    if (!open) return;
     if (entry) { setName(entry.name); setIcon(entry.icon); }
-    else { setName(''); setIcon('blur_on'); }
-  });
+    else { setName(''); setIcon(''); }
+  }, [open, entry]);
 
-  // Reset on open change
   if (!open) return null;
 
   const handleSave = () => {
@@ -149,6 +113,7 @@ export default function SpeciesTypesPage() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerKey, setDrawerKey] = useState(0);
   const [editingType, setEditingType] = useState<SpeciesTypeEntry | undefined>(undefined);
 
   const selected = types?.find((t) => t.id === selectedId) ?? types?.[0] ?? null;
@@ -161,7 +126,7 @@ export default function SpeciesTypesPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Species Types</h1>
             <p className="text-on-surface-variant text-sm mt-1">Define creature categories for this campaign.</p>
           </div>
-          <button onClick={() => { setEditingType(undefined); setDrawerOpen(true); }}
+          <button onClick={() => { setEditingType(undefined); setDrawerKey((k) => k + 1); setDrawerOpen(true); }}
             className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity">
             <span className="material-symbols-outlined text-[18px]">add</span>
             <span className="font-label text-xs uppercase tracking-widest">Add Type</span>
@@ -184,7 +149,7 @@ export default function SpeciesTypesPage() {
               </div>
             </div>
             <div className="flex-1 overflow-y-auto">
-              {(!types || types.length === 0) && <p className="text-xs text-on-surface-variant/40 italic p-6">No species types found.</p>}
+              {(!types || types.length === 0) && <EmptyState icon="category" title="No species types found." />}
               {types?.map((t) => (
                 <button key={t.id} onClick={() => setSelectedId(t.id)}
                   className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
@@ -219,7 +184,7 @@ export default function SpeciesTypesPage() {
         </div>
       )}
 
-      <SpeciesTypeDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} campaignId={campaignId ?? ''} entry={editingType} />
+      <SpeciesTypeDrawer key={editingType?.id ?? `new-${drawerKey}`} open={drawerOpen} onClose={() => setDrawerOpen(false)} campaignId={campaignId ?? ''} entry={editingType} />
     </main>
   );
 }

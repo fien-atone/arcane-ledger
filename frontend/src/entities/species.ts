@@ -9,6 +9,5 @@ export interface Species {
   size: SpeciesSize;
   description?: string;
   traits?: string[];
-  image?: string;
   createdAt: string;
 }

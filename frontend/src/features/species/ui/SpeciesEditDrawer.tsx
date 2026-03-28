@@ -68,7 +68,6 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
       size,
       description: species?.description,
       traits: traits.length > 0 ? traits : undefined,
-      image: species?.image,
       createdAt: species?.createdAt ?? new Date().toISOString(),
     };
     save.mutate(record, { onSuccess: onClose });

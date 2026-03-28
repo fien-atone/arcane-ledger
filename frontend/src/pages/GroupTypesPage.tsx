@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useGroupTypes, useDeleteGroupType, useSaveGroupType } from '@/features/groupTypes/api';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import { GroupTypeEditDrawer } from '@/features/groupTypes/ui';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, EmptyState } from '@/shared/ui';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 export default function GroupTypesPage() {
@@ -84,7 +84,7 @@ export default function GroupTypesPage() {
             </div>
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
               {(!groupTypes || groupTypes.length === 0) ? (
-                <p className="text-xs text-on-surface-variant/40 italic p-6">No group types found.</p>
+                <EmptyState icon="category" title="No group types found." />
               ) : groupTypes.map((t) => (
                   <button
                     key={t.id}
