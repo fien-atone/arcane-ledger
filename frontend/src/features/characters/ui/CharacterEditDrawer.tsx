@@ -26,7 +26,7 @@ const labelCls =
 
 export function CharacterEditDrawer({ open, onClose, campaignId, character }: Props) {
   const save = useSaveCharacter();
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId);
   const isNew = !character;
 
   const [name, setName] = useState('');

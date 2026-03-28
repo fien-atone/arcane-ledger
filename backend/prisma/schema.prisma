@@ -36,6 +36,7 @@ model Campaign {
   quests     Quest[]
   groups     Group[]
   groupTypes GroupType[]
+  species    Species[]
   locations  Location[]
   relations  Relation[]
   characters PlayerCharacter[]
@@ -304,6 +305,8 @@ model GroupType {
 
 model Species {
   id          String   @id @default(uuid())
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
   name        String
   pluralName  String?
   type        String   // humanoid, beast, undead, etc.

@@ -11,7 +11,7 @@ export default function CharacterDetailPage() {
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
   const { data: characters, isLoading, isError } = useParty(campaignId ?? '');
   const character = characters?.find((c) => c.id === charId);
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId ?? '');
   const saveCharacter = useSaveCharacter();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [lightbox, setLightbox] = useState(false);

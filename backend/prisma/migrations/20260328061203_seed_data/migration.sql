@@ -31,19 +31,9 @@ INSERT INTO "LocationType" (id, name, icon, category, "biomeOptions", "isSettlem
   ('route','Route','route','travel',ARRAY['road','trade_route','river_route','sea_lane','mountain_pass','tunnel'],false,true,NOW())
 ON CONFLICT (id) DO NOTHING;
 
+-- Group Types
 
 -- Species
-INSERT INTO "Species" (id, name, "pluralName", type, size, "createdAt") VALUES
-  ('species-human','Human','Humans','humanoid','medium',NOW()),
-  ('species-elf','Elf','Elves','humanoid','medium',NOW()),
-  ('species-dwarf','Dwarf','Dwarves','humanoid','medium',NOW()),
-  ('species-halfling','Halfling','Halflings','humanoid','small',NOW()),
-  ('species-gnome','Gnome','Gnomes','humanoid','small',NOW()),
-  ('species-orc','Orc','Orcs','humanoid','medium',NOW()),
-  ('species-goblin','Goblin','Goblins','humanoid','small',NOW()),
-  ('species-tiefling','Tiefling','Tieflings','humanoid','medium',NOW()),
-  ('species-dragonborn','Dragonborn','Dragonborn','humanoid','medium',NOW())
-ON CONFLICT (id) DO NOTHING;
 
 -- Test Campaign: Drakkenheim
 INSERT INTO "Campaign" (id, title, description, "createdAt") VALUES
@@ -63,6 +53,19 @@ INSERT INTO "GroupType" (id, "campaignId", name, icon, description, "createdAt")
   ('military','campaign-drakkenheim','Military / Order','military_tech','Armed forces and orders.',NOW()),
   ('academy','campaign-drakkenheim','Academy','school','Institutions of learning.',NOW()),
   ('secret','campaign-drakkenheim','Secret Society','visibility_off','Hidden organisations.',NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Species
+INSERT INTO "Species" (id, "campaignId", name, "pluralName", type, size, "createdAt") VALUES
+  ('species-human','campaign-drakkenheim','Human','Humans','humanoid','medium',NOW()),
+  ('species-elf','campaign-drakkenheim','Elf','Elves','humanoid','medium',NOW()),
+  ('species-dwarf','campaign-drakkenheim','Dwarf','Dwarves','humanoid','medium',NOW()),
+  ('species-halfling','campaign-drakkenheim','Halfling','Halflings','humanoid','small',NOW()),
+  ('species-gnome','campaign-drakkenheim','Gnome','Gnomes','humanoid','small',NOW()),
+  ('species-orc','campaign-drakkenheim','Orc','Orcs','humanoid','medium',NOW()),
+  ('species-goblin','campaign-drakkenheim','Goblin','Goblins','humanoid','small',NOW()),
+  ('species-tiefling','campaign-drakkenheim','Tiefling','Tieflings','humanoid','medium',NOW()),
+  ('species-dragonborn','campaign-drakkenheim','Dragonborn','Dragonborn','humanoid','medium',NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- Groups

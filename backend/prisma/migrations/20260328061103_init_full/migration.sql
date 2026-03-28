@@ -242,6 +242,7 @@ CREATE TABLE "GroupType" (
 -- CreateTable
 CREATE TABLE "Species" (
     "id" TEXT NOT NULL,
+    "campaignId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "pluralName" TEXT,
     "type" TEXT NOT NULL,
@@ -353,6 +354,9 @@ ALTER TABLE "Location" ADD CONSTRAINT "Location_parentLocationId_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "GroupType" ADD CONSTRAINT "GroupType_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Species" ADD CONSTRAINT "Species_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Relation" ADD CONSTRAINT "Relation_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;

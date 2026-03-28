@@ -48,7 +48,7 @@ function SectionHeader({ title }: { title: string }) {
 function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
   const st = STATUS_STYLES[npc.status];
   const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId);
   const { data: allGroups } = useGroups(campaignId);
   const matchedSpecies = npc.species
@@ -194,7 +194,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
 export default function NpcListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const { data: npcs, isLoading, isError } = useNpcs(campaignId ?? '');
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId ?? '');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);

@@ -3,6 +3,7 @@ import type { Species } from '@/entities/species';
 export const MOCK_SPECIES: Species[] = [
   {
     id: 'species-human',
+    campaignId: '',
     name: 'Human',
     pluralName: 'Humans',
     type: 'humanoid',
@@ -14,6 +15,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-elf',
+    campaignId: '',
     name: 'Elf',
     pluralName: 'Elves',
     type: 'humanoid',
@@ -25,6 +27,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-dwarf',
+    campaignId: '',
     name: 'Dwarf',
     pluralName: 'Dwarves',
     type: 'humanoid',
@@ -36,6 +39,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-halfling',
+    campaignId: '',
     name: 'Halfling',
     pluralName: 'Halflings',
     type: 'humanoid',
@@ -47,6 +51,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-gnome',
+    campaignId: '',
     name: 'Gnome',
     pluralName: 'Gnomes',
     type: 'humanoid',
@@ -58,6 +63,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-half-elf',
+    campaignId: '',
     name: 'Half-Elf',
     pluralName: 'Half-Elves',
     type: 'humanoid',
@@ -69,6 +75,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-half-orc',
+    campaignId: '',
     name: 'Half-Orc',
     pluralName: 'Half-Orcs',
     type: 'humanoid',
@@ -80,6 +87,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-tiefling',
+    campaignId: '',
     name: 'Tiefling',
     pluralName: 'Tieflings',
     type: 'humanoid',
@@ -91,6 +99,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-dragonborn',
+    campaignId: '',
     name: 'Dragonborn',
     pluralName: 'Dragonborn',
     type: 'humanoid',
@@ -102,6 +111,7 @@ export const MOCK_SPECIES: Species[] = [
   },
   {
     id: 'species-goblin',
+    campaignId: '',
     name: 'Goblin',
     pluralName: 'Goblins',
     type: 'humanoid',

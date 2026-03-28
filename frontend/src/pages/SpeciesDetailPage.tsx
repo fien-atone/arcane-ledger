@@ -21,7 +21,7 @@ const SIZE_ORDER: SpeciesSize[] = ['tiny', 'small', 'medium', 'large', 'huge', '
 
 export default function SpeciesDetailPage() {
   const { id: campaignId, speciesId } = useParams<{ id: string; speciesId: string }>();
-  const { data: species, isLoading, isError } = useSpeciesById(speciesId);
+  const { data: species, isLoading, isError } = useSpeciesById(campaignId, speciesId);
   const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
@@ -124,7 +124,7 @@ export default function SpeciesDetailPage() {
         )}
       </div>
 
-      <SpeciesEditDrawer
+      <SpeciesEditDrawer campaignId={campaignId ?? ""}
         open={editOpen}
         onClose={() => setEditOpen(false)}
         species={species}

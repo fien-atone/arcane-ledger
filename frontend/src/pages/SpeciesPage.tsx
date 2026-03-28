@@ -35,8 +35,8 @@ const SIZE_ORDER: SpeciesSize[] = ['tiny', 'small', 'medium', 'large', 'huge', '
 
 
 export default function SpeciesPage() {
-  const { id: _campaignId } = useParams<{ id: string }>();
-  const { data: speciesList, isLoading } = useSpecies();
+  const { id: campaignId } = useParams<{ id: string }>();
+  const { data: speciesList, isLoading } = useSpecies(campaignId);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -146,7 +146,7 @@ export default function SpeciesPage() {
               <>
                 <SpeciesDetail species={selected} />
                 <Link
-                  to={`/campaigns/${_campaignId}/species/${selected.id}`}
+                  to={`/campaigns/${campaignId}/species/${selected.id}`}
                   className="absolute top-3 right-4 z-20 inline-flex items-center gap-1.5 px-3 py-2 bg-surface/80 backdrop-blur-sm border border-outline-variant/20 text-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
                 >
                   <span className="material-symbols-outlined text-[14px]">open_in_full</span>
@@ -162,7 +162,7 @@ export default function SpeciesPage() {
         </div>
       )}
 
-      <SpeciesEditDrawer
+      <SpeciesEditDrawer campaignId={campaignId ?? ""}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         species={editingSpecies}

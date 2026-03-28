@@ -40,16 +40,13 @@ const labelCls =
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Pass existing species to edit, undefined to create new */
+  campaignId: string;
   species?: Species;
 }
 
-function newId() {
-  return `species-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
 
-export function SpeciesEditDrawer({ open, onClose, species }: Props) {
-  const save = useSaveSpecies();
+export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props) {
+  const save = useSaveSpecies(campaignId);
   const isNew = !species;
 
   const [name, setName] = useState('');
@@ -76,7 +73,8 @@ export function SpeciesEditDrawer({ open, onClose, species }: Props) {
       .map((t) => t.trim())
       .filter(Boolean);
     const record: Species = {
-      id: species?.id ?? newId(),
+      id: species?.id ?? '',
+      campaignId,
       name: name.trim(),
       pluralName: pluralName.trim() || undefined,
       type,

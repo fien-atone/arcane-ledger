@@ -35,7 +35,7 @@ export default function NpcDetailPage() {
   const { data: npc, isLoading, isError } = useNpc(campaignId ?? '', npcId ?? '');
   const { data: groups } = useGroups(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
   const saveNpc = useSaveNpc();

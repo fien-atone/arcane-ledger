@@ -18,6 +18,7 @@ export type SpeciesSize = 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'garg
 
 export interface Species {
   id: string;
+  campaignId: string;
   name: string;
   pluralName?: string;
   type: SpeciesType;

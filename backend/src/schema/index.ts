@@ -224,6 +224,7 @@ export const typeDefs = `#graphql
 
   type Species {
     id: ID!
+    campaignId: ID!
     name: String!
     pluralName: String
     type: String!
@@ -292,7 +293,7 @@ export const typeDefs = `#graphql
     groupTypes(campaignId: ID!, search: String): [GroupType!]!
 
     # Species
-    species: [Species!]!
+    species(campaignId: ID!): [Species!]!
 
     # Relations
     relationsForEntity(campaignId: ID!, entityId: ID!): [Relation!]!
@@ -414,7 +415,7 @@ export const typeDefs = `#graphql
     deleteGroupType(id: ID!): Boolean!
 
     # Species
-    saveSpecies(id: ID, name: String!, pluralName: String, type: String!, size: String!, description: String, traits: [String!], image: String): Species!
+    saveSpecies(campaignId: ID!, id: ID, name: String!, pluralName: String, type: String!, size: String!, description: String, traits: [String!], image: String): Species!
     deleteSpecies(id: ID!): Boolean!
 
     # Characters

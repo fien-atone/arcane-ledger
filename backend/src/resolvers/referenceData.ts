@@ -17,8 +17,8 @@ export const referenceDataResolvers = {
         orderBy: { name: 'asc' },
       }),
 
-    species: (_: unknown, __: unknown, { prisma }: Context) =>
-      prisma.species.findMany(),
+    species: (_: unknown, { campaignId }: { campaignId: string }, { prisma }: Context) =>
+      prisma.species.findMany({ where: { campaignId }, orderBy: { name: 'asc' } }),
   },
 
   Mutation: {
@@ -99,7 +99,7 @@ export const referenceDataResolvers = {
 
     saveSpecies: async (
       _: unknown,
-      args: { id?: string; name: string; pluralName?: string; type: string; size: string; description?: string; traits?: string[]; image?: string },
+      args: { campaignId: string; id?: string; name: string; pluralName?: string; type: string; size: string; description?: string; traits?: string[]; image?: string },
       { prisma }: Context,
     ) => {
       const data = {
@@ -115,7 +115,7 @@ export const referenceDataResolvers = {
       if (args.id) {
         return prisma.species.update({ where: { id: args.id }, data });
       }
-      return prisma.species.create({ data });
+      return prisma.species.create({ data: { ...data, campaignId: args.campaignId } });
     },
 
     deleteSpecies: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {

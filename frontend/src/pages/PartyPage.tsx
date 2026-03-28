@@ -7,7 +7,7 @@ import type { PlayerCharacter } from '@/entities/character';
 
 function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaignId: string }) {
   const initials = char.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId);
   const matchedSpecies = char.speciesId || char.species
     ? allSpecies?.find((s) => s.id === char.speciesId || s.name.toLowerCase() === char.species?.toLowerCase())
     : undefined;
@@ -95,7 +95,7 @@ function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaign
 export default function PartyPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const { data: characters, isLoading, isError } = useParty(campaignId ?? '');
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [addOpen, setAddOpen] = useState(false);

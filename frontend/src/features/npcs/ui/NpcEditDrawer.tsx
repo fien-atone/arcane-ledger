@@ -44,7 +44,7 @@ const labelCls =
 
 export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   const save = useSaveNpc();
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId);
   const isEdit = !!npc;
 
   const statusOptions = useMemo<SelectOption<NpcStatus>[]>(
