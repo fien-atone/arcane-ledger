@@ -17,6 +17,15 @@ export const referenceDataResolvers = {
         orderBy: { name: 'asc' },
       }),
 
+    speciesTypes: (_: unknown, { campaignId, search }: { campaignId: string; search?: string }, { prisma }: Context) =>
+      prisma.speciesType.findMany({
+        where: {
+          campaignId,
+          ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
+        },
+        orderBy: { name: 'asc' },
+      }),
+
     species: (_: unknown, { campaignId }: { campaignId: string }, { prisma }: Context) =>
       prisma.species.findMany({ where: { campaignId }, orderBy: { name: 'asc' } }),
   },
@@ -94,6 +103,21 @@ export const referenceDataResolvers = {
 
     deleteGroupType: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {
       await prisma.groupType.delete({ where: { id } });
+      return true;
+    },
+
+    saveSpeciesType: async (
+      _: unknown,
+      args: { campaignId: string; id?: string; name: string; icon?: string; description?: string },
+      { prisma }: Context,
+    ) => {
+      const data = { name: args.name, icon: args.icon ?? 'blur_on', description: args.description ?? null };
+      if (args.id) return prisma.speciesType.update({ where: { id: args.id }, data });
+      return prisma.speciesType.create({ data: { ...data, campaignId: args.campaignId } });
+    },
+
+    deleteSpeciesType: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {
+      await prisma.speciesType.delete({ where: { id } });
       return true;
     },
 

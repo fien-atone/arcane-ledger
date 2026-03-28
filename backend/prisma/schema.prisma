@@ -35,8 +35,9 @@ model Campaign {
   npcs       NPC[]
   quests     Quest[]
   groups     Group[]
-  groupTypes GroupType[]
-  species    Species[]
+  groupTypes   GroupType[]
+  speciesTypes SpeciesType[]
+  species      Species[]
   locations  Location[]
   relations  Relation[]
   characters PlayerCharacter[]
@@ -314,6 +315,18 @@ model Species {
   description String?
   traits      String[] @default([])
   image       String?
+  createdAt   DateTime @default(now())
+}
+
+// ── Species Types (per-campaign) ─────────────────────────────────────────────
+
+model SpeciesType {
+  id          String   @id @default(uuid())
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  name        String
+  icon        String   @default("blur_on")
+  description String?
   createdAt   DateTime @default(now())
 }
 

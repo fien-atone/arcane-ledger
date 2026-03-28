@@ -24,6 +24,7 @@ const CharacterDetailPage = lazy(() => import('@/pages/CharacterDetailPage'));
 const SpeciesPage = lazy(() => import('@/pages/SpeciesPage'));
 const SpeciesDetailPage = lazy(() => import('@/pages/SpeciesDetailPage'));
 const GroupTypesPage = lazy(() => import('@/pages/GroupTypesPage'));
+const SpeciesTypesPage = lazy(() => import('@/pages/SpeciesTypesPage'));
 const LocationTypesPage = lazy(() => import('@/pages/LocationTypesPage'));
 
 const Fallback = () => (
@@ -76,6 +77,7 @@ export const router = createBrowserRouter(
             { path: 'characters/:charId', element: withSuspense(CharacterDetailPage) },
             { path: 'species', element: withSuspense(SpeciesPage) },
             { path: 'species/:speciesId', element: withSuspense(SpeciesDetailPage) },
+            { path: 'species-types', element: withSuspense(SpeciesTypesPage) },
             { path: 'group-types', element: withSuspense(GroupTypesPage) },
             { path: 'location-types', element: withSuspense(LocationTypesPage) },
           ],

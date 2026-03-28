@@ -3,9 +3,9 @@ import { useParams } from 'react-router-dom';
 import { useSpeciesById, useSaveSpecies } from '@/features/species/api';
 import { SpeciesEditDrawer } from '@/features/species/ui';
 import { BackLink, InlineRichField } from '@/shared/ui';
-import type { SpeciesSize, SpeciesType } from '@/entities/species';
+import type { SpeciesSize } from '@/entities/species';
 
-const TYPE_LABEL: Record<SpeciesType, string> = {
+const TYPE_LABEL: Record<string, string> = {
   humanoid: 'Humanoid', beast: 'Beast', undead: 'Undead', construct: 'Construct',
   fey: 'Fey', fiend: 'Fiend', celestial: 'Celestial', dragon: 'Dragon',
   elemental: 'Elemental', giant: 'Giant', monstrosity: 'Monstrosity',

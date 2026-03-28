@@ -43,7 +43,6 @@ INSERT INTO "CampaignMember" (id, "campaignId", "userId", role, "joinedAt") VALU
   (gen_random_uuid(), 'campaign-drakkenheim', 'user-gm', 'GM', NOW())
 ON CONFLICT ("campaignId", "userId") DO NOTHING;
 
--- Group Types
 INSERT INTO "GroupType" (id, "campaignId", name, icon, description, "createdAt") VALUES
   ('faction','campaign-drakkenheim','Faction','flag','Political or military powers.',NOW()),
   ('guild','campaign-drakkenheim','Guild','handshake','Professional organisations.',NOW()),
@@ -55,7 +54,6 @@ INSERT INTO "GroupType" (id, "campaignId", name, icon, description, "createdAt")
   ('secret','campaign-drakkenheim','Secret Society','visibility_off','Hidden organisations.',NOW())
 ON CONFLICT (id) DO NOTHING;
 
--- Species
 INSERT INTO "Species" (id, "campaignId", name, "pluralName", type, size, "createdAt") VALUES
   ('species-human','campaign-drakkenheim','Human','Humans','humanoid','medium',NOW()),
   ('species-elf','campaign-drakkenheim','Elf','Elves','humanoid','medium',NOW()),
@@ -66,6 +64,24 @@ INSERT INTO "Species" (id, "campaignId", name, "pluralName", type, size, "create
   ('species-goblin','campaign-drakkenheim','Goblin','Goblins','humanoid','small',NOW()),
   ('species-tiefling','campaign-drakkenheim','Tiefling','Tieflings','humanoid','medium',NOW()),
   ('species-dragonborn','campaign-drakkenheim','Dragonborn','Dragonborn','humanoid','medium',NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Species Types
+INSERT INTO "SpeciesType" (id, "campaignId", name, icon, "createdAt") VALUES
+  ('stype-humanoid', 'campaign-drakkenheim', 'Humanoid', 'person', NOW()),
+  ('stype-beast', 'campaign-drakkenheim', 'Beast', 'pets', NOW()),
+  ('stype-undead', 'campaign-drakkenheim', 'Undead', 'skull', NOW()),
+  ('stype-construct', 'campaign-drakkenheim', 'Construct', 'science', NOW()),
+  ('stype-fey', 'campaign-drakkenheim', 'Fey', 'spa', NOW()),
+  ('stype-fiend', 'campaign-drakkenheim', 'Fiend', 'local_fire_department', NOW()),
+  ('stype-celestial', 'campaign-drakkenheim', 'Celestial', 'auto_awesome', NOW()),
+  ('stype-dragon', 'campaign-drakkenheim', 'Dragon', 'diamond', NOW()),
+  ('stype-elemental', 'campaign-drakkenheim', 'Elemental', 'thunderstorm', NOW()),
+  ('stype-giant', 'campaign-drakkenheim', 'Giant', 'castle', NOW()),
+  ('stype-monstrosity', 'campaign-drakkenheim', 'Monstrosity', 'bug_report', NOW()),
+  ('stype-plant', 'campaign-drakkenheim', 'Plant', 'energy_savings_leaf', NOW()),
+  ('stype-ooze', 'campaign-drakkenheim', 'Ooze', 'water_drop', NOW()),
+  ('stype-aberration', 'campaign-drakkenheim', 'Aberration', 'psychology', NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- Groups

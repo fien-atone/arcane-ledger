@@ -1,25 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSaveSpecies } from '../api';
+import { useSpeciesTypes } from '@/features/speciesTypes/api';
 import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
-import type { Species, SpeciesType, SpeciesSize } from '@/entities/species';
-
-const TYPE_OPTIONS: SelectOption<SpeciesType>[] = [
-  { value: 'humanoid',    label: 'Humanoid' },
-  { value: 'beast',       label: 'Beast' },
-  { value: 'undead',      label: 'Undead' },
-  { value: 'construct',   label: 'Construct' },
-  { value: 'fey',         label: 'Fey' },
-  { value: 'fiend',       label: 'Fiend' },
-  { value: 'celestial',   label: 'Celestial' },
-  { value: 'dragon',      label: 'Dragon' },
-  { value: 'elemental',   label: 'Elemental' },
-  { value: 'giant',       label: 'Giant' },
-  { value: 'monstrosity', label: 'Monstrosity' },
-  { value: 'plant',       label: 'Plant' },
-  { value: 'ooze',        label: 'Ooze' },
-  { value: 'aberration',  label: 'Aberration' },
-];
+import type { Species, SpeciesSize } from '@/entities/species';
 
 const SIZE_OPTIONS: SelectOption<SpeciesSize>[] = [
   { value: 'tiny',       label: 'Tiny' },
@@ -46,11 +30,17 @@ interface Props {
 
 export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props) {
   const save = useSaveSpecies(campaignId);
+  const { data: speciesTypes } = useSpeciesTypes(campaignId);
   const isNew = !species;
+
+  const typeOptions = useMemo<SelectOption<string>[]>(
+    () => (speciesTypes ?? []).map((t) => ({ value: t.id, label: t.name, icon: t.icon })),
+    [speciesTypes],
+  );
 
   const [name, setName] = useState('');
   const [pluralName, setPluralName] = useState('');
-  const [type, setType] = useState<SpeciesType>('humanoid');
+  const [type, setType] = useState<string>('humanoid');
   const [size, setSize] = useState<SpeciesSize>('medium');
   const [traitsRaw, setTraitsRaw] = useState('');
 
@@ -140,11 +130,11 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Type</label>
-              <Select
+              <Select<string>
                 value={type}
-                options={TYPE_OPTIONS}
-                nullable={false}
-                onChange={(v) => setType((v || 'humanoid') as SpeciesType)}
+                options={typeOptions}
+                searchable
+                onChange={(v) => setType(v || 'humanoid')}
               />
             </div>
             <div>

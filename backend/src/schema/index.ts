@@ -220,6 +220,16 @@ export const typeDefs = `#graphql
     description: String
   }
 
+  # ── Species Types ─────────────────────────────────────────
+
+  type SpeciesType {
+    id: ID!
+    campaignId: ID!
+    name: String!
+    icon: String!
+    description: String
+  }
+
   # ── Species ────────────────────────────────────────────────
 
   type Species {
@@ -291,6 +301,9 @@ export const typeDefs = `#graphql
 
     # Group Types
     groupTypes(campaignId: ID!, search: String): [GroupType!]!
+
+    # Species Types
+    speciesTypes(campaignId: ID!, search: String): [SpeciesType!]!
 
     # Species
     species(campaignId: ID!): [Species!]!
@@ -413,6 +426,10 @@ export const typeDefs = `#graphql
     # Group Types
     saveGroupType(campaignId: ID!, id: ID, name: String!, icon: String, description: String): GroupType!
     deleteGroupType(id: ID!): Boolean!
+
+    # Species Types
+    saveSpeciesType(campaignId: ID!, id: ID, name: String!, icon: String, description: String): SpeciesType!
+    deleteSpeciesType(id: ID!): Boolean!
 
     # Species
     saveSpecies(campaignId: ID!, id: ID, name: String!, pluralName: String, type: String!, size: String!, description: String, traits: [String!], image: String): Species!

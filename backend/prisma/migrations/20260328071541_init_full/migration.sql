@@ -256,6 +256,18 @@ CREATE TABLE "Species" (
 );
 
 -- CreateTable
+CREATE TABLE "SpeciesType" (
+    "id" TEXT NOT NULL,
+    "campaignId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "icon" TEXT NOT NULL DEFAULT 'blur_on',
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SpeciesType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Relation" (
     "id" TEXT NOT NULL,
     "campaignId" TEXT NOT NULL,
@@ -357,6 +369,9 @@ ALTER TABLE "GroupType" ADD CONSTRAINT "GroupType_campaignId_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "Species" ADD CONSTRAINT "Species_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SpeciesType" ADD CONSTRAINT "SpeciesType_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Relation" ADD CONSTRAINT "Relation_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
