@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSpeciesById } from '@/features/species/api';
+import { useSpeciesById, useSaveSpecies } from '@/features/species/api';
 import { SpeciesEditDrawer } from '@/features/species/ui';
-import { BackLink } from '@/shared/ui';
+import { BackLink, InlineRichField } from '@/shared/ui';
 import type { SpeciesSize, SpeciesType } from '@/entities/species';
 
 const TYPE_LABEL: Record<SpeciesType, string> = {
@@ -22,7 +22,13 @@ const SIZE_ORDER: SpeciesSize[] = ['tiny', 'small', 'medium', 'large', 'huge', '
 export default function SpeciesDetailPage() {
   const { id: campaignId, speciesId } = useParams<{ id: string; speciesId: string }>();
   const { data: species, isLoading, isError } = useSpeciesById(campaignId, speciesId);
+  const saveSpecies = useSaveSpecies(campaignId ?? '');
   const [editOpen, setEditOpen] = useState(false);
+
+  const saveDescription = useCallback((html: string) => {
+    if (!species) return;
+    saveSpecies.mutate({ ...species, description: html || undefined });
+  }, [species, saveSpecies]);
 
   if (isLoading) {
     return (
@@ -92,16 +98,15 @@ export default function SpeciesDetailPage() {
           </div>
         </div>
 
-        {/* Description */}
-        {species.description && (
-          <section className="mb-10">
-            <div className="flex items-center gap-4 mb-4">
-              <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Overview</h2>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <p className="text-on-surface-variant leading-loose text-base">{species.description}</p>
-          </section>
-        )}
+        {/* Description — edit in place */}
+        <div className="mb-10">
+          <InlineRichField
+            label="Overview"
+            value={species.description}
+            onSave={saveDescription}
+            placeholder="Describe this species…"
+          />
+        </div>
 
         {/* Traits */}
         {species.traits && species.traits.length > 0 && (

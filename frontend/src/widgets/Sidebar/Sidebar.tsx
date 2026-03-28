@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
+import { useCampaign } from '@/features/campaigns/api/queries';
 import { useAuthStore } from '@/features/auth';
 import { ChangelogDrawer, getHasUnread } from '@/widgets/Changelog/ChangelogDrawer';
 
@@ -47,6 +48,7 @@ export function Sidebar() {
   const navigate = useNavigate();
   const collapsed = useCampaignUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useCampaignUiStore((s) => s.toggleSidebar);
+  const { data: campaign } = useCampaign(id ?? '');
   const logout = useAuthStore((s) => s.logout);
 
   const [changelogOpen, setChangelogOpen] = useState(false);
@@ -79,8 +81,8 @@ export function Sidebar() {
             <span className="font-serif italic text-primary text-lg leading-tight block whitespace-nowrap">
               Arcane Ledger
             </span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/60 block whitespace-nowrap">
-              The Ledger of Fates
+            <span className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/60 block whitespace-nowrap truncate max-w-[180px]" title={campaign?.title}>
+              {campaign?.title ?? 'Campaign'}
             </span>
           </div>
         )}

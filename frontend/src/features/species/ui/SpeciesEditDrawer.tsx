@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSaveSpecies } from '../api';
 import { Select } from '@/shared/ui/Select';
-import { RichTextEditor } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Species, SpeciesType, SpeciesSize } from '@/entities/species';
 
@@ -53,7 +52,6 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
   const [pluralName, setPluralName] = useState('');
   const [type, setType] = useState<SpeciesType>('humanoid');
   const [size, setSize] = useState<SpeciesSize>('medium');
-  const [description, setDescription] = useState('');
   const [traitsRaw, setTraitsRaw] = useState('');
 
   useEffect(() => {
@@ -62,7 +60,6 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
     setPluralName(species?.pluralName ?? '');
     setType(species?.type ?? 'humanoid');
     setSize(species?.size ?? 'medium');
-    setDescription(species?.description ?? '');
     setTraitsRaw(species?.traits?.join(', ') ?? '');
   }, [open, species]);
 
@@ -79,7 +76,7 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
       pluralName: pluralName.trim() || undefined,
       type,
       size,
-      description: description.trim() || undefined,
+      description: species?.description,
       traits: traits.length > 0 ? traits : undefined,
       image: species?.image,
       createdAt: species?.createdAt ?? new Date().toISOString(),
@@ -159,12 +156,6 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
                 onChange={(v) => setSize((v || 'medium') as SpeciesSize)}
               />
             </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className={labelCls}>Description</label>
-            <RichTextEditor value={description} onChange={setDescription} placeholder="Describe this species…" minHeight="7rem" />
           </div>
 
           {/* Traits */}
