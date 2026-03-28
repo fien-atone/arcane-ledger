@@ -35,6 +35,7 @@ model Campaign {
   npcs       NPC[]
   quests     Quest[]
   groups     Group[]
+  groupTypes GroupType[]
   locations  Location[]
   relations  Relation[]
   characters PlayerCharacter[]
@@ -291,6 +292,8 @@ model LocationTypeContainmentRule {
 
 model GroupType {
   id          String   @id @default(uuid())
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
   name        String
   icon        String   @default("groups")
   description String?

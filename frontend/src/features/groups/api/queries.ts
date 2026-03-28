@@ -5,10 +5,10 @@ import type { Group } from '@/entities/group';
 // ── Queries ──────────────────────────────────────────────────────────────────
 
 const GROUPS_QUERY = gql`
-  query Groups($campaignId: ID!) {
-    groups(campaignId: $campaignId) {
+  query Groups($campaignId: ID!, $search: String, $type: String) {
+    groups(campaignId: $campaignId, search: $search, type: $type) {
       id campaignId name type aliases description goals symbols
-      gmNotes partyRelation createdAt updatedAt
+      gmNotes  createdAt updatedAt
       members { groupId relation subfaction }
     }
   }
@@ -18,7 +18,7 @@ const GROUP_QUERY = gql`
   query Group($campaignId: ID!, $id: ID!) {
     group(campaignId: $campaignId, id: $id) {
       id campaignId name type aliases description goals symbols
-      gmNotes partyRelation createdAt updatedAt
+      gmNotes  createdAt updatedAt
       members { groupId relation subfaction }
     }
   }
@@ -30,7 +30,7 @@ const SAVE_GROUP = gql`
   mutation SaveGroup($campaignId: ID!, $id: ID, $input: GroupInput!) {
     saveGroup(campaignId: $campaignId, id: $id, input: $input) {
       id campaignId name type aliases description goals symbols
-      gmNotes partyRelation createdAt updatedAt
+      gmNotes  createdAt updatedAt
     }
   }
 `;
@@ -43,9 +43,10 @@ const DELETE_GROUP = gql`
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
-export const useGroups = (campaignId: string) => {
+export const useGroups = (campaignId: string, opts?: { search?: string; type?: string }) => {
   const { data, loading, error } = useQuery<any>(GROUPS_QUERY, {
-    variables: { campaignId },
+    variables: { campaignId, search: opts?.search?.trim() || null, type: opts?.type || null },
+    fetchPolicy: 'cache-and-network',
   });
   return { data: data?.groups as Group[] | undefined, isLoading: loading, isError: !!error, error };
 };
@@ -62,10 +63,18 @@ export const useSaveGroup = () => {
   const [execute, { loading, error }] = useMutation(SAVE_GROUP);
   return {
     mutate: (group: Group, opts?: { onSuccess?: () => void }) => {
-      const { id, campaignId, createdAt, updatedAt, ...rest } = group;
+      const input = {
+        name: group.name,
+        type: group.type,
+        aliases: group.aliases,
+        description: group.description,
+        goals: group.goals,
+        symbols: group.symbols,
+        gmNotes: group.gmNotes,
+      };
       execute({
-        variables: { campaignId, id, input: rest },
-        refetchQueries: [{ query: GROUPS_QUERY, variables: { campaignId } }],
+        variables: { campaignId: group.campaignId, id: group.id || undefined, input },
+        refetchQueries: ['Groups'],
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,
@@ -83,7 +92,7 @@ export const useDeleteGroup = () => {
     ) => {
       execute({
         variables: { campaignId, id: groupId },
-        refetchQueries: [{ query: GROUPS_QUERY, variables: { campaignId } }],
+        refetchQueries: ['Groups'],
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,

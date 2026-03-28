@@ -4,38 +4,20 @@ import { useGroups } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
+import { RichContent } from '@/shared/ui';
+import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import type { Group } from '@/entities/group';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
-const RELATION_CONFIG: Record<string, { label: string; pill: string; dot: string; icon: string }> = {
-  allied:  { label: 'Allied',   pill: 'bg-secondary/10 text-secondary border border-secondary/20',                       dot: 'bg-secondary',            icon: 'handshake' },
-  neutral: { label: 'Neutral',  pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/20',     dot: 'bg-on-surface-variant/40', icon: 'remove' },
-  hostile: { label: 'Hostile',  pill: 'bg-primary/10 text-primary border border-primary/20',                             dot: 'bg-primary/60',            icon: 'warning' },
-  unknown: { label: 'Unknown',  pill: 'bg-surface-container text-on-surface-variant/60 border border-outline-variant/10', dot: 'bg-outline-variant',      icon: 'help' },
-};
-
-
-function resolveType(
-  typeId: string,
-  groupTypes: GroupTypeEntry[] | undefined,
-): { name: string; icon: string } {
+function resolveType(typeId: string, groupTypes: GroupTypeEntry[] | undefined): { name: string; icon: string } {
   const found = groupTypes?.find((t) => t.id === typeId);
   return found ? { name: found.name, icon: found.icon } : { name: typeId, icon: 'category' };
 }
 
-function GroupPreview({
-  group,
-  campaignId: _campaignId,
-  memberCount,
-  groupTypes,
-}: {
-  group: Group;
-  campaignId: string;
-  memberCount: number;
-  groupTypes: GroupTypeEntry[] | undefined;
+function GroupPreview({ group, memberCount, groupTypes }: {
+  group: Group; memberCount: number; groupTypes: GroupTypeEntry[] | undefined;
 }) {
   const tc = resolveType(group.type, groupTypes);
-  const rel = group.partyRelation ? (RELATION_CONFIG[group.partyRelation] ?? RELATION_CONFIG.unknown) : null;
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="px-8 py-6 flex flex-col gap-5">
@@ -45,12 +27,6 @@ function GroupPreview({
               <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
               {tc.name}
             </span>
-            {rel && (
-              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                <span className="material-symbols-outlined text-[13px]">{rel.icon}</span>
-                {rel.label}
-              </span>
-            )}
           </div>
           <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{group.name}</h2>
           {group.aliases.length > 0 && (
@@ -64,7 +40,7 @@ function GroupPreview({
               <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">About</h3>
               <div className="h-px flex-1 bg-outline-variant/20" />
             </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{group.description}</p>
+            <RichContent value={group.description} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
 
@@ -74,7 +50,7 @@ function GroupPreview({
               <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Goals</h3>
               <div className="h-px flex-1 bg-outline-variant/20" />
             </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed italic">{group.goals}</p>
+            <RichContent value={group.goals} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:italic" />
           </div>
         )}
 
@@ -91,34 +67,28 @@ function GroupPreview({
 
 export default function GroupListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
-  const { data: groups, isLoading, isError } = useGroups(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
-  const { data: groupTypes } = useGroupTypes();
+  const { data: groupTypes } = useGroupTypes(campaignId);
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [relationFilter] = useState<string>('all');
+  const debouncedSearch = useDebouncedValue(search);
+
+  const { data: groups, isLoading, isError } = useGroups(campaignId ?? '', {
+    search: debouncedSearch,
+    type: typeFilter === 'all' ? undefined : typeFilter,
+  });
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | undefined>(undefined);
   const [editOpen, setEditOpen] = useState(false);
 
-  const filtered = (groups ?? []).filter((g) => {
-    const matchesType = typeFilter === 'all' || g.type === typeFilter;
-    const matchesRelation = relationFilter === 'all' || (g.partyRelation ?? 'unknown') === relationFilter;
-    const matchesSearch =
-      !search ||
-      g.name.toLowerCase().includes(search.toLowerCase()) ||
-      g.description?.toLowerCase().includes(search.toLowerCase());
-    return matchesType && matchesRelation && matchesSearch;
-  });
-
-  const selected = groups?.find((g) => g.id === selectedId) ?? filtered[0] ?? null;
+  const selected = groups?.find((g) => g.id === selectedId) ?? groups?.[0] ?? null;
 
   const getMemberCount = (groupId: string) =>
     allNpcs?.filter((n) => n.groupMemberships.some((m) => m.groupId === groupId)).length ?? 0;
 
-  // Build dynamic type filter buttons: 'all' + one per groupType
   const typeFilterItems: Array<{ value: string; label: string }> = [
     { value: 'all', label: 'All' },
     ...(groupTypes ?? []).map((t) => ({ value: t.id, label: t.name })),
@@ -142,7 +112,7 @@ export default function GroupListPage() {
         </div>
       </header>
 
-      {isLoading && (
+      {isLoading && !groups && (
         <div className="flex items-center gap-3 p-12 text-on-surface-variant">
           <span className="material-symbols-outlined animate-spin">progress_activity</span>
           Loading…
@@ -150,13 +120,12 @@ export default function GroupListPage() {
       )}
       {isError && <p className="text-tertiary text-sm p-12">Failed to load groups.</p>}
 
-      {!isLoading && !isError && (
+      {!isError && (groups || !isLoading) && (
         <div className="flex flex-1 overflow-hidden min-h-0">
 
           {/* Left panel */}
           <div className="w-[580px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
 
-            {/* Search + filters */}
             <div className="px-4 pt-4 pb-3 border-b border-outline-variant/10 flex-shrink-0 space-y-3">
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
@@ -169,42 +138,29 @@ export default function GroupListPage() {
                 />
               </div>
 
-              {/* Type filter */}
               <div className="flex flex-wrap gap-1.5">
-                {typeFilterItems.map(({ value, label }) => {
-                  const count = value === 'all' ? (groups?.length ?? 0) : (groups?.filter((g) => g.type === value).length ?? 0);
-                  return (
-                    <button
-                      key={value}
-                      onClick={() => setTypeFilter(value)}
-                      className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all flex items-center gap-1 ${
-                        typeFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                      }`}
-                    >
-                      {label}
-                      {count > 0 && (
-                        <span className={`text-[8px] font-bold ${typeFilter === value ? 'text-on-primary/70' : 'text-on-surface-variant/40'}`}>
-                          {count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+                {typeFilterItems.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setTypeFilter(value)}
+                    className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
+                      typeFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-
             </div>
 
-            {/* List */}
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {filtered.length === 0 && (
+              {(!groups || groups.length === 0) ? (
                 <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
                   <span className="material-symbols-outlined text-on-surface-variant/20 text-5xl">groups</span>
                   <p className="font-headline text-lg text-on-surface-variant">No groups found.</p>
                 </div>
-              )}
-              {filtered.map((g) => {
+              ) : groups.map((g) => {
                 const tc = resolveType(g.type, groupTypes);
-                const rel = g.partyRelation ? (RELATION_CONFIG[g.partyRelation] ?? RELATION_CONFIG.unknown) : null;
                 const isSelected = selected?.id === g.id;
                 return (
                   <button
@@ -230,25 +186,10 @@ export default function GroupListPage() {
                         {tc.name}
                       </p>
                     </div>
-                    {rel && (
-                      <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${rel.pill}`}>
-                        {rel.label}
-                      </span>
-                    )}
                   </button>
                 );
               })}
             </div>
-
-            {groups && groups.length > 0 && (
-              <div className="px-4 py-2 border-t border-outline-variant/10 flex-shrink-0">
-                <p className="text-[10px] text-on-surface-variant/40">
-                  <span className="text-primary font-bold">{filtered.length}</span>
-                  <span className="text-on-surface-variant/30"> of </span>
-                  <span className="text-primary font-bold">{groups.length}</span> groups
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Right panel */}
@@ -257,7 +198,6 @@ export default function GroupListPage() {
               <>
                 <GroupPreview
                   group={selected}
-                  campaignId={campaignId ?? ''}
                   memberCount={getMemberCount(selected.id)}
                   groupTypes={groupTypes}
                 />

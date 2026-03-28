@@ -27,12 +27,11 @@ interface AuthState {
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  getCampaignRole: (campaignId: string) => 'gm' | 'player';
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
 
       login: async (email, password) => {
@@ -70,11 +69,6 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null });
       },
 
-      getCampaignRole: (_campaignId) => {
-        const { user } = get();
-        if (!user) return 'player';
-        return user.systemRole === 'admin' || user.email === 'gm@arcaneledger.app' ? 'gm' : 'player';
-      },
     }),
     { name: 'arcane-auth' },
   ),

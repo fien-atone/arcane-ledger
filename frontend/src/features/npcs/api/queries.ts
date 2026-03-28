@@ -48,13 +48,24 @@ const DELETE_NPC = gql`
   }
 `;
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Normalise GraphQL enum fields (UPPER_CASE) to the frontend's lowercase types. */
+function mapNpc(raw: any): NPC {
+  return {
+    ...raw,
+    status: raw.status?.toLowerCase(),
+    gender: raw.gender?.toLowerCase(),
+  };
+}
+
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
 export const useNpcs = (campaignId: string) => {
   const { data, loading, error } = useQuery<any>(NPCS_QUERY, {
     variables: { campaignId },
   });
-  return { data: data?.npcs as NPC[] | undefined, isLoading: loading, isError: !!error, error };
+  return { data: data?.npcs?.map(mapNpc) as NPC[] | undefined, isLoading: loading, isError: !!error, error };
 };
 
 export const useNpc = (campaignId: string, npcId: string) => {
@@ -62,17 +73,32 @@ export const useNpc = (campaignId: string, npcId: string) => {
     variables: { campaignId, id: npcId },
     skip: !npcId,
   });
-  return { data: data?.npc as NPC | undefined, isLoading: loading, isError: !!error, error };
+  return { data: data?.npc ? mapNpc(data.npc) as NPC : undefined, isLoading: loading, isError: !!error, error };
 };
 
 export const useSaveNpc = () => {
   const [execute, { loading, error }] = useMutation(SAVE_NPC);
   return {
     mutate: (npc: NPC, opts?: { onSuccess?: () => void }) => {
-      const { id, campaignId, createdAt, updatedAt, ...rest } = npc;
+      const input = {
+        name: npc.name,
+        aliases: npc.aliases,
+        status: npc.status?.toUpperCase(),
+        gender: npc.gender?.toUpperCase() || undefined,
+        age: npc.age,
+        species: npc.species,
+        speciesId: npc.speciesId,
+        appearance: npc.appearance,
+        personality: npc.personality,
+        description: npc.description,
+        motivation: npc.motivation,
+        flaws: npc.flaws,
+        gmNotes: npc.gmNotes,
+        image: npc.image,
+      };
       execute({
-        variables: { campaignId, id, input: rest },
-        refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId } }],
+        variables: { campaignId: npc.campaignId, id: npc.id, input },
+        refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId: npc.campaignId } }],
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,

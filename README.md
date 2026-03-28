@@ -52,8 +52,7 @@ docker compose up postgres -d
 cd backend
 npm install
 cp .env.example .env          # adjust if needed
-npx prisma migrate dev        # create tables
-npx tsx src/seed.ts            # seed: user, location types, species
+npx prisma migrate dev        # create tables + seed data
 npx tsx src/index.ts           # start API on :4000
 ```
 

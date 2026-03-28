@@ -1,19 +1,12 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useGroup, useDeleteGroup } from '@/features/groups/api';
+import { useGroup, useSaveGroup, useDeleteGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
-import { SocialRelationsSection } from '@/features/relations/ui';
-import { BackLink, GmNotesSection, RichContent } from '@/shared/ui';
+import { BackLink, InlineRichField } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
-
-const RELATION_CONFIG: Record<string, { label: string; pill: string; icon: string }> = {
-  allied:  { label: 'Allied',   pill: 'bg-secondary/10 text-secondary border border-secondary/20',                        icon: 'handshake' },
-  neutral: { label: 'Neutral',  pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/20',      icon: 'remove' },
-  hostile: { label: 'Hostile',  pill: 'bg-primary/10 text-primary border border-primary/20',                              icon: 'warning' },
-  unknown: { label: 'Unknown',  pill: 'bg-surface-container text-on-surface-variant/60 border border-outline-variant/10', icon: 'help' },
-};
+import type { Group } from '@/entities/group';
 
 const STATUS_DOT: Record<NpcStatus, string> = {
   alive:   'bg-secondary',
@@ -58,37 +51,23 @@ function AddMemberPanel({ onClose, groupId, nonMembers }: AddMemberPanelProps) {
     <>
       <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 z-70 w-full max-w-md flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
-
-        {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="font-headline text-xl font-bold text-on-surface">Add Member</h2>
-            <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
-              Select an NPC to add to this group
-            </p>
+            <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">Select an NPC to add</p>
           </div>
           <button onClick={onClose} className="p-2 text-on-surface-variant hover:text-on-surface transition-colors">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
-
-        {/* Search */}
         <div className="px-8 pt-5 pb-3 flex-shrink-0">
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
-            <input
-              type="text"
-              placeholder="Search NPCs…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoFocus
-              className="w-full pl-8 pr-3 py-2 bg-surface-container border border-outline-variant/20 focus:border-primary rounded-sm text-on-surface text-sm placeholder:text-on-surface-variant/30 focus:ring-0 focus:outline-none transition-colors"
-            />
+            <input type="text" placeholder="Search NPCs…" value={search} onChange={(e) => setSearch(e.target.value)} autoFocus
+              className="w-full pl-8 pr-3 py-2 bg-surface-container border border-outline-variant/20 focus:border-primary rounded-sm text-on-surface text-sm placeholder:text-on-surface-variant/30 focus:ring-0 focus:outline-none transition-colors" />
           </div>
         </div>
-
-        {/* NPC list */}
-        <div className="flex-1 overflow-y-auto px-8 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
+        <div className="flex-1 overflow-y-auto px-8">
           {filtered.length === 0 ? (
             <p className="text-sm text-on-surface-variant/40 italic py-6 text-center">
               {nonMembers.length === 0 ? 'All NPCs are already members.' : 'No NPCs found.'}
@@ -97,74 +76,39 @@ function AddMemberPanel({ onClose, groupId, nonMembers }: AddMemberPanelProps) {
             <div className="space-y-1 py-2">
               {filtered.map((npc) => {
                 const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-                const dot = STATUS_DOT[npc.status];
                 const isSelected = selectedNpc?.id === npc.id;
                 return (
-                  <button
-                    key={npc.id}
-                    type="button"
-                    onClick={() => setSelectedNpc(isSelected ? null : npc)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-sm border transition-all text-left ${
-                      isSelected
-                        ? 'bg-primary/8 border-primary/30'
-                        : 'bg-surface-container-low border-outline-variant/10 hover:bg-surface-container hover:border-outline-variant/30'
-                    }`}
-                  >
-                    <div className="relative flex-shrink-0">
-                      <div className={`w-9 h-9 rounded-sm flex items-center justify-center border ${isSelected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
-                        <span className={`text-xs font-bold ${isSelected ? 'text-primary' : 'text-on-surface-variant/60'}`}>{initials}</span>
-                      </div>
-                      <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-surface-container-low ${dot}`} />
+                  <button key={npc.id} type="button" onClick={() => setSelectedNpc(isSelected ? null : npc)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-sm border transition-all text-left ${isSelected ? 'bg-primary/8 border-primary/30' : 'bg-surface-container-low border-outline-variant/10 hover:bg-surface-container'}`}>
+                    <div className="w-9 h-9 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-medium truncate ${isSelected ? 'text-primary' : 'text-on-surface'}`}>{npc.name}</p>
-                      {npc.species && (
-                        <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">{npc.species}</p>
-                      )}
+                      {npc.species && <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">{npc.species}</p>}
                     </div>
-                    {isSelected && (
-                      <span className="material-symbols-outlined text-primary text-[18px] flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        check_circle
-                      </span>
-                    )}
+                    {isSelected && <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>}
                   </button>
                 );
               })}
             </div>
           )}
         </div>
-
-        {/* Role field + footer */}
         <div className="px-8 py-5 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container-lowest space-y-4">
           {selectedNpc && (
             <div>
               <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5">
-                Role / Relation <span className="normal-case tracking-normal text-on-surface-variant/40 font-normal">optional</span>
+                Role <span className="normal-case tracking-normal text-on-surface-variant/40">(optional)</span>
               </label>
-              <input
-                type="text"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                placeholder="e.g. Leader, Spy, Recruit…"
-                className="w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
-              />
+              <input type="text" value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Leader, Spy…"
+                className="w-full bg-surface-container-low border border-outline-variant/25 focus:border-primary rounded-sm py-2 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30" />
             </div>
           )}
           <div className="flex items-center justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAdd}
-              disabled={!selectedNpc || saveNpc.isPending}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-            >
-              {saveNpc.isPending
-                ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                : <span className="material-symbols-outlined text-sm">person_add</span>}
+            <button onClick={onClose} className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">Cancel</button>
+            <button onClick={handleAdd} disabled={!selectedNpc || saveNpc.isPending}
+              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
+              <span className="material-symbols-outlined text-sm">person_add</span>
               Add Member
             </button>
           </div>
@@ -180,8 +124,16 @@ export default function GroupDetailPage() {
   const { id: campaignId, groupId } = useParams<{ id: string; groupId: string }>();
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
-  const { data: groupTypes } = useGroupTypes();
+  const { data: groupTypes } = useGroupTypes(campaignId);
   const saveNpc = useSaveNpc();
+  const saveGroup = useSaveGroup();
+  const deleteGroup = useDeleteGroup();
+  const navigate = useNavigate();
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const members = (allNpcs ?? [])
     .filter((n) => n.groupMemberships.some((m) => m.groupId === groupId))
@@ -191,13 +143,10 @@ export default function GroupDetailPage() {
     .filter((n) => !n.groupMemberships.some((m) => m.groupId === groupId))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const deleteGroup = useDeleteGroup();
-  const navigate = useNavigate();
-
-  const [editOpen, setEditOpen] = useState(false);
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
-  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const saveField = useCallback((field: keyof Group, html: string) => {
+    if (!group) return;
+    saveGroup.mutate({ ...group, [field]: html || undefined });
+  }, [group, saveGroup]);
 
   const handleRemoveMember = (npc: NPC) => {
     const updated: NPC = {
@@ -209,7 +158,6 @@ export default function GroupDetailPage() {
   };
 
   const tc = groupTypes?.find((t) => t.id === group?.type) ?? { name: group?.type ?? '', icon: 'category' };
-  const relation = group?.partyRelation ? (RELATION_CONFIG[group.partyRelation] ?? RELATION_CONFIG.unknown) : null;
 
   if (isLoading) {
     return (
@@ -226,7 +174,6 @@ export default function GroupDetailPage() {
 
   return (
     <main className="flex-1 min-h-screen bg-surface">
-      {/* Breadcrumb */}
       <div className="px-10 pt-8">
         <BackLink to={`/campaigns/${campaignId}/groups`}>Groups</BackLink>
       </div>
@@ -244,12 +191,6 @@ export default function GroupDetailPage() {
                   <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
                   {tc.name}
                 </span>
-                {relation && (
-                  <span className={`flex items-center gap-1.5 px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest border ${relation.pill}`}>
-                    <span className="material-symbols-outlined text-[13px]">{relation.icon}</span>
-                    {relation.label}
-                  </span>
-                )}
               </div>
               <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
                 {group.name}
@@ -265,53 +206,46 @@ export default function GroupDetailPage() {
               )}
             </header>
 
-            {/* Description */}
-            <section className="space-y-4">
-              <div className="flex items-center gap-4">
-                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">About</h2>
-                <div className="h-px flex-1 bg-outline-variant/20" />
-              </div>
-              <RichContent value={group.description} />
-            </section>
+            {/* About — edit in place */}
+            <InlineRichField
+              label="About"
+              value={group.description}
+              onSave={(html) => saveField('description', html)}
+              placeholder="Describe this group…"
+            />
 
-            {/* Goals */}
-            {group.goals && (
-              <section className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Goals</h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                </div>
-                <div className="bg-surface-container-low p-6 border-l-2 border-primary/30">
-                  <RichContent value={group.goals} className="prose-p:italic" />
-                </div>
-              </section>
-            )}
+            {/* Goals — edit in place */}
+            <InlineRichField
+              label="Goals"
+              value={group.goals}
+              onSave={(html) => saveField('goals', html)}
+              placeholder="What are their objectives…"
+            />
 
-            {/* Symbols */}
-            {group.symbols && (
-              <section className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Symbols & Insignia</h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                </div>
-                <p className="text-on-surface-variant leading-relaxed">{group.symbols}</p>
-              </section>
-            )}
+            {/* Symbols — edit in place */}
+            <InlineRichField
+              label="Symbols & Insignia"
+              value={group.symbols}
+              onSave={(html) => saveField('symbols', html)}
+              placeholder="Banners, colours, insignia…"
+            />
+
+            {/* GM Notes — edit in place */}
+            <InlineRichField
+              label="GM Notes"
+              value={group.gmNotes}
+              onSave={(html) => saveField('gmNotes', html)}
+              isGmNotes
+            />
 
             {/* Members */}
             <section className="space-y-4">
               <div className="flex items-center gap-4">
-                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                  Members
-                </h2>
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Members</h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
-                {members.length > 0 && (
-                  <span className="text-xs font-bold text-on-surface-variant/40">{members.length}</span>
-                )}
-                <button
-                  onClick={() => setAddMemberOpen(true)}
-                  className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-                >
+                {members.length > 0 && <span className="text-xs font-bold text-on-surface-variant/40">{members.length}</span>}
+                <button onClick={() => setAddMemberOpen(true)}
+                  className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
                   <span className="material-symbols-outlined text-[13px]">person_add</span>
                   Add
                 </button>
@@ -325,11 +259,8 @@ export default function GroupDetailPage() {
                     const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
                     const dot = STATUS_DOT[npc.status];
                     return (
-                      <div key={npc.id} className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 hover:border-outline-variant/30 transition-all group">
-                        <Link
-                          to={`/campaigns/${campaignId}/npcs/${npc.id}`}
-                          className="flex items-center gap-3 flex-1 min-w-0"
-                        >
+                      <div key={npc.id} className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 hover:border-outline-variant/30 transition-all group/card">
+                        <Link to={`/campaigns/${campaignId}/npcs/${npc.id}`} className="flex items-center gap-3 flex-1 min-w-0 group">
                           <div className="relative flex-shrink-0">
                             <div className="w-10 h-10 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center">
                               <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
@@ -337,9 +268,7 @@ export default function GroupDetailPage() {
                             <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface-container-low ${dot}`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">
-                              {npc.name}
-                            </p>
+                            <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">{npc.name}</p>
                             <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
                               {[npc.species, membership?.relation].filter(Boolean).join(' · ') || '—'}
                             </p>
@@ -347,27 +276,15 @@ export default function GroupDetailPage() {
                         </Link>
                         {confirmRemoveId === npc.id ? (
                           <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5 flex-shrink-0">
-                            <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
-                            <button
-                              onClick={() => { handleRemoveMember(npc); setConfirmRemoveId(null); }}
-                              disabled={saveNpc.isPending}
-                              className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors disabled:opacity-40"
-                            >
-                              Yes
-                            </button>
-                            <button
-                              onClick={() => setConfirmRemoveId(null)}
-                              className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-                            >
-                              No
-                            </button>
+                            <span className="text-[10px] text-on-surface-variant">Remove?</span>
+                            <button onClick={() => { handleRemoveMember(npc); setConfirmRemoveId(null); }}
+                              className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                            <button onClick={() => setConfirmRemoveId(null)}
+                              className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => setConfirmRemoveId(npc.id)}
-                            title="Remove from group"
-                            className="flex-shrink-0 opacity-0 group-hover:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all"
-                          >
+                          <button onClick={() => setConfirmRemoveId(npc.id)} title="Remove from group"
+                            className="flex-shrink-0 opacity-0 group-hover/card:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all">
                             <span className="material-symbols-outlined text-[16px]">person_remove</span>
                           </button>
                         )}
@@ -377,73 +294,38 @@ export default function GroupDetailPage() {
                 </div>
               )}
             </section>
-
-            {/* GM Notes */}
-            <GmNotesSection notes={group.gmNotes} fallback={`No GM notes for ${group.name} yet.`} />
-
-            {/* Social Relations */}
-            <SocialRelationsSection
-              campaignId={campaignId ?? ''}
-              entityId={groupId ?? ''}
-            />
           </div>
 
           {/* ── Right column (35%) ──────────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
-
             <div className="flex justify-end gap-2">
               {confirmDelete ? (
                 <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
                   <span className="text-[10px] text-on-surface-variant">Delete this group?</span>
-                  <button
-                    onClick={() => deleteGroup.mutate({ campaignId: campaignId ?? '', groupId: group.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/groups`) })}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
-                  >
-                    Yes
-                  </button>
-                  <button
-                    onClick={() => setConfirmDelete(false)}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-                  >
-                    No
-                  </button>
+                  <button onClick={() => deleteGroup.mutate({ campaignId: campaignId ?? '', groupId: group.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/groups`) })}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setConfirmDelete(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
-                >
+                <button onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
                   <span className="material-symbols-outlined text-sm">delete</span>
                 </button>
               )}
-              <button
-                onClick={() => setEditOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-              >
+              <button onClick={() => setEditOpen(true)}
+                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors">
                 <span className="material-symbols-outlined text-sm">edit</span>
                 Edit Group
               </button>
             </div>
-
           </div>
 
         </div>
       </div>
 
-      <GroupEditDrawer
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        campaignId={campaignId ?? ''}
-        group={group}
-      />
-
-      {addMemberOpen && (
-        <AddMemberPanel
-          onClose={() => setAddMemberOpen(false)}
-          groupId={groupId ?? ''}
-          nonMembers={nonMembers}
-        />
-      )}
+      <GroupEditDrawer open={editOpen} onClose={() => setEditOpen(false)} campaignId={campaignId ?? ''} group={group} />
+      {addMemberOpen && <AddMemberPanel onClose={() => setAddMemberOpen(false)} groupId={groupId ?? ''} nonMembers={nonMembers} />}
     </main>
   );
 }

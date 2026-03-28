@@ -214,6 +214,7 @@ export const typeDefs = `#graphql
 
   type GroupType {
     id: ID!
+    campaignId: ID!
     name: String!
     icon: String!
     description: String
@@ -276,7 +277,7 @@ export const typeDefs = `#graphql
     quest(campaignId: ID!, id: ID!): Quest
 
     # Groups
-    groups(campaignId: ID!): [Group!]!
+    groups(campaignId: ID!, search: String, type: String): [Group!]!
     group(campaignId: ID!, id: ID!): Group
 
     # Locations
@@ -288,7 +289,7 @@ export const typeDefs = `#graphql
     containmentRules: [LocationTypeContainmentRule!]!
 
     # Group Types
-    groupTypes: [GroupType!]!
+    groupTypes(campaignId: ID!, search: String): [GroupType!]!
 
     # Species
     species: [Species!]!
@@ -409,7 +410,7 @@ export const typeDefs = `#graphql
     deleteContainmentRule(id: ID!): Boolean!
 
     # Group Types
-    saveGroupType(id: ID, name: String!, icon: String, description: String): GroupType!
+    saveGroupType(campaignId: ID!, id: ID, name: String!, icon: String, description: String): GroupType!
     deleteGroupType(id: ID!): Boolean!
 
     # Species

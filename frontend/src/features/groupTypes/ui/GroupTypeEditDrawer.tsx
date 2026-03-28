@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSaveGroupType } from '../api';
+import { RichTextEditor } from '@/shared/ui';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 const inputCls =
   'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
 
-const textareaCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30 resize-none';
 
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
@@ -55,12 +54,10 @@ const ICONS: string[] = [
 interface Props {
   open: boolean;
   onClose: () => void;
+  campaignId: string;
   groupType?: GroupTypeEntry;
 }
 
-function newId() {
-  return `type-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
 
 function IconPicker({ value, onChange }: { value: string; onChange: (icon: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -158,8 +155,8 @@ function IconPicker({ value, onChange }: { value: string; onChange: (icon: strin
   );
 }
 
-export function GroupTypeEditDrawer({ open, onClose, groupType }: Props) {
-  const save = useSaveGroupType();
+export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Props) {
+  const save = useSaveGroupType(campaignId);
   const isNew = !groupType;
 
   const [name, setName] = useState('');
@@ -176,7 +173,8 @@ export function GroupTypeEditDrawer({ open, onClose, groupType }: Props) {
   const handleSave = () => {
     if (!name.trim() || !icon.trim()) return;
     const record: GroupTypeEntry = {
-      id: groupType?.id ?? newId(),
+      id: groupType?.id ?? '',
+      campaignId,
       name: name.trim(),
       icon: icon.trim(),
       description: description.trim() || undefined,
@@ -234,12 +232,11 @@ export function GroupTypeEditDrawer({ open, onClose, groupType }: Props) {
           {/* Description */}
           <div>
             <label className={labelCls}>Description</label>
-            <textarea
+            <RichTextEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
+              onChange={setDescription}
               placeholder="Describe this group type…"
-              className={textareaCls}
+              minHeight="5rem"
             />
           </div>
         </div>

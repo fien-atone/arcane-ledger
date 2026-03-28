@@ -8,7 +8,6 @@ export interface Group {
   goals?: string;
   symbols?: string;
   gmNotes?: string;
-  partyRelation?: string;
   createdAt: string;
   updatedAt: string;
 }
