@@ -847,7 +847,7 @@ export default function LocationDetailPage() {
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
-  const { data: locationTypes = [] } = useLocationTypes();
+  const { data: locationTypes = [] } = useLocationTypes(campaignId ?? '');
   const saveMutation = useSaveLocation(campaignId ?? '');
   const saveNpc = useSaveNpc();
 

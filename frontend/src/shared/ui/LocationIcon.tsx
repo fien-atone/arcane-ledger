@@ -1,3 +1,4 @@
+import { useParams } from 'react-router-dom';
 import { useLocationTypes } from '@/features/locationTypes/api/queries';
 import { CATEGORY_HEX_COLOR } from '@/entities/locationType';
 
@@ -10,7 +11,8 @@ interface Props {
 }
 
 export function LocationIcon({ locationType, size = 'text-[14px]', className = '' }: Props) {
-  const { data: types } = useLocationTypes();
+  const { id: campaignId } = useParams<{ id: string }>();
+  const { data: types } = useLocationTypes(campaignId);
   const entry = types?.find((t) => t.id === locationType);
   const icon = entry?.icon ?? 'location_on';
   const hex = entry ? CATEGORY_HEX_COLOR[entry.category] : undefined;

@@ -207,6 +207,7 @@ CREATE TABLE "Location" (
 -- CreateTable
 CREATE TABLE "LocationType" (
     "id" TEXT NOT NULL,
+    "campaignId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "icon" TEXT NOT NULL,
     "category" TEXT NOT NULL,
@@ -363,6 +364,9 @@ ALTER TABLE "Location" ADD CONSTRAINT "Location_campaignId_fkey" FOREIGN KEY ("c
 
 -- AddForeignKey
 ALTER TABLE "Location" ADD CONSTRAINT "Location_parentLocationId_fkey" FOREIGN KEY ("parentLocationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LocationType" ADD CONSTRAINT "LocationType_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "GroupType" ADD CONSTRAINT "GroupType_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;

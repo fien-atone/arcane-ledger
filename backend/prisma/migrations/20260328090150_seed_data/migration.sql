@@ -8,28 +8,6 @@ INSERT INTO "User" (id, email, password, name, "createdAt") VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Location Types
-INSERT INTO "LocationType" (id, name, icon, category, "biomeOptions", "isSettlement", builtin, "createdAt") VALUES
-  ('plane','Plane','public','world','{}',false,true,NOW()),
-  ('city','City','apartment','civilization','{}',true,true,NOW()),
-  ('town','Town','location_city','civilization','{}',true,true,NOW()),
-  ('village','Village','cottage','civilization','{}',true,true,NOW()),
-  ('settlement','Settlement','holiday_village','civilization','{}',true,true,NOW()),
-  ('district','District','domain','civilization','{}',false,true,NOW()),
-  ('building','Building','house','civilization','{}',false,true,NOW()),
-  ('continent','Continent','map','geographic','{}',false,true,NOW()),
-  ('region','Region','terrain','geographic',ARRAY['island','peninsula','cape'],false,true,NOW()),
-  ('wilderness','Wilderness','forest','geographic',ARRAY['forest','desert','plains','tundra','jungle','badlands','savanna','steppe'],false,true,NOW()),
-  ('highland','Highland','landscape','geographic',ARRAY['mountain_range','peak','plateau','valley','pass','cliff'],false,true,NOW()),
-  ('ocean','Ocean','waves','water','{}',false,true,NOW()),
-  ('river','River','stream','water','{}',false,true,NOW()),
-  ('lake','Lake','water','water','{}',false,true,NOW()),
-  ('bay','Bay / Gulf','water_full','water','{}',false,true,NOW()),
-  ('marsh','Marsh / Bog','grass','water','{}',false,true,NOW()),
-  ('delta','Delta','merge','water','{}',false,true,NOW()),
-  ('dungeon','Dungeon','skull','poi','{}',false,true,NOW()),
-  ('landmark','Landmark','place','poi','{}',false,true,NOW()),
-  ('route','Route','route','travel',ARRAY['road','trade_route','river_route','sea_lane','mountain_pass','tunnel'],false,true,NOW())
-ON CONFLICT (id) DO NOTHING;
 
 -- Group Types
 
@@ -42,6 +20,30 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO "CampaignMember" (id, "campaignId", "userId", role, "joinedAt") VALUES
   (gen_random_uuid(), 'campaign-drakkenheim', 'user-gm', 'GM', NOW())
 ON CONFLICT ("campaignId", "userId") DO NOTHING;
+
+INSERT INTO "LocationType" (id, "campaignId", name, icon, category, "biomeOptions", "isSettlement", builtin, "createdAt") VALUES
+  ('plane','campaign-drakkenheim','Plane','public','world','{}',false,true,NOW()),
+  ('city','campaign-drakkenheim','City','apartment','civilization','{}',true,true,NOW()),
+  ('town','campaign-drakkenheim','Town','location_city','civilization','{}',true,true,NOW()),
+  ('village','campaign-drakkenheim','Village','cottage','civilization','{}',true,true,NOW()),
+  ('settlement','campaign-drakkenheim','Settlement','holiday_village','civilization','{}',true,true,NOW()),
+  ('district','campaign-drakkenheim','District','domain','civilization','{}',false,true,NOW()),
+  ('building','campaign-drakkenheim','Building','house','civilization','{}',false,true,NOW()),
+  ('continent','campaign-drakkenheim','Continent','map','geographic','{}',false,true,NOW()),
+  ('region','campaign-drakkenheim','Region','terrain','geographic',ARRAY['island','peninsula','cape'],false,true,NOW()),
+  ('wilderness','campaign-drakkenheim','Wilderness','forest','geographic',ARRAY['forest','desert','plains','tundra','jungle','badlands','savanna','steppe'],false,true,NOW()),
+  ('highland','campaign-drakkenheim','Highland','landscape','geographic',ARRAY['mountain_range','peak','plateau','valley','pass','cliff'],false,true,NOW()),
+  ('ocean','campaign-drakkenheim','Ocean','waves','water','{}',false,true,NOW()),
+  ('river','campaign-drakkenheim','River','stream','water','{}',false,true,NOW()),
+  ('lake','campaign-drakkenheim','Lake','water','water','{}',false,true,NOW()),
+  ('bay','campaign-drakkenheim','Bay / Gulf','water_full','water','{}',false,true,NOW()),
+  ('marsh','campaign-drakkenheim','Marsh / Bog','grass','water','{}',false,true,NOW()),
+  ('delta','campaign-drakkenheim','Delta','merge','water','{}',false,true,NOW()),
+  ('dungeon','campaign-drakkenheim','Dungeon','skull','poi','{}',false,true,NOW()),
+  ('landmark','campaign-drakkenheim','Landmark','place','poi','{}',false,true,NOW()),
+  ('route','campaign-drakkenheim','Route','route','travel',ARRAY['road','trade_route','river_route','sea_lane','mountain_pass','tunnel'],false,true,NOW())
+ON CONFLICT (id) DO NOTHING;
+
 
 INSERT INTO "GroupType" (id, "campaignId", name, icon, description, "createdAt") VALUES
   ('faction','campaign-drakkenheim','Faction','flag','Political or military powers.',NOW()),

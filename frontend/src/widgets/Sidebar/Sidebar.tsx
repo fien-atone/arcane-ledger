@@ -27,10 +27,10 @@ const NAV: Array<NavItem | NavSection> = [
       { label: 'Locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false },
       { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true },
       { label: 'NPCs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false },
-      { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false },
-      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true },
       { label: 'Groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false },
       { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true },
+      { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false },
+      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true },
     ],
   },
   {

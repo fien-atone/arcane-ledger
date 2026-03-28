@@ -35,8 +35,9 @@ model Campaign {
   npcs       NPC[]
   quests     Quest[]
   groups     Group[]
-  groupTypes   GroupType[]
-  speciesTypes SpeciesType[]
+  locationTypes LocationType[]
+  groupTypes    GroupType[]
+  speciesTypes  SpeciesType[]
   species      Species[]
   locations  Location[]
   relations  Relation[]
@@ -273,6 +274,8 @@ model Location {
 
 model LocationType {
   id           String   @id @default(uuid())
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId   String
   name         String
   icon         String
   category     String   // world, civilization, geographic, water, poi, travel

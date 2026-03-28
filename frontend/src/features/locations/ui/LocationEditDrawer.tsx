@@ -33,7 +33,7 @@ function generateId() {
 
 export function LocationEditDrawer({ open, onClose, campaignId, location, initialParentId, onSaved, elevated }: Props) {
   const save = useSaveLocation(campaignId);
-  const { data: locationTypes = [] } = useLocationTypes();
+  const { data: locationTypes = [] } = useLocationTypes(campaignId);
   const { data: containmentRules = [] } = useContainmentRules();
   const { data: allLocations = [] } = useLocations(campaignId);
   const fileInputRef = useRef<HTMLInputElement>(null);

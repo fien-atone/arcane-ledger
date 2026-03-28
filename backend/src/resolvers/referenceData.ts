@@ -2,8 +2,8 @@ import type { Context } from '../context.js';
 
 export const referenceDataResolvers = {
   Query: {
-    locationTypes: (_: unknown, __: unknown, { prisma }: Context) =>
-      prisma.locationType.findMany(),
+    locationTypes: (_: unknown, { campaignId }: { campaignId: string }, { prisma }: Context) =>
+      prisma.locationType.findMany({ where: { campaignId }, orderBy: { name: 'asc' } }),
 
     containmentRules: (_: unknown, __: unknown, { prisma }: Context) =>
       prisma.locationTypeContainmentRule.findMany(),
@@ -33,7 +33,7 @@ export const referenceDataResolvers = {
   Mutation: {
     saveLocationType: async (
       _: unknown,
-      args: { id?: string; name: string; icon: string; category: string; biomeOptions?: string[]; isSettlement?: boolean },
+      args: { campaignId: string; id?: string; name: string; icon: string; category: string; biomeOptions?: string[]; isSettlement?: boolean },
       { prisma }: Context,
     ) => {
       const data = {
@@ -47,7 +47,7 @@ export const referenceDataResolvers = {
       if (args.id) {
         return prisma.locationType.update({ where: { id: args.id }, data });
       }
-      return prisma.locationType.create({ data });
+      return prisma.locationType.create({ data: { ...data, campaignId: args.campaignId } });
     },
 
     deleteLocationType: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {

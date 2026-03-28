@@ -8,8 +8,8 @@ import type {
 // ── Queries ──────────────────────────────────────────────────────────────────
 
 const LOCATION_TYPES_QUERY = gql`
-  query LocationTypes {
-    locationTypes {
+  query LocationTypes($campaignId: ID!) {
+    locationTypes(campaignId: $campaignId) {
       id name icon category biomeOptions isSettlement builtin
     }
   }
@@ -27,11 +27,11 @@ const CONTAINMENT_RULES_QUERY = gql`
 
 const SAVE_LOCATION_TYPE = gql`
   mutation SaveLocationType(
-    $id: ID, $name: String!, $icon: String!, $category: String!,
+    $campaignId: ID!, $id: ID, $name: String!, $icon: String!, $category: String!,
     $biomeOptions: [String!], $isSettlement: Boolean
   ) {
     saveLocationType(
-      id: $id, name: $name, icon: $icon, category: $category,
+      campaignId: $campaignId, id: $id, name: $name, icon: $icon, category: $category,
       biomeOptions: $biomeOptions, isSettlement: $isSettlement
     ) {
       id name icon category biomeOptions isSettlement builtin
@@ -61,8 +61,12 @@ const DELETE_CONTAINMENT_RULE = gql`
 
 // ── Type Hooks ───────────────────────────────────────────────────────────────
 
-export function useLocationTypes() {
-  const { data, loading, error } = useQuery<any>(LOCATION_TYPES_QUERY);
+export function useLocationTypes(campaignId?: string) {
+  const { data, loading, error } = useQuery<any>(LOCATION_TYPES_QUERY, {
+    variables: { campaignId },
+    skip: !campaignId,
+    fetchPolicy: 'cache-and-network',
+  });
   return { data: data?.locationTypes as LocationTypeEntry[] | undefined, isLoading: loading, isError: !!error, error };
 }
 

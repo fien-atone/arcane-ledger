@@ -296,7 +296,7 @@ export const typeDefs = `#graphql
     location(campaignId: ID!, id: ID!): Location
 
     # Location Types
-    locationTypes: [LocationType!]!
+    locationTypes(campaignId: ID!): [LocationType!]!
     containmentRules: [LocationTypeContainmentRule!]!
 
     # Group Types
@@ -418,7 +418,7 @@ export const typeDefs = `#graphql
     deleteRelation(id: ID!): Boolean!
 
     # Location Types
-    saveLocationType(id: ID, name: String!, icon: String!, category: String!, biomeOptions: [String!], isSettlement: Boolean): LocationType!
+    saveLocationType(campaignId: ID!, id: ID, name: String!, icon: String!, category: String!, biomeOptions: [String!], isSettlement: Boolean): LocationType!
     deleteLocationType(id: ID!): Boolean!
     saveContainmentRule(id: ID, parentTypeId: String!, childTypeId: String!): LocationTypeContainmentRule!
     deleteContainmentRule(id: ID!): Boolean!

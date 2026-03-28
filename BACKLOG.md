@@ -31,8 +31,10 @@ _Nothing currently in progress._
 | F-3 | 🟡 | GraphQL subscriptions: real-time updates when data changes | — |
 | F-4 | 🟡 | Role-based field visibility: hide GM Notes from players | — |
 | F-5 | 🟡 | Campaign invitations: invite users to campaign as player | — |
-| F-6 | 🟢 | AI integration: NPC description generation via Claude API | — |
-| F-7 | 🟢 | AI integration: session summary generation from notes | — |
+| F-6 | 🟢 | AI: NPC generation — имя, внешность, предыстория на основе контекста кампании | — |
+| F-7 | 🟢 | AI: парсинг заметок сессии в сущности — NPC, локации, квесты из свободного текста | — |
+| F-13 | 🟢 | AI: генерация локаций и городов на основе типа, климата и региона | — |
+| F-14 | 🟢 | AI provider: поддержка self-hosted Ollama (Qwen/Llama) как альтернатива облачным API — для офлайн и приватности | — |
 | F-8 | 🟢 | Export: PDF character sheets, session summaries | — |
 | F-9 | 🟢 | Dice roller: persist roll history per session | — |
 | F-10 | 🟢 | OAuth login (Google/Discord) | — |

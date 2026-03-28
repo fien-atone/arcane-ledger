@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Select } from '@/shared/ui';
+import { useParams } from 'react-router-dom';
+import { Select, EmptyState } from '@/shared/ui';
 import {
   useLocationTypes,
   useContainmentRules,
@@ -506,7 +507,8 @@ function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: bo
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LocationTypesPage() {
-  const { data: types,        isLoading: loadingTypes }   = useLocationTypes();
+  const { id: campaignId } = useParams<{ id: string }>();
+  const { data: types,        isLoading: loadingTypes }   = useLocationTypes(campaignId);
   const { data: containRules, isLoading: loadingContain } = useContainmentRules();
 
   const saveType    = useSaveLocationType();
@@ -579,7 +581,7 @@ export default function LocationTypesPage() {
 
             <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
               {search.trim() && filtered.length === 0 && (
-                <p className="text-xs text-on-surface-variant/40 italic p-6">No types match.</p>
+                <EmptyState icon="account_tree" title="No types match." />
               )}
               {search.trim() ? (
                 // Flat list when searching

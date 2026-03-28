@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLocations } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
+import { EmptyState } from '@/shared/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
 import type { Location, LocationType } from '@/entities/location';
@@ -230,7 +231,7 @@ function LocationDetail({
 export default function LocationListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const { data: locations, isLoading, isError } = useLocations(campaignId ?? '');
-  const { data: locationTypes = [] } = useLocationTypes();
+  const { data: locationTypes = [] } = useLocationTypes(campaignId);
   const [typeFilter, setTypeFilter] = useState<LocationType | 'all'>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -404,7 +405,7 @@ export default function LocationListPage() {
             {/* List */}
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
               {filtered.length === 0 && (
-                <p className="text-xs text-on-surface-variant/40 italic p-6">No locations found.</p>
+                <EmptyState icon="location_on" title="No locations found." />
               )}
               {filtered.map((loc) => (
                 <LocationRow
