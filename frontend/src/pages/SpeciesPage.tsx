@@ -122,14 +122,19 @@ export default function SpeciesPage() {
                   className="w-full pl-8 pr-3 py-2 bg-surface-container border-0 border-b border-outline-variant/20 focus:ring-0 focus:border-primary text-on-surface text-xs placeholder:text-on-surface-variant/30 transition-colors" />
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {typeFilters.map(({ value, label }) => (
-                  <button key={value} onClick={() => setTypeFilter(value)}
-                    className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
-                      typeFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                    }`}>
-                    {label}
-                  </button>
-                ))}
+                {typeFilters.map(({ value, label }) => {
+                  const count = value === 'all'
+                    ? (speciesList?.length ?? 0)
+                    : (speciesList?.filter((s) => s.type === value).length ?? 0);
+                  return (
+                    <button key={value} onClick={() => setTypeFilter(value)}
+                      className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
+                        typeFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                      }`}>
+                      {label} <span className={typeFilter === value ? 'text-on-primary/70' : 'text-on-surface-variant/40'}>{count}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

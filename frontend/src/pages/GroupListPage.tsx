@@ -139,17 +139,22 @@ export default function GroupListPage() {
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                {typeFilterItems.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    onClick={() => setTypeFilter(value)}
-                    className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
-                      typeFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+                {typeFilterItems.map(({ value, label }) => {
+                  const count = value === 'all'
+                    ? (groups?.length ?? 0)
+                    : (groups?.filter((g) => g.type === value).length ?? 0);
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => setTypeFilter(value)}
+                      className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
+                        typeFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                      }`}
+                    >
+                      {label} <span className={typeFilter === value ? 'text-on-primary/70' : 'text-on-surface-variant/40'}>{count}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
