@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSessions } from '@/features/sessions/api/queries';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
-import { LocationIcon, RichContent, EmptyState } from '@/shared/ui';
+import { LocationIcon, RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 function formatDate(iso: string) {
@@ -103,10 +104,15 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
 
 export default function SessionListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [addOpen, setAddOpen] = useState(false);
+
+  if (!sessionsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   const filtered = sessions?.filter((s) =>
     !search ||

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuests } from '@/features/quests/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
-import { RichContent, EmptyState } from '@/shared/ui';
+import { RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
 import type { Quest, QuestStatus } from '@/entities/quest';
 
 const STATUS_CONFIG: Record<QuestStatus, { label: string; dot: string; pill: string; icon: string; iconColor: string }> = {
@@ -34,6 +35,7 @@ function SectionHeader({ title }: { title: string }) {
 
 function QuestPreview({ quest, campaignId }: { quest: Quest; campaignId: string }) {
   const st = STATUS_CONFIG[quest.status];
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
   const { data: allNpcs } = useNpcs(campaignId);
   const giver = quest.giverId ? allNpcs?.find((n) => n.id === quest.giverId) : undefined;
 
@@ -52,7 +54,7 @@ function QuestPreview({ quest, campaignId }: { quest: Quest; campaignId: string 
       </div>
 
       {/* Quest Giver */}
-      {giver && (
+      {npcsEnabled && giver && (
         <div className="mb-6">
           <SectionHeader title="Quest Giver" />
           <Link
@@ -95,6 +97,7 @@ function QuestPreview({ quest, campaignId }: { quest: Quest; campaignId: string 
 
 export default function QuestListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const { data: quests, isLoading, isError } = useQuests(campaignId ?? '');
   const [statusFilter, setStatusFilter] = useState<QuestStatus | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -108,6 +111,10 @@ export default function QuestListPage() {
   }) ?? [];
 
   const selected = quests?.find((q) => q.id === selectedId) ?? filtered[0] ?? null;
+
+  if (!questsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">

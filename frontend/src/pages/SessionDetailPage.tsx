@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSessions, useSaveSession, useDeleteSession } from '@/features/sessions/api/queries';
-import { useCampaign } from '@/features/campaigns/api/queries';
+import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useQuests } from '@/features/quests/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
-import { BackLink, LocationIcon, InlineRichField } from '@/shared/ui';
+import { BackLink, LocationIcon, InlineRichField, SectionDisabled } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { QuestStatus } from '@/entities/quest';
@@ -73,6 +73,10 @@ function downloadIcs(title: string, datetime: string, description?: string) {
 
 export default function SessionDetailPage() {
   const { id: campaignId, sessionId } = useParams<{ id: string; sessionId: string }>();
+  const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
+  const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
   const session = sessions?.find((s) => s.id === sessionId);
@@ -100,6 +104,10 @@ export default function SessionDetailPage() {
     if (!session) return;
     saveSession.mutate({ ...session, [field]: html || undefined });
   }, [session, saveSession]);
+
+  if (!sessionsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   if (isLoading) {
     return (
@@ -276,7 +284,7 @@ export default function SessionDetailPage() {
           <div className="lg:w-[35%] space-y-10 lg:sticky lg:top-8 self-start">
 
             {/* NPCs in this session */}
-            {(() => {
+            {npcsEnabled && (() => {
               const npcIds = session.npcIds ?? [];
               const linked = npcIds
                 .map((id) => allNpcs?.find((n) => n.id === id))
@@ -385,7 +393,7 @@ export default function SessionDetailPage() {
             })()}
 
             {/* Locations in this session */}
-            {(() => {
+            {locationsEnabled && (() => {
               const locationIds = session.locationIds ?? [];
               const linked = locationIds
                 .map((id) => allLocations?.find((l) => l.id === id))
@@ -480,7 +488,7 @@ export default function SessionDetailPage() {
             })()}
 
             {/* Quests in this session */}
-            {(() => {
+            {questsEnabled && (() => {
               const questIds = session.questIds ?? [];
               const linked = questIds
                 .map((id) => allQuests?.find((q) => q.id === id))

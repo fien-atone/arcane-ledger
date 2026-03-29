@@ -1,3 +1,13 @@
+/** All possible sidebar section identifiers */
+export type CampaignSection =
+  | 'sessions' | 'npcs' | 'locations' | 'groups'
+  | 'quests' | 'party' | 'social_graph' | 'species';
+
+export const ALL_SECTIONS: CampaignSection[] = [
+  'sessions', 'npcs', 'locations', 'groups',
+  'quests', 'party', 'social_graph', 'species',
+];
+
 export interface Campaign {
   id: string;
   title: string;
@@ -23,4 +33,6 @@ export interface CampaignSummary extends Campaign {
   myRole: 'gm' | 'player';
   /** Populated when myRole === 'player' */
   myCharacterName?: string;
+  /** Enabled sidebar sections — empty array means all enabled */
+  enabledSections: CampaignSection[];
 }

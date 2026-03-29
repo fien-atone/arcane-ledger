@@ -55,6 +55,29 @@ export const campaignResolvers = {
       return { ...campaign, myRole: member?.role ?? 'PLAYER' };
     },
 
+    updateCampaignSections: async (
+      _: unknown,
+      { campaignId, sections }: { campaignId: string; sections: string[] },
+      { prisma, user }: Context,
+    ) => {
+      if (!user) throw new Error('Not authenticated');
+
+      const member = await prisma.campaignMember.findUnique({
+        where: { campaignId_userId: { campaignId, userId: user.id } },
+      });
+      if (!member || member.role !== 'GM') throw new Error('Only the GM can change sections');
+
+      const VALID = ['SESSIONS', 'NPCS', 'LOCATIONS', 'GROUPS', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES'];
+      const filtered = sections.filter((s) => VALID.includes(s));
+
+      const campaign = await prisma.campaign.update({
+        where: { id: campaignId },
+        data: { enabledSections: filtered },
+      });
+
+      return { ...campaign, myRole: member.role };
+    },
+
     saveCharacter: async (
       _: unknown,
       args: { campaignId: string; id?: string; name: string; gender?: string; age?: number; species?: string; speciesId?: string; class?: string; appearance?: string; background?: string; personality?: string; motivation?: string; bonds?: string; flaws?: string; gmNotes?: string; image?: string },
@@ -116,6 +139,8 @@ export const campaignResolvers = {
   },
 
   Campaign: {
+    enabledSections: (campaign: { enabledSections?: string[] }) =>
+      campaign.enabledSections ?? [],
     sessionCount: (campaign: { id: string }, _: unknown, { prisma }: Context) =>
       prisma.session.count({ where: { campaignId: campaign.id } }),
     memberCount: (campaign: { id: string }, _: unknown, { prisma }: Context) =>

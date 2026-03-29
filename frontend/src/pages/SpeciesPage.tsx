@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSpecies } from '@/features/species/api';
 import { useSpeciesTypes } from '@/features/speciesTypes/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { SpeciesEditDrawer } from '@/features/species/ui';
-import { RichContent, EmptyState } from '@/shared/ui';
+import { RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
 import type { Species, SpeciesSize } from '@/entities/species';
 
 const SIZE_LABEL: Record<SpeciesSize, string> = {
@@ -67,6 +68,7 @@ function SpeciesPreview({ species, typeName }: { species: Species; typeName: str
 
 export default function SpeciesPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const { data: speciesList, isLoading } = useSpecies(campaignId);
   const { data: speciesTypes } = useSpeciesTypes(campaignId);
 
@@ -86,6 +88,10 @@ export default function SpeciesPage() {
   });
 
   const selected = speciesList?.find((s) => s.id === selectedId) ?? filtered[0] ?? null;
+
+  if (!speciesEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   const typeFilters = [
     { value: 'all', label: 'All' },

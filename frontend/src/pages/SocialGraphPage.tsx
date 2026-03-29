@@ -5,6 +5,7 @@ import { useParty } from '@/features/characters/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { useGroupTypes } from '@/features/groupTypes/api/queries';
 import { useRelationsForCampaign } from '@/features/relations/api/queries';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import type { NPC } from '@/entities/npc';
 import { useGraphSimulation } from '@/features/social-graph/lib/useGraphSimulation';
 import { useGraphZoom } from '@/features/social-graph/lib/useGraphZoom';
@@ -16,7 +17,7 @@ import { GraphControls } from '@/features/social-graph/ui/GraphControls';
 import { GraphFilters } from '@/features/social-graph/ui/GraphFilters';
 import { GraphLegend } from '@/features/social-graph/ui/GraphLegend';
 import { ChordView } from '@/features/social-graph/ui/ChordView';
-import { EmptyState } from '@/shared/ui';
+import { EmptyState, SectionDisabled } from '@/shared/ui';
 import type { NpcStatus } from '@/entities/npc';
 import type { GraphEdge as GraphEdgeType } from '@/features/social-graph/lib/graphTypes';
 
@@ -26,6 +27,8 @@ const PARTY_GROUP_ID = '__party__';
 export default function SocialGraphPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
+  const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
 
   const { data: npcs, isLoading: npcsLoading } = useNpcs(campaignId ?? '');
   const { data: party } = useParty(campaignId ?? '');
@@ -272,6 +275,10 @@ export default function SocialGraphPage() {
 
   const isLoading = npcsLoading;
   const isEmpty = !isLoading && (npcs ?? []).length === 0;
+
+  if (!npcsEnabled || !socialGraphEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">

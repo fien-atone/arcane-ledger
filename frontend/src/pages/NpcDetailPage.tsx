@@ -4,6 +4,7 @@ import { useNpc, useNpcs, useSaveNpc, useAddNPCGroupMembership, useRemoveNPCGrou
 import { useGroups } from '@/features/groups/api';
 import { useLocations } from '@/features/locations/api';
 import { useSessions } from '@/features/sessions/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
@@ -39,6 +40,9 @@ export default function NpcDetailPage() {
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
+  const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
+  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const saveNpc = useSaveNpc();
   const addGroupMembership = useAddNPCGroupMembership();
   const removeGroupMembership = useRemoveNPCGroupMembership();
@@ -187,7 +191,7 @@ export default function NpcDetailPage() {
               placeholder="History, role, key facts…" />
 
             {/* Group Memberships */}
-            {(() => {
+            {groupsEnabled && (() => {
               const memberGroupIds = new Set(npc.groupMemberships.map((m) => m.groupId));
               const availableGroups = (groups ?? [])
                 .filter((g) => !memberGroupIds.has(g.id))
@@ -399,7 +403,7 @@ export default function NpcDetailPage() {
             <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />
 
             {/* Session Appearances */}
-            {(() => {
+            {sessionsEnabled && (() => {
               const sessionAppearances = (allSessions ?? [])
                 .filter((s) => s.npcIds?.includes(npcId ?? ''))
                 .sort((a, b) => b.number - a.number);
@@ -466,7 +470,7 @@ export default function NpcDetailPage() {
               placeholder="Weaknesses, vices, fears…" />
 
             {/* Locations section */}
-            {(() => {
+            {locationsEnabled && (() => {
               const presences = npc.locationPresences ?? [];
               const linkedLocations = presences
                 .map((p) => allLocations?.find((l) => l.id === p.locationId))

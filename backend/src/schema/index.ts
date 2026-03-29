@@ -27,6 +27,7 @@ export const typeDefs = `#graphql
     id: ID!
     title: String!
     description: String
+    enabledSections: [String!]!
     createdAt: String!
     archivedAt: String
     myRole: Role!
@@ -401,6 +402,7 @@ export const typeDefs = `#graphql
     # Campaigns
     createCampaign(title: String!, description: String): Campaign!
     updateCampaign(id: ID!, title: String, description: String, archivedAt: String): Campaign!
+    updateCampaignSections(campaignId: ID!, sections: [String!]!): Campaign!
 
     # Sessions
     saveSession(campaignId: ID!, id: ID, input: SessionInput!): Session!

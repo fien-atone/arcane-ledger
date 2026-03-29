@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSpeciesTypes, useSaveSpeciesType, useDeleteSpeciesType } from '@/features/speciesTypes/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
-import { InlineRichField, IconPicker, EmptyState } from '@/shared/ui';
+import { InlineRichField, IconPicker, EmptyState, SectionDisabled } from '@/shared/ui';
 import type { SpeciesTypeEntry } from '@/entities/speciesType';
 
 
@@ -106,6 +107,7 @@ function SpeciesTypeDetail({ entry, campaignId, onEdit, onDelete }: { entry: Spe
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function SpeciesTypesPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const { data: types, isLoading } = useSpeciesTypes(campaignId, debouncedSearch);
@@ -117,6 +119,10 @@ export default function SpeciesTypesPage() {
   const [editingType, setEditingType] = useState<SpeciesTypeEntry | undefined>(undefined);
 
   const selected = types?.find((t) => t.id === selectedId) ?? types?.[0] ?? null;
+
+  if (!speciesEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">

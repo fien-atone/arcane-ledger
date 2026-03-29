@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useGroups } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
-import { RichContent, EmptyState } from '@/shared/ui';
+import { RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import type { Group } from '@/entities/group';
 import type { GroupTypeEntry } from '@/entities/groupType';
@@ -67,6 +68,7 @@ function GroupPreview({ group, memberCount, groupTypes }: {
 
 export default function GroupListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
 
@@ -85,6 +87,10 @@ export default function GroupListPage() {
   const [editOpen, setEditOpen] = useState(false);
 
   const selected = groups?.find((g) => g.id === selectedId) ?? groups?.[0] ?? null;
+
+  if (!groupsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   const getMemberCount = (groupId: string) =>
     allNpcs?.filter((n) => n.groupMemberships.some((m) => m.groupId === groupId)).length ?? 0;

@@ -14,3 +14,4 @@ export { LocationIcon } from './LocationIcon';
 export { IconPicker } from './IconPicker';
 export { EmptyState } from './EmptyState';
 export { DatePicker } from './DatePicker';
+export { SectionDisabled } from './SectionDisabled';

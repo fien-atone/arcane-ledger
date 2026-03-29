@@ -3,9 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useGroups } from '@/features/groups/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
-import { LocationIcon, RichContent, EmptyState } from '@/shared/ui';
+import { LocationIcon, RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { NPC, NpcStatus } from '@/entities/npc';
 
@@ -208,12 +209,18 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
 
 export default function NpcListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
+  const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
   const { data: npcs, isLoading, isError } = useNpcs(campaignId ?? '');
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+
+  if (!npcsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   const resolveSpeciesName = (npc: NPC) =>
     allSpecies?.find((s) => s.id === npc.speciesId)?.name ?? npc.species;
@@ -239,6 +246,7 @@ export default function NpcListPage() {
           </div>
           <div className="flex items-center gap-3">
             {/* View toggle */}
+            {socialGraphEnabled && (
             <div className="flex bg-surface-container rounded-sm border border-outline-variant/20 overflow-hidden">
               <button
                 className="p-2 bg-primary/15 text-primary"
@@ -255,6 +263,7 @@ export default function NpcListPage() {
                 <span className="material-symbols-outlined text-[20px]">hub</span>
               </Link>
             </div>
+            )}
             <button
               onClick={() => setAddOpen(true)}
               className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"

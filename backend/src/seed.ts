@@ -78,6 +78,7 @@ async function main() {
       id: 'campaign-farchester',
       title: 'Farchester',
       description: 'City intrigue under a dry law and curfew. 5000 gold missing from the treasury. Goblins at the eastern gate, elves at the western. The party operates undercover.',
+      enabledSections: ['SESSIONS', 'NPCS', 'LOCATIONS', 'GROUPS', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES'],
       createdAt: new Date('2026-02-01T00:00:00Z'),
     },
   });
@@ -87,6 +88,7 @@ async function main() {
       id: 'campaign-drakkenheim',
       title: 'Drakkenheim',
       description: 'A ruined city blanketed in deliriite. Five factions fight for control. The party navigates the underground district of Bent Row and the delirium-soaked streets above.',
+      enabledSections: ['SESSIONS', 'NPCS', 'LOCATIONS', 'GROUPS', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES'],
       createdAt: new Date('2025-09-01T00:00:00Z'),
     },
   });
@@ -300,11 +302,14 @@ async function main() {
   ];
 
   let crIdx = 0;
-  for (const cr of containmentRules) {
-    crIdx++;
-    await prisma.locationTypeContainmentRule.create({
-      data: { id: `cr-${crIdx}`, parentTypeId: cr.parentTypeId, childTypeId: cr.childTypeId },
-    });
+  for (const campId of ['campaign-farchester', 'campaign-drakkenheim']) {
+    const suffix = campId === 'campaign-farchester' ? 'fc' : 'dk';
+    for (const cr of containmentRules) {
+      crIdx++;
+      await prisma.locationTypeContainmentRule.create({
+        data: { id: `cr-${crIdx}`, parentTypeId: `${cr.parentTypeId}-${suffix}`, childTypeId: `${cr.childTypeId}-${suffix}` },
+      });
+    }
   }
 
   // ── Species (per-campaign) ────────────────────────────────────────────────
@@ -349,7 +354,7 @@ async function main() {
   await prisma.location.create({
     data: {
       id: 'loc-fc-farchester', campaignId: 'campaign-farchester', name: 'Farchester',
-      aliases: ['Farchester'], type: 'city', settlementPopulation: 12000,
+      aliases: ['Farchester'], type: 'city-fc', settlementPopulation: 12000,
       description: 'City under dry law and curfew. Two factions: Red (Imperial, Kronhev) and Blue (City, Stoungriv). Eastern gate — goblin protesters, western gate — elf camp. River drying up.',
       gmNotes: 'City under pressure — important for the campaign. Track the balance of power between Kronhev and the Burgmaster.',
       createdAt: new Date('2026-02-01T00:00:00Z'),
@@ -360,25 +365,25 @@ async function main() {
     data: [
       {
         id: 'loc-fc-rathusha', campaignId: 'campaign-farchester', name: 'Rathusha',
-        aliases: ['Town Hall'], type: 'building', parentLocationId: 'loc-fc-farchester',
+        aliases: ['Town Hall'], type: 'building-fc', parentLocationId: 'loc-fc-farchester',
         description: 'Central town hall. Meeting place with Burgmaster Stoungriv. Fountain nearby.',
         createdAt: new Date('2026-02-24T00:00:00Z'),
       },
       {
         id: 'loc-fc-residence', campaignId: 'campaign-farchester', name: 'Kronhev Residence',
-        aliases: ["Kronhev's Residence"], type: 'building', parentLocationId: 'loc-fc-farchester',
+        aliases: ["Kronhev's Residence"], type: 'building-fc', parentLocationId: 'loc-fc-farchester',
         description: 'Large house with garden, many red guards. Residence of Lord-Admiral Kronhev.',
         createdAt: new Date('2026-02-24T00:00:00Z'),
       },
       {
         id: 'loc-fc-tavern', campaignId: 'campaign-farchester', name: 'Y Kuru Ayr Tavern',
-        aliases: ['Y Kuru Ayr', 'The Tavern'], type: 'building', parentLocationId: 'loc-fc-farchester',
+        aliases: ['Y Kuru Ayr', 'The Tavern'], type: 'building-fc', parentLocationId: 'loc-fc-farchester',
         description: 'Tavern where the party is staying. Innkeeper Yorvert. Place for rest and planning.',
         createdAt: new Date('2026-02-20T00:00:00Z'),
       },
       {
         id: 'loc-fc-tower', campaignId: 'campaign-farchester', name: "Mage's Tower",
-        aliases: ["Mage's Tower", "Tuts' Tower"], type: 'building', parentLocationId: 'loc-fc-farchester',
+        aliases: ["Mage's Tower", "Tuts' Tower"], type: 'building-fc', parentLocationId: 'loc-fc-farchester',
         description: "Tower of the city mage Tuts. Battered but functional. Ground floor for very large creatures, second floor — enormous number of clocks. Stone terrier guard with riddles.",
         createdAt: new Date('2026-03-02T00:00:00Z'),
       },
@@ -390,7 +395,7 @@ async function main() {
   await prisma.location.create({
     data: {
       id: 'loc-dk-region', campaignId: 'campaign-drakkenheim', name: 'Drakkenheim Region',
-      aliases: ['Drakkenheim Region'], type: 'region',
+      aliases: ['Drakkenheim Region'], type: 'region-dk',
       description: 'The broader region surrounding the ruined city of Drakkenheim. Delirium contamination spreads outward from the crater.',
       createdAt: new Date('2025-09-01T00:00:00Z'),
     },
@@ -399,7 +404,7 @@ async function main() {
   await prisma.location.create({
     data: {
       id: 'loc-dk-emberwood-region', campaignId: 'campaign-drakkenheim', name: 'Emberwood Village Region',
-      aliases: ['Emberwood Region'], type: 'region', parentLocationId: 'loc-dk-region',
+      aliases: ['Emberwood Region'], type: 'region-dk', parentLocationId: 'loc-dk-region',
       description: 'Region around Emberwood — relatively safe zone away from delirium.',
       createdAt: new Date('2025-09-01T00:00:00Z'),
     },
@@ -410,19 +415,19 @@ async function main() {
     data: [
       {
         id: 'loc-dk-road', campaignId: 'campaign-drakkenheim', name: 'Road to Emberwood',
-        aliases: ['Road to Emberwood'], type: 'district', parentLocationId: 'loc-dk-emberwood-region',
+        aliases: ['Road to Emberwood'], type: 'district-dk', parentLocationId: 'loc-dk-emberwood-region',
         description: 'The road leading to Emberwood Village. First session: party encountered a corpse near the Dran river, Rikard Vos touched delirium and transformed.',
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-zoya-house', campaignId: 'campaign-drakkenheim', name: 'Zoya House',
-        aliases: ['Zoya House'], type: 'building', parentLocationId: 'loc-dk-emberwood-region',
+        aliases: ['Zoya House'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood-region',
         description: "Zoya's secluded house in the woods near Emberwood. The old woman sells amber beads and worships the Old Gods. A place of mystery and folk magic.",
         createdAt: new Date('2025-11-07T00:00:00Z'),
       },
       {
         id: 'loc-dk-eckerman-mill', campaignId: 'campaign-drakkenheim', name: 'Eckerman Mill',
-        aliases: ['Eckerman Mill'], type: 'building', parentLocationId: 'loc-dk-region',
+        aliases: ['Eckerman Mill'], type: 'building-dk', parentLocationId: 'loc-dk-region',
         description: 'Mill outside Drakkenheim and Emberwood. Nearby — an abandoned mansion, meeting point with suspicious figure selling contaminated potions (Lanterns quest).',
         createdAt: new Date('2025-11-07T00:00:00Z'),
       },
@@ -433,7 +438,7 @@ async function main() {
   await prisma.location.create({
     data: {
       id: 'loc-dk-emberwood', campaignId: 'campaign-drakkenheim', name: 'Emberwood Village',
-      aliases: ['Emberwood', 'Emberwood'], type: 'village', settlementPopulation: 340,
+      aliases: ['Emberwood', 'Emberwood'], type: 'village-dk', settlementPopulation: 340,
       parentLocationId: 'loc-dk-emberwood-region',
       description: 'Starting village, party base. In turmoil but relatively safe.',
       createdAt: new Date('2025-09-01T00:00:00Z'),
@@ -445,55 +450,55 @@ async function main() {
     data: [
       {
         id: 'loc-dk-marketplace', campaignId: 'campaign-drakkenheim', name: 'Marketplace',
-        aliases: ['Emberwood Market'], type: 'district', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Emberwood Market'], type: 'district-dk', parentLocationId: 'loc-dk-emberwood',
         description: 'Night market in Emberwood. Traders: Eren Marlow (supplies), Aldor (magic items), Orson Fairweather (delirium), Armin Gainsbury (adventuring gear).',
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-bark', campaignId: 'campaign-drakkenheim', name: 'Bark and Buzzard',
-        aliases: ['Bark and Buzzard'], type: 'building', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Bark and Buzzard'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood',
         description: 'Recommended tavern. Food 1gp, room 2gp per person. Owner — Karin Alsberg.',
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-skull', campaignId: 'campaign-drakkenheim', name: 'Skull and Sword Taphouse',
-        aliases: ['Skull and Sword'], type: 'building', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Skull and Sword'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood',
         description: "Queen's Men tavern. Suspicious atmosphere. Place for contacts with Queen's Men.",
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-red-lion', campaignId: 'campaign-drakkenheim', name: 'Red Lion Hotel',
-        aliases: ['Red Lion'], type: 'building', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Red Lion'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood',
         description: 'Hotel in Emberwood. River spends evenings in the private library. Former owner Kosta Stavros — killed by a doppelganger.',
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-gilded-lily', campaignId: 'campaign-drakkenheim', name: 'Gilded Lily',
-        aliases: ['Gilded Lily'], type: 'building', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Gilded Lily'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood',
         description: 'Owned by Madam Rochelle. Grogs for 1gp, live music evenings. Open mic nights.',
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-smithy', campaignId: 'campaign-drakkenheim', name: 'Crowe and Sons Smithy',
-        aliases: ['Crowe Smithy'], type: 'building', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Crowe Smithy'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood',
         description: 'Tobias Crowe smithy. Expensive but custom-made.',
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-chapel', campaignId: 'campaign-drakkenheim', name: 'Chapel of Saint Ardenna',
-        aliases: ['Chapel of Saint Ardenna'], type: 'building', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Chapel of Saint Ardenna'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood',
         description: 'Base of the Knights of the Silver Order in Emberwood. Center of the Sacred Flame.',
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-watchtower', campaignId: 'campaign-drakkenheim', name: 'Emberwood Watchtower',
-        aliases: ['Watchtower', 'Lantern Tower'], type: 'building', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Watchtower', 'Lantern Tower'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood',
         description: 'Hooded Lanterns tower — tallest structure in the village. Guard at the bridge, delirium contamination check. Watch captain — Raine Highlash.',
         createdAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'loc-dk-old-rattlecan', campaignId: 'campaign-drakkenheim', name: 'Old Rattlecan',
-        aliases: ['Old Rattlecan'], type: 'building', parentLocationId: 'loc-dk-emberwood',
+        aliases: ['Old Rattlecan'], type: 'building-dk', parentLocationId: 'loc-dk-emberwood',
         description: 'Animated armor in the backyard of Bark and Buzzard. Local entertainment. In session 3 locals climbed it — Patrikeyevna got hit. Creator unknown.',
         createdAt: new Date('2025-09-23T00:00:00Z'),
       },
@@ -504,7 +509,7 @@ async function main() {
   await prisma.location.create({
     data: {
       id: 'loc-dk-city', campaignId: 'campaign-drakkenheim', name: 'Drakkenheim',
-      aliases: ['Drakkenheim'], type: 'city', settlementPopulation: 40000,
+      aliases: ['Drakkenheim'], type: 'city-dk', settlementPopulation: 40000,
       parentLocationId: 'loc-dk-region',
       description: 'Ruined city. Meteorite impact site with delirium. Extremely dangerous: contamination, monsters, Tainted. Dran river — safe zone boundary.',
       createdAt: new Date('2025-09-01T00:00:00Z'),
@@ -516,19 +521,19 @@ async function main() {
     data: [
       {
         id: 'loc-dk-house-copperpot', campaignId: 'campaign-drakkenheim', name: "House with Copperpot's Corpse",
-        aliases: ["Copperpot's House"], type: 'building', parentLocationId: 'loc-dk-city',
+        aliases: ["Copperpot's House"], type: 'building-dk', parentLocationId: 'loc-dk-city',
         description: 'Place in Drakkenheim with the corpse of Coxworth B. Copperpot. Contains: broken teleportation circle, hidden note in unknown language (undeciphered), wall inscription.',
         createdAt: new Date('2025-10-15T00:00:00Z'),
       },
       {
         id: 'loc-dk-champions-gate', campaignId: 'campaign-drakkenheim', name: "Champion's Gate",
-        aliases: ["Champion's Gate"], type: 'building', parentLocationId: 'loc-dk-city',
+        aliases: ["Champion's Gate"], type: 'building-dk', parentLocationId: 'loc-dk-city',
         description: 'Gate in Drakkenheim — gathering place of Followers of the Falling Fire cultists. Lucretia Mathias is stationed here.',
         createdAt: new Date('2026-01-08T00:00:00Z'),
       },
       {
         id: 'loc-dk-rat-nest', campaignId: 'campaign-drakkenheim', name: 'Rat Nest',
-        aliases: ['Rat Nest'], type: 'dungeon', parentLocationId: 'loc-dk-city',
+        aliases: ['Rat Nest'], type: 'dungeon-dk', parentLocationId: 'loc-dk-city',
         description: 'Rat nest in Drakkenheim ruins. Petra Lang was held here. Cleared by the party.',
         createdAt: new Date('2025-10-01T00:00:00Z'),
       },
@@ -539,7 +544,7 @@ async function main() {
   await prisma.location.create({
     data: {
       id: 'loc-dk-bent-row', campaignId: 'campaign-drakkenheim', name: 'Bent Row',
-      aliases: ['Bent Row'], type: 'district', parentLocationId: 'loc-dk-city',
+      aliases: ['Bent Row'], type: 'district-dk', parentLocationId: 'loc-dk-city',
       description: "Underground district of Drakkenheim in the Spire District beyond the Rat Nest. Lair of several Queen's Men groups: Sewer Cobras, Rose and Thorns, Wounded Hearts.",
       createdAt: new Date('2025-09-01T00:00:00Z'),
     },
@@ -550,25 +555,25 @@ async function main() {
     data: [
       {
         id: 'loc-dk-old-imperial-pub', campaignId: 'campaign-drakkenheim', name: 'Old Imperial Pub',
-        aliases: ['Old Imperial Pub'], type: 'building', parentLocationId: 'loc-dk-bent-row',
+        aliases: ['Old Imperial Pub'], type: 'building-dk', parentLocationId: 'loc-dk-bent-row',
         description: "Underground tavern in Bent Row. Base of 'Rose and Thorns' Queen's Men faction. Owned by Rosa Carver, bartender — Izrael.",
         createdAt: new Date('2026-01-15T00:00:00Z'),
       },
       {
         id: 'loc-dk-sweaty-bugbear', campaignId: 'campaign-drakkenheim', name: 'Sweaty Bugbear',
-        aliases: ['Sweaty Bugbear'], type: 'building', parentLocationId: 'loc-dk-bent-row',
+        aliases: ['Sweaty Bugbear'], type: 'building-dk', parentLocationId: 'loc-dk-bent-row',
         description: "Underground tavern in Bent Row. Veronika Yad's place. Party received free steak as apology here. Patrikeyevna hit a gnome tied to a target with a dart.",
         createdAt: new Date('2026-03-16T00:00:00Z'),
       },
       {
         id: 'loc-dk-smis-palace', campaignId: 'campaign-drakkenheim', name: "Smi's Palace",
-        aliases: ["Smi's Palace"], type: 'building', parentLocationId: 'loc-dk-bent-row',
+        aliases: ["Smi's Palace"], type: 'building-dk', parentLocationId: 'loc-dk-bent-row',
         description: "Underground establishment in Bent Row. Base of 'Wounded Hearts' Queen's Men faction. Owner — Kristian Lam, elf waitress Tilda. Party stayed here after session 15.",
         createdAt: new Date('2026-02-26T00:00:00Z'),
       },
       {
         id: 'loc-dk-arena', campaignId: 'campaign-drakkenheim', name: 'Arena',
-        aliases: ['Underground Arena'], type: 'dungeon', parentLocationId: 'loc-dk-bent-row',
+        aliases: ['Underground Arena'], type: 'dungeon-dk', parentLocationId: 'loc-dk-bent-row',
         description: 'Large underground arena in the sewers beneath Bent Row. Floor in blood and mud, benches for ~40 spectators, fighting ring with wooden barricades, VIP platform. Organizer — Bull (scarred face, one blind eye). Bets taken by halfling Rocky.',
         createdAt: new Date('2026-03-09T00:00:00Z'),
       },
@@ -1070,7 +1075,7 @@ async function main() {
       // ── Farchester ──────────────────────────────────────────────
       {
         id: 'faction-fc-red', campaignId: 'campaign-farchester', name: 'Red Faction (Imperial)',
-        type: 'faction', aliases: ['Red Faction', 'Imperial Guard'],
+        type: 'faction-fc', aliases: ['Red Faction', 'Imperial Guard'],
         description: 'Represent imperial order. Lord-Admiral Kronhev appointed 2 years ago — the wall was built under his rule. Red guards answer to Kronhev.',
         goals: 'Keep Farchester under imperial control. Suppress all opposition.',
         symbols: 'Red guard uniform, imperial eagle',
@@ -1078,7 +1083,7 @@ async function main() {
       },
       {
         id: 'faction-fc-blue', campaignId: 'campaign-farchester', name: 'Blue Faction (City)',
-        type: 'faction', aliases: ['Blue Faction', 'City Guard'],
+        type: 'faction-fc', aliases: ['Blue Faction', 'City Guard'],
         description: 'Represent the interests of native Farchester citizens. Burgmaster Stoungriv is originally a free-spirit. Enthusiastic about elves, unlike the Reds.',
         goals: 'Defend the city from Gefara Order spies. Deal with protesters. Normalize the food situation.',
         symbols: 'Blue guard uniform',
@@ -1086,7 +1091,7 @@ async function main() {
       },
       {
         id: 'group-fc-party', campaignId: 'campaign-farchester', name: 'The Farchester Party',
-        type: 'guild', aliases: ['The Party'],
+        type: 'guild-fc', aliases: ['The Party'],
         description: 'The adventuring party operating in Farchester: Alvin, Godrik, Evelina, Esme, and Yanko. Hired by Burgmaster Stoungriv to find Gefara Order agents.',
         goals: 'Investigate the city, find spies, and survive.',
         partyRelation: 'self',
@@ -1094,14 +1099,14 @@ async function main() {
       },
       {
         id: 'group-fc-goblin-protesters', campaignId: 'campaign-farchester', name: 'Goblin Protesters',
-        type: 'faction', aliases: ['Goblin Camp'],
+        type: 'faction-fc', aliases: ['Goblin Camp'],
         description: 'Goblins camped outside the eastern gate of Farchester. Led by shaman Gnurk. Their caves are flooding — they made a deal with a gnome mage (possibly Tuts) who did magic with the river. They grow mushrooms now.',
         goals: 'Obtain special mold from the city. Resolve the flooding of their caves.',
         createdAt: new Date('2026-03-12T00:00:00Z'), updatedAt: new Date('2026-03-12T00:00:00Z'),
       },
       {
         id: 'group-fc-elf-reps', campaignId: 'campaign-farchester', name: 'Elf Representatives',
-        type: 'faction', aliases: ['Elf Camp', 'Elf Delegation'],
+        type: 'faction-fc', aliases: ['Elf Camp', 'Elf Delegation'],
         description: 'Elves camped outside the western gate of Farchester. Led by Elarwen. The city is polluting the forest — elves are ready to cooperate in exchange for solving the pollution problem.',
         goals: 'Stop the city from polluting the forest.',
         createdAt: new Date('2026-03-12T00:00:00Z'), updatedAt: new Date('2026-03-12T00:00:00Z'),
@@ -1110,7 +1115,7 @@ async function main() {
       // ── Drakkenheim ─────────────────────────────────────────────
       {
         id: 'faction-dk-lanterns', campaignId: 'campaign-drakkenheim', name: 'The Hooded Lanterns',
-        type: 'military', aliases: ['Lanterns'],
+        type: 'military-dk', aliases: ['Lanterns'],
         description: 'Guard Emberwood and strive to revive the old power — restore the former capital. Members wear characteristic lanterns.',
         goals: 'Restore Drakkenheim. Protect Emberwood from delirium threats.',
         symbols: 'Lantern, gray cloak',
@@ -1119,7 +1124,7 @@ async function main() {
       },
       {
         id: 'faction-dk-queens', campaignId: 'campaign-drakkenheim', name: "Queen's Men",
-        type: 'criminal', aliases: ["Queen's Men"],
+        type: 'criminal-dk', aliases: ["Queen's Men"],
         description: "Bandits and thieves, divided into several subgroups: Sewer Cobras (Bent Row), Rose and Thorns (Old Imperial Pub), Wounded Hearts (Smi's Palace). Symbol — red diamond as tattoo.",
         goals: 'Control the criminal underworld of Emberwood and surroundings.',
         symbols: 'Red diamond (diamond suit), tattoo',
@@ -1128,7 +1133,7 @@ async function main() {
       },
       {
         id: 'faction-dk-amethyst', campaignId: 'campaign-drakkenheim', name: 'The Amethyst Academy',
-        type: 'academy', aliases: ['Amethyst Academy', 'Amethysts'],
+        type: 'academy-dk', aliases: ['Amethyst Academy', 'Amethysts'],
         description: 'Powerful magical organization interested in delirium. Hide information about Oscar Yoren.',
         goals: 'Monopoly on the study and use of delirium.',
         symbols: 'Amethyst crystal',
@@ -1137,7 +1142,7 @@ async function main() {
       },
       {
         id: 'faction-dk-flame', campaignId: 'campaign-drakkenheim', name: 'The Followers of the Falling Fire',
-        type: 'religion', aliases: ['Falling Fire', 'Followers'],
+        type: 'religion-dk', aliases: ['Falling Fire', 'Followers'],
         description: "Religious cult worshipping the delirium meteorite as a sacred sign. Based at Champion's Gate.",
         goals: 'Spread the delirium cult. Control the ruins of Drakkenheim.',
         symbols: 'Falling star, orange flame',
@@ -1146,7 +1151,7 @@ async function main() {
       },
       {
         id: 'faction-dk-silver', campaignId: 'campaign-drakkenheim', name: 'Knights of the Silver Order',
-        type: 'military', aliases: ['Silver Order', 'Silver Knights'],
+        type: 'military-dk', aliases: ['Silver Order', 'Silver Knights'],
         description: 'Knightly order seeking to destroy delirium contamination and purify Drakkenheim.',
         goals: 'Complete destruction of delirium. Restoration of order.',
         symbols: 'Silver shield, white cloak',
@@ -1155,7 +1160,7 @@ async function main() {
       },
       {
         id: 'group-dk-party', campaignId: 'campaign-drakkenheim', name: 'The Drakkenheim Party',
-        type: 'guild', aliases: ['The Party', 'Adventurers'],
+        type: 'guild-dk', aliases: ['The Party', 'Adventurers'],
         description: 'The adventuring party: Korvin (Human Wizard), Vermira (Dwarf Paladin), Sai (Elf), Patrikeyevna (Monk). They navigate the dangerous ruins and underground districts.',
         goals: 'Survive Drakkenheim, find Oscar Yoren, uncover the truth about the delirium.',
         partyRelation: 'self',
@@ -1163,19 +1168,19 @@ async function main() {
       },
       {
         id: 'group-dk-lang-family', campaignId: 'campaign-drakkenheim', name: 'Lang Family',
-        type: 'family', aliases: ['Langs'],
+        type: 'family-dk', aliases: ['Langs'],
         description: 'Ansom Lang and Petra Lang are siblings. Both members of the Hooded Lanterns. Petra was captured by rats and rescued by the party from Rat Nest in session 7.',
         createdAt: new Date('2025-09-01T00:00:00Z'), updatedAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'group-dk-crowe-family', campaignId: 'campaign-drakkenheim', name: 'Crowe Family',
-        type: 'family', aliases: ['Crowes'],
+        type: 'family-dk', aliases: ['Crowes'],
         description: 'Tobias Crowe and his daughter Emma. Run Crowe and Sons smithy in Emberwood.',
         createdAt: new Date('2025-09-01T00:00:00Z'), updatedAt: new Date('2025-09-01T00:00:00Z'),
       },
       {
         id: 'group-dk-road-travelers', campaignId: 'campaign-drakkenheim', name: 'Road Travelers',
-        type: 'guild', aliases: ['Rikard Group'],
+        type: 'guild-dk', aliases: ['Rikard Group'],
         description: 'Rikard Vos, Ludwig von Graff, and Endra Jansen — a group of travelers on the road to Emberwood. Rikard touched delirium and transformed. Ludwig died. Endra survived.',
         createdAt: new Date('2025-09-01T00:00:00Z'), updatedAt: new Date('2025-09-01T00:00:00Z'),
       },

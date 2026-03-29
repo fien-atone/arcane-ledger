@@ -32,6 +32,7 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
       sessionCount: 0,
       memberCount: 1,
       myRole: 'gm',
+      enabledSections: [],
     };
     create.mutate(campaign, {
       onSuccess: (created) => {

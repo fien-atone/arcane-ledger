@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuest, useSaveQuest, useDeleteQuest } from '@/features/quests/api/queries';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
-import { BackLink, InlineRichField } from '@/shared/ui';
+import { BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Quest, QuestStatus } from '@/entities/quest';
 
@@ -17,6 +18,8 @@ const STATUS_CONFIG: Record<QuestStatus, { label: string; icon: string; pill: st
 
 export default function QuestDetailPage() {
   const { id: campaignId, questId } = useParams<{ id: string; questId: string }>();
+  const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const { data: quest, isLoading, isError } = useQuest(campaignId ?? '', questId ?? '');
   const { data: npcs } = useNpcs(campaignId ?? '');
   const saveQuest = useSaveQuest(campaignId ?? '');
@@ -31,6 +34,10 @@ export default function QuestDetailPage() {
     if (!quest) return;
     saveQuest.mutate({ ...quest, [field]: html || undefined });
   }, [quest, saveQuest]);
+
+  if (!questsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   if (isLoading) {
     return (
@@ -155,6 +162,7 @@ export default function QuestDetailPage() {
             </div>
 
             {/* Quest giver */}
+            {npcsEnabled && (
             <section>
               <div className="flex items-center gap-4 mb-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
@@ -188,6 +196,7 @@ export default function QuestDetailPage() {
                 <p className="text-xs text-on-surface-variant/40 italic">No quest giver set.</p>
               )}
             </section>
+            )}
 
             {/* Reward */}
             <section>

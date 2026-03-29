@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLocations } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
-import { EmptyState, RichContent } from '@/shared/ui';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { EmptyState, RichContent, SectionDisabled } from '@/shared/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
 import type { Location, LocationType } from '@/entities/location';
@@ -88,6 +89,7 @@ function LocationDetail({
   campaignId: string;
   typeMap: TypeMap;
 }) {
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
   const { data: allNpcs } = useNpcs(campaignId);
   const children = allLocations.filter((l) => l.parentLocationId === loc.id).sort((a, b) => {
     const catA = CATEGORY_ORDER.indexOf(typeMap.get(a.type)?.category ?? '');
@@ -199,7 +201,7 @@ function LocationDetail({
         )}
 
         {/* NPCs */}
-        {npcsHere.length > 0 && (
+        {npcsEnabled && npcsHere.length > 0 && (
           <div>
             <div className="flex items-center gap-4 mb-3">
               <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">
@@ -231,6 +233,7 @@ function LocationDetail({
 
 export default function LocationListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const { data: locations, isLoading, isError } = useLocations(campaignId ?? '');
   const { data: locationTypes = [] } = useLocationTypes(campaignId);
   const [typeFilter, setTypeFilter] = useState<LocationType | 'all'>('all');
@@ -327,6 +330,10 @@ export default function LocationListPage() {
   }, [locations, typeFilter, search, sortByCategory]);
 
   const selected = locations?.find((l) => l.id === selectedId) ?? filtered[0] ?? null;
+
+  if (!locationsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">

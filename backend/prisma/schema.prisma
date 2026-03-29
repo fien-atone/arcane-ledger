@@ -24,24 +24,25 @@ model User {
 // ── Campaigns ────────────────────────────────────────────────────────────────
 
 model Campaign {
-  id          String    @id @default(uuid())
-  title       String
-  description String?
-  createdAt   DateTime  @default(now())
-  archivedAt  DateTime?
+  id              String    @id @default(uuid())
+  title           String
+  description     String?
+  enabledSections String[]  @default([])
+  createdAt       DateTime  @default(now())
+  archivedAt      DateTime?
 
-  members    CampaignMember[]
-  sessions   Session[]
-  npcs       NPC[]
-  quests     Quest[]
-  groups     Group[]
+  members       CampaignMember[]
+  sessions      Session[]
+  npcs          NPC[]
+  quests        Quest[]
+  groups        Group[]
   locationTypes LocationType[]
   groupTypes    GroupType[]
   speciesTypes  SpeciesType[]
-  species      Species[]
-  locations  Location[]
-  relations  Relation[]
-  characters PlayerCharacter[]
+  species       Species[]
+  locations     Location[]
+  relations     Relation[]
+  characters    PlayerCharacter[]
 }
 
 model CampaignMember {
@@ -247,6 +248,7 @@ model Group {
   campaignId    String
   name          String
   type          String
+  groupType     GroupType? @relation(fields: [type], references: [id], onDelete: SetNull)
   aliases       String[] @default([])
   description   String   @default("")
   goals         String?
@@ -269,6 +271,7 @@ model Location {
   name                 String
   aliases              String[]  @default([])
   type                 String
+  locationType         LocationType? @relation(fields: [type], references: [id], onDelete: SetNull)
   settlementPopulation Int?
   biome                String?
   parentLocation       Location? @relation("LocationHierarchy", fields: [parentLocationId], references: [id], onDelete: SetNull)
@@ -279,9 +282,9 @@ model Location {
   mapMarkers           Json      @default("[]") // MapMarker[]
   createdAt            DateTime  @default(now())
 
-  children      Location[]            @relation("LocationHierarchy")
-  npcPresences  NPCLocationPresence[]
-  sessionLinks  SessionLocation[]
+  children     Location[]            @relation("LocationHierarchy")
+  npcPresences NPCLocationPresence[]
+  sessionLinks SessionLocation[]
 }
 
 // ── Location Types (global, not per-campaign) ────────────────────────────────
@@ -292,16 +295,22 @@ model LocationType {
   campaignId   String
   name         String
   icon         String
-  category     String   // world, civilization, geographic, water, poi, travel
+  category     String // world, civilization, geographic, water, poi, travel
   biomeOptions String[] @default([])
   isSettlement Boolean  @default(false)
   builtin      Boolean  @default(false)
   createdAt    DateTime @default(now())
+
+  locations    Location[]
+  parentRules  LocationTypeContainmentRule[] @relation("ContainmentParent")
+  childRules   LocationTypeContainmentRule[] @relation("ContainmentChild")
 }
 
 model LocationTypeContainmentRule {
-  id           String @id @default(uuid())
+  id           String       @id @default(uuid())
+  parentType   LocationType @relation("ContainmentParent", fields: [parentTypeId], references: [id], onDelete: Cascade)
   parentTypeId String
+  childType    LocationType @relation("ContainmentChild", fields: [childTypeId], references: [id], onDelete: Cascade)
   childTypeId  String
 
   @@unique([parentTypeId, childTypeId])
@@ -317,6 +326,8 @@ model GroupType {
   icon        String   @default("groups")
   description String?
   createdAt   DateTime @default(now())
+
+  groups Group[]
 }
 
 // ── Species (global) ─────────────────────────────────────────────────────────
@@ -327,8 +338,8 @@ model Species {
   campaignId  String
   name        String
   pluralName  String?
-  type        String   // humanoid, beast, undead, etc.
-  size        String   // tiny, small, medium, large, huge, gargantuan
+  type        String // humanoid, beast, undead, etc.
+  size        String // tiny, small, medium, large, huge, gargantuan
   description String?
   traits      String[] @default([])
   image       String?
@@ -353,9 +364,9 @@ model Relation {
   id             String   @id @default(uuid())
   campaign       Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId     String
-  fromEntityType String   // npc, character, group
+  fromEntityType String // npc, character, group
   fromEntityId   String
-  toEntityType   String   // npc, character, group
+  toEntityType   String // npc, character, group
   toEntityId     String
   friendliness   Int      @default(0) // -80, -40, 0, 40, 80
   note           String?

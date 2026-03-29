@@ -2,9 +2,10 @@ import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGroup, useSaveGroup, useDeleteGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs, useAddNPCGroupMembership, useRemoveNPCGroupMembership } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
-import { BackLink, InlineRichField } from '@/shared/ui';
+import { BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
 import type { Group } from '@/entities/group';
 
@@ -116,6 +117,8 @@ function AddMemberPanel({ onClose, groupId, nonMembers }: AddMemberPanelProps) {
 
 export default function GroupDetailPage() {
   const { id: campaignId, groupId } = useParams<{ id: string; groupId: string }>();
+  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
@@ -147,6 +150,10 @@ export default function GroupDetailPage() {
   };
 
   const tc = groupTypes?.find((t) => t.id === group?.type) ?? { name: group?.type ?? '', icon: 'category' };
+
+  if (!groupsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   if (isLoading) {
     return (
@@ -228,6 +235,7 @@ export default function GroupDetailPage() {
             />
 
             {/* Members */}
+            {npcsEnabled && (
             <section className="space-y-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Members</h2>
@@ -283,9 +291,10 @@ export default function GroupDetailPage() {
                 </div>
               )}
             </section>
+            )}
           </div>
 
-          {/* ── Right column (35%) ──────────────────────────────── */}
+          {/* ��─ Right column (35%) ────────────────────────��─────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
             <div className="flex justify-end gap-2">
               {confirmDelete ? (

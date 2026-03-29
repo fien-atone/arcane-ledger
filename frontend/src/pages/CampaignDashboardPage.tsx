@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useCampaign, useSaveCampaign } from '@/features/campaigns/api/queries';
+import { useCampaign, useSaveCampaign, getEnabledSections } from '@/features/campaigns/api/queries';
 import { useSessions } from '@/features/sessions/api/queries';
 import { useQuests } from '@/features/quests/api';
 import { useParty } from '@/features/characters/api/queries';
@@ -9,7 +9,9 @@ import { useLocations } from '@/features/locations/api';
 import { useGroups } from '@/features/groups/api';
 import { InlineRichField } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
+import { ManageSectionsDrawer } from '@/features/campaigns/ui/ManageSectionsDrawer';
 import type { CampaignSummary } from '@/entities/campaign';
+import type { CampaignSection } from '@/entities/campaign';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -133,6 +135,7 @@ export default function CampaignDashboardPage() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [sectionsOpen, setSectionsOpen] = useState(false);
 
   const saveDescription = useCallback((html: string) => {
     if (!campaign) return;
@@ -177,6 +180,23 @@ export default function CampaignDashboardPage() {
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
     .slice(0, 5);
 
+  // Section visibility
+  const enabled = getEnabledSections(campaign);
+  const enabledSet = new Set(enabled);
+  const sectionOn = (s: CampaignSection) => enabledSet.has(s);
+
+  // Quick nav items filtered by enabled sections
+  const quickNavItems = [
+    { label: 'Sessions', section: 'sessions' as CampaignSection, count: String(sessionCount), icon: 'auto_stories', to: 'sessions' },
+    { label: 'NPCs', section: 'npcs' as CampaignSection, count: String(npcCount), icon: 'person', to: 'npcs' },
+    { label: 'Locations', section: 'locations' as CampaignSection, count: String(locationCount), icon: 'location_on', to: 'locations' },
+    { label: 'Groups', section: 'groups' as CampaignSection, count: String(groupCount), icon: 'groups', to: 'groups' },
+    { label: 'Quests', section: 'quests' as CampaignSection, count: `${questActiveCount}/${questTotal}`, sub: 'active', icon: 'auto_awesome', to: 'quests' },
+    { label: 'Social Graph', section: 'social_graph' as CampaignSection, icon: 'hub', to: 'npcs/relationships' },
+    { label: 'Party', section: 'party' as CampaignSection, icon: 'shield_person', to: 'party' },
+    { label: 'Species', section: 'species' as CampaignSection, icon: 'blur_on', to: 'species' },
+  ].filter((item) => enabledSet.has(item.section));
+
 
   return (
     <div className="flex-1 min-h-screen bg-surface overflow-y-auto">
@@ -184,7 +204,14 @@ export default function CampaignDashboardPage() {
 
         {/* Campaign header */}
         <header className="mb-8">
-          <div className="flex items-center justify-end mb-2">
+          <div className="flex items-center justify-end gap-2 mb-2">
+            <button
+              onClick={() => setSectionsOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant/40 text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-primary/30 hover:text-primary transition-colors"
+            >
+              <span className="material-symbols-outlined text-[14px]">settings</span>
+              Sections
+            </button>
             {confirmArchive ? (
               <div className="flex items-center gap-2 px-3 py-2 border border-outline-variant/20 bg-surface-container rounded-sm">
                 <span className="text-[10px] text-on-surface-variant">
@@ -275,28 +302,23 @@ export default function CampaignDashboardPage() {
         </header>
 
         {/* Quick Nav */}
-        <div className="grid grid-cols-6 gap-3 mb-8 pb-8 border-b border-outline-variant/10">
-          {[
-            { label: 'Sessions', count: String(sessionCount), icon: 'auto_stories', to: 'sessions' },
-            { label: 'NPCs', count: String(npcCount), icon: 'person', to: 'npcs' },
-            { label: 'Locations', count: String(locationCount), icon: 'location_on', to: 'locations' },
-            { label: 'Groups', count: String(groupCount), icon: 'groups', to: 'groups' },
-            { label: 'Quests', count: `${questActiveCount}/${questTotal}`, sub: 'active', icon: 'auto_awesome', to: 'quests' },
-            { label: 'Social Graph', icon: 'hub', to: 'npcs/relationships' },
-          ].map(({ label, count, sub, icon, to }) => (
-            <Link
-              key={to}
-              to={`/campaigns/${campaignId}/${to}`}
-              className="group flex items-center gap-3 p-4 bg-primary/5 border border-primary/10 hover:border-primary/30 hover:bg-primary/8 rounded-sm transition-colors"
-            >
-              <span className="material-symbols-outlined text-primary/30 group-hover:text-primary/60 transition-colors text-xl">{icon}</span>
-              <div>
-                {count && <p className="text-xl font-bold text-primary leading-none">{count}</p>}
-                <p className={`text-[9px] font-label uppercase tracking-widest text-primary/50 ${!count ? 'text-[10px]' : ''}`}>{label}{sub && <span className="text-primary/30 ml-1">{sub}</span>}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {quickNavItems.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8 pb-8 border-b border-outline-variant/10">
+            {quickNavItems.map(({ label, count, sub, icon, to }) => (
+              <Link
+                key={to}
+                to={`/campaigns/${campaignId}/${to}`}
+                className="group flex items-center gap-3 p-4 bg-primary/5 border border-primary/10 hover:border-primary/30 hover:bg-primary/8 rounded-sm transition-colors"
+              >
+                <span className="material-symbols-outlined text-primary/30 group-hover:text-primary/60 transition-colors text-xl">{icon}</span>
+                <div>
+                  {count && <p className="text-xl font-bold text-primary leading-none">{count}</p>}
+                  <p className={`text-[9px] font-label uppercase tracking-widest text-primary/50 ${!count ? 'text-[10px]' : ''}`}>{label}{sub && <span className="text-primary/30 ml-1">{sub}</span>}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
         <div className="grid grid-cols-12 gap-8">
 
@@ -304,7 +326,7 @@ export default function CampaignDashboardPage() {
           <div className="col-span-12 lg:col-span-8 space-y-8">
 
             {/* Next Session */}
-            {(() => {
+            {sectionOn('sessions') && (() => {
               if (!nextSession) {
                 return (
                   <Link
@@ -377,7 +399,7 @@ export default function CampaignDashboardPage() {
             })()}
 
             {/* Recent Sessions */}
-            <section>
+            {sectionOn('sessions') && <section>
               <div className="flex items-center gap-4 mb-5">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
                   Recent Sessions
@@ -421,10 +443,10 @@ export default function CampaignDashboardPage() {
               ) : (
                 <p className="text-xs text-on-surface-variant/40 italic">No sessions recorded yet.</p>
               )}
-            </section>
+            </section>}
 
             {/* Active Quests */}
-            <section>
+            {sectionOn('quests') && <section>
               <div className="flex items-center gap-4 mb-5">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
                   Active Quests
@@ -459,7 +481,7 @@ export default function CampaignDashboardPage() {
               ) : (
                 <p className="text-xs text-on-surface-variant/40 italic">No active quests.</p>
               )}
-            </section>
+            </section>}
 
           </div>
 
@@ -467,10 +489,10 @@ export default function CampaignDashboardPage() {
           <div className="col-span-12 lg:col-span-4 space-y-8">
 
             {/* Session Calendar */}
-            <SessionCalendar sessions={sessions ?? []} campaignId={campaignId} />
+            {sectionOn('sessions') && <SessionCalendar sessions={sessions ?? []} campaignId={campaignId} />}
 
             {/* The Party */}
-            <section>
+            {sectionOn('party') && <section>
               <div className="flex items-center gap-4 mb-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
                   The Party
@@ -513,10 +535,10 @@ export default function CampaignDashboardPage() {
               ) : (
                 <p className="text-xs text-on-surface-variant/40 italic">No characters yet.</p>
               )}
-            </section>
+            </section>}
 
             {/* Recently Updated NPCs */}
-            {recentNpcs.length > 0 && (
+            {sectionOn('npcs') && recentNpcs.length > 0 && (
               <section>
                 <div className="flex items-center gap-4 mb-4">
                   <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
@@ -560,6 +582,12 @@ export default function CampaignDashboardPage() {
           </div>
         </div>
       </div>
+
+      <ManageSectionsDrawer
+        open={sectionsOpen}
+        onClose={() => setSectionsOpen(false)}
+        campaign={campaign as CampaignSummary}
+      />
     </div>
   );
 }

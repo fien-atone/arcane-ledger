@@ -1,5 +1,7 @@
 import { gql } from '@apollo/client';
 import { useQuery, useMutation } from '@apollo/client/react';
+import { ALL_SECTIONS } from '@/entities/campaign';
+import type { CampaignSection, CampaignSummary } from '@/entities/campaign';
 
 // ── GraphQL documents ─────────────────────────────────────────────
 
@@ -12,6 +14,7 @@ const CAMPAIGNS_QUERY = gql`
       createdAt
       archivedAt
       myRole
+      enabledSections
       sessionCount
       memberCount
       lastSession {
@@ -31,6 +34,7 @@ const CAMPAIGN_QUERY = gql`
       createdAt
       archivedAt
       myRole
+      enabledSections
       sessionCount
       memberCount
       lastSession {
@@ -74,6 +78,30 @@ const UPDATE_CAMPAIGN = gql`
     }
   }
 `;
+
+const UPDATE_CAMPAIGN_SECTIONS = gql`
+  mutation UpdateCampaignSections($campaignId: ID!, $sections: [String!]!) {
+    updateCampaignSections(campaignId: $campaignId, sections: $sections) {
+      id
+      enabledSections
+    }
+  }
+`;
+
+// ── Helpers ───────────────────────────────────────────────────────
+
+/** Returns effective enabled sections. Empty array = all enabled (backward compat). */
+export function getEnabledSections(campaign: CampaignSummary | undefined): CampaignSection[] {
+  if (!campaign || !campaign.enabledSections || campaign.enabledSections.length === 0) return ALL_SECTIONS;
+  return campaign.enabledSections.map((s) => s.toLowerCase() as CampaignSection);
+}
+
+/** Hook: check if a specific section is enabled for a campaign. */
+export function useSectionEnabled(campaignId: string, section: CampaignSection): boolean {
+  const { data: campaign } = useCampaign(campaignId);
+  const enabled = getEnabledSections(campaign);
+  return new Set(enabled).has(section);
+}
 
 // ── Hooks ─────────────────────────────────────────────────────────
 
@@ -143,6 +171,18 @@ export const useCreateCampaign = () => {
         options?.onSuccess?.(created);
       });
     },
+    isPending: loading,
+  };
+};
+
+export const useUpdateCampaignSections = () => {
+  const [mutate, { loading }] = useMutation(UPDATE_CAMPAIGN_SECTIONS);
+  return {
+    mutate: (campaignId: string, sections: CampaignSection[]) =>
+      mutate({
+        variables: { campaignId, sections: sections.map((s) => s.toUpperCase()) },
+        refetchQueries: [{ query: CAMPAIGN_QUERY, variables: { id: campaignId } }],
+      }),
     isPending: loading,
   };
 };

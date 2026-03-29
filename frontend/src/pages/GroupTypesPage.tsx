@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGroupTypes, useDeleteGroupType, useSaveGroupType } from '@/features/groupTypes/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import { GroupTypeEditDrawer } from '@/features/groupTypes/ui';
-import { InlineRichField, EmptyState } from '@/shared/ui';
+import { InlineRichField, EmptyState, SectionDisabled } from '@/shared/ui';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 export default function GroupTypesPage() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const { id: campaignId } = useParams<{ id: string }>();
+  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const { data: groupTypes, isLoading } = useGroupTypes(campaignId, debouncedSearch);
   const deleteGroupType = useDeleteGroupType();
 
@@ -36,6 +38,10 @@ export default function GroupTypesPage() {
       },
     });
   };
+
+  if (!groupsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 h-full bg-surface flex flex-col overflow-hidden">

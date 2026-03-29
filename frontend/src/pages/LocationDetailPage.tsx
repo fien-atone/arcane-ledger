@@ -4,8 +4,9 @@ import { useLocation, useLocations, useSaveLocation, useDeleteLocation } from '@
 import { LocationEditDrawer } from '@/features/locations/ui';
 import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPresence } from '@/features/npcs/api/queries';
 import { useSessions } from '@/features/sessions/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
-import { InlineRichField, ImageUpload } from '@/shared/ui';
+import { InlineRichField, ImageUpload, SectionDisabled } from '@/shared/ui';
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Location, MapMarker } from '@/entities/location';
@@ -846,6 +847,9 @@ export default function LocationDetailPage() {
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
+  const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const { data: locationTypes = [] } = useLocationTypes(campaignId ?? '');
   const saveMutation = useSaveLocation(campaignId ?? '');
   const deleteLocation = useDeleteLocation(campaignId ?? '');
@@ -870,6 +874,10 @@ export default function LocationDetailPage() {
       }),
     [allLocations, location?.id, typeMap],
   );
+
+  if (!locationsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   if (isLoading) {
     return (
@@ -1062,6 +1070,7 @@ export default function LocationDetailPage() {
             )}
 
             {/* NPCs Here */}
+            {npcsEnabled && (
             <section className="space-y-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
@@ -1245,8 +1254,10 @@ export default function LocationDetailPage() {
                 </div>
               ) : null}
             </section>
+            )}
 
             {/* Session Appearances */}
+            {sessionsEnabled && (
             <section className="space-y-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
@@ -1280,6 +1291,7 @@ export default function LocationDetailPage() {
                 </div>
               )}
             </section>
+            )}
           </div>
 
           {/* ── Right column (35%) ──────────────────────────────── */}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Select, EmptyState } from '@/shared/ui';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { Select, EmptyState, SectionDisabled } from '@/shared/ui';
 import {
   useLocationTypes,
   useContainmentRules,
@@ -507,6 +508,7 @@ function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: bo
 
 export default function LocationTypesPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const { data: types,        isLoading: loadingTypes }   = useLocationTypes(campaignId);
   const { data: containRules, isLoading: loadingContain } = useContainmentRules();
 
@@ -530,6 +532,10 @@ export default function LocationTypesPage() {
     : sorted;
 
   const selected = types?.find((t) => t.id === selectedId) ?? sorted[0] ?? null;
+
+  if (!locationsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">

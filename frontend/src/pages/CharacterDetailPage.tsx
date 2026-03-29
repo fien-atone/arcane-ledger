@@ -2,16 +2,19 @@ import { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useParty, useSaveCharacter, useAddCharacterGroupMembership, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, InlineRichField } from '@/shared/ui';
+import { ImageUpload, BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { PlayerCharacter } from '@/entities/character';
 
 export default function CharacterDetailPage() {
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
+  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const { data: characters, isLoading, isError, refetch } = useParty(campaignId ?? '');
   const character = characters?.find((c) => c.id === charId);
   const { data: allSpecies } = useSpecies(campaignId ?? '');
@@ -53,6 +56,10 @@ export default function CharacterDetailPage() {
       console.error('Upload failed:', err);
     }
   };
+
+  if (!partyEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   if (isLoading) {
     return (
@@ -129,7 +136,7 @@ export default function CharacterDetailPage() {
               placeholder="History, origin, key events…" />
 
             {/* Group Memberships */}
-            {(() => {
+            {groupsEnabled && (() => {
               const memberGroupIds = new Set((character.groupMemberships ?? []).map((m) => m.groupId));
               const availableGroups = (groups ?? [])
                 .filter((g) => !memberGroupIds.has(g.id))

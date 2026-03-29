@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
-import { useCampaign } from '@/features/campaigns/api/queries';
+import { useCampaign, getEnabledSections } from '@/features/campaigns/api/queries';
 import { useAuthStore } from '@/features/auth';
 import { ChangelogDrawer, getHasUnread } from '@/widgets/Changelog/ChangelogDrawer';
+import { ManageSectionsDrawer } from '@/features/campaigns/ui/ManageSectionsDrawer';
+import type { CampaignSection } from '@/entities/campaign';
 
 interface NavItem {
   label: string;
@@ -12,6 +14,8 @@ interface NavItem {
   to: (id: string) => string;
   exact: boolean;
   sub?: boolean;
+  /** Links this nav item to a CampaignSection for filtering */
+  sectionId?: CampaignSection;
 }
 
 interface NavSection {
@@ -24,21 +28,21 @@ const NAV: Array<NavItem | NavSection> = [
   {
     section: 'World',
     items: [
-      { label: 'Locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false },
-      { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true },
-      { label: 'NPCs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false },
-      { label: 'Groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false },
-      { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true },
-      { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false },
-      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true },
+      { label: 'Locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false, sectionId: 'locations' },
+      { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true, sectionId: 'locations' },
+      { label: 'NPCs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false, sectionId: 'npcs' },
+      { label: 'Groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false, sectionId: 'groups' },
+      { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true, sectionId: 'groups' },
+      { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false, sectionId: 'species' },
+      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true, sectionId: 'species' },
     ],
   },
   {
     section: 'Adventure',
     items: [
-      { label: 'Sessions', icon: 'event', to: (id) => `/campaigns/${id}/sessions`, exact: false },
-      { label: 'Party', icon: 'shield_person', to: (id) => `/campaigns/${id}/party`, exact: false },
-      { label: 'Quests', icon: 'assignment', to: (id) => `/campaigns/${id}/quests`, exact: false },
+      { label: 'Sessions', icon: 'event', to: (id) => `/campaigns/${id}/sessions`, exact: false, sectionId: 'sessions' },
+      { label: 'Party', icon: 'shield_person', to: (id) => `/campaigns/${id}/party`, exact: false, sectionId: 'party' },
+      { label: 'Quests', icon: 'assignment', to: (id) => `/campaigns/${id}/quests`, exact: false, sectionId: 'quests' },
     ],
   },
 ];
@@ -53,11 +57,31 @@ export function Sidebar() {
   const logout = useAuthStore((s) => s.logout);
 
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [sectionsOpen, setSectionsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
     setHasUnread(getHasUnread());
   }, []);
+
+  const enabledSections = useMemo(() => getEnabledSections(campaign ?? undefined), [campaign]);
+  const enabledSet = useMemo(() => new Set(enabledSections), [enabledSections]);
+
+  /** Filter NAV entries by enabled sections */
+  const filteredNav = useMemo(() => {
+    return NAV.map((entry) => {
+      if ('section' in entry) {
+        const items = entry.items.filter(
+          (item) => !item.sectionId || enabledSet.has(item.sectionId),
+        );
+        if (items.length === 0) return null;
+        return { ...entry, items };
+      }
+      return entry; // Dashboard — always shown
+    }).filter(Boolean) as Array<NavItem | NavSection>;
+  }, [enabledSet]);
+
+  const isGm = campaign?.myRole === 'gm';
 
   const handleLogout = () => {
     logout();
@@ -113,7 +137,7 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
         <ul className="px-2 space-y-0.5">
-          {NAV.map((entry) => {
+          {filteredNav.map((entry) => {
             if ('section' in entry) {
               const { section, items } = entry;
               return (
@@ -191,6 +215,20 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-outline-variant/10 px-2 py-3 space-y-0.5">
+        {/* Manage Sections (GM only) */}
+        {isGm && (
+          <button
+            onClick={() => setSectionsOpen(true)}
+            title={collapsed ? 'Manage Sections' : undefined}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
+          >
+            <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
+              settings
+            </span>
+            {!collapsed && <span className="whitespace-nowrap">Manage Sections</span>}
+          </button>
+        )}
+
         {/* What's New */}
         <button
           onClick={() => { setChangelogOpen(true); setHasUnread(false); }}
@@ -224,6 +262,15 @@ export function Sidebar() {
         <ChangelogDrawer
           open={changelogOpen}
           onClose={() => setChangelogOpen(false)}
+        />,
+        document.body,
+      )}
+
+      {campaign && createPortal(
+        <ManageSectionsDrawer
+          open={sectionsOpen}
+          onClose={() => setSectionsOpen(false)}
+          campaign={campaign}
         />,
         document.body,
       )}

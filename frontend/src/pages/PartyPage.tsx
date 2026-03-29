@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useParty } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useSpecies } from '@/features/species/api';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
-import { RichContent } from '@/shared/ui';
+import { RichContent, SectionDisabled } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
 
 function SectionHeader({ title }: { title: string }) {
@@ -101,6 +102,7 @@ function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaign
 
 export default function PartyPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: characters, isLoading, isError } = useParty(campaignId ?? '');
   const { data: allSpecies } = useSpecies(campaignId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -118,6 +120,10 @@ export default function PartyPage() {
   ) ?? [];
 
   const selected = characters?.find((c) => c.id === selectedId) ?? filtered[0] ?? null;
+
+  if (!partyEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">

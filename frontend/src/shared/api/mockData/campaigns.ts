@@ -15,6 +15,7 @@ export const MOCK_CAMPAIGNS: CampaignSummary[] = [
       datetime: '2026-03-18T18:00:00Z',
     },
     myRole: 'gm',
+    enabledSections: [],
   },
   {
     id: 'campaign-drakkenheim',
@@ -30,5 +31,6 @@ export const MOCK_CAMPAIGNS: CampaignSummary[] = [
       datetime: '2026-03-16T18:00:00Z',
     },
     myRole: 'gm',
+    enabledSections: [],
   },
 ];

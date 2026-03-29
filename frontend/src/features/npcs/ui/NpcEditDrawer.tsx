@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSaveNpc } from '@/features/npcs/api';
 import { useSpecies } from '@/features/species/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { NPC, NpcGender, NpcStatus } from '@/entities/npc';
@@ -40,6 +41,7 @@ const labelCls =
 
 export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   const save = useSaveNpc();
+  const speciesEnabled = useSectionEnabled(campaignId, 'species');
   const { data: allSpecies } = useSpecies(campaignId);
   const isEdit = !!npc;
 
@@ -201,6 +203,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           </div>
 
           {/* Species */}
+          {speciesEnabled && (
           <div>
             <label className={labelCls}>Species</label>
             <Select
@@ -211,6 +214,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
               onChange={(v) => setSpeciesId(v ?? '')}
             />
           </div>
+          )}
 
         </div>
 

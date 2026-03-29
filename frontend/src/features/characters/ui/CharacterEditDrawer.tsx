@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveCharacter } from '@/features/characters/api/queries';
 import { useSpecies } from '@/features/species/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui';
 import type { PlayerCharacter, CharacterGender } from '@/entities/character';
 
@@ -22,6 +23,7 @@ const labelCls =
 
 export function CharacterEditDrawer({ open, onClose, campaignId, character }: Props) {
   const save = useSaveCharacter();
+  const speciesEnabled = useSectionEnabled(campaignId, 'species');
   const { data: allSpecies } = useSpecies(campaignId);
   const isNew = !character;
 
@@ -101,7 +103,8 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
           </div>
 
           {/* Species / Class */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${speciesEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {speciesEnabled && (
             <div>
               <label className={labelCls}>Species</label>
               <Select
@@ -113,6 +116,7 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
                   .map((s) => ({ value: s.id, label: s.name }))}
               />
             </div>
+            )}
             <div>
               <label className={labelCls}>Class</label>
               <input type="text" value={cls} onChange={(e) => setCls(e.target.value)}
