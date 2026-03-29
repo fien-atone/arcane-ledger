@@ -275,13 +275,14 @@ export default function CampaignDashboardPage() {
         </header>
 
         {/* Quick Nav */}
-        <div className="grid grid-cols-5 gap-3 mb-8 pb-8 border-b border-outline-variant/10">
+        <div className="grid grid-cols-6 gap-3 mb-8 pb-8 border-b border-outline-variant/10">
           {[
             { label: 'Sessions', count: String(sessionCount), icon: 'auto_stories', to: 'sessions' },
             { label: 'NPCs', count: String(npcCount), icon: 'person', to: 'npcs' },
             { label: 'Locations', count: String(locationCount), icon: 'location_on', to: 'locations' },
             { label: 'Groups', count: String(groupCount), icon: 'groups', to: 'groups' },
             { label: 'Quests', count: `${questActiveCount}/${questTotal}`, sub: 'active', icon: 'auto_awesome', to: 'quests' },
+            { label: 'Social Graph', icon: 'hub', to: 'npcs/relationships' },
           ].map(({ label, count, sub, icon, to }) => (
             <Link
               key={to}
@@ -290,8 +291,8 @@ export default function CampaignDashboardPage() {
             >
               <span className="material-symbols-outlined text-primary/30 group-hover:text-primary/60 transition-colors text-xl">{icon}</span>
               <div>
-                <p className="text-xl font-bold text-primary leading-none">{count}</p>
-                <p className="text-[9px] font-label uppercase tracking-widest text-primary/50">{label}{sub && <span className="text-primary/30 ml-1">{sub}</span>}</p>
+                {count && <p className="text-xl font-bold text-primary leading-none">{count}</p>}
+                <p className={`text-[9px] font-label uppercase tracking-widest text-primary/50 ${!count ? 'text-[10px]' : ''}`}>{label}{sub && <span className="text-primary/30 ml-1">{sub}</span>}</p>
               </div>
             </Link>
           ))}

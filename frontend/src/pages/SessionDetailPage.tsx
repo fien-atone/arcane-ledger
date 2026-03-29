@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSessions, useSaveSession, useDeleteSession } from '@/features/sessions/api/queries';
+import { useCampaign } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useQuests } from '@/features/quests/api';
@@ -27,8 +28,52 @@ const QUEST_STATUS_PILL: Record<QuestStatus, string> = {
   undiscovered: 'bg-surface-variant text-on-surface-variant border-outline-variant/10',
 };
 
+function toGoogleCalUrl(title: string, datetime: string, description?: string): string {
+  const start = new Date(datetime);
+  const end = new Date(start.getTime() + 3 * 60 * 60 * 1000); // 3 hours default
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    ...(description ? { details: description } : {}),
+  });
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
+function generateIcs(title: string, datetime: string, description?: string): string {
+  const start = new Date(datetime);
+  const end = new Date(start.getTime() + 3 * 60 * 60 * 1000);
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Arcane Ledger//EN',
+    'BEGIN:VEVENT',
+    `DTSTART:${fmt(start)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:${title}`,
+    ...(description ? [`DESCRIPTION:${description.replace(/\n/g, '\\n')}`] : []),
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ];
+  return lines.join('\r\n');
+}
+
+function downloadIcs(title: string, datetime: string, description?: string) {
+  const ics = generateIcs(title, datetime, description);
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function SessionDetailPage() {
   const { id: campaignId, sessionId } = useParams<{ id: string; sessionId: string }>();
+  const { data: campaign } = useCampaign(campaignId ?? '');
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
   const session = sessions?.find((s) => s.id === sessionId);
   const { data: allNpcs } = useNpcs(campaignId ?? '');
@@ -49,6 +94,7 @@ export default function SessionDetailPage() {
   const [confirmRemoveQuestId, setConfirmRemoveQuestId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [calMenuOpen, setCalMenuOpen] = useState(false);
 
   const saveField = useCallback((field: keyof Session, html: string) => {
     if (!session) return;
@@ -104,6 +150,39 @@ export default function SessionDetailPage() {
                   </span>
                 )}
                 <div className="ml-auto flex items-center gap-2">
+                  {/* Add to Calendar */}
+                  {session.datetime && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setCalMenuOpen((v) => !v)}
+                        className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant text-xs font-label uppercase tracking-widest rounded-sm hover:text-primary hover:border-primary/30 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">calendar_add_on</span>
+                        Calendar
+                      </button>
+                      {calMenuOpen && (
+                        <div className="absolute z-50 top-full mt-1 right-0 w-48 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl py-1">
+                          <a
+                            href={toGoogleCalUrl(`${campaign?.title ? campaign.title + ' — ' : ''}Session #${session.number}`, session.datetime, session.brief)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setCalMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-high transition-colors text-xs text-on-surface"
+                          >
+                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">event</span>
+                            Google Calendar
+                          </a>
+                          <button
+                            onClick={() => { downloadIcs(`${campaign?.title ? campaign.title + ' — ' : ''}Session #${session.number}`, session.datetime, session.brief); setCalMenuOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-high transition-colors text-xs text-on-surface text-left"
+                          >
+                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">download</span>
+                            Apple / Outlook (.ics)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {confirmDelete ? (
                     <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
                       <span className="text-[10px] text-on-surface-variant">Delete this session?</span>
