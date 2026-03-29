@@ -16,7 +16,7 @@ export const npcResolvers = {
       { campaignId, id, input }: { campaignId: string; id?: string; input: { name: string; aliases?: string[]; status?: string; gender?: string; age?: number; species?: string; speciesId?: string; appearance?: string; personality?: string; description?: string; motivation?: string; flaws?: string; gmNotes?: string; image?: string } },
       { prisma }: Context,
     ) => {
-      const data = {
+      const data: Record<string, unknown> = {
         name: input.name,
         aliases: input.aliases ?? [],
         status: toEnum(input.status, 'ALIVE'),
@@ -30,8 +30,8 @@ export const npcResolvers = {
         motivation: input.motivation ?? null,
         flaws: input.flaws ?? null,
         gmNotes: input.gmNotes ?? null,
-        image: input.image ?? null,
       };
+      if (input.image !== undefined) data.image = input.image ?? null;
 
       if (id) {
         return prisma.nPC.update({ where: { id }, data });

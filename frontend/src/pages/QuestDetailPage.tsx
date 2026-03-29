@@ -4,6 +4,7 @@ import { useQuest, useSaveQuest, useDeleteQuest } from '@/features/quests/api/qu
 import { useNpcs } from '@/features/npcs/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
 import { BackLink, InlineRichField } from '@/shared/ui';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Quest, QuestStatus } from '@/entities/quest';
 
 const STATUS_CONFIG: Record<QuestStatus, { label: string; icon: string; pill: string }> = {
@@ -168,7 +169,7 @@ export default function QuestDetailPage() {
                 >
                   <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
                     {giver.image ? (
-                      <img src={giver.image} alt={giver.name} className="w-full h-full object-cover rounded-sm" />
+                      <img src={resolveImageUrl(giver.image)} alt={giver.name} className="w-full h-full object-cover rounded-sm" />
                     ) : (
                       <span className="text-xs font-bold text-on-surface-variant/60">
                         {giver.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}

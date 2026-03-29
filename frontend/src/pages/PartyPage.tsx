@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useParty } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
 import { useSpecies } from '@/features/species/api';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { PlayerCharacter } from '@/entities/character';
 
 function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaignId: string }) {
@@ -17,7 +18,7 @@ function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaign
       {/* Header image / placeholder */}
       <div className="relative w-full h-64 flex-shrink-0 bg-surface-container-low overflow-hidden">
         {char.image ? (
-          <img src={char.image} alt={char.name} className="w-full h-full object-cover" />
+          <img src={resolveImageUrl(char.image)} alt={char.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="font-headline text-[8rem] font-bold text-on-surface-variant/8 select-none leading-none">{initials}</span>

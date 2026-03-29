@@ -1,11 +1,13 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useLocation, useLocations, useSaveLocation } from '@/features/locations/api';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useLocation, useLocations, useSaveLocation, useDeleteLocation } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
-import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
+import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPresence } from '@/features/npcs/api/queries';
 import { useSessions } from '@/features/sessions/api';
 import { useLocationTypes } from '@/features/locationTypes';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, ImageUpload } from '@/shared/ui';
+import { uploadFile } from '@/shared/api/uploadFile';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Location, MapMarker } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
 import { CATEGORY_ICON_COLOR, CATEGORY_HEX_COLOR, CATEGORY_BADGE_CLS, CATEGORY_TILE_CLS, CATEGORY_LABEL } from '@/entities/locationType';
@@ -20,89 +22,85 @@ type TypeMap = Map<string, LocationTypeEntry>;
 interface LocationPlaceholderProps {
   name: string;
   imageUrl?: string;
-  onUpload: (dataUrl: string) => void;
+  markers?: MapMarker[];
+  childLocations?: { id: string; name: string; type: string }[];
+  typeMap?: TypeMap;
+  onUpload: (file: File) => void;
   onOpenMap: () => void;
 }
 
-function LocationPlaceholder({ name, imageUrl, onUpload, onOpenMap }: LocationPlaceholderProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+function LocationPlaceholder({ name, imageUrl, markers, childLocations, typeMap, onUpload, onOpenMap }: LocationPlaceholderProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [imgBounds, setImgBounds] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
+  // Recalculate image bounds within object-contain container
+  const recalc = useCallback(() => {
+    const el = containerRef.current;
+    if (!el || !imageUrl) return;
+    const img = el.querySelector('img[alt]') as HTMLImageElement | null;
+    if (!img || !img.naturalWidth) return;
+    const cW = el.offsetWidth;
+    const cH = el.offsetHeight;
+    const imgRatio = img.naturalWidth / img.naturalHeight;
+    const containerRatio = cW / cH;
+    let w: number, h: number;
+    if (imgRatio > containerRatio) {
+      w = cW; h = cW / imgRatio;
+    } else {
+      h = cH; w = cH * imgRatio;
+    }
+    setImgBounds({ left: (cW - w) / 2, top: (cH - h) / 2, width: w, height: h });
+  }, [imageUrl]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      onUpload(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-    // Reset so the same file can be re-selected
-    e.target.value = '';
-  };
+  useEffect(() => {
+    recalc();
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
+  }, [recalc]);
+
+  const pins = (markers ?? []).map((m) => {
+    const child = childLocations?.find((c) => c.id === m.linkedLocationId);
+    const te = child && typeMap ? typeMap.get(child.type) : undefined;
+    const icon = te?.icon ?? 'location_on';
+    const iconColor = te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/60';
+    const bubbleCls = te ? (CATEGORY_MARKER_CLS[te.category]?.bubble ?? MARKER_DEFAULT_CLS.bubble) : MARKER_DEFAULT_CLS.bubble;
+    return { ...m, icon, iconColor, bubbleCls, label: m.label || child?.name };
+  });
 
   return (
-    <div className="relative group w-full">
-      <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-transparent blur-xl opacity-50 group-hover:opacity-100 transition duration-1000" />
-      <div className="relative w-full h-80 overflow-hidden rounded-sm bg-surface-container-low flex items-center justify-center">
-        {imageUrl ? (
-          <>
-            <img
-              src={imageUrl}
-              alt={name}
-              className="w-full h-full object-cover"
-            />
-            {/* Open Map overlay */}
-            <button
-              type="button"
-              onClick={onOpenMap}
-              className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30"
-              title="Open Map"
-            >
-              <span className="material-symbols-outlined text-white text-4xl drop-shadow-lg">map</span>
-              <span className="text-white text-xs font-label uppercase tracking-widest mt-1 drop-shadow">Open Map</span>
-            </button>
-            {/* Re-upload button (bottom-right, does NOT open map) */}
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-              className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5"
-              title="Replace image"
-            >
-              <span className="material-symbols-outlined text-white text-base">photo_camera</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <span className="font-headline text-[8rem] font-bold text-on-surface-variant/10 select-none leading-none">
-              {initials}
-            </span>
-            {/* Upload overlay */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20"
-              title="Upload Map"
-            >
-              <span className="material-symbols-outlined text-white text-4xl drop-shadow-lg">photo_camera</span>
-              <span className="text-white text-xs font-label uppercase tracking-widest mt-1 drop-shadow">Upload Map</span>
-            </button>
-          </>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none" />
-      </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
+    <div className="relative group/loc" ref={containerRef}>
+      <ImageUpload
+        image={imageUrl}
+        name={name}
+        className="w-full aspect-[4/3]"
+        onUpload={onUpload}
+        onView={imageUrl ? onOpenMap : undefined}
+        onLoad={recalc}
       />
+      {/* Map markers overlay */}
+      {imageUrl && pins.length > 0 && imgBounds && (
+        <div
+          className="absolute pointer-events-none overflow-hidden group-hover/loc:opacity-0 transition-opacity"
+          style={{ left: imgBounds.left, top: imgBounds.top, width: imgBounds.width, height: imgBounds.height }}
+        >
+          {pins.map((pin) => (
+            <div
+              key={pin.id}
+              className="absolute flex flex-col items-center"
+              style={{ left: `${pin.x}%`, top: `${pin.y}%`, transform: 'translate(-50%, -14px)' }}
+            >
+              <div className={`w-5 h-5 rounded-full border-2 ${pin.bubbleCls} shadow-[0_2px_6px_rgba(0,0,0,0.6)] flex items-center justify-center`}>
+                <span className={`material-symbols-outlined text-[10px] ${pin.iconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{pin.icon}</span>
+              </div>
+              {pin.label && (
+                <div className="mt-0.5 px-1 py-px rounded-sm text-[7px] font-medium text-on-surface bg-surface-container/90 border border-outline-variant/30 leading-tight whitespace-nowrap shadow-sm max-w-[80px] truncate">
+                  {pin.label}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -831,6 +829,7 @@ const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', '
 
 export default function LocationDetailPage() {
   const { id: campaignId, locationId } = useParams<{ id: string; locationId: string }>();
+  const [imgVersion, setImgVersion] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [editingNoteForNpcId, setEditingNoteForNpcId] = useState<string | null>(null);
@@ -843,13 +842,18 @@ export default function LocationDetailPage() {
   const [mapAddLocDrawerOpen, setMapAddLocDrawerOpen] = useState(false);
   const [mapExternalMarker, setMapExternalMarker] = useState<MapMarker | null>(null);
 
-  const { data: location, isLoading, isError } = useLocation(campaignId ?? '', locationId ?? '');
+  const { data: location, isLoading, isError, refetch } = useLocation(campaignId ?? '', locationId ?? '');
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
   const { data: locationTypes = [] } = useLocationTypes(campaignId ?? '');
   const saveMutation = useSaveLocation(campaignId ?? '');
+  const deleteLocation = useDeleteLocation(campaignId ?? '');
+  const navigate = useNavigate();
   const saveNpc = useSaveNpc();
+  const addNpcPresence = useAddNPCLocationPresence();
+  const removeNpcPresence = useRemoveNPCLocationPresence();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const typeMap = useMemo<TypeMap>(
     () => new Map(locationTypes.map((t) => [t.id, t])),
@@ -916,35 +920,38 @@ export default function LocationDetailPage() {
     .filter((s) => s.locationIds?.includes(location.id))
     .sort((a, b) => b.number - a.number);
 
-  const handleImageUpload = (dataUrl: string) => {
-    saveMutation.mutate({ ...location, image: dataUrl });
+  const handleImageUpload = async (file: File) => {
+    if (import.meta.env.VITE_USE_MOCK !== 'false') {
+      const reader = new FileReader();
+      reader.onload = (ev) => saveMutation.mutate({ ...location, image: ev.target?.result as string });
+      reader.readAsDataURL(file);
+      return;
+    }
+    try {
+      await uploadFile(campaignId!, 'location', location.id, file);
+      setImgVersion((v) => v + 1);
+      refetch();
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
   };
 
   const handleAddNpc = (npc: NPC) => {
-    const presences = [...(npc.locationPresences ?? [])];
-    if (!presences.find((p) => p.locationId === location.id)) {
-      presences.push({ locationId: location.id });
-    }
-    saveNpc.mutate({ ...npc, locationPresences: presences }, {
-      onSuccess: () => { setAddNpcOpen(false); setAddNpcSearch(''); },
-    });
+    addNpcPresence.mutate(
+      { npcId: npc.id, locationId: location.id },
+      { onSuccess: () => { setAddNpcOpen(false); setAddNpcSearch(''); } },
+    );
   };
 
   const handleRemoveNpc = (npc: NPC) => {
-    saveNpc.mutate({ ...npc, locationPresences: (npc.locationPresences ?? []).filter((p) => p.locationId !== location.id) });
+    removeNpcPresence.mutate({ npcId: npc.id, locationId: location.id });
   };
 
   const handleSaveNote = (npc: NPC, note: string) => {
-    const presences = npc.locationPresences ? [...npc.locationPresences] : [];
-    const idx = presences.findIndex((p) => p.locationId === location.id);
-    if (idx >= 0) {
-      presences[idx] = { ...presences[idx], note: note.trim() || undefined };
-    } else {
-      presences.push({ locationId: location.id, note: note.trim() || undefined });
-    }
-    saveNpc.mutate({ ...npc, locationPresences: presences }, {
-      onSuccess: () => setEditingNoteForNpcId(null),
-    });
+    addNpcPresence.mutate(
+      { npcId: npc.id, locationId: location.id, note: note.trim() || undefined },
+      { onSuccess: () => setEditingNoteForNpcId(null) },
+    );
   };
 
   return (
@@ -958,16 +965,6 @@ export default function LocationDetailPage() {
           <span className="material-symbols-outlined text-sm">chevron_left</span>
           Locations
         </Link>
-      </div>
-
-      {/* Hero image — full width */}
-      <div className="px-10 pt-4">
-        <LocationPlaceholder
-          name={location.name}
-          imageUrl={location.image}
-          onUpload={handleImageUpload}
-          onOpenMap={() => setMapOpen(true)}
-        />
       </div>
 
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
@@ -1147,7 +1144,7 @@ export default function LocationDetailPage() {
                           >
                             <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
                               {npc.image ? (
-                                <img src={npc.image} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
+                                <img src={resolveImageUrl(npc.image)} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
                               ) : (
                                 <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
                               )}
@@ -1288,8 +1285,22 @@ export default function LocationDetailPage() {
           {/* ── Right column (35%) ──────────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            {/* Edit button */}
-            <div className="flex justify-end">
+            {/* Actions */}
+            <div className="flex justify-end gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[10px] text-on-surface-variant">Delete this location?</span>
+                  <button onClick={() => deleteLocation.mutate(location.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/locations`) })}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
               <button
                 onClick={() => setEditOpen(true)}
                 className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors"
@@ -1298,6 +1309,17 @@ export default function LocationDetailPage() {
                 Edit Location
               </button>
             </div>
+
+            {/* Image / Map */}
+            <LocationPlaceholder
+              name={location.name}
+              imageUrl={resolveImageUrl(location.image, imgVersion)}
+              markers={location.mapMarkers}
+              childLocations={childLocations}
+              typeMap={typeMap}
+              onUpload={handleImageUpload}
+              onOpenMap={() => setMapOpen(true)}
+            />
 
             {/* Parent location */}
             {parentLocation && (
@@ -1348,7 +1370,7 @@ export default function LocationDetailPage() {
                   className="block relative group/minimap rounded-sm overflow-hidden"
                 >
                   <MiniMapPreview
-                    imageUrl={parentLocation.image}
+                    imageUrl={resolveImageUrl(parentLocation.image)!}
                     markerX={parentMarker.x}
                     markerY={parentMarker.y}
                     markerLabel={parentMarker.label}
@@ -1439,7 +1461,7 @@ export default function LocationDetailPage() {
 
       {mapOpen && location.image && (
         <MapViewer
-          imageUrl={location.image}
+          imageUrl={resolveImageUrl(location.image, imgVersion)!}
           locationId={location.id}
           locationName={location.name}
           initialMarkers={location.mapMarkers ?? []}

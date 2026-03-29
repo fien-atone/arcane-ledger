@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useNpc, useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
+import { useNpc, useNpcs, useSaveNpc, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useAddNPCLocationPresence, useRemoveNPCLocationPresence } from '@/features/npcs/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { useLocations } from '@/features/locations/api';
 import { useSessions } from '@/features/sessions/api';
@@ -8,6 +8,8 @@ import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
 import { ImageUpload, BackLink, InlineRichField, LocationIcon } from '@/shared/ui';
+import { uploadFile } from '@/shared/api/uploadFile';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { NPC, NpcStatus, NpcRelationType } from '@/entities/npc';
 
 const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
@@ -32,13 +34,18 @@ const STATUS_STYLES: Record<NpcStatus, { pill: string; label: string }> = {
 
 export default function NpcDetailPage() {
   const { id: campaignId, npcId } = useParams<{ id: string; npcId: string }>();
-  const { data: npc, isLoading, isError } = useNpc(campaignId ?? '', npcId ?? '');
+  const { data: npc, isLoading, isError, refetch } = useNpc(campaignId ?? '', npcId ?? '');
   const { data: groups } = useGroups(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
   const saveNpc = useSaveNpc();
+  const addGroupMembership = useAddNPCGroupMembership();
+  const removeGroupMembership = useRemoveNPCGroupMembership();
+  const addLocationPresence = useAddNPCLocationPresence();
+  const removeLocationPresence = useRemoveNPCLocationPresence();
+  const [imgVersion, setImgVersion] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [addLocSearch, setAddLocSearch] = useState('');
@@ -46,6 +53,11 @@ export default function NpcDetailPage() {
   const [confirmRemoveLocId, setConfirmRemoveLocId] = useState<string | null>(null);
   const [editingNoteForLocId, setEditingNoteForLocId] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
+  const [addGroupOpen, setAddGroupOpen] = useState(false);
+  const [addGroupSearch, setAddGroupSearch] = useState('');
+  const [addGroupRole, setAddGroupRole] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [confirmRemoveGroupId, setConfirmRemoveGroupId] = useState<string | null>(null);
 
   const saveField = useCallback((field: keyof NPC, html: string) => {
     if (!npc) return;
@@ -53,8 +65,20 @@ export default function NpcDetailPage() {
     saveNpc.mutate({ ...npc, [field]: html || undefined, updatedAt: new Date().toISOString() });
   }, [npc, saveNpc]);
 
-  const handleImageUpload = (dataUrl: string) => {
-    saveNpc.mutate({ ...npc!, image: dataUrl, updatedAt: new Date().toISOString() });
+  const handleImageUpload = async (file: File) => {
+    if (import.meta.env.VITE_USE_MOCK !== 'false') {
+      const reader = new FileReader();
+      reader.onload = (ev) => saveNpc.mutate({ ...npc!, image: ev.target?.result as string, updatedAt: new Date().toISOString() });
+      reader.readAsDataURL(file);
+      return;
+    }
+    try {
+      await uploadFile(campaignId!, 'npc', npc!.id, file);
+      setImgVersion((v) => v + 1);
+      refetch();
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
   };
 
   const groupNameById = (id: string) => groups?.find((g) => g.id === id)?.name ?? id;
@@ -98,7 +122,7 @@ export default function NpcDetailPage() {
               <div className="relative group flex-shrink-0">
                 <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
                 <ImageUpload
-                  image={npc.image}
+                  image={resolveImageUrl(npc.image, imgVersion)}
                   name={npc.name}
                   className="relative w-48 h-64"
                   onUpload={handleImageUpload}
@@ -164,40 +188,169 @@ export default function NpcDetailPage() {
               placeholder="History, role, key facts…" />
 
             {/* Group Memberships */}
-            {npc.groupMemberships.length > 0 && (
-              <section className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                    Group Memberships
-                  </h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  {npc.groupMemberships.map((m) => (
-                    <Link
-                      key={m.groupId}
-                      to={`/campaigns/${campaignId}/groups/${m.groupId}`}
-                      className="group flex items-center bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 px-4 py-3 transition-all"
+            {(() => {
+              const memberGroupIds = new Set(npc.groupMemberships.map((m) => m.groupId));
+              const availableGroups = (groups ?? [])
+                .filter((g) => !memberGroupIds.has(g.id))
+                .filter((g) => !addGroupSearch.trim() || g.name.toLowerCase().includes(addGroupSearch.toLowerCase()))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+              const handleAddGroup = () => {
+                if (!selectedGroupId) return;
+                addGroupMembership.mutate(
+                  { npcId: npc.id, groupId: selectedGroupId, relation: addGroupRole.trim() || undefined },
+                  { onSuccess: () => { setAddGroupOpen(false); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); } },
+                );
+              };
+
+              const handleRemoveGroup = (groupId: string) => {
+                removeGroupMembership.mutate({ npcId: npc.id, groupId });
+                setConfirmRemoveGroupId(null);
+              };
+
+              return (
+                <section className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                      Group Memberships
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                    <button
+                      onClick={() => { setAddGroupOpen((v) => !v); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); }}
+                      className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                     >
-                      <span className="material-symbols-outlined text-primary mr-3">groups</span>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
-                          {m.subfaction ?? groupNameById(m.groupId)}
-                        </span>
-                        {m.relation && (
-                          <span className="text-[10px] text-on-surface-variant uppercase tracking-tighter">
-                            {m.relation}
-                          </span>
-                        )}
+                      <span className="material-symbols-outlined text-[13px]">group_add</span>
+                      Add
+                    </button>
+                  </div>
+
+                  {addGroupOpen && (
+                    <div className="border border-outline-variant/20 bg-surface-container-low">
+                      <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
+                        <input
+                          autoFocus
+                          type="text"
+                          value={addGroupSearch}
+                          onChange={(e) => setAddGroupSearch(e.target.value)}
+                          placeholder="Search groups…"
+                          className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
+                        />
                       </div>
-                      <span className="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity ml-3">
-                        arrow_forward
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
+                      <div className="max-h-48 overflow-y-auto">
+                        {availableGroups.length === 0 ? (
+                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">
+                            {(groups ?? []).length === 0 ? 'No groups in this campaign.' : 'No groups found.'}
+                          </p>
+                        ) : availableGroups.map((g) => (
+                          <button
+                            key={g.id}
+                            onClick={() => setSelectedGroupId(selectedGroupId === g.id ? null : g.id)}
+                            className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors ${
+                              selectedGroupId === g.id ? 'bg-primary/8 border-l-2 border-primary' : 'hover:bg-surface-container'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[13px] text-primary">groups</span>
+                            <span className={`text-xs ${selectedGroupId === g.id ? 'text-primary font-medium' : 'text-on-surface'}`}>{g.name}</span>
+                            {selectedGroupId === g.id && (
+                              <span className="material-symbols-outlined text-primary text-[14px] ml-auto" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      {selectedGroupId && (
+                        <div className="px-4 py-3 border-t border-outline-variant/20 space-y-3">
+                          <div>
+                            <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1">
+                              Role <span className="normal-case tracking-normal text-on-surface-variant/40">(optional)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={addGroupRole}
+                              onChange={(e) => setAddGroupRole(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleAddGroup(); }}
+                              placeholder="e.g. Leader, Spy…"
+                              className="w-full bg-surface-container border border-outline-variant/20 focus:border-primary rounded-sm py-1.5 px-2 text-xs text-on-surface focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
+                            />
+                          </div>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => { setAddGroupOpen(false); setSelectedGroupId(null); }}
+                              className="px-3 py-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleAddGroup}
+                              disabled={addGroupMembership.isPending}
+                              className="flex items-center gap-1 px-4 py-1.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-[10px] font-label uppercase tracking-widest rounded-sm disabled:opacity-40 transition-opacity"
+                            >
+                              <span className="material-symbols-outlined text-[13px]">group_add</span>
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {npc.groupMemberships.length === 0 && !addGroupOpen ? (
+                    <p className="text-xs text-on-surface-variant/40 italic">No group memberships.</p>
+                  ) : npc.groupMemberships.length > 0 ? (
+                    <div className="flex flex-wrap gap-4">
+                      {npc.groupMemberships.map((m) => (
+                        <div key={m.groupId} className="group/card flex items-center bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 transition-all">
+                          <Link
+                            to={`/campaigns/${campaignId}/groups/${m.groupId}`}
+                            className="group flex items-center px-4 py-3"
+                          >
+                            <span className="material-symbols-outlined text-primary mr-3">groups</span>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
+                                {m.subfaction ?? groupNameById(m.groupId)}
+                              </span>
+                              {m.relation && (
+                                <span className="text-[10px] text-on-surface-variant uppercase tracking-tighter">
+                                  {m.relation}
+                                </span>
+                              )}
+                            </div>
+                            <span className="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity ml-3">
+                              arrow_forward
+                            </span>
+                          </Link>
+                          {confirmRemoveGroupId === m.groupId ? (
+                            <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
+                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                              <button
+                                onClick={() => handleRemoveGroup(m.groupId)}
+                                className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => setConfirmRemoveGroupId(null)}
+                                className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmRemoveGroupId(m.groupId)}
+                              title="Remove from group"
+                              className="px-2 py-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+              );
+            })()}
 
             {/* Direct Relations */}
             {resolvedRelations.length > 0 && (
@@ -379,32 +532,18 @@ export default function NpcDetailPage() {
                 .sort((a, b) => a.name.localeCompare(b.name));
 
               const handleAddLocation = (locId: string) => {
-                saveNpc.mutate({
-                  ...npc,
-                  locationPresences: [...presences, { locationId: locId }],
-                  updatedAt: new Date().toISOString(),
-                });
+                addLocationPresence.mutate({ npcId: npc.id, locationId: locId });
                 setAddLocOpen(false);
                 setAddLocSearch('');
               };
 
               const handleRemoveLocation = (locId: string) => {
-                saveNpc.mutate({
-                  ...npc,
-                  locationPresences: presences.filter((p) => p.locationId !== locId),
-                  updatedAt: new Date().toISOString(),
-                });
+                removeLocationPresence.mutate({ npcId: npc.id, locationId: locId });
                 setConfirmRemoveLocId(null);
               };
 
               const handleSaveNote = (locId: string, note: string) => {
-                saveNpc.mutate({
-                  ...npc,
-                  locationPresences: presences.map((p) =>
-                    p.locationId === locId ? { ...p, note: note || undefined } : p
-                  ),
-                  updatedAt: new Date().toISOString(),
-                });
+                addLocationPresence.mutate({ npcId: npc.id, locationId: locId, note: note.trim() || undefined });
                 setEditingNoteForLocId(null);
               };
 
@@ -579,7 +718,7 @@ export default function NpcDetailPage() {
           onClick={() => setLightbox(false)}
         >
           <img
-            src={npc.image}
+            src={resolveImageUrl(npc.image, imgVersion)}
             alt={npc.name}
             className="max-w-full max-h-full object-contain drop-shadow-2xl"
           />

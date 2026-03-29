@@ -20,10 +20,6 @@ const GENDER_OPTIONS: SelectOption<NpcGender | ''>[] = [
   { value: 'nonbinary', label: 'Non-binary' },
 ];
 
-function generateId() {
-  return `npc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 const now = () => new Date().toISOString();
 
 function toArray(raw: string): string[] {
@@ -53,7 +49,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   );
 
   const speciesOptions = useMemo<SelectOption<string>[]>(
-    () => (allSpecies ?? []).sort((a, b) => a.name.localeCompare(b.name)).map((s) => ({ value: s.id, label: s.name })),
+    () => [...(allSpecies ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map((s) => ({ value: s.id, label: s.name })),
     [allSpecies],
   );
 
@@ -83,7 +79,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
     const ts = now();
     const selectedSpecies = allSpecies?.find((s) => s.id === speciesId);
     const record: NPC = {
-      id: npc?.id ?? generateId(),
+      id: npc?.id ?? '',
       campaignId,
       name: name.trim(),
       aliases: toArray(aliases),

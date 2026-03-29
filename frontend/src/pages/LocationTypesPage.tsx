@@ -579,8 +579,8 @@ export default function LocationTypesPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {search.trim() && filtered.length === 0 && (
-                <EmptyState icon="account_tree" title="No types match." />
+              {filtered.length === 0 && (
+                <EmptyState icon="account_tree" title={search.trim() ? "No types match." : "No location types yet."} subtitle={search.trim() ? undefined : "Create your first location type to get started."} />
               )}
               {search.trim() ? (
                 // Flat list when searching

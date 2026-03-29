@@ -101,7 +101,7 @@ export const useSaveSession = (campaignId: string) => {
       saveSession({
         variables: {
           campaignId,
-          id: session.id,
+          id: session.id || undefined,
           input: {
             number: session.number,
             title: session.title,

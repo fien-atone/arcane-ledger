@@ -7,6 +7,7 @@ import { useQuests } from '@/features/quests/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
 import { BackLink, LocationIcon, InlineRichField } from '@/shared/ui';
 import type { Session } from '@/entities/session';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { QuestStatus } from '@/entities/quest';
 
 function formatDateTime(iso: string) {
@@ -271,7 +272,7 @@ export default function SessionDetailPage() {
                                 className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0">
                                 <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
                                   {npc.image ? (
-                                    <img src={npc.image} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
+                                    <img src={resolveImageUrl(npc.image)} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
                                   ) : (
                                     <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
                                   )}

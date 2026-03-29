@@ -42,6 +42,42 @@ const SAVE_NPC = gql`
   }
 `;
 
+const ADD_NPC_GROUP_MEMBERSHIP = gql`
+  mutation AddNPCGroupMembership($npcId: ID!, $groupId: ID!, $relation: String, $subfaction: String) {
+    addNPCGroupMembership(npcId: $npcId, groupId: $groupId, relation: $relation, subfaction: $subfaction) {
+      id
+      groupMemberships { groupId relation subfaction }
+    }
+  }
+`;
+
+const REMOVE_NPC_GROUP_MEMBERSHIP = gql`
+  mutation RemoveNPCGroupMembership($npcId: ID!, $groupId: ID!) {
+    removeNPCGroupMembership(npcId: $npcId, groupId: $groupId) {
+      id
+      groupMemberships { groupId relation subfaction }
+    }
+  }
+`;
+
+const ADD_NPC_LOCATION_PRESENCE = gql`
+  mutation AddNPCLocationPresence($npcId: ID!, $locationId: ID!, $note: String) {
+    addNPCLocationPresence(npcId: $npcId, locationId: $locationId, note: $note) {
+      id
+      locationPresences { locationId note }
+    }
+  }
+`;
+
+const REMOVE_NPC_LOCATION_PRESENCE = gql`
+  mutation RemoveNPCLocationPresence($npcId: ID!, $locationId: ID!) {
+    removeNPCLocationPresence(npcId: $npcId, locationId: $locationId) {
+      id
+      locationPresences { locationId note }
+    }
+  }
+`;
+
 const DELETE_NPC = gql`
   mutation DeleteNPC($campaignId: ID!, $id: ID!) {
     deleteNPC(campaignId: $campaignId, id: $id)
@@ -69,11 +105,11 @@ export const useNpcs = (campaignId: string) => {
 };
 
 export const useNpc = (campaignId: string, npcId: string) => {
-  const { data, loading, error } = useQuery<any>(NPC_QUERY, {
+  const { data, loading, error, refetch } = useQuery<any>(NPC_QUERY, {
     variables: { campaignId, id: npcId },
     skip: !npcId,
   });
-  return { data: data?.npc ? mapNpc(data.npc) as NPC : undefined, isLoading: loading, isError: !!error, error };
+  return { data: data?.npc ? mapNpc(data.npc) as NPC : undefined, isLoading: loading, isError: !!error, error, refetch };
 };
 
 export const useSaveNpc = () => {
@@ -94,14 +130,83 @@ export const useSaveNpc = () => {
         motivation: npc.motivation,
         flaws: npc.flaws,
         gmNotes: npc.gmNotes,
-        image: npc.image,
       };
       execute({
-        variables: { campaignId: npc.campaignId, id: npc.id, input },
+        variables: { campaignId: npc.campaignId, id: npc.id || undefined, input },
         refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId: npc.campaignId } }],
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useAddNPCGroupMembership = () => {
+  const [execute, { loading, error }] = useMutation(ADD_NPC_GROUP_MEMBERSHIP);
+  return {
+    mutate: (
+      vars: { npcId: string; groupId: string; relation?: string; subfaction?: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Npcs', 'Groups'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useRemoveNPCGroupMembership = () => {
+  const [execute, { loading, error }] = useMutation(REMOVE_NPC_GROUP_MEMBERSHIP);
+  return {
+    mutate: (
+      vars: { npcId: string; groupId: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Npcs', 'Groups'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useAddNPCLocationPresence = () => {
+  const [execute, { loading, error }] = useMutation(ADD_NPC_LOCATION_PRESENCE);
+  return {
+    mutate: (
+      vars: { npcId: string; locationId: string; note?: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Npcs'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useRemoveNPCLocationPresence = () => {
+  const [execute, { loading, error }] = useMutation(REMOVE_NPC_LOCATION_PRESENCE);
+  return {
+    mutate: (
+      vars: { npcId: string; locationId: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Npcs'],
+      }).then(() => opts?.onSuccess?.());
+    },
     isPending: loading,
     isError: !!error,
   };

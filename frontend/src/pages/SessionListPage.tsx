@@ -4,7 +4,7 @@ import { useSessions } from '@/features/sessions/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
-import { LocationIcon, RichContent } from '@/shared/ui';
+import { LocationIcon, RichContent, EmptyState } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 function formatDate(iso: string) {
@@ -156,7 +156,7 @@ export default function SessionListPage() {
             </div>
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
               {filtered.length === 0 && (
-                <p className="text-xs text-on-surface-variant/40 italic p-6">No sessions found.</p>
+                <EmptyState icon="auto_stories" title="No sessions found." subtitle="Log your first session to begin." />
               )}
               {(() => {
                 const now = new Date();

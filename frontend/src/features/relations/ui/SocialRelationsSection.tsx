@@ -91,7 +91,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
   const handleAdd = (targetId: string) => {
     const now = new Date().toISOString();
     saveRelation.mutate({
-      id: `rel-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: '',
       campaignId,
       fromEntity: { type: 'npc', id: entityId },
       toEntity: { type: 'npc', id: targetId },

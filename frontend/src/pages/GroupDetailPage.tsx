@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGroup, useSaveGroup, useDeleteGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
-import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
+import { useNpcs, useAddNPCGroupMembership, useRemoveNPCGroupMembership } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
 import { BackLink, InlineRichField } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
@@ -25,7 +25,7 @@ interface AddMemberPanelProps {
 }
 
 function AddMemberPanel({ onClose, groupId, nonMembers }: AddMemberPanelProps) {
-  const saveNpc = useSaveNpc();
+  const addMembership = useAddNPCGroupMembership();
   const [search, setSearch] = useState('');
   const [selectedNpc, setSelectedNpc] = useState<NPC | null>(null);
   const [role, setRole] = useState('');
@@ -36,15 +36,10 @@ function AddMemberPanel({ onClose, groupId, nonMembers }: AddMemberPanelProps) {
 
   const handleAdd = () => {
     if (!selectedNpc) return;
-    const updated: NPC = {
-      ...selectedNpc,
-      groupMemberships: [
-        ...selectedNpc.groupMemberships,
-        { npcId: selectedNpc.id, groupId, relation: role.trim() || undefined },
-      ],
-      updatedAt: new Date().toISOString(),
-    };
-    saveNpc.mutate(updated, { onSuccess: onClose });
+    addMembership.mutate(
+      { npcId: selectedNpc.id, groupId, relation: role.trim() || undefined },
+      { onSuccess: onClose },
+    );
   };
 
   return (
@@ -106,7 +101,7 @@ function AddMemberPanel({ onClose, groupId, nonMembers }: AddMemberPanelProps) {
           )}
           <div className="flex items-center justify-end gap-3">
             <button onClick={onClose} className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">Cancel</button>
-            <button onClick={handleAdd} disabled={!selectedNpc || saveNpc.isPending}
+            <button onClick={handleAdd} disabled={!selectedNpc || addMembership.isPending}
               className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
               <span className="material-symbols-outlined text-sm">person_add</span>
               Add Member
@@ -125,7 +120,7 @@ export default function GroupDetailPage() {
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
-  const saveNpc = useSaveNpc();
+  const removeMembership = useRemoveNPCGroupMembership();
   const saveGroup = useSaveGroup();
   const deleteGroup = useDeleteGroup();
   const navigate = useNavigate();
@@ -149,12 +144,7 @@ export default function GroupDetailPage() {
   }, [group, saveGroup]);
 
   const handleRemoveMember = (npc: NPC) => {
-    const updated: NPC = {
-      ...npc,
-      groupMemberships: npc.groupMemberships.filter((m) => m.groupId !== groupId),
-      updatedAt: new Date().toISOString(),
-    };
-    saveNpc.mutate(updated);
+    removeMembership.mutate({ npcId: npc.id, groupId: groupId! });
   };
 
   const tc = groupTypes?.find((t) => t.id === group?.type) ?? { name: group?.type ?? '', icon: 'category' };

@@ -103,13 +103,14 @@ function mapCharacter(raw: any): PlayerCharacter {
 // ── Hooks ─────────────────────────────────────────────────────────
 
 export const useParty = (campaignId: string) => {
-  const { data, loading, error } = useQuery<any>(PARTY_QUERY, {
+  const { data, loading, error, refetch } = useQuery<any>(PARTY_QUERY, {
     variables: { campaignId },
   });
   return {
     data: data?.party?.map(mapCharacter) as PlayerCharacter[] | undefined,
     isLoading: loading,
     isError: !!error,
+    refetch,
   };
 };
 
@@ -121,7 +122,7 @@ export const useSaveCharacter = () => {
       saveCharacter({
         variables: {
           campaignId: character.campaignId,
-          id: character.id,
+          id: character.id || undefined,
           name: character.name,
           gender: character.gender?.toUpperCase(),
           age: character.age,
@@ -135,7 +136,6 @@ export const useSaveCharacter = () => {
           bonds: character.bonds,
           flaws: character.flaws,
           gmNotes: character.gmNotes,
-          image: character.image,
         },
         refetchQueries: [{ query: PARTY_QUERY, variables: { campaignId: character.campaignId } }],
       }).then(() => options?.onSuccess?.());

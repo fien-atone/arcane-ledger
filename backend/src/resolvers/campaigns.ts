@@ -62,7 +62,7 @@ export const campaignResolvers = {
     ) => {
       if (!user) throw new Error('Not authenticated');
 
-      const data = {
+      const data: Record<string, unknown> = {
         name: args.name,
         gender: args.gender ? toEnum(args.gender, 'MALE') : null,
         age: args.age ?? null,
@@ -76,8 +76,8 @@ export const campaignResolvers = {
         bonds: args.bonds ?? null,
         flaws: args.flaws ?? null,
         gmNotes: args.gmNotes ?? '',
-        image: args.image ?? null,
       };
+      if (args.image !== undefined) data.image = args.image ?? null;
 
       if (args.id) {
         return prisma.playerCharacter.update({ where: { id: args.id }, data });

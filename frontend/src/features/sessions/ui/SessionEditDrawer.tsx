@@ -16,10 +16,6 @@ const inputCls =
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
-function generateId() {
-  return `session-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 function parseIso(iso: string): { date: string; time: string } {
   if (!iso) return { date: '', time: '' };
   const d = new Date(iso);
@@ -76,7 +72,7 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
       }, { onSuccess: onClose });
     } else {
       save.mutate({
-        id: generateId(),
+        id: '',
         campaignId,
         title: title.trim() || `Session ${number}`,
         datetime: iso,

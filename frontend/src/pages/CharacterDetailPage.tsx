@@ -5,14 +5,17 @@ import { CharacterEditDrawer } from '@/features/characters/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
 import { ImageUpload, BackLink, InlineRichField } from '@/shared/ui';
+import { uploadFile } from '@/shared/api/uploadFile';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { PlayerCharacter } from '@/entities/character';
 
 export default function CharacterDetailPage() {
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
-  const { data: characters, isLoading, isError } = useParty(campaignId ?? '');
+  const { data: characters, isLoading, isError, refetch } = useParty(campaignId ?? '');
   const character = characters?.find((c) => c.id === charId);
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const saveCharacter = useSaveCharacter();
+  const [imgVersion, setImgVersion] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [lightbox, setLightbox] = useState(false);
 
@@ -26,8 +29,20 @@ export default function CharacterDetailPage() {
     } as PlayerCharacter);
   }, [character, saveCharacter]);
 
-  const handleImageUpload = (dataUrl: string) => {
-    saveCharacter.mutate({ ...character!, image: dataUrl, updatedAt: new Date().toISOString() });
+  const handleImageUpload = async (file: File) => {
+    if (import.meta.env.VITE_USE_MOCK !== 'false') {
+      const reader = new FileReader();
+      reader.onload = (ev) => saveCharacter.mutate({ ...character!, image: ev.target?.result as string, updatedAt: new Date().toISOString() });
+      reader.readAsDataURL(file);
+      return;
+    }
+    try {
+      await uploadFile(campaignId!, 'character', character!.id, file);
+      setImgVersion((v) => v + 1);
+      refetch();
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
   };
 
   if (isLoading) {
@@ -77,7 +92,7 @@ export default function CharacterDetailPage() {
               <div className="relative group flex-shrink-0">
                 <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
                 <ImageUpload
-                  image={character.image}
+                  image={resolveImageUrl(character.image, imgVersion)}
                   name={character.name}
                   className="relative w-48 h-64"
                   onUpload={handleImageUpload}
@@ -151,7 +166,7 @@ export default function CharacterDetailPage() {
           onClick={() => setLightbox(false)}
         >
           <img
-            src={character.image}
+            src={resolveImageUrl(character.image, imgVersion)}
             alt={character.name}
             className="max-w-full max-h-full object-contain drop-shadow-2xl"
           />

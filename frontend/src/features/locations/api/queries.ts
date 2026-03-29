@@ -38,6 +38,12 @@ const SAVE_LOCATION = gql`
   }
 `;
 
+const DELETE_LOCATION = gql`
+  mutation DeleteLocation($campaignId: ID!, $id: ID!) {
+    deleteLocation(campaignId: $campaignId, id: $id)
+  }
+`;
+
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
 export const useLocations = (campaignId: string) => {
@@ -48,24 +54,31 @@ export const useLocations = (campaignId: string) => {
 };
 
 export const useLocation = (campaignId: string, locationId: string) => {
-  const { data, loading, error } = useQuery<any>(LOCATION_QUERY, {
+  const { data, loading, error, refetch } = useQuery<any>(LOCATION_QUERY, {
     variables: { campaignId, id: locationId },
     skip: !locationId,
   });
-  return { data: data?.location as Location | undefined, isLoading: loading, isError: !!error, error };
+  return { data: data?.location as Location | undefined, isLoading: loading, isError: !!error, error, refetch };
 };
 
 export const useSaveLocation = (campaignId: string) => {
   const [execute, { loading, error }] = useMutation(SAVE_LOCATION);
   return {
     mutate: (loc: Location, opts?: { onSuccess?: () => void }) => {
-      const { id, campaignId: cId, createdAt, ...rest } = loc;
+      const { id } = loc;
       const input = {
-        ...rest,
-        mapMarkers: rest.mapMarkers ? JSON.stringify(rest.mapMarkers) : undefined,
+        name: loc.name,
+        aliases: loc.aliases,
+        type: loc.type,
+        parentLocationId: loc.parentLocationId,
+        settlementPopulation: loc.settlementPopulation,
+        biome: loc.biome,
+        description: loc.description,
+        gmNotes: loc.gmNotes,
+        mapMarkers: loc.mapMarkers ? JSON.stringify(loc.mapMarkers) : undefined,
       };
       execute({
-        variables: { campaignId, id, input },
+        variables: { campaignId, id: id || undefined, input },
         refetchQueries: [
           { query: LOCATIONS_QUERY, variables: { campaignId } },
           { query: LOCATION_QUERY, variables: { campaignId, id } },
@@ -73,6 +86,20 @@ export const useSaveLocation = (campaignId: string) => {
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useDeleteLocation = (campaignId: string) => {
+  const [execute, { loading, error }] = useMutation(DELETE_LOCATION);
+  return {
+    mutate: (locationId: string, opts?: { onSuccess?: () => void }) => {
+      execute({
+        variables: { campaignId, id: locationId },
+        refetchQueries: [{ query: LOCATIONS_QUERY, variables: { campaignId } }],
+      }).then(() => opts?.onSuccess?.());
+    },
     isPending: loading,
     isError: !!error,
   };

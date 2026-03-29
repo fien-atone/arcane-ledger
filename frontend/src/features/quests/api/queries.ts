@@ -115,7 +115,7 @@ export const useSaveQuest = (campaignId: string) => {
       saveQuest({
         variables: {
           campaignId,
-          id: quest.id,
+          id: quest.id || undefined,
           input: {
             title: quest.title,
             description: quest.description,

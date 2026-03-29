@@ -5,20 +5,19 @@ interface ImageUploadProps {
   name: string;
   /** Tailwind sizing classes, e.g. "w-full aspect-[21/9]" or "w-48 h-64" */
   className?: string;
-  onUpload: (dataUrl: string) => void;
+  onUpload: (file: File) => void;
   onView?: () => void;
+  onLoad?: () => void;
 }
 
-export function ImageUpload({ image, name, className = 'w-full aspect-[16/9]', onUpload, onView }: ImageUploadProps) {
+export function ImageUpload({ image, name, className = 'w-full aspect-[16/9]', onUpload, onView, onLoad }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initials = name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => onUpload(ev.target?.result as string);
-    reader.readAsDataURL(file);
+    onUpload(file);
     e.target.value = '';
   };
 
@@ -29,7 +28,7 @@ export function ImageUpload({ image, name, className = 'w-full aspect-[16/9]', o
           {/* Blurred backdrop fills empty space around portrait images */}
           <img src={image} aria-hidden alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40 pointer-events-none" />
           {/* Sharp contained image */}
-          <img src={image} alt={name} className="relative w-full h-full object-contain drop-shadow-2xl" />
+          <img src={image} alt={name} className="relative w-full h-full object-contain drop-shadow-2xl" onLoad={onLoad} />
           <div className="absolute inset-0 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
             {onView && (
               <button type="button" onClick={onView} className="flex flex-col items-center gap-1">

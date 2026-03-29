@@ -13,10 +13,6 @@ interface Props {
 
 const now = () => new Date().toISOString();
 
-function generateId() {
-  return `char-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 const inputCls =
   'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
 
@@ -53,7 +49,7 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
     const selectedSpecies = allSpecies?.find((s) => s.id === speciesId);
     const ts = now();
     const record: PlayerCharacter = {
-      id: character?.id ?? generateId(),
+      id: character?.id ?? '',
       campaignId,
       userId: character?.userId ?? 'gm',
       image: character?.image,

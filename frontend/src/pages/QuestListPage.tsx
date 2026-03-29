@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuests } from '@/features/quests/api';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
-import { RichContent } from '@/shared/ui';
+import { RichContent, EmptyState } from '@/shared/ui';
 import type { Quest, QuestStatus } from '@/entities/quest';
 
 const STATUS_CONFIG: Record<QuestStatus, { label: string; dot: string; pill: string; icon: string; iconColor: string }> = {
@@ -165,7 +165,7 @@ export default function QuestListPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {filtered.length === 0 && <p className="text-xs text-on-surface-variant/40 italic p-6">No quests found.</p>}
+              {filtered.length === 0 && <EmptyState icon="map" title="No quests found." subtitle="Create a quest to track objectives." />}
               {filtered.map((quest) => {
                 const st = STATUS_CONFIG[quest.status];
                 const isSelected = selected?.id === quest.id;

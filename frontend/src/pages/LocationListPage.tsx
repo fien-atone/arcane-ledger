@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLocations } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
-import { EmptyState } from '@/shared/ui';
+import { EmptyState, RichContent } from '@/shared/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
 import type { Location, LocationType } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
 import { CATEGORY_ICON_COLOR, CATEGORY_HEX_COLOR, CATEGORY_BADGE_CLS } from '@/entities/locationType';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 
 const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', 'travel'];
 
@@ -107,7 +108,7 @@ function LocationDetail({
       {/* Image / placeholder */}
       <div className="relative w-full h-56 flex-shrink-0 bg-surface-container-low overflow-hidden">
         {loc.image ? (
-          <img src={loc.image} alt={loc.name} className="w-full h-full object-cover" />
+          <img src={resolveImageUrl(loc.image)} alt={loc.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="font-headline text-[6rem] font-bold text-on-surface-variant/8 select-none leading-none">
@@ -169,7 +170,7 @@ function LocationDetail({
               <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Overview</h3>
               <div className="h-px flex-1 bg-outline-variant/20" />
             </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{loc.description}</p>
+            <RichContent value={loc.description} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
 

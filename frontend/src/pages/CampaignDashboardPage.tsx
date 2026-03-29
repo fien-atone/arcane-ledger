@@ -8,6 +8,7 @@ import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useGroups } from '@/features/groups/api';
 import { InlineRichField } from '@/shared/ui';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { CampaignSummary } from '@/entities/campaign';
 
 const formatDate = (iso: string) =>
@@ -384,7 +385,7 @@ export default function CampaignDashboardPage() {
                       >
                         <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
                           {character.image ? (
-                            <img src={character.image} alt={character.name} className="w-full h-full object-cover rounded-sm" />
+                            <img src={resolveImageUrl(character.image)} alt={character.name} className="w-full h-full object-cover rounded-sm" />
                           ) : (
                             <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
                           )}
@@ -430,7 +431,7 @@ export default function CampaignDashboardPage() {
                       >
                         <div className="w-8 h-8 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
                           {npc.image ? (
-                            <img src={npc.image} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
+                            <img src={resolveImageUrl(npc.image)} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
                           ) : (
                             <span className="text-[10px] font-bold text-on-surface-variant/60">{initials}</span>
                           )}

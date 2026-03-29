@@ -15,7 +15,7 @@ export const locationResolvers = {
       { campaignId, id, input }: { campaignId: string; id?: string; input: { name: string; aliases?: string[]; type: string; settlementPopulation?: number; biome?: string; parentLocationId?: string; description?: string; image?: string; gmNotes?: string; mapMarkers?: string } },
       { prisma }: Context,
     ) => {
-      const data = {
+      const data: Record<string, unknown> = {
         name: input.name,
         aliases: input.aliases ?? [],
         type: input.type,
@@ -23,10 +23,10 @@ export const locationResolvers = {
         biome: input.biome ?? null,
         parentLocationId: input.parentLocationId ?? null,
         description: input.description ?? '',
-        image: input.image ?? null,
         gmNotes: input.gmNotes ?? null,
         mapMarkers: input.mapMarkers ? JSON.parse(input.mapMarkers) : [],
       };
+      if (input.image !== undefined) data.image = input.image ?? null;
 
       if (id) {
         return prisma.location.update({ where: { id }, data });

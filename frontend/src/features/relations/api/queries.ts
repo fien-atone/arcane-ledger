@@ -67,7 +67,7 @@ export const useSaveRelation = (campaignId: string) => {
   const [execute, { loading, error }] = useMutation(SAVE_RELATION);
   return {
     mutate: (relation: Relation, opts?: { onSuccess?: () => void }) => {
-      const { id, campaignId: cId, createdAt, updatedAt, fromEntity, toEntity, ...rest } = relation;
+      const { id, campaignId: cId, createdAt, updatedAt, fromEntity, toEntity, __typename, ...rest } = relation as any;
       const input = {
         fromEntityType: fromEntity.type,
         fromEntityId: fromEntity.id,
@@ -76,8 +76,8 @@ export const useSaveRelation = (campaignId: string) => {
         ...rest,
       };
       execute({
-        variables: { campaignId, id, input },
-        refetchQueries: [{ query: RELATIONS_FOR_CAMPAIGN_QUERY, variables: { campaignId } }],
+        variables: { campaignId, id: id || undefined, input },
+        refetchQueries: ['RelationsForEntity', 'RelationsForCampaign'],
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,
@@ -86,13 +86,13 @@ export const useSaveRelation = (campaignId: string) => {
   };
 };
 
-export const useDeleteRelation = (campaignId: string) => {
+export const useDeleteRelation = (_campaignId: string) => {
   const [execute, { loading, error }] = useMutation(DELETE_RELATION);
   return {
     mutate: (id: string, opts?: { onSuccess?: () => void }) => {
       execute({
         variables: { id },
-        refetchQueries: [{ query: RELATIONS_FOR_CAMPAIGN_QUERY, variables: { campaignId } }],
+        refetchQueries: ['RelationsForEntity', 'RelationsForCampaign'],
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,
