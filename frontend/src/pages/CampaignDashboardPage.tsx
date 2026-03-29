@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useCampaign, useSaveCampaign } from '@/features/campaigns/api/queries';
 import { useSessions } from '@/features/sessions/api/queries';
-import { useActiveQuests } from '@/features/quests/api/queries';
+import { useQuests } from '@/features/quests/api';
 import { useParty } from '@/features/characters/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
@@ -14,13 +14,116 @@ import type { CampaignSummary } from '@/entities/campaign';
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
+const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+
+function SessionCalendar({ sessions, campaignId }: { sessions: { id: string; number: number; title: string; datetime: string }[]; campaignId: string }) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+
+  // Map date string → session
+  const sessionsByDate = useMemo(() => {
+    const map = new Map<string, typeof sessions[number]>();
+    for (const s of sessions) {
+      if (!s.datetime) continue;
+      const d = new Date(s.datetime);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      map.set(key, s);
+    }
+    return map;
+  }, [sessions]);
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const startDay = (() => { const d = new Date(viewYear, viewMonth, 1).getDay(); return d === 0 ? 6 : d - 1; })();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
+  const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
+
+  return (
+    <section>
+      <div className="flex items-center gap-4 mb-4">
+        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+          Calendar
+        </h2>
+        <div className="h-px flex-1 bg-outline-variant/20" />
+      </div>
+      <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-4 space-y-3">
+        {/* Month nav */}
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={prevMonth} className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors">
+            <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+          </button>
+          <span className="text-xs font-label font-bold uppercase tracking-widest text-on-surface">{monthLabel}</span>
+          <button type="button" onClick={nextMonth} className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors">
+            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          </button>
+        </div>
+
+        {/* Weekday headers */}
+        <div className="grid grid-cols-7 gap-0.5">
+          {WEEKDAYS.map((wd, i) => (
+            <div key={wd} className={`text-center text-[8px] font-bold uppercase tracking-wider py-0.5 ${i >= 5 ? 'text-primary/40' : 'text-on-surface-variant/30'}`}>
+              {wd}
+            </div>
+          ))}
+        </div>
+
+        {/* Days */}
+        <div className="grid grid-cols-7 gap-0.5">
+          {Array.from({ length: startDay }).map((_, i) => <div key={`e-${i}`} />)}
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1;
+            const key = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const session = sessionsByDate.get(key);
+            const isToday = key === todayKey;
+            const dayOfWeek = (startDay + i) % 7;
+            const isWeekend = dayOfWeek >= 5;
+
+            const base = 'h-7 flex items-center justify-center rounded-sm text-[11px] transition-all';
+
+            if (session) {
+              return (
+                <Link
+                  key={day}
+                  to={`/campaigns/${campaignId}/sessions/${session.id}`}
+                  title={`#${session.number} ${session.title}`}
+                  className={`${base} bg-primary/15 text-primary font-bold border border-primary/30 hover:bg-primary/25`}
+                >
+                  {day}
+                </Link>
+              );
+            }
+
+            return (
+              <div
+                key={day}
+                className={`${base} ${
+                  isToday
+                    ? 'bg-secondary/10 text-secondary font-bold border border-secondary/30'
+                    : isWeekend
+                      ? 'text-on-surface-variant/30'
+                      : 'text-on-surface-variant/50'
+                }`}
+              >
+                {day}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function CampaignDashboardPage() {
   const { id } = useParams<{ id: string }>();
   const campaignId = id ?? '';
 
   const { data: campaign, isLoading: campaignLoading } = useCampaign(campaignId);
   const { data: sessions } = useSessions(campaignId);
-  const { data: activeQuests } = useActiveQuests(campaignId);
+  const { data: allQuests } = useQuests(campaignId);
   const { data: party } = useParty(campaignId);
   const { data: allNpcs } = useNpcs(campaignId);
   const { data: allLocations } = useLocations(campaignId);
@@ -49,8 +152,6 @@ export default function CampaignDashboardPage() {
     return <div className="p-12 text-on-surface-variant">Campaign not found.</div>;
   }
 
-  const sorted = [...(sessions ?? [])].sort((a, b) => b.number - a.number);
-  const lastSessions = sorted.slice(0, 5);
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   // Nearest upcoming: today or future, sorted ascending by date
@@ -58,13 +159,18 @@ export default function CampaignDashboardPage() {
     .filter((s) => s.datetime && new Date(s.datetime) >= todayStart)
     .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
   const nextSession = upcoming[0] ?? null;
+  // Recent sessions: exclude the next session to avoid duplication
+  const sorted = [...(sessions ?? [])].sort((a, b) => b.number - a.number);
+  const lastSessions = sorted.filter((s) => s.id !== nextSession?.id).slice(0, 5);
 
   // Stats
   const npcCount = allNpcs?.length ?? 0;
   const locationCount = allLocations?.length ?? 0;
   const groupCount = allGroups?.length ?? 0;
   const sessionCount = sessions?.length ?? 0;
-  const questCount = activeQuests?.length ?? 0;
+  const activeQuests = (allQuests ?? []).filter((q) => q.status === 'active');
+  const questTotal = allQuests?.length ?? 0;
+  const questActiveCount = activeQuests.length;
 
   // Recent NPCs (last 5 updated)
   const recentNpcs = [...(allNpcs ?? [])]
@@ -171,12 +277,12 @@ export default function CampaignDashboardPage() {
         {/* Quick Nav */}
         <div className="grid grid-cols-5 gap-3 mb-8 pb-8 border-b border-outline-variant/10">
           {[
-            { label: 'Sessions', count: sessionCount, icon: 'auto_stories', to: 'sessions' },
-            { label: 'NPCs', count: npcCount, icon: 'person', to: 'npcs' },
-            { label: 'Locations', count: locationCount, icon: 'location_on', to: 'locations' },
-            { label: 'Groups', count: groupCount, icon: 'groups', to: 'groups' },
-            { label: 'Quests', count: questCount, icon: 'auto_awesome', to: 'quests' },
-          ].map(({ label, count, icon, to }) => (
+            { label: 'Sessions', count: String(sessionCount), icon: 'auto_stories', to: 'sessions' },
+            { label: 'NPCs', count: String(npcCount), icon: 'person', to: 'npcs' },
+            { label: 'Locations', count: String(locationCount), icon: 'location_on', to: 'locations' },
+            { label: 'Groups', count: String(groupCount), icon: 'groups', to: 'groups' },
+            { label: 'Quests', count: `${questActiveCount}/${questTotal}`, sub: 'active', icon: 'auto_awesome', to: 'quests' },
+          ].map(({ label, count, sub, icon, to }) => (
             <Link
               key={to}
               to={`/campaigns/${campaignId}/${to}`}
@@ -185,7 +291,7 @@ export default function CampaignDashboardPage() {
               <span className="material-symbols-outlined text-primary/30 group-hover:text-primary/60 transition-colors text-xl">{icon}</span>
               <div>
                 <p className="text-xl font-bold text-primary leading-none">{count}</p>
-                <p className="text-[9px] font-label uppercase tracking-widest text-primary/50">{label}</p>
+                <p className="text-[9px] font-label uppercase tracking-widest text-primary/50">{label}{sub && <span className="text-primary/30 ml-1">{sub}</span>}</p>
               </div>
             </Link>
           ))}
@@ -358,6 +464,9 @@ export default function CampaignDashboardPage() {
 
           {/* ── Right column (4/12) ────────────────────────── */}
           <div className="col-span-12 lg:col-span-4 space-y-8">
+
+            {/* Session Calendar */}
+            <SessionCalendar sessions={sessions ?? []} campaignId={campaignId} />
 
             {/* The Party */}
             <section>

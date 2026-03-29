@@ -3,7 +3,7 @@ import { select } from 'd3-selection';
 import 'd3-transition';
 import { zoom, type ZoomBehavior } from 'd3-zoom';
 import { useChordLayout } from '../lib/useChordLayout';
-import { GROUP_HULL_COLORS, FRIENDLINESS_COLORS, STATUS_STROKE_COLORS } from '../lib/graphTypes';
+import { getGroupColor, PARTY_GROUP_COLOR, FRIENDLINESS_COLORS, STATUS_STROKE_COLORS } from '../lib/graphTypes';
 import { GraphTooltip } from './GraphTooltip';
 import type { GraphEdge } from '../lib/graphTypes';
 import type { NPC } from '@/entities/npc';
@@ -190,7 +190,7 @@ export function ChordView({ npcs, groups, relations, width, height, onNodeClick 
         <g ref={gRef}>
           {/* Group arcs on outer ring with text along path */}
           {chordGroups.map((group) => {
-            const color = GROUP_HULL_COLORS[group.colorIndex] || GROUP_HULL_COLORS[0];
+            const color = group.colorIndex === -1 ? PARTY_GROUP_COLOR : getGroupColor(group.colorIndex);
             const ringOffset = group.ring * (OUTER_RING_WIDTH + 4);
             const ringR = outerRingRadius + ringOffset;
             const arcPath = describeArc(cx, cy, ringR, group.startAngle, group.endAngle);
@@ -385,7 +385,7 @@ export function ChordView({ npcs, groups, relations, width, height, onNodeClick 
           {hoveredGroupId && (() => {
             const hg = chordGroups.find((g) => g.id === hoveredGroupId);
             if (!hg) return null;
-            const color = GROUP_HULL_COLORS[hg.colorIndex] || GROUP_HULL_COLORS[0];
+            const color = hg.colorIndex === -1 ? PARTY_GROUP_COLOR : getGroupColor(hg.colorIndex);
             return (
               <text
                 x={cx}

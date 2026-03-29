@@ -3,7 +3,6 @@ import type { NPC } from '@/entities/npc';
 import type { Relation } from '@/entities/relation';
 import type { Group } from '@/entities/group';
 import type { NpcStatus } from '@/entities/npc';
-import { GROUP_HULL_COLORS } from './graphTypes';
 
 export interface ChordNode {
   id: string;
@@ -71,7 +70,13 @@ export function useChordLayout(
     }
 
     // Sort NPCs: grouped first (sorted by group), ungrouped at end
-    const groupOrder = new Map(groups.map((g, i) => [g.id, i]));
+    // Put virtual party group (__party__) first so it lands at top center
+    const sortedGroups = [...groups].sort((a, b) => {
+      if (a.id === '__party__') return -1;
+      if (b.id === '__party__') return 1;
+      return 0;
+    });
+    const groupOrder = new Map(sortedGroups.map((g, i) => [g.id, i]));
 
     const sorted = [...npcs].sort((a, b) => {
       const aGroups = npcToGroups.get(a.id) ?? [];
@@ -128,7 +133,7 @@ export function useChordLayout(
         groupSegments.push({
           id: g.id,
           name: g.name,
-          colorIndex: gi % GROUP_HULL_COLORS.length,
+          colorIndex: g.id === '__party__' ? -1 : gi,
           startAngle,
           endAngle,
           ring: 0,
@@ -148,14 +153,15 @@ export function useChordLayout(
       }
     }
 
-    // Filter to NPC-NPC relations where both exist
-    const npcIdSet = new Set(npcs.map((n) => n.id));
+    // Filter to relations where both entities exist in our node list
+    const nodeIdSet = new Set(npcs.map((n) => n.id));
+    const allowedTypes = new Set(['npc', 'character']);
     const validRelations = relations.filter(
       (r) =>
-        r.fromEntity.type === 'npc' &&
-        r.toEntity.type === 'npc' &&
-        npcIdSet.has(r.fromEntity.id) &&
-        npcIdSet.has(r.toEntity.id),
+        allowedTypes.has(r.fromEntity.type) &&
+        allowedTypes.has(r.toEntity.type) &&
+        nodeIdSet.has(r.fromEntity.id) &&
+        nodeIdSet.has(r.toEntity.id),
     );
 
     // Build chords

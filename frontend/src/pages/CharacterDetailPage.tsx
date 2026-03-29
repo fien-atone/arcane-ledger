@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { useParty, useSaveCharacter } from '@/features/characters/api/queries';
+import { useParams, Link } from 'react-router-dom';
+import { useParty, useSaveCharacter, useAddCharacterGroupMembership, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
+import { useGroups } from '@/features/groups/api';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
 import { ImageUpload, BackLink, InlineRichField } from '@/shared/ui';
@@ -14,10 +15,18 @@ export default function CharacterDetailPage() {
   const { data: characters, isLoading, isError, refetch } = useParty(campaignId ?? '');
   const character = characters?.find((c) => c.id === charId);
   const { data: allSpecies } = useSpecies(campaignId ?? '');
+  const { data: groups } = useGroups(campaignId ?? '');
   const saveCharacter = useSaveCharacter();
+  const addGroupMembership = useAddCharacterGroupMembership();
+  const removeGroupMembership = useRemoveCharacterGroupMembership();
   const [imgVersion, setImgVersion] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [lightbox, setLightbox] = useState(false);
+  const [addGroupOpen, setAddGroupOpen] = useState(false);
+  const [addGroupSearch, setAddGroupSearch] = useState('');
+  const [addGroupRole, setAddGroupRole] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [confirmRemoveGroupId, setConfirmRemoveGroupId] = useState<string | null>(null);
 
   const saveField = useCallback((field: keyof PlayerCharacter, html: string) => {
     if (!character) return;
@@ -118,6 +127,173 @@ export default function CharacterDetailPage() {
             <InlineRichField label="Backstory" value={character.background}
               onSave={(html) => saveField('background', html)}
               placeholder="History, origin, key events…" />
+
+            {/* Group Memberships */}
+            {(() => {
+              const memberGroupIds = new Set((character.groupMemberships ?? []).map((m) => m.groupId));
+              const availableGroups = (groups ?? [])
+                .filter((g) => !memberGroupIds.has(g.id))
+                .filter((g) => !addGroupSearch.trim() || g.name.toLowerCase().includes(addGroupSearch.toLowerCase()))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+              const groupNameById = (id: string) => groups?.find((g) => g.id === id)?.name ?? id;
+
+              const handleAddGroup = () => {
+                if (!selectedGroupId) return;
+                addGroupMembership.mutate(
+                  { characterId: character.id, groupId: selectedGroupId, relation: addGroupRole.trim() || undefined },
+                  { onSuccess: () => { setAddGroupOpen(false); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); } },
+                );
+              };
+
+              const handleRemoveGroup = (groupId: string) => {
+                removeGroupMembership.mutate({ characterId: character.id, groupId });
+                setConfirmRemoveGroupId(null);
+              };
+
+              return (
+                <section className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                      Group Memberships
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                    <button
+                      onClick={() => { setAddGroupOpen((v) => !v); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); }}
+                      className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">group_add</span>
+                      Add
+                    </button>
+                  </div>
+
+                  {addGroupOpen && (
+                    <div className="border border-outline-variant/20 bg-surface-container-low">
+                      <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
+                        <input
+                          autoFocus
+                          type="text"
+                          value={addGroupSearch}
+                          onChange={(e) => setAddGroupSearch(e.target.value)}
+                          placeholder="Search groups…"
+                          className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {availableGroups.length === 0 ? (
+                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">
+                            {(groups ?? []).length === 0 ? 'No groups in this campaign.' : 'No groups found.'}
+                          </p>
+                        ) : availableGroups.map((g) => (
+                          <button
+                            key={g.id}
+                            onClick={() => setSelectedGroupId(selectedGroupId === g.id ? null : g.id)}
+                            className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors ${
+                              selectedGroupId === g.id ? 'bg-primary/8 border-l-2 border-primary' : 'hover:bg-surface-container'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[13px] text-primary">groups</span>
+                            <span className={`text-xs ${selectedGroupId === g.id ? 'text-primary font-medium' : 'text-on-surface'}`}>{g.name}</span>
+                            {selectedGroupId === g.id && (
+                              <span className="material-symbols-outlined text-primary text-[14px] ml-auto" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      {selectedGroupId && (
+                        <div className="px-4 py-3 border-t border-outline-variant/20 space-y-3">
+                          <div>
+                            <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1">
+                              Role <span className="normal-case tracking-normal text-on-surface-variant/40">(optional)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={addGroupRole}
+                              onChange={(e) => setAddGroupRole(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleAddGroup(); }}
+                              placeholder="e.g. Leader, Spy…"
+                              className="w-full bg-surface-container border border-outline-variant/20 focus:border-primary rounded-sm py-1.5 px-2 text-xs text-on-surface focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
+                            />
+                          </div>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => { setAddGroupOpen(false); setSelectedGroupId(null); }}
+                              className="px-3 py-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleAddGroup}
+                              disabled={addGroupMembership.isPending}
+                              className="flex items-center gap-1 px-4 py-1.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-[10px] font-label uppercase tracking-widest rounded-sm disabled:opacity-40 transition-opacity"
+                            >
+                              <span className="material-symbols-outlined text-[13px]">group_add</span>
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {(character.groupMemberships ?? []).length === 0 && !addGroupOpen ? (
+                    <p className="text-xs text-on-surface-variant/40 italic">No group memberships.</p>
+                  ) : (character.groupMemberships ?? []).length > 0 ? (
+                    <div className="flex flex-wrap gap-4">
+                      {(character.groupMemberships ?? []).map((m) => (
+                        <div key={m.groupId} className="group/card flex items-center bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 transition-all">
+                          <Link
+                            to={`/campaigns/${campaignId}/groups/${m.groupId}`}
+                            className="group flex items-center px-4 py-3"
+                          >
+                            <span className="material-symbols-outlined text-primary mr-3">groups</span>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
+                                {m.subfaction ?? groupNameById(m.groupId)}
+                              </span>
+                              {m.relation && (
+                                <span className="text-[10px] text-on-surface-variant uppercase tracking-tighter">
+                                  {m.relation}
+                                </span>
+                              )}
+                            </div>
+                            <span className="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity ml-3">
+                              arrow_forward
+                            </span>
+                          </Link>
+                          {confirmRemoveGroupId === m.groupId ? (
+                            <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
+                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                              <button
+                                onClick={() => handleRemoveGroup(m.groupId)}
+                                className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => setConfirmRemoveGroupId(null)}
+                                className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmRemoveGroupId(m.groupId)}
+                              title="Remove from group"
+                              className="px-2 py-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+              );
+            })()}
 
             <SocialRelationsSection campaignId={campaignId ?? ''} entityId={charId ?? ''} />
           </div>

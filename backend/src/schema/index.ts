@@ -106,6 +106,14 @@ export const typeDefs = `#graphql
 
   # ── Player Character ───────────────────────────────────────
 
+  type CharacterGroupMembership {
+    characterId: ID!
+    groupId: ID!
+    group: Group!
+    relation: String
+    subfaction: String
+  }
+
   type PlayerCharacter {
     id: ID!
     campaignId: ID!
@@ -126,6 +134,7 @@ export const typeDefs = `#graphql
     image: String
     createdAt: String!
     updatedAt: String!
+    groupMemberships: [CharacterGroupMembership!]!
   }
 
   # ── Quest ──────────────────────────────────────────────────
@@ -443,6 +452,10 @@ export const typeDefs = `#graphql
     removeNPCLocationPresence(npcId: ID!, locationId: ID!): NPC!
     addNPCGroupMembership(npcId: ID!, groupId: ID!, relation: String, subfaction: String): NPC!
     removeNPCGroupMembership(npcId: ID!, groupId: ID!): NPC!
+
+    # Character sub-entities
+    addCharacterGroupMembership(characterId: ID!, groupId: ID!, relation: String, subfaction: String): PlayerCharacter!
+    removeCharacterGroupMembership(characterId: ID!, groupId: ID!): PlayerCharacter!
   }
 
   # ── Subscriptions ──────────────────────────────────────────

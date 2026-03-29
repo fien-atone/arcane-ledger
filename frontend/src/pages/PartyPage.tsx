@@ -4,7 +4,17 @@ import { useParty } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
 import { useSpecies } from '@/features/species/api';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
+import { RichContent } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <div className="flex items-center gap-4 mb-3">
+      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">{title}</h3>
+      <div className="h-px flex-1 bg-outline-variant/20" />
+    </div>
+  );
+}
 
 function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaignId: string }) {
   const initials = char.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
@@ -13,81 +23,77 @@ function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaign
     ? allSpecies?.find((s) => s.id === char.speciesId || s.name.toLowerCase() === char.species?.toLowerCase())
     : undefined;
   const displaySpeciesName = matchedSpecies?.name ?? char.species;
+  const resolvedImage = resolveImageUrl(char.image);
+  const genderLabel = char.gender
+    ? (char.gender === 'nonbinary' ? 'Non-binary' : char.gender.charAt(0).toUpperCase() + char.gender.slice(1))
+    : null;
+  const metaParts = [displaySpeciesName, char.class, genderLabel, char.age != null ? `Age ${char.age}` : null].filter(Boolean);
+
   return (
     <div className="flex flex-col overflow-y-auto h-full">
-      {/* Header image / placeholder */}
-      <div className="relative w-full h-64 flex-shrink-0 bg-surface-container-low overflow-hidden">
-        {char.image ? (
-          <img src={resolveImageUrl(char.image)} alt={char.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="font-headline text-[8rem] font-bold text-on-surface-variant/8 select-none leading-none">{initials}</span>
+      {/* Character card header */}
+      <div className="flex-shrink-0 flex gap-6 p-8 pb-6">
+        {/* Portrait */}
+        <div className="w-36 h-48 rounded-sm border border-outline-variant/20 overflow-hidden bg-surface-container-low flex-shrink-0">
+          {resolvedImage ? (
+            <img src={resolvedImage} alt={char.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="font-headline text-5xl font-bold text-on-surface-variant/8 select-none leading-none">{initials}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex flex-col justify-center gap-3 min-w-0">
+          <div>
+            <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{char.name}</h2>
+            {displaySpeciesName && (
+              matchedSpecies ? (
+                <Link
+                  to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
+                  className="text-xs text-primary/70 uppercase tracking-wider mt-1 hover:text-primary transition-colors block"
+                >
+                  {displaySpeciesName}
+                </Link>
+              ) : (
+                <p className="text-xs text-on-surface-variant/60 uppercase tracking-wider mt-1">{displaySpeciesName}</p>
+              )
+            )}
           </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent pointer-events-none" />
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container/90 backdrop-blur-sm border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-            <span className="material-symbols-outlined text-[13px]">person</span>
-            {[displaySpeciesName, char.class].filter(Boolean).join(' · ') || 'Character'}
-          </span>
+
+          {metaParts.length > 0 && (
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant w-fit">
+              <span className="material-symbols-outlined text-[13px]">person</span>
+              {metaParts.join(' · ')}
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="px-8 py-6 flex flex-col gap-5">
-        <div>
-          <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{char.name}</h2>
-          {displaySpeciesName && (
-            matchedSpecies ? (
-              <Link
-                to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
-                className="text-xs text-primary/70 uppercase tracking-wider mt-1 hover:text-primary transition-colors block"
-              >
-                {displaySpeciesName}
-              </Link>
-            ) : (
-              <p className="text-xs text-on-surface-variant/60 uppercase tracking-wider mt-1">{displaySpeciesName}</p>
-            )
-          )}
-          {(char.gender || char.age != null) && (
-            <p className="text-xs text-on-surface-variant/50 uppercase tracking-wider mt-0.5">
-              {[
-                char.gender ? (char.gender === 'nonbinary' ? 'Non-binary' : char.gender.charAt(0).toUpperCase() + char.gender.slice(1)) : null,
-                char.age != null ? `Age ${char.age}` : null,
-              ].filter(Boolean).join(' · ')}
-            </p>
-          )}
-        </div>
+      <div className="border-t border-outline-variant/10 mx-8" />
 
+      <div className="px-8 py-6 flex flex-col gap-5">
         {char.appearance && (
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Appearance</h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{char.appearance}</p>
+            <SectionHeader title="Appearance" />
+            <RichContent value={char.appearance} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
 
         {char.personality && (
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Personality</h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{char.personality}</p>
+            <SectionHeader title="Personality" />
+            <RichContent value={char.personality} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
 
         {char.background && (
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Background</h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{char.background}</p>
+            <SectionHeader title="Background" />
+            <RichContent value={char.background} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
-
       </div>
     </div>
   );
@@ -170,8 +176,14 @@ export default function PartyPage() {
                       isSelected ? 'bg-primary/8 border-l-2 border-l-primary' : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border ${isSelected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
-                      <span className={`text-xs font-bold ${isSelected ? 'text-primary' : 'text-on-surface-variant/60'}`}>{initials}</span>
+                    <div className="w-10 h-10 rounded-sm border border-outline-variant/20 flex-shrink-0 overflow-hidden bg-surface-container-highest">
+                      {char.image ? (
+                        <img src={resolveImageUrl(char.image)} alt={char.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className={`text-xs font-bold ${isSelected ? 'text-primary' : 'text-on-surface-variant/60'}`}>{initials}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>{char.name}</p>

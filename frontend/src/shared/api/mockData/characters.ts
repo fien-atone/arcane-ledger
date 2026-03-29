@@ -11,6 +11,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     species: 'Human',
     speciesId: 'species-human',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2026-02-01T00:00:00Z',
   },
   {
@@ -24,6 +25,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     speciesId: 'species-human',
     class: 'Paladin',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2026-02-01T00:00:00Z',
   },
   {
@@ -36,6 +38,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     species: 'Halfling',
     speciesId: 'species-halfling',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2026-02-01T00:00:00Z',
   },
   {
@@ -49,6 +52,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     speciesId: 'species-elf',
     class: 'Alchemist',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2026-02-01T00:00:00Z',
   },
   {
@@ -60,6 +64,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     age: 27,
     class: 'Ranger',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2026-02-01T00:00:00Z',
   },
   {
@@ -73,6 +78,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     speciesId: 'species-human',
     class: 'Wizard',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
   },
   {
@@ -86,6 +92,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     speciesId: 'species-dwarf',
     class: 'Paladin',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
   },
   {
@@ -98,6 +105,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     species: 'Elf',
     speciesId: 'species-elf',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
   },
   {
@@ -109,6 +117,7 @@ export const MOCK_CHARACTERS: PlayerCharacter[] = [
     age: 35,
     class: 'Monk',
     gmNotes: '',
+    groupMemberships: [],
     createdAt: '2025-09-01T00:00:00Z',
   },
 ];

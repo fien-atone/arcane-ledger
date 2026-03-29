@@ -8,11 +8,15 @@ interface Props {
   targetNode: GraphNode;
   dimmed?: boolean;
   highlighted?: boolean;
+  /** Center of the graph for edge bundling */
+  center?: { x: number; y: number };
+  /** Bundling strength: 0 = straight lines, 1 = all through center. Default 0.6 */
+  bundleStrength?: number;
   onMouseEnter?: (e: React.MouseEvent, edge: GraphEdge) => void;
   onMouseLeave?: () => void;
 }
 
-const NODE_RADIUS = 20;
+const NODE_RADIUS = 26;
 
 export function GraphEdgeComponent({
   edge,
@@ -20,6 +24,8 @@ export function GraphEdgeComponent({
   targetNode,
   dimmed,
   highlighted,
+  center,
+  bundleStrength = 0.6,
   onMouseEnter,
   onMouseLeave,
 }: Props) {
@@ -40,17 +46,24 @@ export function GraphEdgeComponent({
 
   const startX = sx + ux * NODE_RADIUS;
   const startY = sy + uy * NODE_RADIUS;
-  const endX = tx - ux * (NODE_RADIUS + 6); // leave room for arrowhead
-  const endY = ty - uy * (NODE_RADIUS + 6);
+  const rawEndX = edge.isBidirectional ? tx - ux * NODE_RADIUS : tx - ux * (NODE_RADIUS + 6);
+  const rawEndY = edge.isBidirectional ? ty - uy * NODE_RADIUS : ty - uy * (NODE_RADIUS + 6);
 
   const markerId = `arrow-${edge.id}`;
 
-  // Bidirectional: no arrowhead offset needed
-  const adjustedEndX = edge.isBidirectional ? tx - ux * NODE_RADIUS : endX;
-  const adjustedEndY = edge.isBidirectional ? ty - uy * NODE_RADIUS : endY;
-  const pathD = `M ${startX},${startY} L ${adjustedEndX},${adjustedEndY}`;
+  let pathD: string;
+  if (center) {
+    // Edge bundling: control points pulled toward the graph center
+    const midX = (startX + rawEndX) / 2;
+    const midY = (startY + rawEndY) / 2;
+    const cp1x = midX + (center.x - midX) * bundleStrength;
+    const cp1y = midY + (center.y - midY) * bundleStrength;
+    pathD = `M ${startX},${startY} Q ${cp1x},${cp1y} ${rawEndX},${rawEndY}`;
+  } else {
+    pathD = `M ${startX},${startY} L ${rawEndX},${rawEndY}`;
+  }
 
-  const opacity = dimmed ? 0.08 : highlighted ? 1 : 0.6;
+  const opacity = dimmed ? 0.05 : highlighted ? 1 : 0.4;
 
   return (
     <g style={{ transition: 'opacity 0.2s' }}>
@@ -80,7 +93,7 @@ export function GraphEdgeComponent({
       <path
         d={pathD}
         stroke={color}
-        strokeWidth={2}
+        strokeWidth={highlighted ? 2.5 : 1.5}
         fill="none"
         opacity={opacity}
         markerEnd={edge.isBidirectional ? undefined : `url(#${markerId})`}

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { NpcStatus } from '@/entities/npc';
 import type { Group } from '@/entities/group';
 import type { GroupTypeEntry } from '@/entities/groupType';
-import { STATUS_STROKE_COLORS, GROUP_HULL_COLORS } from '../lib/graphTypes';
+import { STATUS_STROKE_COLORS, getGroupColor, PARTY_GROUP_COLOR } from '../lib/graphTypes';
 
 interface Props {
   statusFilters: Set<NpcStatus>;
@@ -127,7 +127,7 @@ export function GraphFilters({
             {[...groups].sort((a, b) => a.name.localeCompare(b.name)).map((g) => {
               const active = groupFilters.has(g.id);
               const colorIdx = groupColorMap.get(g.id) ?? 0;
-              const color = GROUP_HULL_COLORS[colorIdx % GROUP_HULL_COLORS.length];
+              const color = colorIdx === -1 ? PARTY_GROUP_COLOR : getGroupColor(colorIdx);
               return (
                 <button
                   key={g.id}

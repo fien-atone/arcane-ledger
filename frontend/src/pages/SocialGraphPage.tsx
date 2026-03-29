@@ -1,9 +1,11 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useNpcs } from '@/features/npcs/api/queries';
+import { useParty } from '@/features/characters/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { useGroupTypes } from '@/features/groupTypes/api/queries';
 import { useRelationsForCampaign } from '@/features/relations/api/queries';
+import type { NPC } from '@/entities/npc';
 import { useGraphSimulation } from '@/features/social-graph/lib/useGraphSimulation';
 import { useGraphZoom } from '@/features/social-graph/lib/useGraphZoom';
 import { GraphNodeComponent } from '@/features/social-graph/ui/GraphNode';
@@ -19,12 +21,14 @@ import type { NpcStatus } from '@/entities/npc';
 import type { GraphEdge as GraphEdgeType } from '@/features/social-graph/lib/graphTypes';
 
 type ViewMode = 'force' | 'chord';
+const PARTY_GROUP_ID = '__party__';
 
 export default function SocialGraphPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const { data: npcs, isLoading: npcsLoading } = useNpcs(campaignId ?? '');
+  const { data: party } = useParty(campaignId ?? '');
   const { data: groups } = useGroups(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId ?? '');
   const { data: relations } = useRelationsForCampaign(campaignId ?? '');
@@ -36,16 +40,16 @@ export default function SocialGraphPage() {
   const [statusFilters, setStatusFilters] = useState<Set<NpcStatus>>(new Set(['alive', 'unknown']));
   const [groupFilters, setGroupFilters] = useState<Set<string> | null>(null);
 
-  // Initialize group filters when groups data loads
+  // Initialize group filters when data loads (including virtual party group)
   const allGroupIds = useMemo(
-    () => (groups ?? []).map((g) => g.id),
-    [groups],
+    () => [...(groups ?? []).map((g) => g.id), ...(party && party.length > 0 ? [PARTY_GROUP_ID] : [])],
+    [groups, party],
   );
   useEffect(() => {
-    if (groups && groupFilters === null) {
+    if (groups && party && groupFilters === null) {
       setGroupFilters(new Set(allGroupIds));
     }
-  }, [groups, groupFilters, allGroupIds]);
+  }, [groups, party, groupFilters, allGroupIds]);
 
   const activeGroupFilters = groupFilters ?? new Set(allGroupIds);
   // Hover state
@@ -79,15 +83,62 @@ export default function SocialGraphPage() {
     return () => observer.disconnect();
   }, []);
 
-  // Filter NPCs by status
-  const filteredNpcs = useMemo(
-    () => (npcs ?? []).filter((n) => statusFilters.has(n.status)),
-    [npcs, statusFilters],
+  // Virtual group for the party
+  const partyGroup = useMemo(() => ({
+    id: PARTY_GROUP_ID,
+    campaignId: campaignId ?? '',
+    name: 'The Party',
+    type: '',
+    aliases: [],
+    description: '',
+    createdAt: '',
+    updatedAt: '',
+  }), [campaignId]);
+
+  // Convert party characters to NPC-like nodes with virtual group membership
+  const partyAsNpcs = useMemo<NPC[]>(
+    () => (party ?? []).map((c) => ({
+      id: c.id,
+      campaignId: c.campaignId,
+      name: c.name,
+      aliases: [],
+      status: 'alive' as const,
+      gender: c.gender,
+      age: c.age,
+      species: c.species,
+      speciesId: c.speciesId,
+      image: c.image,
+      description: '',
+      groupMemberships: [
+        { npcId: c.id, groupId: PARTY_GROUP_ID, relation: 'Member' },
+        ...(c.groupMemberships ?? []).map((m) => ({ npcId: c.id, groupId: m.groupId, relation: m.relation, subfaction: m.subfaction })),
+      ],
+      locationPresences: [],
+      relations: [],
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt ?? c.createdAt,
+    })),
+    [party],
   );
 
+  // Merge NPCs + party, filter by status
+  const allEntities = useMemo(
+    () => [...(npcs ?? []), ...partyAsNpcs],
+    [npcs, partyAsNpcs],
+  );
+  const filteredNpcs = useMemo(
+    () => allEntities.filter((n) => statusFilters.has(n.status)),
+    [allEntities, statusFilters],
+  );
+
+  // Include virtual party group + real groups
+  const allGroups = useMemo(
+    () => [...(groups ?? []), ...(partyAsNpcs.length > 0 ? [partyGroup] : [])],
+    [groups, partyAsNpcs, partyGroup],
+  );
   const filteredGroups = useMemo(
-    () => (groups ?? []).filter((g) => activeGroupFilters.has(g.id)),
-    [groups, activeGroupFilters],
+    () => allGroups.filter((g) => activeGroupFilters.has(g.id)),
+    [allGroups, activeGroupFilters],
   );
 
   const filteredRelations = relations ?? [];
@@ -154,11 +205,17 @@ export default function SocialGraphPage() {
   }, [hoveredNodeId, edges]);
 
   // Handlers
+  const partyIds = useMemo(() => new Set((party ?? []).map((c) => c.id)), [party]);
+
   const handleNodeClick = useCallback(
     (nodeId: string) => {
-      navigate(`/campaigns/${campaignId}/npcs/${nodeId}`);
+      if (partyIds.has(nodeId)) {
+        navigate(`/campaigns/${campaignId}/characters/${nodeId}`);
+      } else {
+        navigate(`/campaigns/${campaignId}/npcs/${nodeId}`);
+      }
     },
-    [navigate, campaignId],
+    [navigate, campaignId, partyIds],
   );
 
   const handleEdgeHover = useCallback(
@@ -329,6 +386,7 @@ export default function SocialGraphPage() {
                         targetNode={tgt}
                         dimmed={!!hoveredNodeId && !connectedEdgeIds.has(edge.id)}
                         highlighted={hoveredNodeId ? connectedEdgeIds.has(edge.id) : false}
+                        center={{ x: dimensions.width / 2, y: dimensions.height / 2 }}
                         onMouseEnter={handleEdgeHover}
                         onMouseLeave={handleEdgeLeave}
                       />
@@ -403,7 +461,7 @@ export default function SocialGraphPage() {
           <GraphFilters
             statusFilters={statusFilters}
             onToggleStatus={toggleStatus}
-            groups={groups ?? []}
+            groups={allGroups}
             groupFilters={activeGroupFilters}
             onToggleGroup={toggleGroup}
             groupColorMap={new Map(graphGroups.map((g) => [g.id, g.colorIndex]))}

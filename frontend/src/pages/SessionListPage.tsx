@@ -47,7 +47,7 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
       {session.brief && (
         <div className="mb-6">
           <SectionHeader title="Brief" />
-          <p className="text-sm text-on-surface-variant leading-relaxed italic">{session.brief}</p>
+          <RichContent value={session.brief} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
         </div>
       )}
 

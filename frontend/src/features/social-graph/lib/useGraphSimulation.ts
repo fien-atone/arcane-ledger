@@ -13,7 +13,6 @@ import type { NPC } from '@/entities/npc';
 import type { Relation } from '@/entities/relation';
 import type { Group } from '@/entities/group';
 import type { GraphNode, GraphEdge, GraphGroup } from './graphTypes';
-import { GROUP_HULL_COLORS } from './graphTypes';
 import { computeGroupCenters } from './computeGroupCenters';
 
 interface SimNode extends SimulationNodeDatum {
@@ -47,16 +46,17 @@ export function useGraphSimulation(
       return { nodes: [], edges: [], groups: [] };
     }
 
-    // Filter to NPC-NPC relations only
-    const npcNpcRelations = relations.filter(
-      (r) => r.fromEntity.type === 'npc' && r.toEntity.type === 'npc',
+    // Filter to relations between entities in our node list (NPC + character)
+    const allowedTypes = new Set(['npc', 'character']);
+    const entityRelations = relations.filter(
+      (r) => allowedTypes.has(r.fromEntity.type) && allowedTypes.has(r.toEntity.type),
     );
 
-    // Build NPC ID set for quick lookup
+    // Build node ID set for quick lookup
     const npcIdSet = new Set(npcs.map((n) => n.id));
 
-    // Only keep relations where both NPCs exist in our list
-    const validRelations = npcNpcRelations.filter(
+    // Only keep relations where both entities exist in our node list
+    const validRelations = entityRelations.filter(
       (r) => npcIdSet.has(r.fromEntity.id) && npcIdSet.has(r.toEntity.id),
     );
 
@@ -248,7 +248,7 @@ export function useGraphSimulation(
       return {
         id: g.id,
         name: g.name,
-        colorIndex: i % GROUP_HULL_COLORS.length,
+        colorIndex: g.id === '__party__' ? -1 : i,
         memberNodeIds: memberIds,
         cx: center.cx,
         cy: center.cy,

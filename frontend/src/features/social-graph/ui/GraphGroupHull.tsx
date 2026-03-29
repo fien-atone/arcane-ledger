@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { GraphGroup, GraphNode } from '../lib/graphTypes';
-import { GROUP_HULL_COLORS } from '../lib/graphTypes';
+import { getGroupColor, PARTY_GROUP_COLOR } from '../lib/graphTypes';
 
 interface Props {
   group: GraphGroup;
@@ -35,7 +35,7 @@ export function GraphGroupHull({ group, nodes, dimmed }: Props) {
 
   if (!circle || memberNodes.length === 0) return null;
 
-  const color = GROUP_HULL_COLORS[group.colorIndex];
+  const color = group.colorIndex === -1 ? PARTY_GROUP_COLOR : getGroupColor(group.colorIndex);
 
   return (
     <g opacity={dimmed ? 0.05 : 1} style={{ transition: 'opacity 0.2s' }}>

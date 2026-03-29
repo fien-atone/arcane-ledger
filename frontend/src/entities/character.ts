@@ -1,5 +1,12 @@
 export type CharacterGender = 'male' | 'female' | 'nonbinary';
 
+export interface CharacterGroupMembership {
+  characterId: string;
+  groupId: string;
+  relation?: string;
+  subfaction?: string;
+}
+
 export interface PlayerCharacter {
   id: string;
   campaignId: string;
@@ -18,6 +25,7 @@ export interface PlayerCharacter {
   flaws?: string;
   image?: string;
   gmNotes: string;
+  groupMemberships: CharacterGroupMembership[];
   createdAt: string;
   updatedAt?: string;
 }

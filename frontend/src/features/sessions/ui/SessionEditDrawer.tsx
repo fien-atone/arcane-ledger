@@ -59,7 +59,8 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
       const maxNumber = (allSessions ?? []).reduce((max, s) => Math.max(max, s.number), 0);
       setNumber(maxNumber + 1);
     }
-  }, [open, session, allSessions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleSave = () => {
     const iso = toIso(date, time);

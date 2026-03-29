@@ -84,6 +84,35 @@ export const campaignResolvers = {
       }
       return prisma.playerCharacter.create({ data: { ...data, campaignId: args.campaignId, userId: user.id } });
     },
+
+    addCharacterGroupMembership: async (
+      _: unknown,
+      { characterId, groupId, relation, subfaction }: { characterId: string; groupId: string; relation?: string; subfaction?: string },
+      { prisma }: Context,
+    ) => {
+      await prisma.characterGroupMembership.upsert({
+        where: { characterId_groupId: { characterId, groupId } },
+        update: { relation: relation ?? null, subfaction: subfaction ?? null },
+        create: { characterId, groupId, relation: relation ?? null, subfaction: subfaction ?? null },
+      });
+      return prisma.playerCharacter.findUniqueOrThrow({ where: { id: characterId } });
+    },
+
+    removeCharacterGroupMembership: async (
+      _: unknown,
+      { characterId, groupId }: { characterId: string; groupId: string },
+      { prisma }: Context,
+    ) => {
+      await prisma.characterGroupMembership.delete({
+        where: { characterId_groupId: { characterId, groupId } },
+      });
+      return prisma.playerCharacter.findUniqueOrThrow({ where: { id: characterId } });
+    },
+  },
+
+  PlayerCharacter: {
+    groupMemberships: (character: { id: string }, _: unknown, { prisma }: Context) =>
+      prisma.characterGroupMembership.findMany({ where: { characterId: character.id }, include: { group: true } }),
   },
 
   Campaign: {

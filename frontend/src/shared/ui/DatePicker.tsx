@@ -33,7 +33,9 @@ function toIsoDate(year: number, month: number, day: number): string {
 
 export function DatePicker({ value, onChange, placeholder = 'Pick a date…', className = '' }: Props) {
   const [open, setOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Calendar state
   const today = new Date();
@@ -79,8 +81,15 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date…', cl
     <div ref={ref} className={`relative ${className}`}>
       {/* Trigger */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (!open && triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+          }
+          setOpen((v) => !v);
+        }}
         className="w-full h-[42px] flex items-center gap-2.5 bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm px-3 text-sm focus:ring-0 focus:outline-none transition-colors text-left"
       >
         <span className="material-symbols-outlined text-[16px] text-on-surface-variant/40">calendar_today</span>
@@ -102,7 +111,7 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date…', cl
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 top-full mt-1 left-0 w-72 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl p-4 space-y-3">
+        <div className="fixed z-[80] w-72 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl p-4 space-y-3" style={{ top: dropdownPos.top, left: dropdownPos.left }}>
           {/* Month navigation */}
           <div className="flex items-center justify-between">
             <button type="button" onClick={prevMonth}

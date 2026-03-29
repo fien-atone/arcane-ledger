@@ -24,8 +24,27 @@ const PARTY_QUERY = gql`
       flaws
       gmNotes
       image
+      groupMemberships { groupId relation subfaction }
       createdAt
       updatedAt
+    }
+  }
+`;
+
+const ADD_CHARACTER_GROUP_MEMBERSHIP = gql`
+  mutation AddCharacterGroupMembership($characterId: ID!, $groupId: ID!, $relation: String, $subfaction: String) {
+    addCharacterGroupMembership(characterId: $characterId, groupId: $groupId, relation: $relation, subfaction: $subfaction) {
+      id
+      groupMemberships { groupId relation subfaction }
+    }
+  }
+`;
+
+const REMOVE_CHARACTER_GROUP_MEMBERSHIP = gql`
+  mutation RemoveCharacterGroupMembership($characterId: ID!, $groupId: ID!) {
+    removeCharacterGroupMembership(characterId: $characterId, groupId: $groupId) {
+      id
+      groupMemberships { groupId relation subfaction }
     }
   }
 `;
@@ -97,6 +116,7 @@ function mapCharacter(raw: any): PlayerCharacter {
   return {
     ...raw,
     gender: raw.gender?.toLowerCase(),
+    groupMemberships: raw.groupMemberships ?? [],
   };
 }
 
@@ -141,5 +161,41 @@ export const useSaveCharacter = () => {
       }).then(() => options?.onSuccess?.());
     },
     isPending: loading,
+  };
+};
+
+export const useAddCharacterGroupMembership = () => {
+  const [execute, { loading, error }] = useMutation(ADD_CHARACTER_GROUP_MEMBERSHIP);
+  return {
+    mutate: (
+      vars: { characterId: string; groupId: string; relation?: string; subfaction?: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Party', 'Groups'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useRemoveCharacterGroupMembership = () => {
+  const [execute, { loading, error }] = useMutation(REMOVE_CHARACTER_GROUP_MEMBERSHIP);
+  return {
+    mutate: (
+      vars: { characterId: string; groupId: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Party', 'Groups'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
   };
 };
