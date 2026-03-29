@@ -40,7 +40,7 @@ function loadMock(filename: string): any[] {
   return parseArrayFromTS(content);
 }
 
-const statusMap: Record<string, string> = { alive: 'ALIVE', dead: 'DEAD', missing: 'MISSING', unknown: 'UNKNOWN', hostile: 'HOSTILE' };
+const statusMap: Record<string, string> = { alive: 'ALIVE', dead: 'DEAD', missing: 'MISSING', unknown: 'UNKNOWN' };
 const genderMap: Record<string, string> = { male: 'MALE', female: 'FEMALE', nonbinary: 'NONBINARY' };
 const questStatusMap: Record<string, string> = { active: 'ACTIVE', completed: 'COMPLETED', failed: 'FAILED', unavailable: 'UNAVAILABLE', undiscovered: 'UNDISCOVERED' };
 

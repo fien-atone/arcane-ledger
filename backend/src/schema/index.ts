@@ -3,7 +3,7 @@ export const typeDefs = `#graphql
   # ── Enums ───────────────────────────────────────────────────
 
   enum Role { GM PLAYER }
-  enum NPCStatus { ALIVE DEAD MISSING UNKNOWN HOSTILE }
+  enum NPCStatus { ALIVE DEAD MISSING UNKNOWN }
   enum Gender { MALE FEMALE NONBINARY }
   enum QuestStatus { ACTIVE COMPLETED FAILED UNAVAILABLE UNDISCOVERED }
 

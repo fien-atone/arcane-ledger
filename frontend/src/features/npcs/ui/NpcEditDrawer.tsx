@@ -12,7 +12,7 @@ interface Props {
   npc?: NPC;
 }
 
-const STATUS_OPTIONS: NpcStatus[] = ['alive', 'dead', 'missing', 'unknown', 'hostile'];
+const STATUS_OPTIONS: NpcStatus[] = ['alive', 'dead', 'missing', 'unknown'];
 
 const GENDER_OPTIONS: SelectOption<NpcGender | ''>[] = [
   { value: 'male', label: 'Male' },

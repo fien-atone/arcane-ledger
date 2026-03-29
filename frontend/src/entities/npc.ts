@@ -1,4 +1,4 @@
-export type NpcStatus = 'alive' | 'dead' | 'missing' | 'unknown' | 'hostile';
+export type NpcStatus = 'alive' | 'dead' | 'missing' | 'unknown';
 export type NpcGender = 'male' | 'female' | 'nonbinary';
 
 export type NpcRelationType =

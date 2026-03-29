@@ -343,7 +343,7 @@ export const MOCK_NPCS: NPC[] = [
     campaignId: 'campaign-drakkenheim',
     name: 'Rosa Carver',
     aliases: ['Роза Карвер'],
-    status: 'hostile',
+    status: 'alive',
     gender: 'female',
     age: 36,
     species: 'Human',

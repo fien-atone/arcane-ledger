@@ -13,7 +13,6 @@ const STATUS_DOT: Record<NpcStatus, string> = {
   dead:    'bg-outline-variant',
   missing: 'bg-on-surface-variant',
   unknown: 'bg-outline',
-  hostile: 'bg-primary animate-pulse',
 };
 
 // ── Add Member Panel ─────────────────────────────────────────────────────────

@@ -26,6 +26,7 @@ const SpeciesDetailPage = lazy(() => import('@/pages/SpeciesDetailPage'));
 const GroupTypesPage = lazy(() => import('@/pages/GroupTypesPage'));
 const SpeciesTypesPage = lazy(() => import('@/pages/SpeciesTypesPage'));
 const LocationTypesPage = lazy(() => import('@/pages/LocationTypesPage'));
+const SocialGraphPage = lazy(() => import('@/pages/SocialGraphPage'));
 
 const Fallback = () => (
   <div className="flex h-screen items-center justify-center text-on-surface-variant">
@@ -64,6 +65,7 @@ export const router = createBrowserRouter(
           children: [
             { index: true, element: withSuspense(CampaignDashboardPage) },
             { path: 'npcs', element: withSuspense(NpcListPage) },
+            { path: 'npcs/relationships', element: withSuspense(SocialGraphPage) },
             { path: 'npcs/:npcId', element: withSuspense(NpcDetailPage) },
             { path: 'sessions', element: withSuspense(SessionListPage) },
             { path: 'sessions/:sessionId', element: withSuspense(SessionDetailPage) },

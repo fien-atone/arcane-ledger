@@ -17,7 +17,6 @@ const STATUS_PILLS: { label: string; value: StatusFilter }[] = [
   { label: 'Dead', value: 'dead' },
   { label: 'Missing', value: 'missing' },
   { label: 'Unknown', value: 'unknown' },
-  { label: 'Hostile', value: 'hostile' },
 ];
 
 const STATUS_STYLES: Record<NpcStatus, { pill: string; dot: string; label: string; icon: string }> = {
@@ -25,7 +24,6 @@ const STATUS_STYLES: Record<NpcStatus, { pill: string; dot: string; label: strin
   dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20', dot: 'bg-outline-variant', label: 'Dead',    icon: 'skull' },
   missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20', dot: 'bg-on-surface-variant', label: 'Missing', icon: 'person_search' },
   unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10', dot: 'bg-outline',                     label: 'Unknown', icon: 'help' },
-  hostile: { pill: 'bg-primary/10 text-primary border border-primary/20', dot: 'bg-primary animate-pulse',                               label: 'Hostile', icon: 'warning' },
 };
 
 function NpcAvatar({ name, image }: { name: string; image?: string }) {
@@ -239,13 +237,32 @@ export default function NpcListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">NPCs</h1>
             <p className="text-on-surface-variant text-sm mt-1">Inhabitants, allies, and adversaries.</p>
           </div>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-[20px]">add</span>
-            <span className="font-label text-xs uppercase tracking-widest">Add NPC</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* View toggle */}
+            <div className="flex bg-surface-container rounded-sm border border-outline-variant/20 overflow-hidden">
+              <button
+                className="p-2 bg-primary/15 text-primary"
+                title="List view"
+                disabled
+              >
+                <span className="material-symbols-outlined text-[20px]">list</span>
+              </button>
+              <Link
+                to={`/campaigns/${campaignId}/npcs/relationships`}
+                className="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors"
+                title="Graph view"
+              >
+                <span className="material-symbols-outlined text-[20px]">hub</span>
+              </Link>
+            </div>
+            <button
+              onClick={() => setAddOpen(true)}
+              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[20px]">add</span>
+              <span className="font-label text-xs uppercase tracking-widest">Add NPC</span>
+            </button>
+          </div>
         </div>
       </header>
 

@@ -29,7 +29,6 @@ const STATUS_STYLES: Record<NpcStatus, { pill: string; label: string }> = {
   dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20',     label: 'Dead'    },
   missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20',        label: 'Missing' },
   unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10',                  label: 'Unknown' },
-  hostile: { pill: 'bg-primary/10 text-primary border border-primary/20',                                          label: 'Hostile' },
 };
 
 export default function NpcDetailPage() {
@@ -398,59 +397,6 @@ export default function NpcDetailPage() {
 
             {/* Social Relations */}
             <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />
-
-            {/* Connections via shared groups */}
-            {(() => {
-              if (!allNpcs || npc.groupMemberships.length === 0) return null;
-              const myGroupIds = new Set(npc.groupMemberships.map((m) => m.groupId));
-              const connections = allNpcs
-                .filter((other) => other.id !== npc.id)
-                .flatMap((other) => {
-                  const shared = other.groupMemberships.filter((m) => myGroupIds.has(m.groupId));
-                  return shared.length > 0 ? [{ npc: other, sharedGroups: shared }] : [];
-                });
-              if (connections.length === 0) return null;
-              return (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                      Connections
-                    </h2>
-                    <div className="h-px flex-1 bg-outline-variant/20" />
-                  </div>
-                  <div className="space-y-2">
-                    {connections.map(({ npc: other, sharedGroups }) => {
-                      const initials = other.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-                      return (
-                        <Link
-                          key={other.id}
-                          to={`/campaigns/${campaignId}/npcs/${other.id}`}
-                          className="flex items-center gap-4 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-colors group"
-                        >
-                          <div className="w-10 h-10 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-                              {other.name}
-                            </p>
-                            <p className="text-[10px] text-on-surface-variant/60 mt-0.5">
-                              via {sharedGroups.map((m) => groupNameById(m.groupId)).join(', ')}
-                            </p>
-                          </div>
-                          {other.species && (
-                            <span className="text-[10px] text-on-surface-variant/40 italic flex-shrink-0">{other.species}</span>
-                          )}
-                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60">
-                            chevron_right
-                          </span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
-            })()}
 
             {/* Session Appearances */}
             {(() => {
