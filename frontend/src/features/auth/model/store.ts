@@ -13,6 +13,7 @@ const LOGIN_MUTATION = gql`
         email
         name
         avatar
+        role
       }
     }
   }
@@ -38,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email, password) => {
         try {
           const { data } = await apolloClient.mutate<{
-            login: { token: string; user: { id: string; email: string; name: string; avatar?: string } };
+            login: { token: string; user: { id: string; email: string; name: string; avatar?: string; role: string } };
           }>({
             mutation: LOGIN_MUTATION,
             variables: { email, password },
@@ -52,8 +53,7 @@ export const useAuthStore = create<AuthState>()(
               user: {
                 email: user.email,
                 name: user.name,
-                // Derive systemRole from server response — admin if email contains 'admin'
-                systemRole: user.email === 'admin' ? 'admin' : 'user',
+                systemRole: (user.role?.toLowerCase() === 'admin' ? 'admin' : 'user') as 'admin' | 'user',
               },
             });
             return true;

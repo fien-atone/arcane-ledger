@@ -1,3 +1,4 @@
+import { adminResolvers } from './admin.js';
 import { authResolvers } from './auth.js';
 import { campaignResolvers } from './campaigns.js';
 import { sessionResolvers } from './sessions.js';
@@ -23,6 +24,7 @@ function mergeResolvers(...maps: ResolverMap[]): ResolverMap {
 }
 
 export const resolvers = mergeResolvers(
+  adminResolvers,
   authResolvers,
   campaignResolvers,
   sessionResolvers,

@@ -2,7 +2,8 @@ export const typeDefs = `#graphql
 
   # ── Enums ───────────────────────────────────────────────────
 
-  enum Role { GM PLAYER }
+  enum SystemRole { ADMIN USER }
+  enum CampaignRole { GM PLAYER }
   enum NPCStatus { ALIVE DEAD MISSING UNKNOWN }
   enum Gender { MALE FEMALE NONBINARY }
   enum QuestStatus { ACTIVE COMPLETED FAILED UNAVAILABLE UNDISCOVERED }
@@ -14,6 +15,7 @@ export const typeDefs = `#graphql
     email: String!
     name: String!
     avatar: String
+    role: SystemRole!
   }
 
   type AuthPayload {
@@ -30,7 +32,7 @@ export const typeDefs = `#graphql
     enabledSections: [String!]!
     createdAt: String!
     archivedAt: String
-    myRole: Role!
+    myRole: CampaignRole!
     sessionCount: Int!
     memberCount: Int!
     lastSession: Session
@@ -45,7 +47,7 @@ export const typeDefs = `#graphql
   type CampaignMember {
     id: ID!
     user: User!
-    role: Role!
+    role: CampaignRole!
     joinedAt: String!
   }
 
@@ -321,6 +323,9 @@ export const typeDefs = `#graphql
     # Relations
     relationsForEntity(campaignId: ID!, entityId: ID!): [Relation!]!
     relationsForCampaign(campaignId: ID!): [Relation!]!
+
+    # Admin
+    adminUsers(search: String): [User!]!
   }
 
   # ── Mutations ──────────────────────────────────────────────
@@ -384,6 +389,20 @@ export const typeDefs = `#graphql
     image: String
     gmNotes: String
     mapMarkers: String # JSON string
+  }
+
+  input AdminCreateUserInput {
+    name: String!
+    email: String!
+    password: String!
+    role: SystemRole
+  }
+
+  input AdminUpdateUserInput {
+    name: String
+    email: String
+    password: String
+    role: SystemRole
   }
 
   input RelationInput {
@@ -459,6 +478,11 @@ export const typeDefs = `#graphql
     # Character sub-entities
     addCharacterGroupMembership(characterId: ID!, groupId: ID!, relation: String, subfaction: String): PlayerCharacter!
     removeCharacterGroupMembership(characterId: ID!, groupId: ID!): PlayerCharacter!
+
+    # Admin
+    adminCreateUser(input: AdminCreateUserInput!): User!
+    adminUpdateUser(id: ID!, input: AdminUpdateUserInput!): User!
+    adminDeleteUser(id: ID!): Boolean!
   }
 
   # ── Subscriptions ──────────────────────────────────────────

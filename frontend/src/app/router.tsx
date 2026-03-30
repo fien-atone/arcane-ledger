@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
-import { ProtectedRoute } from '@/features/auth';
+import { ProtectedRoute, AdminRoute } from '@/features/auth';
 import { AppLayout } from './AppLayout';
 import { CampaignShell } from '@/widgets/CampaignShell';
 
@@ -27,6 +27,7 @@ const GroupTypesPage = lazy(() => import('@/pages/GroupTypesPage'));
 const SpeciesTypesPage = lazy(() => import('@/pages/SpeciesTypesPage'));
 const LocationTypesPage = lazy(() => import('@/pages/LocationTypesPage'));
 const SocialGraphPage = lazy(() => import('@/pages/SocialGraphPage'));
+const AdminUsersPage = lazy(() => import('@/pages/AdminUsersPage'));
 
 const Fallback = () => (
   <div className="flex h-screen items-center justify-center text-on-surface-variant">
@@ -56,6 +57,18 @@ export const router = createBrowserRouter(
           element: <AppLayout />,
           children: [
             { path: '/campaigns', element: withSuspense(CampaignsPage) },
+          ],
+        },
+        // Admin routes — with Topbar, no Sidebar
+        {
+          element: <AdminRoute />,
+          children: [
+            {
+              element: <AppLayout />,
+              children: [
+                { path: '/admin/users', element: withSuspense(AdminUsersPage) },
+              ],
+            },
           ],
         },
         // Campaign inner pages — with Sidebar

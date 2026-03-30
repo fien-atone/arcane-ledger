@@ -9,13 +9,19 @@ datasource db {
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
+enum SystemRole {
+  ADMIN
+  USER
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
   password  String
   name      String
   avatar    String?
-  createdAt DateTime @default(now())
+  role      SystemRole @default(USER)
+  createdAt DateTime   @default(now())
 
   campaignMembers CampaignMember[]
   characters      PlayerCharacter[]
@@ -51,13 +57,13 @@ model CampaignMember {
   campaignId String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
-  role       Role     @default(PLAYER)
-  joinedAt   DateTime @default(now())
+  role       CampaignRole @default(PLAYER)
+  joinedAt   DateTime     @default(now())
 
   @@unique([campaignId, userId])
 }
 
-enum Role {
+enum CampaignRole {
   GM
   PLAYER
 }
