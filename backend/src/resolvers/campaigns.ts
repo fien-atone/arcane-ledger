@@ -67,7 +67,7 @@ export const campaignResolvers = {
       });
       if (!member || member.role !== 'GM') throw new Error('Only the GM can change sections');
 
-      const VALID = ['SESSIONS', 'NPCS', 'LOCATIONS', 'GROUPS', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES'];
+      const VALID = ['SESSIONS', 'NPCS', 'LOCATIONS', 'LOCATION_TYPES', 'GROUPS', 'GROUP_TYPES', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES', 'SPECIES_TYPES'];
       const filtered = sections.filter((s) => VALID.includes(s));
 
       const campaign = await prisma.campaign.update({

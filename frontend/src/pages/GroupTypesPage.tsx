@@ -11,7 +11,7 @@ export default function GroupTypesPage() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const { id: campaignId } = useParams<{ id: string }>();
-  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
+  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
   const { data: groupTypes, isLoading } = useGroupTypes(campaignId, debouncedSearch);
   const deleteGroupType = useDeleteGroupType();
 

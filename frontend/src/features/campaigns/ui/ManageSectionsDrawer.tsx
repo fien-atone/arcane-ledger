@@ -21,9 +21,12 @@ const SECTION_GROUPS: SectionGroup[] = [
     icon: 'public',
     items: [
       { id: 'locations', label: 'Locations', icon: 'location_on' },
+      { id: 'location_types', label: 'Location Types', icon: 'account_tree' },
       { id: 'npcs', label: 'NPCs', icon: 'group' },
       { id: 'groups', label: 'Groups', icon: 'groups' },
+      { id: 'group_types', label: 'Group Types', icon: 'category' },
       { id: 'species', label: 'Species', icon: 'blur_on' },
+      { id: 'species_types', label: 'Species Types', icon: 'category' },
     ],
   },
   {

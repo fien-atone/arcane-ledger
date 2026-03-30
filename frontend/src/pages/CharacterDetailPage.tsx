@@ -15,6 +15,7 @@ export default function CharacterDetailPage() {
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
   const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
+  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const { data: characters, isLoading, isError, refetch } = useParty(campaignId ?? '');
   const character = characters?.find((c) => c.id === charId);
   const { data: allSpecies } = useSpecies(campaignId ?? '');
@@ -79,10 +80,10 @@ export default function CharacterDetailPage() {
     );
   }
 
-  const matchedSpecies = allSpecies?.find(
-    (s) => s.id === character.speciesId || s.name.toLowerCase() === character.species?.toLowerCase()
-  );
-  const displaySpecies = matchedSpecies?.name ?? character.species;
+  const matchedSpecies = speciesEnabled
+    ? allSpecies?.find((s) => s.id === character.speciesId || s.name.toLowerCase() === character.species?.toLowerCase())
+    : undefined;
+  const displaySpecies = speciesEnabled ? (matchedSpecies?.name ?? character.species) : undefined;
   const displayGender = character.gender === 'nonbinary'
     ? 'Non-binary'
     : character.gender

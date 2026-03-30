@@ -521,7 +521,7 @@ export default function CampaignDashboardPage() {
                         <div className="min-w-0 flex-1">
                           <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{character.name}</p>
                           <p className="text-[10px] text-on-surface-variant/40 truncate">
-                            {[character.species, character.class].filter(Boolean).join(' · ')}
+                            {[sectionOn('species') ? character.species : null, character.class].filter(Boolean).join(' · ')}
                           </p>
                         </div>
                       </Link>

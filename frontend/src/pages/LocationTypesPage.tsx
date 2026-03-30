@@ -508,7 +508,7 @@ function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: bo
 
 export default function LocationTypesPage() {
   const { id: campaignId } = useParams<{ id: string }>();
-  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
   const { data: types,        isLoading: loadingTypes }   = useLocationTypes(campaignId);
   const { data: containRules, isLoading: loadingContain } = useContainmentRules();
 

@@ -21,7 +21,7 @@ function SpeciesPreview({ species, typeName }: { species: Species; typeName: str
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-            {typeName} · {SIZE_LABEL[species.size]}
+            {[typeName, SIZE_LABEL[species.size]].filter(Boolean).join(' · ')}
           </span>
         </div>
         <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{species.name}</h2>
@@ -69,6 +69,7 @@ function SpeciesPreview({ species, typeName }: { species: Species; typeName: str
 export default function SpeciesPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
+  const typesEnabled = useSectionEnabled(campaignId ?? '', 'species_types');
   const { data: speciesList, isLoading } = useSpecies(campaignId);
   const { data: speciesTypes } = useSpeciesTypes(campaignId);
 
@@ -79,7 +80,7 @@ export default function SpeciesPage() {
   const [editingSpecies, setEditingSpecies] = useState<Species | undefined>(undefined);
 
   const resolveTypeName = (typeId: string) =>
-    speciesTypes?.find((t) => t.id === typeId)?.name ?? typeId;
+    typesEnabled ? (speciesTypes?.find((t) => t.id === typeId)?.name ?? typeId) : '';
 
   const filtered = (speciesList ?? []).filter((s) => {
     const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase());
@@ -93,10 +94,10 @@ export default function SpeciesPage() {
     return <SectionDisabled campaignId={campaignId ?? ''} />;
   }
 
-  const typeFilters = [
+  const typeFilters = typesEnabled ? [
     { value: 'all', label: 'All' },
     ...(speciesTypes ?? []).map((t) => ({ value: t.id, label: t.name })),
-  ];
+  ] : [];
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
@@ -160,7 +161,7 @@ export default function SpeciesPage() {
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm truncate ${selected?.id === s.id ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>{s.name}</p>
                     <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${selected?.id === s.id ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>
-                      {resolveTypeName(s.type)} · {SIZE_LABEL[s.size]}
+                      {[typesEnabled ? resolveTypeName(s.type) : null, SIZE_LABEL[s.size]].filter(Boolean).join(' · ')}
                     </p>
                   </div>
                 </button>

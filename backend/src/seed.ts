@@ -78,7 +78,7 @@ async function main() {
       id: 'campaign-farchester',
       title: 'Farchester',
       description: 'City intrigue under a dry law and curfew. 5000 gold missing from the treasury. Goblins at the eastern gate, elves at the western. The party operates undercover.',
-      enabledSections: ['SESSIONS', 'NPCS', 'LOCATIONS', 'GROUPS', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES'],
+      enabledSections: ['SESSIONS', 'NPCS', 'LOCATIONS', 'LOCATION_TYPES', 'GROUPS', 'GROUP_TYPES', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES', 'SPECIES_TYPES'],
       createdAt: new Date('2026-02-01T00:00:00Z'),
     },
   });
@@ -88,7 +88,7 @@ async function main() {
       id: 'campaign-drakkenheim',
       title: 'Drakkenheim',
       description: 'A ruined city blanketed in deliriite. Five factions fight for control. The party navigates the underground district of Bent Row and the delirium-soaked streets above.',
-      enabledSections: ['SESSIONS', 'NPCS', 'LOCATIONS', 'GROUPS', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES'],
+      enabledSections: ['SESSIONS', 'NPCS', 'LOCATIONS', 'LOCATION_TYPES', 'GROUPS', 'GROUP_TYPES', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES', 'SPECIES_TYPES'],
       createdAt: new Date('2025-09-01T00:00:00Z'),
     },
   });
@@ -335,7 +335,7 @@ async function main() {
           campaignId: campId,
           name: sp.name,
           pluralName: sp.pluralName,
-          type: sp.type,
+          type: `st-${sp.type}-${suffix}`,
           size: sp.size,
           description: sp.description,
           traits: sp.traits,

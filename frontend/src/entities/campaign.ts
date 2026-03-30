@@ -1,11 +1,11 @@
 /** All possible sidebar section identifiers */
 export type CampaignSection =
-  | 'sessions' | 'npcs' | 'locations' | 'groups'
-  | 'quests' | 'party' | 'social_graph' | 'species';
+  | 'sessions' | 'npcs' | 'locations' | 'location_types' | 'groups' | 'group_types'
+  | 'quests' | 'party' | 'social_graph' | 'species' | 'species_types';
 
 export const ALL_SECTIONS: CampaignSection[] = [
-  'sessions', 'npcs', 'locations', 'groups',
-  'quests', 'party', 'social_graph', 'species',
+  'sessions', 'npcs', 'locations', 'location_types', 'groups', 'group_types',
+  'quests', 'party', 'social_graph', 'species', 'species_types',
 ];
 
 export interface Campaign {

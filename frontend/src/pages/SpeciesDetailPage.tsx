@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSpeciesById, useSaveSpecies, useDeleteSpecies } from '@/features/species/api';
 import { useSpeciesTypes } from '@/features/speciesTypes/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { SpeciesEditDrawer } from '@/features/species/ui';
 import { BackLink, InlineRichField } from '@/shared/ui';
 import type { SpeciesSize } from '@/entities/species';
@@ -17,6 +18,7 @@ export default function SpeciesDetailPage() {
   const { id: campaignId, speciesId } = useParams<{ id: string; speciesId: string }>();
   const { data: species, isLoading, isError } = useSpeciesById(campaignId, speciesId);
   const { data: speciesTypes } = useSpeciesTypes(campaignId);
+  const typesEnabled = useSectionEnabled(campaignId ?? '', 'species_types');
   const saveSpecies = useSaveSpecies(campaignId ?? '');
   const deleteSpecies = useDeleteSpecies();
   const navigate = useNavigate();
@@ -63,9 +65,11 @@ export default function SpeciesDetailPage() {
             )}
           </div>
           <div className="flex flex-col items-end gap-3">
-            <span className="px-3 py-1 bg-surface-container border border-outline-variant/20 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant rounded-sm">
-              {speciesTypes?.find((t) => t.id === species.type)?.name ?? species.type}
-            </span>
+            {typesEnabled && (
+              <span className="px-3 py-1 bg-surface-container border border-outline-variant/20 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant rounded-sm">
+                {speciesTypes?.find((t) => t.id === species.type)?.name ?? species.type}
+              </span>
+            )}
             <div className="flex gap-2">
               {confirmDelete ? (
                 <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">

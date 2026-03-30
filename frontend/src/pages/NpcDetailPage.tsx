@@ -46,6 +46,7 @@ export default function NpcDetailPage() {
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
+  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const saveNpc = useSaveNpc();
   const addGroupMembership = useAddNPCGroupMembership();
   const removeGroupMembership = useRemoveNPCGroupMembership();
@@ -151,7 +152,7 @@ export default function NpcDetailPage() {
                       Age {npc.age}
                     </span>
                   )}
-                  {npc.species && (() => {
+                  {speciesEnabled && npc.species && (() => {
                     const matchedSpecies = allSpecies?.find(
                       (s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase()
                     );

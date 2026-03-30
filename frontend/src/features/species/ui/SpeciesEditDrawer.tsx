@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSaveSpecies } from '../api';
 import { useSpeciesTypes } from '@/features/speciesTypes/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Species, SpeciesSize } from '@/entities/species';
@@ -30,6 +31,7 @@ interface Props {
 
 export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props) {
   const save = useSaveSpecies(campaignId);
+  const typesEnabled = useSectionEnabled(campaignId, 'species_types');
   const { data: speciesTypes } = useSpeciesTypes(campaignId);
   const isNew = !species;
 
@@ -126,16 +128,18 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
           </div>
 
           {/* Type + Size */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Type</label>
-              <Select<string>
-                value={type}
-                options={typeOptions}
-                searchable
-                onChange={(v) => setType(v || 'humanoid')}
-              />
-            </div>
+          <div className={`grid gap-4 ${typesEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {typesEnabled && (
+              <div>
+                <label className={labelCls}>Type</label>
+                <Select<string>
+                  value={type}
+                  options={typeOptions}
+                  searchable
+                  onChange={(v) => setType(v || 'humanoid')}
+                />
+              </div>
+            )}
             <div>
               <label className={labelCls}>Size</label>
               <Select

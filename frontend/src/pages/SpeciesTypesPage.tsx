@@ -107,7 +107,7 @@ function SpeciesTypeDetail({ entry, campaignId, onEdit, onDelete }: { entry: Spe
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function SpeciesTypesPage() {
   const { id: campaignId } = useParams<{ id: string }>();
-  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
+  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species_types');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const { data: types, isLoading } = useSpeciesTypes(campaignId, debouncedSearch);

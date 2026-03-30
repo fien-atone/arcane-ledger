@@ -19,11 +19,12 @@ function SectionHeader({ title }: { title: string }) {
 
 function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaignId: string }) {
   const initials = char.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  const specEnabled = useSectionEnabled(campaignId, 'species');
   const { data: allSpecies } = useSpecies(campaignId);
-  const matchedSpecies = char.speciesId || char.species
+  const matchedSpecies = specEnabled && (char.speciesId || char.species)
     ? allSpecies?.find((s) => s.id === char.speciesId || s.name.toLowerCase() === char.species?.toLowerCase())
     : undefined;
-  const displaySpeciesName = matchedSpecies?.name ?? char.species;
+  const displaySpeciesName = specEnabled ? (matchedSpecies?.name ?? char.species) : undefined;
   const resolvedImage = resolveImageUrl(char.image);
   const genderLabel = char.gender
     ? (char.gender === 'nonbinary' ? 'Non-binary' : char.gender.charAt(0).toUpperCase() + char.gender.slice(1))
@@ -49,18 +50,6 @@ function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaign
         <div className="flex flex-col justify-center gap-3 min-w-0">
           <div>
             <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{char.name}</h2>
-            {displaySpeciesName && (
-              matchedSpecies ? (
-                <Link
-                  to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
-                  className="text-xs text-primary/70 uppercase tracking-wider mt-1 hover:text-primary transition-colors block"
-                >
-                  {displaySpeciesName}
-                </Link>
-              ) : (
-                <p className="text-xs text-on-surface-variant/60 uppercase tracking-wider mt-1">{displaySpeciesName}</p>
-              )
-            )}
           </div>
 
           {metaParts.length > 0 && (
@@ -109,8 +98,9 @@ export default function PartyPage() {
   const [search, setSearch] = useState('');
   const [addOpen, setAddOpen] = useState(false);
 
+  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const resolveSpeciesName = (char: PlayerCharacter) =>
-    allSpecies?.find((s) => s.id === char.speciesId)?.name ?? char.species;
+    speciesEnabled ? (allSpecies?.find((s) => s.id === char.speciesId)?.name ?? char.species) : undefined;
 
   const filtered = characters?.filter((c) =>
     !search ||

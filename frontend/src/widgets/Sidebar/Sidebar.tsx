@@ -27,15 +27,15 @@ const NAV: Array<NavItem | NavSection> = [
   { label: 'Dashboard', icon: 'dashboard', to: (id) => `/campaigns/${id}`, exact: true },
   {
     section: 'World',
-    sectionIds: ['locations', 'npcs', 'groups', 'species'],
+    sectionIds: ['locations', 'location_types', 'npcs', 'groups', 'group_types', 'species', 'species_types'],
     items: [
       { label: 'Locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false, sectionId: 'locations' },
-      { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true, sectionId: 'locations' },
+      { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true, sectionId: 'location_types' },
       { label: 'NPCs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false, sectionId: 'npcs' },
       { label: 'Groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false, sectionId: 'groups' },
-      { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true, sectionId: 'groups' },
+      { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true, sectionId: 'group_types' },
       { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false, sectionId: 'species' },
-      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true, sectionId: 'species' },
+      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true, sectionId: 'species_types' },
     ],
   },
   {
@@ -91,13 +91,22 @@ export function Sidebar() {
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const isAllEnabled = !campaign?.enabledSections || campaign.enabledSections.length === 0;
 
+  // Parent→child: disabling parent also disables its *_types child
+  const CHILDREN: Partial<Record<CampaignSection, CampaignSection>> = {
+    species: 'species_types',
+    locations: 'location_types',
+    groups: 'group_types',
+  };
+
   const toggleSection = (section: CampaignSection) => {
     if (!campaign) return;
     let next: CampaignSection[];
     if (isAllEnabled) {
       next = ALL_SECTIONS.filter((s) => s !== section);
     } else if (enabledSet.has(section)) {
-      next = enabledSections.filter((s) => s !== section);
+      // Turning off — also turn off child if exists
+      const child = CHILDREN[section];
+      next = enabledSections.filter((s) => s !== section && s !== child);
     } else {
       next = [...enabledSections, section];
     }
@@ -215,9 +224,6 @@ export function Sidebar() {
                       const isOn = !sectionId || enabledSet.has(sectionId);
                       const dimmed = editMode && !isOn;
 
-                      // In edit mode: show all items, but only non-sub items get toggles
-                      if (editMode && sub) return null; // sub-items follow parent, don't show separately
-
                       return (
                         <li key={label} className={dimmed ? 'opacity-40' : ''}>
                           <div className="flex items-center">
@@ -243,7 +249,7 @@ export function Sidebar() {
                               </span>
                               {!collapsed && <span className="whitespace-nowrap">{label}</span>}
                             </Link>
-                            {editMode && !collapsed && sectionId && !sub && (
+                            {editMode && !collapsed && sectionId && (
                               <div className="pr-3">
                                 <SectionToggle on={isOn} onClick={() => toggleSection(sectionId)} small />
                               </div>

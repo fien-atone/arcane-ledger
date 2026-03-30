@@ -55,10 +55,11 @@ function SectionHeader({ title }: { title: string }) {
 function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
   const st = STATUS_STYLES[npc.status];
   const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  const specEnabled = useSectionEnabled(campaignId, 'species');
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId);
   const { data: allGroups } = useGroups(campaignId);
-  const matchedSpecies = npc.species
+  const matchedSpecies = specEnabled && npc.species
     ? allSpecies?.find((s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase())
     : undefined;
 
@@ -71,7 +72,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
     .filter(Boolean) as { loc: NonNullable<typeof allLocations>[number]; note?: string }[];
 
   const resolvedImage = resolveImageUrl(npc.image);
-  const displayName = matchedSpecies?.name ?? npc.species;
+  const displayName = specEnabled ? (matchedSpecies?.name ?? npc.species) : undefined;
   const genderLabel = npc.gender
     ? (npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1))
     : null;
@@ -211,6 +212,7 @@ export default function NpcListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
+  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const { data: npcs, isLoading, isError } = useNpcs(campaignId ?? '');
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const [search, setSearch] = useState('');
@@ -223,7 +225,7 @@ export default function NpcListPage() {
   }
 
   const resolveSpeciesName = (npc: NPC) =>
-    allSpecies?.find((s) => s.id === npc.speciesId)?.name ?? npc.species;
+    speciesEnabled ? (allSpecies?.find((s) => s.id === npc.speciesId)?.name ?? npc.species) : undefined;
 
   const filtered = useMemo(() => {
     if (!npcs) return [];
