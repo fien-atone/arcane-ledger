@@ -1,4 +1,5 @@
 import type { Context } from '../context.js';
+import { publishCampaignEvent } from '../publish.js';
 
 export const relationResolvers = {
   Query: {
@@ -30,11 +31,13 @@ export const relationResolvers = {
       };
 
       if (id) {
-        return prisma.relation.update({ where: { id }, data });
+        const result = await prisma.relation.update({ where: { id }, data });
+        publishCampaignEvent(campaignId, 'RELATION', result.id, 'UPDATED');
+        return result;
       }
 
       // Upsert by unique composite key
-      return prisma.relation.upsert({
+      const result = await prisma.relation.upsert({
         where: {
           campaignId_fromEntityType_fromEntityId_toEntityType_toEntityId: {
             campaignId,
@@ -47,10 +50,14 @@ export const relationResolvers = {
         update: { friendliness: input.friendliness, note: input.note ?? null },
         create: { ...data, campaignId },
       });
+      publishCampaignEvent(campaignId, 'RELATION', result.id, 'CREATED');
+      return result;
     },
 
     deleteRelation: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {
+      const entity = await prisma.relation.findUniqueOrThrow({ where: { id } });
       await prisma.relation.delete({ where: { id } });
+      publishCampaignEvent(entity.campaignId, 'RELATION', id, 'DELETED');
       return true;
     },
   },

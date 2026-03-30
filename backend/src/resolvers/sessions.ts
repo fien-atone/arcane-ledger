@@ -1,4 +1,5 @@
 import type { Context } from '../context.js';
+import { publishCampaignEvent } from '../publish.js';
 
 export const sessionResolvers = {
   Query: {
@@ -24,11 +25,13 @@ export const sessionResolvers = {
       };
 
       let session;
+      const isCreate = !id;
       if (id) {
         session = await prisma.session.update({ where: { id }, data });
       } else {
         session = await prisma.session.create({ data: { ...data, campaignId } });
       }
+      publishCampaignEvent(campaignId, 'SESSION', session.id, isCreate ? 'CREATED' : 'UPDATED');
 
       // Sync junction tables only when the array was explicitly provided (not undefined)
       const sessionId = session.id;
@@ -63,8 +66,9 @@ export const sessionResolvers = {
       return session;
     },
 
-    deleteSession: async (_: unknown, { id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteSession: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
       await prisma.session.delete({ where: { id } });
+      publishCampaignEvent(campaignId, 'SESSION', id, 'DELETED');
       return true;
     },
   },

@@ -1,5 +1,6 @@
 import type { Context } from '../context.js';
 import { toEnum } from './utils.js';
+import { publishCampaignEvent } from '../publish.js';
 
 export const questResolvers = {
   Query: {
@@ -26,13 +27,18 @@ export const questResolvers = {
       };
 
       if (id) {
-        return prisma.quest.update({ where: { id }, data });
+        const result = await prisma.quest.update({ where: { id }, data });
+        publishCampaignEvent(campaignId, 'QUEST', result.id, 'UPDATED');
+        return result;
       }
-      return prisma.quest.create({ data: { ...data, campaignId } });
+      const result = await prisma.quest.create({ data: { ...data, campaignId } });
+      publishCampaignEvent(campaignId, 'QUEST', result.id, 'CREATED');
+      return result;
     },
 
-    deleteQuest: async (_: unknown, { id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteQuest: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
       await prisma.quest.delete({ where: { id } });
+      publishCampaignEvent(campaignId, 'QUEST', id, 'DELETED');
       return true;
     },
   },

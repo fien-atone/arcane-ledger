@@ -462,10 +462,21 @@ export const typeDefs = `#graphql
 
   # ── Subscriptions ──────────────────────────────────────────
 
+  enum ChangeAction {
+    CREATED
+    UPDATED
+    DELETED
+  }
+
+  type CampaignEvent {
+    entityType: String!
+    entityId: ID!
+    action: ChangeAction!
+    campaignId: ID!
+    relatedIds: [ID!]
+  }
+
   type Subscription {
-    campaignUpdated(campaignId: ID!): Campaign!
-    sessionChanged(campaignId: ID!): Session!
-    npcChanged(campaignId: ID!): NPC!
-    questChanged(campaignId: ID!): Quest!
+    campaignEvent(campaignId: ID!): CampaignEvent!
   }
 `;

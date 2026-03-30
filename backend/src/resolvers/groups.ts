@@ -1,4 +1,5 @@
 import type { Context } from '../context.js';
+import { publishCampaignEvent } from '../publish.js';
 
 export const groupResolvers = {
   Query: {
@@ -34,13 +35,18 @@ export const groupResolvers = {
       };
 
       if (id) {
-        return prisma.group.update({ where: { id }, data });
+        const result = await prisma.group.update({ where: { id }, data });
+        publishCampaignEvent(campaignId, 'GROUP', result.id, 'UPDATED');
+        return result;
       }
-      return prisma.group.create({ data: { ...data, campaignId } });
+      const result = await prisma.group.create({ data: { ...data, campaignId } });
+      publishCampaignEvent(campaignId, 'GROUP', result.id, 'CREATED');
+      return result;
     },
 
-    deleteGroup: async (_: unknown, { id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteGroup: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
       await prisma.group.delete({ where: { id } });
+      publishCampaignEvent(campaignId, 'GROUP', id, 'DELETED');
       return true;
     },
   },

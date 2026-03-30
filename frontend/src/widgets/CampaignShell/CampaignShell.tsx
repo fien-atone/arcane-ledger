@@ -3,6 +3,9 @@ import { Sidebar } from '@/widgets/Sidebar';
 import { DiceRoller } from '@/widgets/DiceRollerModal';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
 import { useCampaign } from '@/features/campaigns/api/queries';
+import { CampaignSubscriptionManager } from '@/shared/api/CampaignSubscriptionManager';
+
+const useMock = import.meta.env.VITE_USE_MOCK === 'true';
 
 export function CampaignShell() {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +42,7 @@ export function CampaignShell() {
 
   return (
     <div className="flex h-screen bg-surface text-on-surface overflow-hidden">
+      {!useMock && id && <CampaignSubscriptionManager campaignId={id} />}
       <Sidebar />
       <main
         className={`flex-1 overflow-auto transition-all duration-300 ${

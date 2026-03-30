@@ -7,6 +7,7 @@ import { groupResolvers } from './groups.js';
 import { locationResolvers } from './locations.js';
 import { relationResolvers } from './relations.js';
 import { referenceDataResolvers } from './referenceData.js';
+import { subscriptionResolvers } from './subscriptions.js';
 
 type ResolverMap = Record<string, Record<string, unknown>>;
 
@@ -31,4 +32,5 @@ export const resolvers = mergeResolvers(
   locationResolvers,
   relationResolvers,
   referenceDataResolvers,
+  subscriptionResolvers,
 );

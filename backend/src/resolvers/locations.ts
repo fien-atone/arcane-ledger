@@ -1,4 +1,5 @@
 import type { Context } from '../context.js';
+import { publishCampaignEvent } from '../publish.js';
 
 export const locationResolvers = {
   Query: {
@@ -29,13 +30,18 @@ export const locationResolvers = {
       if (input.image !== undefined) data.image = input.image ?? null;
 
       if (id) {
-        return prisma.location.update({ where: { id }, data });
+        const result = await prisma.location.update({ where: { id }, data });
+        publishCampaignEvent(campaignId, 'LOCATION', result.id, 'UPDATED');
+        return result;
       }
-      return prisma.location.create({ data: { ...data, campaignId } });
+      const result = await prisma.location.create({ data: { ...data, campaignId } });
+      publishCampaignEvent(campaignId, 'LOCATION', result.id, 'CREATED');
+      return result;
     },
 
-    deleteLocation: async (_: unknown, { id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteLocation: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
       await prisma.location.delete({ where: { id } });
+      publishCampaignEvent(campaignId, 'LOCATION', id, 'DELETED');
       return true;
     },
   },

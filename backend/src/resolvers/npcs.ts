@@ -1,5 +1,6 @@
 import type { Context } from '../context.js';
 import { toEnum } from './utils.js';
+import { publishCampaignEvent } from '../publish.js';
 
 export const npcResolvers = {
   Query: {
@@ -34,13 +35,18 @@ export const npcResolvers = {
       if (input.image !== undefined) data.image = input.image ?? null;
 
       if (id) {
-        return prisma.nPC.update({ where: { id }, data });
+        const result = await prisma.nPC.update({ where: { id }, data });
+        publishCampaignEvent(campaignId, 'NPC', result.id, 'UPDATED');
+        return result;
       }
-      return prisma.nPC.create({ data: { ...data, campaignId } });
+      const result = await prisma.nPC.create({ data: { ...data, campaignId } });
+      publishCampaignEvent(campaignId, 'NPC', result.id, 'CREATED');
+      return result;
     },
 
-    deleteNPC: async (_: unknown, { id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteNPC: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
       await prisma.nPC.delete({ where: { id } });
+      publishCampaignEvent(campaignId, 'NPC', id, 'DELETED');
       return true;
     },
 
@@ -54,7 +60,9 @@ export const npcResolvers = {
         update: { note: note ?? null },
         create: { npcId, locationId, note: note ?? null },
       });
-      return prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      const npc = await prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      publishCampaignEvent(npc.campaignId, 'NPC_PRESENCE', npcId, 'UPDATED', [locationId]);
+      return npc;
     },
 
     removeNPCLocationPresence: async (
@@ -65,7 +73,9 @@ export const npcResolvers = {
       await prisma.nPCLocationPresence.delete({
         where: { npcId_locationId: { npcId, locationId } },
       });
-      return prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      const npc = await prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      publishCampaignEvent(npc.campaignId, 'NPC_PRESENCE', npcId, 'DELETED', [locationId]);
+      return npc;
     },
 
     addNPCGroupMembership: async (
@@ -78,7 +88,9 @@ export const npcResolvers = {
         update: { relation: relation ?? null, subfaction: subfaction ?? null },
         create: { npcId, groupId, relation: relation ?? null, subfaction: subfaction ?? null },
       });
-      return prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      const npc = await prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      publishCampaignEvent(npc.campaignId, 'NPC_MEMBERSHIP', npcId, 'UPDATED', [groupId]);
+      return npc;
     },
 
     removeNPCGroupMembership: async (
@@ -89,7 +101,9 @@ export const npcResolvers = {
       await prisma.nPCGroupMembership.delete({
         where: { npcId_groupId: { npcId, groupId } },
       });
-      return prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      const npc = await prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      publishCampaignEvent(npc.campaignId, 'NPC_MEMBERSHIP', npcId, 'DELETED', [groupId]);
+      return npc;
     },
   },
 

@@ -1,5 +1,6 @@
 import type { Context } from '../context.js';
 import { toEnum } from './utils.js';
+import { publishCampaignEvent } from '../publish.js';
 
 export const campaignResolvers = {
   Query: {
@@ -52,6 +53,7 @@ export const campaignResolvers = {
       const member = await prisma.campaignMember.findUnique({
         where: { campaignId_userId: { campaignId: args.id, userId: user.id } },
       });
+      publishCampaignEvent(args.id, 'CAMPAIGN', args.id, 'UPDATED');
       return { ...campaign, myRole: member?.role ?? 'PLAYER' };
     },
 
@@ -75,6 +77,7 @@ export const campaignResolvers = {
         data: { enabledSections: filtered },
       });
 
+      publishCampaignEvent(campaignId, 'CAMPAIGN', campaignId, 'UPDATED');
       return { ...campaign, myRole: member.role };
     },
 
@@ -103,9 +106,13 @@ export const campaignResolvers = {
       if (args.image !== undefined) data.image = args.image ?? null;
 
       if (args.id) {
-        return prisma.playerCharacter.update({ where: { id: args.id }, data });
+        const result = await prisma.playerCharacter.update({ where: { id: args.id }, data });
+        publishCampaignEvent(args.campaignId, 'CHARACTER', result.id, 'UPDATED');
+        return result;
       }
-      return prisma.playerCharacter.create({ data: { ...data, campaignId: args.campaignId, userId: user.id } });
+      const result = await prisma.playerCharacter.create({ data: { ...data, campaignId: args.campaignId, userId: user.id } });
+      publishCampaignEvent(args.campaignId, 'CHARACTER', result.id, 'CREATED');
+      return result;
     },
 
     addCharacterGroupMembership: async (
@@ -118,7 +125,9 @@ export const campaignResolvers = {
         update: { relation: relation ?? null, subfaction: subfaction ?? null },
         create: { characterId, groupId, relation: relation ?? null, subfaction: subfaction ?? null },
       });
-      return prisma.playerCharacter.findUniqueOrThrow({ where: { id: characterId } });
+      const character = await prisma.playerCharacter.findUniqueOrThrow({ where: { id: characterId } });
+      publishCampaignEvent(character.campaignId, 'CHARACTER_MEMBERSHIP', characterId, 'UPDATED', [groupId]);
+      return character;
     },
 
     removeCharacterGroupMembership: async (
@@ -129,7 +138,9 @@ export const campaignResolvers = {
       await prisma.characterGroupMembership.delete({
         where: { characterId_groupId: { characterId, groupId } },
       });
-      return prisma.playerCharacter.findUniqueOrThrow({ where: { id: characterId } });
+      const character = await prisma.playerCharacter.findUniqueOrThrow({ where: { id: characterId } });
+      publishCampaignEvent(character.campaignId, 'CHARACTER_MEMBERSHIP', characterId, 'DELETED', [groupId]);
+      return character;
     },
   },
 

@@ -1,4 +1,5 @@
 import type { Context } from '../context.js';
+import { publishCampaignEvent } from '../publish.js';
 
 export const referenceDataResolvers = {
   Query: {
@@ -45,13 +46,19 @@ export const referenceDataResolvers = {
       };
 
       if (args.id) {
-        return prisma.locationType.update({ where: { id: args.id }, data });
+        const result = await prisma.locationType.update({ where: { id: args.id }, data });
+        publishCampaignEvent(args.campaignId, 'LOCATION_TYPE', result.id, 'UPDATED');
+        return result;
       }
-      return prisma.locationType.create({ data: { ...data, campaignId: args.campaignId } });
+      const result = await prisma.locationType.create({ data: { ...data, campaignId: args.campaignId } });
+      publishCampaignEvent(args.campaignId, 'LOCATION_TYPE', result.id, 'CREATED');
+      return result;
     },
 
     deleteLocationType: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {
+      const entity = await prisma.locationType.findUniqueOrThrow({ where: { id } });
       await prisma.locationType.delete({ where: { id } });
+      publishCampaignEvent(entity.campaignId, 'LOCATION_TYPE', id, 'DELETED');
       return true;
     },
 
@@ -96,13 +103,19 @@ export const referenceDataResolvers = {
       };
 
       if (args.id) {
-        return prisma.groupType.update({ where: { id: args.id }, data });
+        const result = await prisma.groupType.update({ where: { id: args.id }, data });
+        publishCampaignEvent(args.campaignId, 'GROUP_TYPE', result.id, 'UPDATED');
+        return result;
       }
-      return prisma.groupType.create({ data: { ...data, campaignId: args.campaignId } });
+      const result = await prisma.groupType.create({ data: { ...data, campaignId: args.campaignId } });
+      publishCampaignEvent(args.campaignId, 'GROUP_TYPE', result.id, 'CREATED');
+      return result;
     },
 
     deleteGroupType: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {
+      const entity = await prisma.groupType.findUniqueOrThrow({ where: { id } });
       await prisma.groupType.delete({ where: { id } });
+      publishCampaignEvent(entity.campaignId, 'GROUP_TYPE', id, 'DELETED');
       return true;
     },
 
@@ -112,12 +125,20 @@ export const referenceDataResolvers = {
       { prisma }: Context,
     ) => {
       const data = { name: args.name, icon: args.icon ?? 'blur_on', description: args.description ?? null };
-      if (args.id) return prisma.speciesType.update({ where: { id: args.id }, data });
-      return prisma.speciesType.create({ data: { ...data, campaignId: args.campaignId } });
+      if (args.id) {
+        const result = await prisma.speciesType.update({ where: { id: args.id }, data });
+        publishCampaignEvent(args.campaignId, 'SPECIES_TYPE', result.id, 'UPDATED');
+        return result;
+      }
+      const result = await prisma.speciesType.create({ data: { ...data, campaignId: args.campaignId } });
+      publishCampaignEvent(args.campaignId, 'SPECIES_TYPE', result.id, 'CREATED');
+      return result;
     },
 
     deleteSpeciesType: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {
+      const entity = await prisma.speciesType.findUniqueOrThrow({ where: { id } });
       await prisma.speciesType.delete({ where: { id } });
+      publishCampaignEvent(entity.campaignId, 'SPECIES_TYPE', id, 'DELETED');
       return true;
     },
 
@@ -137,13 +158,19 @@ export const referenceDataResolvers = {
       };
 
       if (args.id) {
-        return prisma.species.update({ where: { id: args.id }, data });
+        const result = await prisma.species.update({ where: { id: args.id }, data });
+        publishCampaignEvent(args.campaignId, 'SPECIES', result.id, 'UPDATED');
+        return result;
       }
-      return prisma.species.create({ data: { ...data, campaignId: args.campaignId } });
+      const result = await prisma.species.create({ data: { ...data, campaignId: args.campaignId } });
+      publishCampaignEvent(args.campaignId, 'SPECIES', result.id, 'CREATED');
+      return result;
     },
 
     deleteSpecies: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {
+      const entity = await prisma.species.findUniqueOrThrow({ where: { id } });
       await prisma.species.delete({ where: { id } });
+      publishCampaignEvent(entity.campaignId, 'SPECIES', id, 'DELETED');
       return true;
     },
   },
