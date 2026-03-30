@@ -448,6 +448,7 @@ export const typeDefs = `#graphql
 
     # Characters
     saveCharacter(campaignId: ID!, id: ID, name: String!, gender: Gender, age: Int, species: String, speciesId: String, class: String, appearance: String, background: String, personality: String, motivation: String, bonds: String, flaws: String, gmNotes: String, image: String): PlayerCharacter!
+    deleteCharacter(campaignId: ID!, id: ID!): Boolean!
 
     # NPC sub-entities
     addNPCLocationPresence(npcId: ID!, locationId: ID!, note: String): NPC!
@@ -478,5 +479,6 @@ export const typeDefs = `#graphql
 
   type Subscription {
     campaignEvent(campaignId: ID!): CampaignEvent!
+    campaignsChanged: CampaignEvent!
   }
 `;

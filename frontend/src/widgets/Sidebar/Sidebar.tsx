@@ -89,7 +89,7 @@ export function Sidebar() {
   const enabledSet = useMemo(() => new Set(enabledSections), [enabledSections]);
 
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
-  const isAllEnabled = !campaign?.enabledSections || campaign.enabledSections.length === 0;
+  const isAllEnabled = campaign?.enabledSections == null;
 
   // Parent→child: disabling parent also disables its *_types child
   const CHILDREN: Partial<Record<CampaignSection, CampaignSection>> = {
@@ -110,8 +110,7 @@ export function Sidebar() {
     } else {
       next = [...enabledSections, section];
     }
-    const allOn = ALL_SECTIONS.every((s) => next.includes(s));
-    updateSections(campaign.id, allOn ? [] : next);
+    updateSections(campaign.id, next);
   };
 
   const toggleGroup = (sectionIds: CampaignSection[]) => {
@@ -125,8 +124,7 @@ export function Sidebar() {
         if (!base.includes(sid)) base.push(sid);
       }
     }
-    const allSectionsOn = ALL_SECTIONS.every((s) => base.includes(s));
-    updateSections(campaign.id, allSectionsOn ? [] : base);
+    updateSections(campaign.id, base);
   };
 
   /** In normal mode: filter by enabled. In edit mode: show all. */

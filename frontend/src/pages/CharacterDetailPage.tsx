@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useParty, useSaveCharacter, useAddCharacterGroupMembership, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParty, useSaveCharacter, useDeleteCharacter, useAddCharacterGroupMembership, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useGroups } from '@/features/groups/api';
@@ -21,10 +21,13 @@ export default function CharacterDetailPage() {
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: groups } = useGroups(campaignId ?? '');
   const saveCharacter = useSaveCharacter();
+  const deleteCharacter = useDeleteCharacter();
+  const navigate = useNavigate();
   const addGroupMembership = useAddCharacterGroupMembership();
   const removeGroupMembership = useRemoveCharacterGroupMembership();
   const [imgVersion, setImgVersion] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [addGroupOpen, setAddGroupOpen] = useState(false);
   const [addGroupSearch, setAddGroupSearch] = useState('');
@@ -309,7 +312,21 @@ export default function CharacterDetailPage() {
           {/* ── Right column ────────────────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[10px] text-on-surface-variant">Delete this character?</span>
+                  <button onClick={() => deleteCharacter.mutate({ campaignId: campaignId!, charId: character.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/party`) })}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
               <button onClick={() => setDetailsOpen(true)}
                 className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors">
                 <span className="material-symbols-outlined text-sm">edit</span>

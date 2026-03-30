@@ -6,5 +6,8 @@ export const subscriptionResolvers = {
       subscribe: (_: unknown, { campaignId }: { campaignId: string }) =>
         pubsub.asyncIterableIterator(campaignTopic(campaignId)),
     },
+    campaignsChanged: {
+      subscribe: () => pubsub.asyncIterableIterator('CAMPAIGNS_CHANGED'),
+    },
   },
 };

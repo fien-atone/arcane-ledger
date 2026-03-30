@@ -27,13 +27,11 @@ export function CampaignSubscriptionManager({ campaignId }: Props) {
       const event = data.data?.campaignEvent;
       if (!event) return;
 
-      const queryNames = REFETCH_MAP[event.entityType];
-      if (!queryNames?.length) return;
+      const queryNames = REFETCH_MAP[event.entityType] ?? [];
+      if (!queryNames.length) return;
 
-      // Refetch only active (mounted) queries that match
-      client.refetchQueries({
-        include: queryNames,
-      });
+      // Refetch matching active queries — uses 'include' which matches by operation name
+      client.refetchQueries({ include: queryNames }).catch(() => {});
     },
   });
 

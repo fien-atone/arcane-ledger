@@ -1,7 +1,17 @@
 import { gql } from '@apollo/client';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
 import { ALL_SECTIONS } from '@/entities/campaign';
 import type { CampaignSection, CampaignSummary } from '@/entities/campaign';
+
+const CAMPAIGNS_CHANGED_SUBSCRIPTION = gql`
+  subscription CampaignsChanged {
+    campaignsChanged {
+      entityType
+      action
+      campaignId
+    }
+  }
+`;
 
 // ── GraphQL documents ─────────────────────────────────────────────
 
@@ -90,9 +100,9 @@ const UPDATE_CAMPAIGN_SECTIONS = gql`
 
 // ── Helpers ───────────────────────────────────────────────────────
 
-/** Returns effective enabled sections. Empty array = all enabled (backward compat). */
+/** Returns effective enabled sections. undefined/null = all enabled (campaign not loaded yet). Empty array = nothing enabled. */
 export function getEnabledSections(campaign: CampaignSummary | undefined): CampaignSection[] {
-  if (!campaign || !campaign.enabledSections || campaign.enabledSections.length === 0) return ALL_SECTIONS;
+  if (!campaign || campaign.enabledSections == null) return ALL_SECTIONS;
   return campaign.enabledSections.map((s) => s.toLowerCase() as CampaignSection);
 }
 
@@ -106,7 +116,11 @@ export function useSectionEnabled(campaignId: string, section: CampaignSection):
 // ── Hooks ─────────────────────────────────────────────────────────
 
 export const useCampaigns = () => {
-  const { data, loading, error } = useQuery<any>(CAMPAIGNS_QUERY);
+  const { data, loading, error, refetch } = useQuery<any>(CAMPAIGNS_QUERY);
+  // Subscribe to campaign-level changes (create, archive, restore)
+  useSubscription(CAMPAIGNS_CHANGED_SUBSCRIPTION, {
+    onData: () => { refetch(); },
+  });
   return {
     data: data?.campaigns as import('@/entities/campaign').CampaignSummary[] | undefined,
     isLoading: loading,

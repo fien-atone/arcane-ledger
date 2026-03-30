@@ -13,16 +13,13 @@ export function publishCampaignEvent(
   action: Action,
   relatedIds?: string[],
 ) {
+  const event = { entityType, entityId, action, campaignId, relatedIds: relatedIds ?? [] };
   try {
-    pubsub.publish(campaignTopic(campaignId), {
-      campaignEvent: {
-        entityType,
-        entityId,
-        action,
-        campaignId,
-        relatedIds: relatedIds ?? [],
-      },
-    });
+    pubsub.publish(campaignTopic(campaignId), { campaignEvent: event });
+    // Also publish to global campaigns topic for campaign-level changes
+    if (entityType === 'CAMPAIGN') {
+      pubsub.publish('CAMPAIGNS_CHANGED', { campaignsChanged: event });
+    }
   } catch {
     // Silently ignore publish errors — never fail a mutation because of PubSub
   }

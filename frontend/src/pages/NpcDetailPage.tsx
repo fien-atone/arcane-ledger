@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useNpc, useNpcs, useSaveNpc, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useAddNPCLocationPresence, useRemoveNPCLocationPresence } from '@/features/npcs/api/queries';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useNpc, useNpcs, useSaveNpc, useDeleteNpc, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useAddNPCLocationPresence, useRemoveNPCLocationPresence } from '@/features/npcs/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { useLocations } from '@/features/locations/api';
 import { useSessions } from '@/features/sessions/api';
@@ -50,12 +50,15 @@ export default function NpcDetailPage() {
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const saveNpc = useSaveNpc();
+  const deleteNpc = useDeleteNpc();
+  const navigate = useNavigate();
   const addGroupMembership = useAddNPCGroupMembership();
   const removeGroupMembership = useRemoveNPCGroupMembership();
   const addLocationPresence = useAddNPCLocationPresence();
   const removeLocationPresence = useRemoveNPCLocationPresence();
   const [imgVersion, setImgVersion] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [addLocSearch, setAddLocSearch] = useState('');
   const [addLocOpen, setAddLocOpen] = useState(false);
@@ -493,7 +496,21 @@ export default function NpcDetailPage() {
           {/* ── Right column (35%) ─────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[10px] text-on-surface-variant">Delete this NPC?</span>
+                  <button onClick={() => deleteNpc.mutate({ campaignId: campaignId!, npcId: npc.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/npcs`) })}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
               <button
                 onClick={() => setEditOpen(true)}
                 className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"

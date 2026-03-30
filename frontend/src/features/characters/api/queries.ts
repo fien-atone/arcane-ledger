@@ -49,6 +49,12 @@ const REMOVE_CHARACTER_GROUP_MEMBERSHIP = gql`
   }
 `;
 
+const DELETE_CHARACTER = gql`
+  mutation DeleteCharacter($campaignId: ID!, $id: ID!) {
+    deleteCharacter(campaignId: $campaignId, id: $id)
+  }
+`;
+
 const SAVE_CHARACTER = gql`
   mutation SaveCharacter(
     $campaignId: ID!
@@ -197,5 +203,21 @@ export const useRemoveCharacterGroupMembership = () => {
     isLoading: loading,
     isPending: loading,
     isError: !!error,
+  };
+};
+
+export const useDeleteCharacter = () => {
+  const [execute, { loading }] = useMutation(DELETE_CHARACTER);
+  return {
+    mutate: (
+      { campaignId, charId }: { campaignId: string; charId: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: { campaignId, id: charId },
+        refetchQueries: ['Party'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isPending: loading,
   };
 };

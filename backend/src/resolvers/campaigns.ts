@@ -37,6 +37,7 @@ export const campaignResolvers = {
           members: { create: { userId: user.id, role: 'GM' } },
         },
       });
+      publishCampaignEvent(campaign.id, 'CAMPAIGN', campaign.id, 'CREATED');
       return { ...campaign, myRole: 'GM' };
     },
 
@@ -113,6 +114,12 @@ export const campaignResolvers = {
       const result = await prisma.playerCharacter.create({ data: { ...data, campaignId: args.campaignId, userId: user.id } });
       publishCampaignEvent(args.campaignId, 'CHARACTER', result.id, 'CREATED');
       return result;
+    },
+
+    deleteCharacter: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
+      await prisma.playerCharacter.delete({ where: { id } });
+      publishCampaignEvent(campaignId, 'CHARACTER', id, 'DELETED');
+      return true;
     },
 
     addCharacterGroupMembership: async (

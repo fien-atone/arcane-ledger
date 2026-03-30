@@ -52,4 +52,11 @@ const splitLink = split(
 export const apolloClient = new ApolloClient({
   link: splitLink,
   cache: new InMemoryCache(),
+  defaultOptions: {
+    watchQuery: {
+      // Don't flip loading=true on refetch — prevents screen flicker
+      // when subscription-triggered refetches update the cache
+      notifyOnNetworkStatusChange: false,
+    },
+  },
 });
