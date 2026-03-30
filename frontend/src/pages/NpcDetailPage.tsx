@@ -46,6 +46,7 @@ export default function NpcDetailPage() {
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
+  const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const saveNpc = useSaveNpc();
   const addGroupMembership = useAddNPCGroupMembership();
@@ -579,7 +580,7 @@ export default function NpcDetailPage() {
                             onClick={() => handleAddLocation(l.id)}
                             className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-surface-container transition-colors"
                           >
-                            <LocationIcon locationType={l.type} size="text-[13px]" />
+                            <LocationIcon locationType={l.type} size="text-[13px]" generic={!locationTypesEnabled} />
                             <span className="text-xs text-on-surface">{l.name}</span>
                           </button>
                         ))}
@@ -601,7 +602,7 @@ export default function NpcDetailPage() {
                                 to={`/campaigns/${campaignId}/locations/${loc.id}`}
                                 className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0"
                               >
-                                <LocationIcon locationType={loc.type} size="text-[16px]" />
+                                <LocationIcon locationType={loc.type} size="text-[16px]" generic={!locationTypesEnabled} />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">
                                     {loc.name}

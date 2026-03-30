@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useSaveLocation, useLocations } from '@/features/locations/api/queries';
 import { useLocationTypes, useContainmentRules } from '@/features/locationTypes';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Location, LocationType } from '@/entities/location';
@@ -29,6 +30,7 @@ interface Props {
 
 export function LocationEditDrawer({ open, onClose, campaignId, location, initialParentId, onSaved, elevated }: Props) {
   const save = useSaveLocation(campaignId);
+  const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
   const { data: locationTypes = [] } = useLocationTypes(campaignId);
   const { data: containmentRules = [] } = useContainmentRules();
   const { data: allLocations = [] } = useLocations(campaignId);
@@ -138,19 +140,21 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           </div>
 
           {/* Location Type */}
-          <div>
-            <label className={labelCls}>Type</label>
-            <Select
-              value={type}
-              options={locationTypeOptions}
-              nullable={false}
-              searchable
-              onChange={(v) => { setType(v || (locationTypes[0]?.id ?? 'building')); setParentLocationId(initialParentId ?? ''); }}
-            />
-          </div>
+          {locationTypesEnabled && (
+            <div>
+              <label className={labelCls}>Type</label>
+              <Select
+                value={type}
+                options={locationTypeOptions}
+                nullable={false}
+                searchable
+                onChange={(v) => { setType(v || (locationTypes[0]?.id ?? 'building')); setParentLocationId(initialParentId ?? ''); }}
+              />
+            </div>
+          )}
 
           {/* Parent location */}
-          {parentOptions.length > 0 && (
+          {locationTypesEnabled && parentOptions.length > 0 && (
             <div>
               <label className={labelCls}>Part of</label>
               <Select
@@ -163,7 +167,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           )}
 
           {/* Population — only for settlement types */}
-          {selectedTypeEntry?.isSettlement && (
+          {locationTypesEnabled && selectedTypeEntry?.isSettlement && (
             <div>
               <label className={labelCls}>Population</label>
               <input
@@ -178,7 +182,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           )}
 
           {/* Biome / terrain sub-type */}
-          {biomeOptions.length > 0 && (
+          {locationTypesEnabled && biomeOptions.length > 0 && (
             <div>
               <label className={labelCls}>Terrain</label>
               <Select

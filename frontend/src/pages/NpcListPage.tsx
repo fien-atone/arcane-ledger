@@ -58,6 +58,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
   const specEnabled = useSectionEnabled(campaignId, 'species');
   const groupsEnabled = useSectionEnabled(campaignId, 'groups');
   const locationsEnabled = useSectionEnabled(campaignId, 'locations');
+  const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId);
   const { data: allGroups } = useGroups(campaignId);
@@ -197,7 +198,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
                   to={`/campaigns/${campaignId}/locations/${loc.id}`}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
                 >
-                  <LocationIcon locationType={loc.type} size="text-[13px]" />
+                  <LocationIcon locationType={loc.type} size="text-[13px]" generic={!locationTypesEnabled} />
                   {loc.name}
                 </Link>
               ))}

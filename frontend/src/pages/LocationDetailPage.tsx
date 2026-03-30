@@ -190,6 +190,7 @@ interface MapViewerProps {
   npcsHere: NPC[];
   campaignId: string;
   typeMap: TypeMap;
+  hideTypes?: boolean;
   onClose: () => void;
   onSave: (markers: MapMarker[]) => void;
   onRequestAddLocation: (point: { x: number; y: number }) => void;
@@ -216,6 +217,7 @@ function MapViewer({
   npcsHere,
   campaignId,
   typeMap,
+  hideTypes,
   onClose,
   onSave,
   onRequestAddLocation,
@@ -536,7 +538,7 @@ function MapViewer({
             >
               {(() => {
                 const linkedType = childLocations.find((l) => l.id === m.linkedLocationId)?.type ?? '';
-                const te = typeMap.get(linkedType);
+                const te = hideTypes ? undefined : typeMap.get(linkedType);
                 const cls = te ? (CATEGORY_MARKER_CLS[te.category] ?? MARKER_DEFAULT_CLS) : MARKER_DEFAULT_CLS;
                 return (
                 <div className="flex flex-col items-center" style={{ userSelect: 'none' }}>
@@ -687,13 +689,14 @@ function MapViewer({
             // Group child locations by category, sorted by CATEGORY_ORDER then name
             const grouped = new Map<string, Location[]>();
             const sortedLocs = [...childLocations].sort((a, b) => {
+              if (hideTypes) return a.name.localeCompare(b.name);
               const catA = CATEGORY_ORDER.indexOf(typeMap.get(a.type)?.category ?? '');
               const catB = CATEGORY_ORDER.indexOf(typeMap.get(b.type)?.category ?? '');
               if (catA !== catB) return catA - catB;
               return a.name.localeCompare(b.name);
             });
             for (const loc of sortedLocs) {
-              const cat = typeMap.get(loc.type)?.category ?? '';
+              const cat = hideTypes ? '' : (typeMap.get(loc.type)?.category ?? '');
               if (!grouped.has(cat)) grouped.set(cat, []);
               grouped.get(cat)!.push(loc);
             }
@@ -708,13 +711,15 @@ function MapViewer({
                 {/* Locations grouped by category */}
                 {[...grouped.entries()].map(([cat, locs], gi) => (
                   <div key={cat || gi}>
-                    <div className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/30 flex items-center gap-2">
-                      <span>{CATEGORY_LABEL[cat as keyof typeof CATEGORY_LABEL] ?? cat}</span>
-                      <div className="flex-1 h-px bg-outline-variant/10" />
-                    </div>
+                    {!hideTypes && cat && (
+                      <div className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/30 flex items-center gap-2">
+                        <span>{CATEGORY_LABEL[cat as keyof typeof CATEGORY_LABEL] ?? cat}</span>
+                        <div className="flex-1 h-px bg-outline-variant/10" />
+                      </div>
+                    )}
                     {locs.map((loc) => {
                       const marker = markerByLocId.get(loc.id) ?? null;
-                      const te = typeMap.get(loc.type);
+                      const te = hideTypes ? undefined : typeMap.get(loc.type);
                       const markerId = marker?.id ?? null;
                       const isHovered = hoveredMarkerId === markerId && markerId !== null;
                       const isSelected = selectedMarkerId === markerId && markerId !== null;
@@ -850,6 +855,7 @@ export default function LocationDetailPage() {
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
+  const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
   const { data: locationTypes = [] } = useLocationTypes(campaignId ?? '');
   const saveMutation = useSaveLocation(campaignId ?? '');
   const deleteLocation = useDeleteLocation(campaignId ?? '');
@@ -984,7 +990,7 @@ export default function LocationDetailPage() {
             {/* Header */}
             <header className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                {(() => {
+                {locationTypesEnabled && (() => {
                   const te = typeMap.get(location.type);
                   return (
                     <span className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-label tracking-widest uppercase rounded-sm border ${
@@ -1003,7 +1009,7 @@ export default function LocationDetailPage() {
                     {location.settlementPopulation.toLocaleString()}
                   </span>
                 )}
-                {location.biome && (
+                {locationTypesEnabled && location.biome && (
                   <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/20">
                     <span className="material-symbols-outlined text-[13px]">terrain</span>
                     {location.biome.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -1048,17 +1054,19 @@ export default function LocationDetailPage() {
                       className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
                     >
                       <span className={`material-symbols-outlined text-[18px] ${
-                        (() => { const te = typeMap.get(adj.type); return te ? '' : 'text-on-surface-variant/40'; })()
-                      }`} style={(() => { const te = typeMap.get(adj.type); return te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined; })()}>
-                        {typeMap.get(adj.type)?.icon ?? 'location_on'}
+                        (() => { const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined; return te ? '' : 'text-on-surface-variant/40'; })()
+                      }`} style={(() => { const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined; return te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined; })()}>
+                        {(locationTypesEnabled ? typeMap.get(adj.type)?.icon : undefined) ?? 'location_on'}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-headline text-on-surface group-hover:text-secondary transition-colors truncate">
                           {adj.name}
                         </p>
-                        <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
-                          {typeMap.get(adj.type)?.name ?? adj.type}
-                        </p>
+                        {locationTypesEnabled && (
+                          <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
+                            {typeMap.get(adj.type)?.name ?? adj.type}
+                          </p>
+                        )}
                       </div>
                       <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-secondary/60 opacity-0 group-hover:opacity-100 transition-opacity">
                         arrow_forward
@@ -1328,7 +1336,7 @@ export default function LocationDetailPage() {
               imageUrl={resolveImageUrl(location.image, imgVersion)}
               markers={location.mapMarkers}
               childLocations={childLocations}
-              typeMap={typeMap}
+              typeMap={locationTypesEnabled ? typeMap : undefined}
               onUpload={handleImageUpload}
               onOpenMap={() => setMapOpen(true)}
             />
@@ -1344,7 +1352,7 @@ export default function LocationDetailPage() {
                   className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all rounded-sm"
                 >
                   {(() => {
-                    const te = typeMap.get(parentLocation.type);
+                    const te = locationTypesEnabled ? typeMap.get(parentLocation.type) : undefined;
                     return (
                       <span className={`w-10 h-10 rounded-sm flex items-center justify-center border flex-shrink-0 transition-all ${
                         te ? CATEGORY_TILE_CLS[te.category] : 'bg-surface-container-highest border-outline-variant/20'
@@ -1359,9 +1367,11 @@ export default function LocationDetailPage() {
                     <p className="text-sm font-headline text-on-surface group-hover:text-primary transition-colors truncate">
                       {parentLocation.name}
                     </p>
-                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
-                      {typeMap.get(parentLocation.type)?.name ?? parentLocation.type}
-                    </p>
+                    {locationTypesEnabled && (
+                      <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
+                        {typeMap.get(parentLocation.type)?.name ?? parentLocation.type}
+                      </p>
+                    )}
                   </div>
                   <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
                     arrow_forward
@@ -1386,9 +1396,9 @@ export default function LocationDetailPage() {
                     markerX={parentMarker.x}
                     markerY={parentMarker.y}
                     markerLabel={parentMarker.label}
-                    markerIcon={typeMap.get(location.type)?.icon ?? 'location_on'}
-                    markerIconColor={(() => { const te = typeMap.get(location.type); return te ? CATEGORY_ICON_COLOR[te.category] : 'text-primary'; })()}
-                    markerBubbleCls={(() => { const te = typeMap.get(location.type); return te ? (CATEGORY_MARKER_CLS[te.category]?.bubble ?? MARKER_DEFAULT_CLS.bubble) : MARKER_DEFAULT_CLS.bubble; })()}
+                    markerIcon={(locationTypesEnabled ? typeMap.get(location.type)?.icon : undefined) ?? 'location_on'}
+                    markerIconColor={(() => { const te = locationTypesEnabled ? typeMap.get(location.type) : undefined; return te ? CATEGORY_ICON_COLOR[te.category] : 'text-primary'; })()}
+                    markerBubbleCls={(() => { const te = locationTypesEnabled ? typeMap.get(location.type) : undefined; return te ? (CATEGORY_MARKER_CLS[te.category]?.bubble ?? MARKER_DEFAULT_CLS.bubble) : MARKER_DEFAULT_CLS.bubble; })()}
                   />
                   {/* Hover overlay */}
                   <div className="absolute inset-0 flex items-end justify-end p-2.5 opacity-0 group-hover/minimap:opacity-100 transition-opacity pointer-events-none">
@@ -1420,7 +1430,7 @@ export default function LocationDetailPage() {
                 <div className="space-y-1.5">
                   {childLocations.map((child) => {
                     const hasMarker = (location.mapMarkers ?? []).some((mk) => mk.linkedLocationId === child.id);
-                    const te = typeMap.get(child.type);
+                    const te = locationTypesEnabled ? typeMap.get(child.type) : undefined;
                     return (
                       <Link
                         key={child.id}
@@ -1435,9 +1445,11 @@ export default function LocationDetailPage() {
                           <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">
                             {child.name}
                           </p>
-                          <p className="text-[9px] uppercase tracking-wider text-on-surface-variant/40">
-                            {te?.name ?? child.type}
-                          </p>
+                          {locationTypesEnabled && (
+                            <p className="text-[9px] uppercase tracking-wider text-on-surface-variant/40">
+                              {te?.name ?? child.type}
+                            </p>
+                          )}
                         </div>
                         {hasMarker && (
                           <span className="material-symbols-outlined text-[13px] text-on-surface-variant/30 flex-shrink-0">
@@ -1481,6 +1493,7 @@ export default function LocationDetailPage() {
           npcsHere={npcsHere}
           campaignId={campaignId ?? ''}
           typeMap={typeMap}
+          hideTypes={!locationTypesEnabled}
           onClose={() => setMapOpen(false)}
           onSave={(markers) => saveMutation.mutate({ ...location, mapMarkers: markers })}
           onRequestAddLocation={(point) => {

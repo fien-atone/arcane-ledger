@@ -76,6 +76,7 @@ export default function SessionDetailPage() {
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
+  const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
@@ -445,7 +446,7 @@ export default function SessionDetailPage() {
                         ) : available.map((l) => (
                           <button key={l.id} onClick={() => addLoc(l.id)}
                             className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-surface-container transition-colors">
-                            <LocationIcon locationType={l.type} size="text-[13px]" />
+                            <LocationIcon locationType={l.type} size="text-[13px]" generic={!locationTypesEnabled} />
                             <span className="text-xs text-on-surface">{l.name}</span>
                           </button>
                         ))}
@@ -462,7 +463,7 @@ export default function SessionDetailPage() {
                           <div className="flex items-stretch">
                             <Link to={`/campaigns/${campaignId}/locations/${loc.id}`}
                               className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0">
-                              <LocationIcon locationType={loc.type} size="text-[16px]" />
+                              <LocationIcon locationType={loc.type} size="text-[16px]" generic={!locationTypesEnabled} />
                               <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate flex-1">{loc.name}</p>
                               <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                             </Link>
