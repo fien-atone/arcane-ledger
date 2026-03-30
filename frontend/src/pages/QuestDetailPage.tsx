@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuest, useSaveQuest, useDeleteQuest } from '@/features/quests/api/queries';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
+import { useSessions } from '@/features/sessions/api';
 import { QuestEditDrawer } from '@/features/quests/ui';
 import { BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
@@ -20,8 +21,10 @@ export default function QuestDetailPage() {
   const { id: campaignId, questId } = useParams<{ id: string; questId: string }>();
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
+  const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
   const { data: quest, isLoading, isError } = useQuest(campaignId ?? '', questId ?? '');
   const { data: npcs } = useNpcs(campaignId ?? '');
+  const { data: allSessions } = useSessions(campaignId ?? '');
   const saveQuest = useSaveQuest(campaignId ?? '');
   const deleteQuest = useDeleteQuest(campaignId ?? '');
   const navigate = useNavigate();
@@ -213,6 +216,48 @@ export default function QuestDetailPage() {
                 placeholder="Gold, items, reputation…"
               />
             </section>
+
+            {/* Session Appearances */}
+            {sessionsEnabled && (() => {
+              const questSessions = (allSessions ?? [])
+                .filter((s) => s.questIds?.includes(questId ?? ''))
+                .sort((a, b) => b.number - a.number);
+              if (questSessions.length === 0) return null;
+              return (
+                <section>
+                  <div className="flex items-center gap-4 mb-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                      Sessions
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                  </div>
+                  <div className="space-y-2">
+                    {questSessions.map((s) => (
+                      <Link
+                        key={s.id}
+                        to={`/campaigns/${campaignId}/sessions/${s.id}`}
+                        className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
+                      >
+                        <div className="w-8 h-8 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0 border border-outline-variant/15">
+                          <span className="font-headline text-xs font-bold italic text-on-surface-variant/50">
+                            {String(s.number).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{s.title}</p>
+                          {s.datetime && (
+                            <p className="text-[10px] text-on-surface-variant/40">
+                              {new Date(s.datetime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+                          )}
+                        </div>
+                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
 
           </div>
 

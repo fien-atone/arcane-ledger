@@ -4,6 +4,7 @@ import { useRelationsForEntity, useSaveRelation, useDeleteRelation } from '../ap
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useParty } from '@/features/characters/api/queries';
 import { useGroups } from '@/features/groups/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import {
   friendlinessLabel,
   friendlinessColor,
@@ -54,6 +55,8 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
   const { data: allNpcs } = useNpcs(campaignId);
   const { data: allChars } = useParty(campaignId);
   const { data: allGroups } = useGroups(campaignId);
+  const partyEnabled = useSectionEnabled(campaignId, 'party');
+  const groupsEnabled = useSectionEnabled(campaignId, 'groups');
   const saveRelation = useSaveRelation(campaignId);
   const deleteRelation = useDeleteRelation(campaignId);
 
@@ -78,8 +81,14 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
     return '#';
   }
 
-  const outgoing = (relations ?? []).filter((r) => r.fromEntity.id === entityId);
-  const incoming = (relations ?? []).filter((r) => r.toEntity.id === entityId);
+  // Filter out relations to disabled entity types
+  const isEntityVisible = (ref: EntityRef) => {
+    if (ref.type === 'character' && !partyEnabled) return false;
+    if (ref.type === 'group' && !groupsEnabled) return false;
+    return true;
+  };
+  const outgoing = (relations ?? []).filter((r) => r.fromEntity.id === entityId && isEntityVisible(r.toEntity));
+  const incoming = (relations ?? []).filter((r) => r.toEntity.id === entityId && isEntityVisible(r.fromEntity));
 
   // NPCs available to add (not already in outgoing)
   const existingTargetIds = new Set(outgoing.map((r) => r.toEntity.id));

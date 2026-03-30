@@ -175,10 +175,7 @@ export default function CampaignDashboardPage() {
   const questTotal = allQuests?.length ?? 0;
   const questActiveCount = activeQuests.length;
 
-  // Recent NPCs (last 5 updated)
-  const recentNpcs = [...(allNpcs ?? [])]
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    .slice(0, 5);
+
 
   // Section visibility
   const enabled = getEnabledSections(campaign);
@@ -193,7 +190,6 @@ export default function CampaignDashboardPage() {
     { label: 'Groups', section: 'groups' as CampaignSection, count: String(groupCount), icon: 'groups', to: 'groups' },
     { label: 'Quests', section: 'quests' as CampaignSection, count: `${questActiveCount}/${questTotal}`, sub: 'active', icon: 'auto_awesome', to: 'quests' },
     { label: 'Social Graph', section: 'social_graph' as CampaignSection, icon: 'hub', to: 'npcs/relationships' },
-    { label: 'Party', section: 'party' as CampaignSection, icon: 'shield_person', to: 'party' },
     { label: 'Species', section: 'species' as CampaignSection, icon: 'blur_on', to: 'species' },
   ].filter((item) => enabledSet.has(item.section));
 
@@ -537,47 +533,6 @@ export default function CampaignDashboardPage() {
               )}
             </section>}
 
-            {/* Recently Updated NPCs */}
-            {sectionOn('npcs') && recentNpcs.length > 0 && (
-              <section>
-                <div className="flex items-center gap-4 mb-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                    Recent NPCs
-                  </h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                  <Link
-                    to={`/campaigns/${campaignId}/npcs`}
-                    className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors"
-                  >
-                    All →
-                  </Link>
-                </div>
-                <div className="space-y-2">
-                  {recentNpcs.map((npc) => {
-                    const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-                    return (
-                      <Link
-                        key={npc.id}
-                        to={`/campaigns/${campaignId}/npcs/${npc.id}`}
-                        className="group flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
-                          {npc.image ? (
-                            <img src={resolveImageUrl(npc.image)} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
-                          ) : (
-                            <span className="text-[10px] font-bold text-on-surface-variant/60">{initials}</span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{npc.name}</p>
-                          <p className="text-[10px] text-on-surface-variant/40">{npc.species ?? npc.status}</p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
 
           </div>
         </div>

@@ -99,7 +99,11 @@ const CAMPAIGN_COLORS = ['#f2ca50', '#14b8a6', '#a78bfa', '#f87171', '#60a5fa', 
 function GlobalCalendar({ campaigns }: { campaigns: CampaignSummary[] }) {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const activeCampaigns = campaigns.filter((c) => !c.archivedAt);
-  const campaignIds = activeCampaigns.map((c) => c.id);
+  // Only include campaigns with sessions enabled (empty array = all enabled)
+  const sessionsEnabledCampaigns = activeCampaigns.filter((c) =>
+    !c.enabledSections || c.enabledSections.length === 0 || c.enabledSections.some((s) => s.toUpperCase() === 'SESSIONS')
+  );
+  const campaignIds = sessionsEnabledCampaigns.map((c) => c.id);
   const campaignColorMap = useMemo(() => new Map(campaignIds.map((id, i) => [id, CAMPAIGN_COLORS[i % CAMPAIGN_COLORS.length]])), [campaignIds]);
   const s0 = useSessions(campaignIds[0] ?? '');
   const s1 = useSessions(campaignIds[1] ?? '');
@@ -235,9 +239,9 @@ function GlobalCalendar({ campaigns }: { campaigns: CampaignSummary[] }) {
           );
         })}
       </div>
-      {activeCampaigns.length > 1 && (
+      {sessionsEnabledCampaigns.length > 1 && (
         <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-outline-variant/10">
-          {activeCampaigns.map((c) => {
+          {sessionsEnabledCampaigns.map((c) => {
             const color = campaignColorMap.get(c.id) ?? '#f2ca50';
             return (
               <div key={c.id} className="flex items-center gap-1.5">

@@ -4,6 +4,7 @@ import { useNpc, useNpcs, useSaveNpc, useAddNPCGroupMembership, useRemoveNPCGrou
 import { useGroups } from '@/features/groups/api';
 import { useLocations } from '@/features/locations/api';
 import { useSessions } from '@/features/sessions/api';
+import { useQuests } from '@/features/quests/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
@@ -40,7 +41,9 @@ export default function NpcDetailPage() {
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
+  const { data: allQuests } = useQuests(campaignId ?? '');
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
+  const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const saveNpc = useSaveNpc();
@@ -401,6 +404,46 @@ export default function NpcDetailPage() {
 
             {/* Social Relations */}
             <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />
+
+            {/* Quests (given by this NPC) */}
+            {questsEnabled && (() => {
+              const npcQuests = (allQuests ?? []).filter((q) => q.giverId === npcId);
+              if (npcQuests.length === 0) return null;
+              const statusDot: Record<string, string> = {
+                active: 'bg-secondary', completed: 'bg-emerald-400', failed: 'bg-rose-400',
+                unavailable: 'bg-outline-variant', undiscovered: 'bg-on-surface-variant/20',
+              };
+              return (
+                <section className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                      Quests
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                  </div>
+                  <div className="space-y-2">
+                    {npcQuests.map((q) => (
+                      <Link
+                        key={q.id}
+                        to={`/campaigns/${campaignId}/quests/${q.id}`}
+                        className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
+                      >
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDot[q.status] ?? 'bg-outline-variant'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{q.title}</p>
+                          <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
+                            {q.status}
+                          </p>
+                        </div>
+                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">
+                          arrow_forward
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
 
             {/* Session Appearances */}
             {sessionsEnabled && (() => {

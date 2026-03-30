@@ -4,6 +4,7 @@ import { useGroup, useSaveGroup, useDeleteGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs, useAddNPCGroupMembership, useRemoveNPCGroupMembership } from '@/features/npcs/api/queries';
+import { useParty, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
 import { BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
@@ -120,9 +121,12 @@ export default function GroupDetailPage() {
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
+  const { data: party } = useParty(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
   const removeMembership = useRemoveNPCGroupMembership();
+  const removeCharMembership = useRemoveCharacterGroupMembership();
   const saveGroup = useSaveGroup();
   const deleteGroup = useDeleteGroup();
   const navigate = useNavigate();
@@ -130,6 +134,7 @@ export default function GroupDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [confirmRemoveCharId, setConfirmRemoveCharId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const members = (allNpcs ?? [])
@@ -139,6 +144,10 @@ export default function GroupDetailPage() {
   const nonMembers = (allNpcs ?? [])
     .filter((n) => !n.groupMemberships.some((m) => m.groupId === groupId))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const charMembers = partyEnabled
+    ? (party ?? []).filter((c) => (c.groupMemberships ?? []).some((m) => m.groupId === groupId)).sort((a, b) => a.name.localeCompare(b.name))
+    : [];
 
   const saveField = useCallback((field: keyof Group, html: string) => {
     if (!group) return;
@@ -240,14 +249,14 @@ export default function GroupDetailPage() {
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Members</h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
-                {members.length > 0 && <span className="text-xs font-bold text-on-surface-variant/40">{members.length}</span>}
+                {(members.length + charMembers.length) > 0 && <span className="text-xs font-bold text-on-surface-variant/40">{members.length + charMembers.length}</span>}
                 <button onClick={() => setAddMemberOpen(true)}
                   className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
                   <span className="material-symbols-outlined text-[13px]">person_add</span>
                   Add
                 </button>
               </div>
-              {members.length === 0 ? (
+              {members.length === 0 && charMembers.length === 0 ? (
                 <p className="text-sm text-on-surface-variant/40 italic">No members yet.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -281,6 +290,42 @@ export default function GroupDetailPage() {
                           </div>
                         ) : (
                           <button onClick={() => setConfirmRemoveId(npc.id)} title="Remove from group"
+                            className="flex-shrink-0 opacity-0 group-hover/card:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all">
+                            <span className="material-symbols-outlined text-[16px]">person_remove</span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {charMembers.map((char) => {
+                    const membership = (char.groupMemberships ?? []).find((m) => m.groupId === groupId);
+                    const initials = char.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+                    return (
+                      <div key={char.id} className="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-secondary/10 hover:border-secondary/30 transition-all group/card">
+                        <Link to={`/campaigns/${campaignId}/characters/${char.id}`} className="flex items-center gap-3 flex-1 min-w-0 group">
+                          <div className="relative flex-shrink-0">
+                            <div className="w-10 h-10 rounded-sm bg-secondary/10 border border-secondary/20 flex items-center justify-center">
+                              <span className="text-xs font-bold text-secondary/60">{initials}</span>
+                            </div>
+                            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface-container-low bg-secondary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-on-surface group-hover:text-secondary transition-colors truncate">{char.name}</p>
+                            <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
+                              {[char.class, membership?.relation].filter(Boolean).join(' · ') || 'PC'}
+                            </p>
+                          </div>
+                        </Link>
+                        {confirmRemoveCharId === char.id ? (
+                          <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5 flex-shrink-0">
+                            <span className="text-[10px] text-on-surface-variant">Remove?</span>
+                            <button onClick={() => { removeCharMembership.mutate({ characterId: char.id, groupId: groupId! }); setConfirmRemoveCharId(null); }}
+                              className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                            <button onClick={() => setConfirmRemoveCharId(null)}
+                              className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setConfirmRemoveCharId(char.id)} title="Remove from group"
                             className="flex-shrink-0 opacity-0 group-hover/card:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all">
                             <span className="material-symbols-outlined text-[16px]">person_remove</span>
                           </button>

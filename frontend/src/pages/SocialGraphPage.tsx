@@ -29,6 +29,7 @@ export default function SocialGraphPage() {
   const navigate = useNavigate();
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
 
   const { data: npcs, isLoading: npcsLoading } = useNpcs(campaignId ?? '');
   const { data: party } = useParty(campaignId ?? '');
@@ -100,7 +101,7 @@ export default function SocialGraphPage() {
 
   // Convert party characters to NPC-like nodes with virtual group membership
   const partyAsNpcs = useMemo<NPC[]>(
-    () => (party ?? []).map((c) => ({
+    () => (!partyEnabled ? [] : (party ?? []).map((c) => ({
       id: c.id,
       campaignId: c.campaignId,
       name: c.name,
@@ -120,8 +121,8 @@ export default function SocialGraphPage() {
       relations: [],
       createdAt: c.createdAt,
       updatedAt: c.updatedAt ?? c.createdAt,
-    })),
-    [party],
+    }))),
+    [party, partyEnabled],
   );
 
   // Merge NPCs + party, filter by status

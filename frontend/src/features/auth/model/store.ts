@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apolloClient } from '@/shared/api/apolloClient';
+import { useConnectionStore } from '@/shared/api/connectionStatus';
 import { gql } from '@apollo/client';
 
 const LOGIN_MUTATION = gql`
@@ -59,6 +60,7 @@ export const useAuthStore = create<AuthState>()(
           }
           return false;
         } catch {
+          useConnectionStore.getState().setBackendDown(true);
           return false;
         }
       },

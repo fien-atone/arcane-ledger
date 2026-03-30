@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
-import { useCampaign, getEnabledSections } from '@/features/campaigns/api/queries';
+import { useCampaign, getEnabledSections, useUpdateCampaignSections } from '@/features/campaigns/api/queries';
 import { useAuthStore } from '@/features/auth';
 import { ChangelogDrawer, getHasUnread } from '@/widgets/Changelog/ChangelogDrawer';
-import { ManageSectionsDrawer } from '@/features/campaigns/ui/ManageSectionsDrawer';
+import { ALL_SECTIONS } from '@/entities/campaign';
 import type { CampaignSection } from '@/entities/campaign';
 
 interface NavItem {
@@ -14,12 +14,12 @@ interface NavItem {
   to: (id: string) => string;
   exact: boolean;
   sub?: boolean;
-  /** Links this nav item to a CampaignSection for filtering */
   sectionId?: CampaignSection;
 }
 
 interface NavSection {
   section: string;
+  sectionIds: CampaignSection[]; // all section IDs in this group
   items: NavItem[];
 }
 
@@ -27,6 +27,7 @@ const NAV: Array<NavItem | NavSection> = [
   { label: 'Dashboard', icon: 'dashboard', to: (id) => `/campaigns/${id}`, exact: true },
   {
     section: 'World',
+    sectionIds: ['locations', 'npcs', 'groups', 'species'],
     items: [
       { label: 'Locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false, sectionId: 'locations' },
       { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true, sectionId: 'locations' },
@@ -39,13 +40,31 @@ const NAV: Array<NavItem | NavSection> = [
   },
   {
     section: 'Adventure',
+    sectionIds: ['sessions', 'party', 'quests', 'social_graph'],
     items: [
       { label: 'Sessions', icon: 'event', to: (id) => `/campaigns/${id}/sessions`, exact: false, sectionId: 'sessions' },
       { label: 'Party', icon: 'shield_person', to: (id) => `/campaigns/${id}/party`, exact: false, sectionId: 'party' },
       { label: 'Quests', icon: 'assignment', to: (id) => `/campaigns/${id}/quests`, exact: false, sectionId: 'quests' },
+      { label: 'Social Graph', icon: 'hub', to: (id) => `/campaigns/${id}/npcs/relationships`, exact: false, sectionId: 'social_graph' },
     ],
   },
 ];
+
+function SectionToggle({ on, onClick, small }: { on: boolean; onClick: () => void; small?: boolean }) {
+  const w = small ? 'w-7' : 'w-8';
+  const h = small ? 'h-3.5' : 'h-4';
+  const dot = small ? 'w-2.5 h-2.5' : 'w-3 h-3';
+  const onPos = small ? 'left-[15px]' : 'left-[18px]';
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
+      className={`${w} ${h} rounded-full transition-colors flex-shrink-0 relative ${on ? 'bg-primary/80' : 'bg-outline-variant/30'}`}
+    >
+      <div className={`absolute top-0.5 ${dot} rounded-full bg-on-surface shadow-sm transition-all ${on ? onPos : 'left-0.5'}`} />
+    </button>
+  );
+}
 
 export function Sidebar() {
   const { id } = useParams<{ id: string }>();
@@ -55,9 +74,11 @@ export function Sidebar() {
   const toggleSidebar = useCampaignUiStore((s) => s.toggleSidebar);
   const { data: campaign } = useCampaign(id ?? '');
   const logout = useAuthStore((s) => s.logout);
+  const { mutate: updateSections } = useUpdateCampaignSections();
 
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [sectionsOpen, setSectionsOpen] = useState(false);
+  const editMode = useCampaignUiStore((s) => s.editMode);
+  const setEditMode = useCampaignUiStore((s) => s.setEditMode);
   const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
@@ -67,8 +88,41 @@ export function Sidebar() {
   const enabledSections = useMemo(() => getEnabledSections(campaign ?? undefined), [campaign]);
   const enabledSet = useMemo(() => new Set(enabledSections), [enabledSections]);
 
-  /** Filter NAV entries by enabled sections */
-  const filteredNav = useMemo(() => {
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
+  const isAllEnabled = !campaign?.enabledSections || campaign.enabledSections.length === 0;
+
+  const toggleSection = (section: CampaignSection) => {
+    if (!campaign) return;
+    let next: CampaignSection[];
+    if (isAllEnabled) {
+      next = ALL_SECTIONS.filter((s) => s !== section);
+    } else if (enabledSet.has(section)) {
+      next = enabledSections.filter((s) => s !== section);
+    } else {
+      next = [...enabledSections, section];
+    }
+    const allOn = ALL_SECTIONS.every((s) => next.includes(s));
+    updateSections(campaign.id, allOn ? [] : next);
+  };
+
+  const toggleGroup = (sectionIds: CampaignSection[]) => {
+    if (!campaign) return;
+    const allOn = sectionIds.every((id) => enabledSet.has(id));
+    let base = isAllEnabled ? [...ALL_SECTIONS] : [...enabledSections];
+    if (allOn) {
+      base = base.filter((s) => !sectionIds.includes(s));
+    } else {
+      for (const sid of sectionIds) {
+        if (!base.includes(sid)) base.push(sid);
+      }
+    }
+    const allSectionsOn = ALL_SECTIONS.every((s) => base.includes(s));
+    updateSections(campaign.id, allSectionsOn ? [] : base);
+  };
+
+  /** In normal mode: filter by enabled. In edit mode: show all. */
+  const displayNav = useMemo(() => {
+    if (editMode) return NAV;
     return NAV.map((entry) => {
       if ('section' in entry) {
         const items = entry.items.filter(
@@ -77,11 +131,9 @@ export function Sidebar() {
         if (items.length === 0) return null;
         return { ...entry, items };
       }
-      return entry; // Dashboard — always shown
+      return entry;
     }).filter(Boolean) as Array<NavItem | NavSection>;
-  }, [enabledSet]);
-
-  const isGm = campaign?.myRole === 'gm';
+  }, [enabledSet, editMode]);
 
   const handleLogout = () => {
     logout();
@@ -137,46 +189,66 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
         <ul className="px-2 space-y-0.5">
-          {filteredNav.map((entry) => {
+          {displayNav.map((entry) => {
             if ('section' in entry) {
-              const { section, items } = entry;
+              const { section, sectionIds, items } = entry;
+              const groupAllOn = sectionIds.every((sid) => enabledSet.has(sid));
+
               return (
                 <li key={section}>
-                  {/* Section header */}
                   {!collapsed ? (
-                    <p className="px-3 pt-4 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/35 select-none">
-                      {section}
-                    </p>
+                    <div className="flex items-center px-3 pt-4 pb-1">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/35 select-none flex-1">
+                        {section}
+                      </p>
+                      {editMode && (
+                        <SectionToggle on={groupAllOn} onClick={() => toggleGroup(sectionIds)} small />
+                      )}
+                    </div>
                   ) : (
                     <div className="mx-3 my-3 h-px bg-outline-variant/20" />
                   )}
                   <ul className="space-y-0.5">
-                    {items.map(({ label, icon, to, exact, sub }) => {
+                    {items.map(({ label, icon, to, exact, sub, sectionId }) => {
                       const href = id ? to(id) : '#';
                       const active = id ? isActive(href, exact) : false;
+                      const isOn = !sectionId || enabledSet.has(sectionId);
+                      const dimmed = editMode && !isOn;
+
+                      // In edit mode: show all items, but only non-sub items get toggles
+                      if (editMode && sub) return null; // sub-items follow parent, don't show separately
+
                       return (
-                        <li key={label}>
-                          <Link
-                            to={href}
-                            title={collapsed ? label : undefined}
-                            className={`flex items-center gap-3 rounded-sm transition-all duration-200 font-medium ${
-                              sub
-                                ? `px-3 py-1.5 ${collapsed ? '' : 'pl-9'} text-xs`
-                                : 'px-3 py-2.5 text-sm'
-                            } ${
-                              active
-                                ? 'text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary/10 to-transparent'
-                                : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
-                            }`}
-                          >
-                            <span
-                              className={`material-symbols-outlined flex-shrink-0 ${active ? 'text-primary' : ''}`}
-                              style={{ fontSize: sub ? '16px' : '20px' }}
+                        <li key={label} className={dimmed ? 'opacity-40' : ''}>
+                          <div className="flex items-center">
+                            <Link
+                              to={editMode ? '#' : href}
+                              onClick={editMode ? (e) => e.preventDefault() : undefined}
+                              title={collapsed ? label : undefined}
+                              className={`flex-1 flex items-center gap-3 rounded-sm transition-all duration-200 font-medium ${
+                                sub
+                                  ? `px-3 py-1.5 ${collapsed ? '' : 'pl-9'} text-xs`
+                                  : 'px-3 py-2.5 text-sm'
+                              } ${
+                                active && !editMode
+                                  ? 'text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary/10 to-transparent'
+                                  : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
+                              }`}
                             >
-                              {icon}
-                            </span>
-                            {!collapsed && <span className="whitespace-nowrap">{label}</span>}
-                          </Link>
+                              <span
+                                className={`material-symbols-outlined flex-shrink-0 ${active && !editMode ? 'text-primary' : ''}`}
+                                style={{ fontSize: sub ? '16px' : '20px' }}
+                              >
+                                {icon}
+                              </span>
+                              {!collapsed && <span className="whitespace-nowrap">{label}</span>}
+                            </Link>
+                            {editMode && !collapsed && sectionId && !sub && (
+                              <div className="pr-3">
+                                <SectionToggle on={isOn} onClick={() => toggleSection(sectionId)} small />
+                              </div>
+                            )}
+                          </div>
                         </li>
                       );
                     })}
@@ -191,16 +263,17 @@ export function Sidebar() {
             return (
               <li key={label}>
                 <Link
-                  to={href}
+                  to={editMode ? '#' : href}
+                  onClick={editMode ? (e) => e.preventDefault() : undefined}
                   title={collapsed ? label : undefined}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-200 text-sm font-medium ${
-                    active
+                    active && !editMode
                       ? 'text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary/10 to-transparent'
                       : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
                   }`}
                 >
                   <span
-                    className={`material-symbols-outlined flex-shrink-0 ${active ? 'text-primary' : ''}`}
+                    className={`material-symbols-outlined flex-shrink-0 ${active && !editMode ? 'text-primary' : ''}`}
                     style={{ fontSize: '20px' }}
                   >
                     {icon}
@@ -215,17 +288,30 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-outline-variant/10 px-2 py-3 space-y-0.5">
-        {/* Manage Sections (GM only) */}
-        {isGm && (
+        {/* Edit Sections (GM only) */}
+        {isGm && !collapsed && (
           <button
-            onClick={() => setSectionsOpen(true)}
-            title={collapsed ? 'Manage Sections' : undefined}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
+            onClick={() => setEditMode(!editMode)}
+            title="Toggle section editing"
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm transition-all duration-300 ${
+              editMode
+                ? 'text-primary bg-primary/10 font-medium'
+                : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
+            }`}
           >
             <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
-              settings
+              {editMode ? 'check' : 'tune'}
             </span>
-            {!collapsed && <span className="whitespace-nowrap">Manage Sections</span>}
+            <span className="whitespace-nowrap">{editMode ? 'Done' : 'Edit Sections'}</span>
+          </button>
+        )}
+        {isGm && collapsed && (
+          <button
+            onClick={() => { if (collapsed) toggleSidebar(); setEditMode(!editMode); }}
+            title="Edit Sections"
+            className="w-full flex items-center justify-center py-2.5 rounded-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>tune</span>
           </button>
         )}
 
@@ -262,15 +348,6 @@ export function Sidebar() {
         <ChangelogDrawer
           open={changelogOpen}
           onClose={() => setChangelogOpen(false)}
-        />,
-        document.body,
-      )}
-
-      {campaign && createPortal(
-        <ManageSectionsDrawer
-          open={sectionsOpen}
-          onClose={() => setSectionsOpen(false)}
-          campaign={campaign}
         />,
         document.body,
       )}
