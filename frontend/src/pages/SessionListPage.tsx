@@ -22,6 +22,7 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 function SessionDetail({ session, campaignId }: { session: Session; campaignId: string }) {
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
   const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
   const { data: allNpcs } = useNpcs(campaignId);
   const { data: allLocations } = useLocations(campaignId);
@@ -61,7 +62,7 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
       )}
 
       {/* NPCs */}
-      {linkedNpcs.length > 0 && (
+      {npcsEnabled && linkedNpcs.length > 0 && (
         <div className="mb-6">
           <SectionHeader title={`NPCs (${linkedNpcs.length})`} />
           <div className="flex flex-wrap gap-2">

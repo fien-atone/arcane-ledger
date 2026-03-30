@@ -72,6 +72,7 @@ export default function GroupListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
 
@@ -96,7 +97,7 @@ export default function GroupListPage() {
   }
 
   const getMemberCount = (groupId: string) =>
-    allNpcs?.filter((n) => n.groupMemberships.some((m) => m.groupId === groupId)).length ?? 0;
+    npcsEnabled ? (allNpcs?.filter((n) => n.groupMemberships.some((m) => m.groupId === groupId)).length ?? 0) : 0;
 
   const typeFilterItems: Array<{ value: string; label: string }> = groupTypesEnabled ? [
     { value: 'all', label: 'All' },

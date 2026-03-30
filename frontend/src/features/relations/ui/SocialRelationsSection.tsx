@@ -55,6 +55,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
   const { data: allNpcs } = useNpcs(campaignId);
   const { data: allChars } = useParty(campaignId);
   const { data: allGroups } = useGroups(campaignId);
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
   const partyEnabled = useSectionEnabled(campaignId, 'party');
   const groupsEnabled = useSectionEnabled(campaignId, 'groups');
   const saveRelation = useSaveRelation(campaignId);
@@ -83,6 +84,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
 
   // Filter out relations to disabled entity types
   const isEntityVisible = (ref: EntityRef) => {
+    if (ref.type === 'npc' && !npcsEnabled) return false;
     if (ref.type === 'character' && !partyEnabled) return false;
     if (ref.type === 'group' && !groupsEnabled) return false;
     return true;
@@ -92,7 +94,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
 
   // NPCs available to add (not already in outgoing)
   const existingTargetIds = new Set(outgoing.map((r) => r.toEntity.id));
-  const availableNpcs = (allNpcs ?? [])
+  const availableNpcs = (!npcsEnabled ? [] : (allNpcs ?? []))
     .filter((n) => n.id !== entityId && !existingTargetIds.has(n.id))
     .filter((n) => !addSearch.trim() || n.name.toLowerCase().includes(addSearch.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name));

@@ -9,7 +9,7 @@ import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, InlineRichField, LocationIcon } from '@/shared/ui';
+import { ImageUpload, BackLink, InlineRichField, LocationIcon, SectionDisabled } from '@/shared/ui';
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { NPC, NpcStatus, NpcRelationType } from '@/entities/npc';
@@ -42,6 +42,7 @@ export default function NpcDetailPage() {
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
   const { data: allQuests } = useQuests(campaignId ?? '');
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
@@ -90,6 +91,10 @@ export default function NpcDetailPage() {
   };
 
   const groupNameById = (id: string) => groups?.find((g) => g.id === id)?.name ?? id;
+
+  if (!npcsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   if (isLoading) {
     return (
