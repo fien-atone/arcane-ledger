@@ -30,6 +30,8 @@ export default function SocialGraphPage() {
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
   const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
+  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
+  const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
 
   const { data: npcs, isLoading: npcsLoading } = useNpcs(campaignId ?? '');
   const { data: party } = useParty(campaignId ?? '');
@@ -141,8 +143,8 @@ export default function SocialGraphPage() {
     [groups, partyAsNpcs, partyGroup],
   );
   const filteredGroups = useMemo(
-    () => allGroups.filter((g) => activeGroupFilters.has(g.id)),
-    [allGroups, activeGroupFilters],
+    () => groupsEnabled ? allGroups.filter((g) => activeGroupFilters.has(g.id)) : [],
+    [allGroups, activeGroupFilters, groupsEnabled],
   );
 
   const filteredRelations = relations ?? [];
@@ -469,11 +471,11 @@ export default function SocialGraphPage() {
           <GraphFilters
             statusFilters={statusFilters}
             onToggleStatus={toggleStatus}
-            groups={allGroups}
+            groups={groupsEnabled ? allGroups : []}
             groupFilters={activeGroupFilters}
             onToggleGroup={toggleGroup}
             groupColorMap={new Map(graphGroups.map((g) => [g.id, g.colorIndex]))}
-            groupTypes={groupTypes ?? []}
+            groupTypes={groupTypesEnabled ? (groupTypes ?? []) : []}
           />
 
           {/* Legend */}

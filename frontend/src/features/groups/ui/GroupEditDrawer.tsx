@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSaveGroup } from '@/features/groups/api';
 import { useGroupTypes } from '@/features/groupTypes';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Group } from '@/entities/group';
@@ -27,6 +28,7 @@ const labelCls =
 
 export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
   const save = useSaveGroup();
+  const typesEnabled = useSectionEnabled(campaignId, 'group_types');
   const { data: groupTypes } = useGroupTypes(campaignId);
   const isEdit = !!group;
 
@@ -59,7 +61,7 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
       id: group?.id ?? '',
       campaignId,
       name: name.trim(),
-      type,
+      type: typesEnabled ? type : (group?.type ?? ''),  // empty string becomes null on backend
       aliases: toArray(aliases),
       description: group?.description ?? '',
       goals: group?.goals,
@@ -97,15 +99,17 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
               placeholder="Group name…" className={inputCls} autoFocus />
           </div>
 
-          <div>
-            <label className={labelCls}>Type</label>
-            <Select<string>
-              value={type}
-              options={typeOptions}
-              onChange={(v) => setType(v || 'faction')}
-              searchable
-            />
-          </div>
+          {typesEnabled && (
+            <div>
+              <label className={labelCls}>Type</label>
+              <Select<string>
+                value={type}
+                options={typeOptions}
+                onChange={(v) => setType(v || 'faction')}
+                searchable
+              />
+            </div>
+          )}
 
           <div>
             <label className={labelCls}>Aliases <span className="text-on-surface-variant/30 normal-case tracking-normal">(comma-separated)</span></label>

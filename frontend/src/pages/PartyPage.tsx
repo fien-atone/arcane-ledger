@@ -4,6 +4,7 @@ import { useParty } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useSpecies } from '@/features/species/api';
+import { useGroups } from '@/features/groups/api';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { RichContent, SectionDisabled } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
@@ -20,7 +21,9 @@ function SectionHeader({ title }: { title: string }) {
 function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaignId: string }) {
   const initials = char.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const specEnabled = useSectionEnabled(campaignId, 'species');
+  const groupsEnabled = useSectionEnabled(campaignId, 'groups');
   const { data: allSpecies } = useSpecies(campaignId);
+  const { data: allGroups } = useGroups(campaignId);
   const matchedSpecies = specEnabled && (char.speciesId || char.species)
     ? allSpecies?.find((s) => s.id === char.speciesId || s.name.toLowerCase() === char.species?.toLowerCase())
     : undefined;
@@ -82,6 +85,32 @@ function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaign
           <div>
             <SectionHeader title="Background" />
             <RichContent value={char.background} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
+          </div>
+        )}
+
+        {/* Group Memberships */}
+        {groupsEnabled && (char.groupMemberships ?? []).length > 0 && (
+          <div>
+            <SectionHeader title="Groups" />
+            <div className="flex flex-wrap gap-2">
+              {(char.groupMemberships ?? []).map((m) => {
+                const group = allGroups?.find((g) => g.id === m.groupId);
+                const label = m.subfaction ?? group?.name ?? m.groupId;
+                return (
+                  <Link
+                    key={m.groupId}
+                    to={`/campaigns/${campaignId}/groups/${m.groupId}`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant/15 hover:border-primary/30 rounded-sm transition-colors group"
+                  >
+                    <span className="material-symbols-outlined text-primary/60 text-[13px]">groups</span>
+                    <span className="text-xs text-on-surface group-hover:text-primary transition-colors">{label}</span>
+                    {m.relation && (
+                      <span className="text-[9px] text-on-surface-variant/40 uppercase tracking-wider">{m.relation}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

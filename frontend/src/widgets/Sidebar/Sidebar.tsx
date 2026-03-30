@@ -101,11 +101,11 @@ export function Sidebar() {
   const toggleSection = (section: CampaignSection) => {
     if (!campaign) return;
     let next: CampaignSection[];
+    const child = CHILDREN[section];
     if (isAllEnabled) {
-      next = ALL_SECTIONS.filter((s) => s !== section);
+      next = ALL_SECTIONS.filter((s) => s !== section && s !== child);
     } else if (enabledSet.has(section)) {
-      // Turning off — also turn off child if exists
-      const child = CHILDREN[section];
+      // Turning off — also turn off child
       next = enabledSections.filter((s) => s !== section && s !== child);
     } else {
       next = [...enabledSections, section];

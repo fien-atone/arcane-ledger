@@ -15,20 +15,22 @@ function resolveType(typeId: string, groupTypes: GroupTypeEntry[] | undefined): 
   return found ? { name: found.name, icon: found.icon } : { name: typeId, icon: 'category' };
 }
 
-function GroupPreview({ group, memberCount, groupTypes }: {
-  group: Group; memberCount: number; groupTypes: GroupTypeEntry[] | undefined;
+function GroupPreview({ group, memberCount, groupTypes, typesEnabled }: {
+  group: Group; memberCount: number; groupTypes: GroupTypeEntry[] | undefined; typesEnabled: boolean;
 }) {
   const tc = resolveType(group.type, groupTypes);
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="px-8 py-6 flex flex-col gap-5">
         <div>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
-              {tc.name}
-            </span>
-          </div>
+          {typesEnabled && (
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
+                {tc.name}
+              </span>
+            </div>
+          )}
           <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{group.name}</h2>
           {group.aliases.length > 0 && (
             <p className="text-xs text-on-surface-variant/40 italic mt-0.5">{group.aliases.join(', ')}</p>
@@ -69,6 +71,7 @@ function GroupPreview({ group, memberCount, groupTypes }: {
 export default function GroupListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
+  const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
 
@@ -95,10 +98,10 @@ export default function GroupListPage() {
   const getMemberCount = (groupId: string) =>
     allNpcs?.filter((n) => n.groupMemberships.some((m) => m.groupId === groupId)).length ?? 0;
 
-  const typeFilterItems: Array<{ value: string; label: string }> = [
+  const typeFilterItems: Array<{ value: string; label: string }> = groupTypesEnabled ? [
     { value: 'all', label: 'All' },
     ...(groupTypes ?? []).map((t) => ({ value: t.id, label: t.name })),
-  ];
+  ] : [];
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
@@ -190,9 +193,11 @@ export default function GroupListPage() {
                       <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>
                         {g.name}
                       </p>
-                      <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>
-                        {tc.name}
-                      </p>
+                      {groupTypesEnabled && (
+                        <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>
+                          {tc.name}
+                        </p>
+                      )}
                     </div>
                   </button>
                 );
@@ -208,6 +213,7 @@ export default function GroupListPage() {
                   group={selected}
                   memberCount={getMemberCount(selected.id)}
                   groupTypes={groupTypes}
+                  typesEnabled={groupTypesEnabled}
                 />
                 <Link
                   to={`/campaigns/${campaignId}/groups/${selected.id}`}

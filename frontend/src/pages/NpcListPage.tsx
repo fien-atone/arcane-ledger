@@ -56,6 +56,8 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
   const st = STATUS_STYLES[npc.status];
   const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const specEnabled = useSectionEnabled(campaignId, 'species');
+  const groupsEnabled = useSectionEnabled(campaignId, 'groups');
+  const locationsEnabled = useSectionEnabled(campaignId, 'locations');
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId);
   const { data: allGroups } = useGroups(campaignId);
@@ -159,7 +161,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
         )}
 
         {/* Group Memberships */}
-        {npc.groupMemberships.length > 0 && (
+        {groupsEnabled && npc.groupMemberships.length > 0 && (
           <div>
             <SectionHeader title="Groups" />
             <div className="flex flex-wrap gap-2">
@@ -185,7 +187,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
         )}
 
         {/* Locations */}
-        {linkedLocations.length > 0 && (
+        {locationsEnabled && linkedLocations.length > 0 && (
           <div>
             <SectionHeader title={`Locations (${linkedLocations.length})`} />
             <div className="flex flex-wrap gap-2">

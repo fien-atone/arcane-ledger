@@ -24,7 +24,7 @@ export const groupResolvers = {
     ) => {
       const data = {
         name: input.name,
-        type: input.type,
+        type: input.type || null,
         aliases: input.aliases ?? [],
         description: input.description ?? '',
         goals: input.goals ?? null,

@@ -119,6 +119,7 @@ function AddMemberPanel({ onClose, groupId, nonMembers }: AddMemberPanelProps) {
 export default function GroupDetailPage() {
   const { id: campaignId, groupId } = useParams<{ id: string; groupId: string }>();
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
+  const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
   const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
@@ -191,12 +192,14 @@ export default function GroupDetailPage() {
 
             {/* Header */}
             <header className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
-                  <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
-                  {tc.name}
-                </span>
-              </div>
+              {groupTypesEnabled && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
+                    <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
+                    {tc.name}
+                  </span>
+                </div>
+              )}
               <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
                 {group.name}
               </h1>

@@ -247,7 +247,7 @@ model Group {
   campaign      Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId    String
   name          String
-  type          String
+  type          String?
   groupType     GroupType? @relation(fields: [type], references: [id], onDelete: SetNull)
   aliases       String[] @default([])
   description   String   @default("")
@@ -270,7 +270,7 @@ model Location {
   campaignId           String
   name                 String
   aliases              String[]  @default([])
-  type                 String
+  type                 String?
   locationType         LocationType? @relation(fields: [type], references: [id], onDelete: SetNull)
   settlementPopulation Int?
   biome                String?

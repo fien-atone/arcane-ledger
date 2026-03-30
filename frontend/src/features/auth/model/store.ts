@@ -59,8 +59,12 @@ export const useAuthStore = create<AuthState>()(
             return true;
           }
           return false;
-        } catch {
-          useConnectionStore.getState().setBackendDown(true);
+        } catch (err: any) {
+          // Only show error overlay for network failures, not auth errors
+          const isNetwork = err?.networkError || err?.message?.includes('Failed to fetch');
+          if (isNetwork) {
+            useConnectionStore.getState().setBackendDown(true);
+          }
           return false;
         }
       },

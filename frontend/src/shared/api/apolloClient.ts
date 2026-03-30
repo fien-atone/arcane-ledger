@@ -21,8 +21,13 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-const errorLink = onError(() => {
-  useConnectionStore.getState().setBackendDown(true);
+const errorLink = onError((errorResponse: any) => {
+  // Only show error overlay for network failures (server unreachable)
+  // NOT for GraphQL errors (those are handled per-query)
+  const networkError = errorResponse.networkError;
+  if (networkError) {
+    useConnectionStore.getState().setBackendDown(true);
+  }
 });
 
 const wsLink = new GraphQLWsLink(
