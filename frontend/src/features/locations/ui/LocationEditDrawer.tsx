@@ -99,7 +99,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
       createdAt: location?.createdAt ?? ts,
       ...(location ?? {}),
       name: name.trim(),
-      type,
+      type: locationTypesEnabled ? type : (location?.type ?? ''),
       parentLocationId: parentLocationId || undefined,
       settlementPopulation: selectedTypeEntry?.isSettlement && !isNaN(pop) && pop > 0 ? pop : undefined,
       biome: biomeOptions.length > 0 && biome ? biome : undefined,

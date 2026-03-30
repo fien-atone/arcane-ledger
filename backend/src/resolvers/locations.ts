@@ -18,7 +18,7 @@ export const locationResolvers = {
       const data: Record<string, unknown> = {
         name: input.name,
         aliases: input.aliases ?? [],
-        type: input.type,
+        type: input.type || null,
         settlementPopulation: input.settlementPopulation ?? null,
         biome: input.biome ?? null,
         parentLocationId: input.parentLocationId ?? null,
