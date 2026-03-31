@@ -1,14 +1,32 @@
 import type { Context } from '../context.js';
-import { toEnum } from './utils.js';
+import { toEnum, getCampaignRole } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
+import { redactEntity, NPC_FIELDS } from './redact.js';
 
 export const npcResolvers = {
   Query: {
-    npcs: (_: unknown, { campaignId }: { campaignId: string }, { prisma }: Context) =>
-      prisma.nPC.findMany({ where: { campaignId } }),
+    npcs: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      const where = role === 'PLAYER'
+        ? { campaignId, playerVisible: true as const }
+        : { campaignId };
+      const npcs = await ctx.prisma.nPC.findMany({ where });
+      if (role === 'PLAYER') {
+        return npcs.map((npc) => redactEntity(npc, npc.playerVisibleFields, NPC_FIELDS));
+      }
+      return npcs;
+    },
 
-    npc: (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) =>
-      prisma.nPC.findFirst({ where: { id, campaignId } }),
+    npc: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      const entity = await ctx.prisma.nPC.findFirst({ where: { id, campaignId } });
+      if (!entity) return null;
+      const role = await getCampaignRole(ctx, campaignId);
+      if (role === 'PLAYER') {
+        if (!entity.playerVisible) return null;
+        return redactEntity(entity, entity.playerVisibleFields, NPC_FIELDS);
+      }
+      return entity;
+    },
   },
 
   Mutation: {
@@ -105,18 +123,61 @@ export const npcResolvers = {
       publishCampaignEvent(npc.campaignId, 'NPC_MEMBERSHIP', npcId, 'DELETED', [groupId]);
       return npc;
     },
+
+    setNPCVisibility: async (
+      _: unknown,
+      { campaignId, id, input }: { campaignId: string; id: string; input: { playerVisible: boolean; playerVisibleFields: string[] } },
+      ctx: Context,
+    ) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      const result = await ctx.prisma.nPC.update({
+        where: { id },
+        data: {
+          playerVisible: input.playerVisible,
+          playerVisibleFields: input.playerVisibleFields,
+        },
+      });
+      publishCampaignEvent(campaignId, 'NPC', result.id, 'UPDATED');
+      return result;
+    },
   },
 
   NPC: {
-    locationPresences: (npc: { id: string }, _: unknown, { prisma }: Context) =>
-      prisma.nPCLocationPresence.findMany({ where: { npcId: npc.id }, include: { location: true } }),
-    groupMemberships: (npc: { id: string }, _: unknown, { prisma }: Context) =>
-      prisma.nPCGroupMembership.findMany({ where: { npcId: npc.id }, include: { group: true } }),
-    sessions: async (npc: { id: string }, _: unknown, { prisma }: Context) => {
-      const links = await prisma.sessionNPC.findMany({ where: { npcId: npc.id }, include: { session: true } });
+    locationPresences: async (npc: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+      const role = await getCampaignRole(ctx, npc.campaignId);
+      if (role === 'PLAYER' && !(npc.playerVisibleFields ?? []).includes('locationPresences')) {
+        return [];
+      }
+      const presences = await ctx.prisma.nPCLocationPresence.findMany({
+        where: { npcId: npc.id },
+        include: { location: true },
+      });
+      // For players, filter out hidden locations
+      if (role === 'PLAYER') {
+        return presences.filter((p) => p.location.playerVisible);
+      }
+      return presences;
+    },
+    groupMemberships: async (npc: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+      const role = await getCampaignRole(ctx, npc.campaignId);
+      if (role === 'PLAYER' && !(npc.playerVisibleFields ?? []).includes('groupMemberships')) {
+        return [];
+      }
+      return ctx.prisma.nPCGroupMembership.findMany({ where: { npcId: npc.id }, include: { group: true } });
+    },
+    sessions: async (npc: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+      const role = await getCampaignRole(ctx, npc.campaignId);
+      if (role === 'PLAYER') return [];
+      const links = await ctx.prisma.sessionNPC.findMany({ where: { npcId: npc.id }, include: { session: true } });
       return links.map((l) => l.session);
     },
-    questsGiven: (npc: { id: string }, _: unknown, { prisma }: Context) =>
-      prisma.quest.findMany({ where: { giverId: npc.id } }),
+    questsGiven: async (npc: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+      const role = await getCampaignRole(ctx, npc.campaignId);
+      if (role === 'PLAYER' && !(npc.playerVisibleFields ?? []).includes('questsGiven')) {
+        return [];
+      }
+      return ctx.prisma.quest.findMany({ where: { giverId: npc.id } });
+    },
   },
 };

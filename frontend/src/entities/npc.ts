@@ -51,6 +51,8 @@ export interface NPC {
   relations?: NPCRelation[];
   motivation?: string;
   flaws?: string;
+  playerVisible?: boolean;
+  playerVisibleFields?: string[];
   createdAt: string;
   updatedAt: string;
 }

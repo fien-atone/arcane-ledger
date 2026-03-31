@@ -9,7 +9,10 @@ import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, InlineRichField, LocationIcon, SectionDisabled } from '@/shared/ui';
+import { ImageUpload, BackLink, InlineRichField, LocationIcon, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { useCampaign } from '@/features/campaigns/api/queries';
+import { useSetNpcVisibility } from '@/features/npcs/api/queries';
+import { NPC_VISIBILITY_FIELDS, NPC_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { NPC, NpcStatus, NpcRelationType } from '@/entities/npc';
@@ -49,8 +52,11 @@ export default function NpcDetailPage() {
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const saveNpc = useSaveNpc();
   const deleteNpc = useDeleteNpc();
+  const setNpcVisibility = useSetNpcVisibility();
   const navigate = useNavigate();
   const addGroupMembership = useAddNPCGroupMembership();
   const removeGroupMembership = useRemoveNPCGroupMembership();
@@ -716,6 +722,34 @@ export default function NpcDetailPage() {
                 </section>
               );
             })()}
+
+            {/* Player Visibility */}
+            {isGm && npc && (
+              <VisibilityPanel
+                playerVisible={npc.playerVisible ?? false}
+                playerVisibleFields={npc.playerVisibleFields ?? []}
+                fields={NPC_VISIBILITY_FIELDS}
+                basicPreset={NPC_BASIC_PRESET}
+                onToggleVisible={(v) => setNpcVisibility.mutate({
+                  campaignId: campaignId!, id: npc.id,
+                  playerVisible: v, playerVisibleFields: npc.playerVisibleFields ?? [],
+                })}
+                onToggleField={(f, on) => {
+                  const fields = on
+                    ? [...(npc.playerVisibleFields ?? []), f]
+                    : (npc.playerVisibleFields ?? []).filter((x) => x !== f);
+                  setNpcVisibility.mutate({
+                    campaignId: campaignId!, id: npc.id,
+                    playerVisible: npc.playerVisible ?? false, playerVisibleFields: fields,
+                  });
+                }}
+                onSetPreset={(fields) => setNpcVisibility.mutate({
+                  campaignId: campaignId!, id: npc.id,
+                  playerVisible: npc.playerVisible ?? false, playerVisibleFields: fields,
+                })}
+                isPending={setNpcVisibility.isPending}
+              />
+            )}
 
           </div>
 

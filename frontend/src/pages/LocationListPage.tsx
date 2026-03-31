@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLocations } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { EmptyState, RichContent, SectionDisabled } from '@/shared/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
@@ -27,6 +27,7 @@ function LocationRow({
   typeFilter,
   typeMap,
   hideTypes,
+  isGm,
 }: {
   loc: Location;
   depth: number;
@@ -35,6 +36,7 @@ function LocationRow({
   typeFilter: LocationType | 'all';
   typeMap: TypeMap;
   hideTypes?: boolean;
+  isGm?: boolean;
 }) {
   const isTopLevel = depth === 0;
   const indent = typeFilter === 'all' ? DEPTH_INDENT[Math.min(depth, DEPTH_INDENT.length - 1)] : '';
@@ -76,6 +78,11 @@ function LocationRow({
           </p>
         )}
       </div>
+      {isGm && loc.playerVisible && (
+        <span className="material-symbols-outlined text-[13px] text-secondary/60 flex-shrink-0" title="Visible to players">
+          visibility
+        </span>
+      )}
     </button>
   );
 }
@@ -243,6 +250,8 @@ export default function LocationListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: locations, isLoading, isError } = useLocations(campaignId ?? '');
   const { data: locationTypes = [] } = useLocationTypes(campaignId);
   const [typeFilter, setTypeFilter] = useState<LocationType | 'all'>('all');
@@ -434,6 +443,7 @@ export default function LocationListPage() {
                   typeFilter={typeFilter}
                   typeMap={typeMap}
                   hideTypes={!locationTypesEnabled}
+                  isGm={isGm}
                 />
               ))}
             </div>

@@ -9,5 +9,7 @@ export interface Session {
   locationIds?: string[];
   npcIds?: string[];
   questIds?: string[];
+  playerVisible?: boolean;
+  playerVisibleFields?: string[];
   createdAt: string;
 }

@@ -1,13 +1,32 @@
 import type { Context } from '../context.js';
+import { getCampaignRole } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
+import { redactEntity, LOCATION_FIELDS } from './redact.js';
 
 export const locationResolvers = {
   Query: {
-    locations: (_: unknown, { campaignId }: { campaignId: string }, { prisma }: Context) =>
-      prisma.location.findMany({ where: { campaignId } }),
+    locations: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      const where = role === 'PLAYER'
+        ? { campaignId, playerVisible: true as const }
+        : { campaignId };
+      const locations = await ctx.prisma.location.findMany({ where });
+      if (role === 'PLAYER') {
+        return locations.map((loc) => redactEntity(loc, loc.playerVisibleFields, LOCATION_FIELDS));
+      }
+      return locations;
+    },
 
-    location: (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) =>
-      prisma.location.findFirst({ where: { id, campaignId } }),
+    location: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      const entity = await ctx.prisma.location.findFirst({ where: { id, campaignId } });
+      if (!entity) return null;
+      const role = await getCampaignRole(ctx, campaignId);
+      if (role === 'PLAYER') {
+        if (!entity.playerVisible) return null;
+        return redactEntity(entity, entity.playerVisibleFields, LOCATION_FIELDS);
+      }
+      return entity;
+    },
   },
 
   Mutation: {
@@ -44,15 +63,51 @@ export const locationResolvers = {
       publishCampaignEvent(campaignId, 'LOCATION', id, 'DELETED');
       return true;
     },
+
+    setLocationVisibility: async (
+      _: unknown,
+      { campaignId, id, input }: { campaignId: string; id: string; input: { playerVisible: boolean; playerVisibleFields: string[] } },
+      ctx: Context,
+    ) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      const result = await ctx.prisma.location.update({
+        where: { id },
+        data: {
+          playerVisible: input.playerVisible,
+          playerVisibleFields: input.playerVisibleFields,
+        },
+      });
+      publishCampaignEvent(campaignId, 'LOCATION', result.id, 'UPDATED');
+      return result;
+    },
   },
 
   Location: {
     parentLocation: (loc: { parentLocationId: string | null }, _: unknown, { prisma }: Context) =>
       loc.parentLocationId ? prisma.location.findUnique({ where: { id: loc.parentLocationId } }) : null,
-    children: (loc: { id: string }, _: unknown, { prisma }: Context) =>
-      prisma.location.findMany({ where: { parentLocationId: loc.id } }),
-    npcsHere: async (loc: { id: string }, _: unknown, { prisma }: Context) => {
-      const presences = await prisma.nPCLocationPresence.findMany({ where: { locationId: loc.id }, include: { npc: true } });
+    children: async (loc: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+      const role = await getCampaignRole(ctx, loc.campaignId);
+      if (role === 'PLAYER' && !(loc.playerVisibleFields ?? []).includes('children')) {
+        return [];
+      }
+      const children = await ctx.prisma.location.findMany({ where: { parentLocationId: loc.id } });
+      // For players, filter out hidden child locations
+      if (role === 'PLAYER') {
+        return children.filter((c) => c.playerVisible);
+      }
+      return children;
+    },
+    npcsHere: async (loc: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+      const role = await getCampaignRole(ctx, loc.campaignId);
+      if (role === 'PLAYER' && !(loc.playerVisibleFields ?? []).includes('npcsHere')) {
+        return [];
+      }
+      const presences = await ctx.prisma.nPCLocationPresence.findMany({ where: { locationId: loc.id }, include: { npc: true } });
+      // For players, filter out hidden NPCs
+      if (role === 'PLAYER') {
+        return presences.filter((p) => p.npc.playerVisible).map((p) => p.npc);
+      }
       return presences.map((p) => p.npc);
     },
     mapMarkers: (loc: { mapMarkers: unknown }) => {

@@ -44,7 +44,7 @@ useServer(
     context: async (ctx) => {
       const token = ctx.connectionParams?.authorization as string | undefined;
       const user = token ? await authenticate(token, prisma) : null;
-      return { prisma, user };
+      return { prisma, user, _roleCache: new Map() };
     },
   },
   wsServer,
@@ -61,7 +61,7 @@ app.use(
     context: async ({ req }): Promise<Context> => {
       const token = req.headers.authorization?.replace('Bearer ', '');
       const user = token ? await authenticate(token, prisma) : null;
-      return { prisma, user };
+      return { prisma, user, _roleCache: new Map() };
     },
   }),
 );

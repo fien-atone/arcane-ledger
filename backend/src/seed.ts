@@ -1645,6 +1645,23 @@ async function main() {
     ],
   });
 
+  // ── Sample visibility data ──────────────────────────────────────────────
+  // Make a few NPCs and locations visible to players for testing
+  await prisma.nPC.updateMany({
+    where: { id: { in: ['npc-kronheyv', 'npc-stoungriv'] } },
+    data: {
+      playerVisible: true,
+      playerVisibleFields: ['aliases', 'status', 'species', 'description', 'image', 'appearance'],
+    },
+  });
+  await prisma.location.updateMany({
+    where: { id: { in: ['loc-fc-farchester', 'loc-fc-tavern'] } },
+    data: {
+      playerVisible: true,
+      playerVisibleFields: ['aliases', 'type', 'description', 'image'],
+    },
+  });
+
   console.log('Seed completed successfully!');
 }
 

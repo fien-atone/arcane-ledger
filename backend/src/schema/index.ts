@@ -81,6 +81,8 @@ export const typeDefs = `#graphql
     brief: String
     summary: String!
     createdAt: String!
+    playerVisible: Boolean!
+    playerVisibleFields: [String!]!
     npcs: [NPC!]!
     locations: [Location!]!
     quests: [Quest!]!
@@ -120,6 +122,8 @@ export const typeDefs = `#graphql
     image: String
     createdAt: String!
     updatedAt: String!
+    playerVisible: Boolean!
+    playerVisibleFields: [String!]!
     locationPresences: [NPCLocationPresence!]!
     groupMemberships: [NPCGroupMembership!]!
     sessions: [Session!]!
@@ -220,6 +224,8 @@ export const typeDefs = `#graphql
     gmNotes: String
     mapMarkers: [MapMarker!]!
     createdAt: String!
+    playerVisible: Boolean!
+    playerVisibleFields: [String!]!
     children: [Location!]!
     npcsHere: [NPC!]!
   }
@@ -431,6 +437,11 @@ export const typeDefs = `#graphql
     role: SystemRole
   }
 
+  input SetEntityVisibilityInput {
+    playerVisible: Boolean!
+    playerVisibleFields: [String!]!
+  }
+
   input RelationInput {
     fromEntityType: String!
     fromEntityId: ID!
@@ -507,6 +518,11 @@ export const typeDefs = `#graphql
     removeNPCLocationPresence(npcId: ID!, locationId: ID!): NPC!
     addNPCGroupMembership(npcId: ID!, groupId: ID!, relation: String, subfaction: String): NPC!
     removeNPCGroupMembership(npcId: ID!, groupId: ID!): NPC!
+
+    # Entity Visibility (GM-only)
+    setNPCVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): NPC!
+    setLocationVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Location!
+    setSessionVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Session!
 
     # Character sub-entities
     addCharacterGroupMembership(characterId: ID!, groupId: ID!, relation: String, subfaction: String): PlayerCharacter!

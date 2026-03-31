@@ -6,7 +6,10 @@ import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPre
 import { useSessions } from '@/features/sessions/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
-import { InlineRichField, ImageUpload, SectionDisabled } from '@/shared/ui';
+import { InlineRichField, ImageUpload, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { useCampaign } from '@/features/campaigns/api/queries';
+import { useSetLocationVisibility } from '@/features/locations/api';
+import { LOCATION_VISIBILITY_FIELDS, LOCATION_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Location, MapMarker } from '@/entities/location';
@@ -857,8 +860,11 @@ export default function LocationDetailPage() {
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
   const { data: locationTypes = [] } = useLocationTypes(campaignId ?? '');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const saveMutation = useSaveLocation(campaignId ?? '');
   const deleteLocation = useDeleteLocation(campaignId ?? '');
+  const setLocationVisibility = useSetLocationVisibility();
   const navigate = useNavigate();
   const saveNpc = useSaveNpc();
   const addNpcPresence = useAddNPCLocationPresence();
@@ -1465,6 +1471,33 @@ export default function LocationDetailPage() {
                 </div>
             </div>
 
+            {/* Player Visibility */}
+            {isGm && location && (
+              <VisibilityPanel
+                playerVisible={location.playerVisible ?? false}
+                playerVisibleFields={location.playerVisibleFields ?? []}
+                fields={LOCATION_VISIBILITY_FIELDS}
+                basicPreset={LOCATION_BASIC_PRESET}
+                onToggleVisible={(v) => setLocationVisibility.mutate({
+                  campaignId: campaignId!, id: location.id,
+                  playerVisible: v, playerVisibleFields: location.playerVisibleFields ?? [],
+                })}
+                onToggleField={(f, on) => {
+                  const fields = on
+                    ? [...(location.playerVisibleFields ?? []), f]
+                    : (location.playerVisibleFields ?? []).filter((x) => x !== f);
+                  setLocationVisibility.mutate({
+                    campaignId: campaignId!, id: location.id,
+                    playerVisible: location.playerVisible ?? false, playerVisibleFields: fields,
+                  });
+                }}
+                onSetPreset={(fields) => setLocationVisibility.mutate({
+                  campaignId: campaignId!, id: location.id,
+                  playerVisible: location.playerVisible ?? false, playerVisibleFields: fields,
+                })}
+                isPending={setLocationVisibility.isPending}
+              />
+            )}
 
           </div>
         </div>

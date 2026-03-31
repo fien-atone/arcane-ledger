@@ -107,6 +107,9 @@ model Session {
   summary    String   @default("")
   createdAt  DateTime @default(now())
 
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
+
   npcLinks      SessionNPC[]
   locationLinks SessionLocation[]
   questLinks    SessionQuest[]
@@ -161,6 +164,9 @@ model NPC {
   image       String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
 
   locationPresences NPCLocationPresence[]
   groupMemberships  NPCGroupMembership[]
@@ -313,6 +319,9 @@ model Location {
   gmNotes              String?
   mapMarkers           Json      @default("[]") // MapMarker[]
   createdAt            DateTime  @default(now())
+
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
 
   children     Location[]            @relation("LocationHierarchy")
   npcPresences NPCLocationPresence[]

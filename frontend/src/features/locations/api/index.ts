@@ -1,1 +1,1 @@
-export { useLocations, useLocation, useSaveLocation, useDeleteLocation } from './queries';
+export { useLocations, useLocation, useSaveLocation, useDeleteLocation, useSetLocationVisibility } from './queries';

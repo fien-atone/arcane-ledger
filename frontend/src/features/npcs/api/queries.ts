@@ -9,6 +9,7 @@ const NPCS_QUERY = gql`
     npcs(campaignId: $campaignId) {
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
+      playerVisible playerVisibleFields
       createdAt updatedAt
       locationPresences { locationId note }
       groupMemberships { groupId relation subfaction }
@@ -21,6 +22,7 @@ const NPC_QUERY = gql`
     npc(campaignId: $campaignId, id: $id) {
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
+      playerVisible playerVisibleFields
       createdAt updatedAt
       locationPresences { locationId note }
       groupMemberships { groupId relation subfaction }
@@ -74,6 +76,14 @@ const REMOVE_NPC_LOCATION_PRESENCE = gql`
     removeNPCLocationPresence(npcId: $npcId, locationId: $locationId) {
       id
       locationPresences { locationId note }
+    }
+  }
+`;
+
+const SET_NPC_VISIBILITY = gql`
+  mutation SetNPCVisibility($campaignId: ID!, $id: ID!, $input: SetEntityVisibilityInput!) {
+    setNPCVisibility(campaignId: $campaignId, id: $id, input: $input) {
+      id playerVisible playerVisibleFields
     }
   }
 `;
@@ -209,6 +219,25 @@ export const useRemoveNPCLocationPresence = () => {
     },
     isPending: loading,
     isError: !!error,
+  };
+};
+
+export const useSetNpcVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_NPC_VISIBILITY);
+  return {
+    mutate: (
+      vars: { campaignId: string; id: string; playerVisible: boolean; playerVisibleFields: string[] },
+    ) => {
+      execute({
+        variables: {
+          campaignId: vars.campaignId,
+          id: vars.id,
+          input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
+        },
+        refetchQueries: ['Npcs', 'Npc'],
+      });
+    },
+    isPending: loading,
   };
 };
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSessions } from '@/features/sessions/api/queries';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
@@ -107,6 +107,8 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
 export default function SessionListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -227,6 +229,11 @@ export default function SessionListPage() {
                         <span className={`flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider border ${badge.cls}`}>
                           {badge.pulse && <span className={`w-1 h-1 rounded-full ${isToday ? 'bg-primary' : 'bg-secondary'} animate-pulse`} />}
                           {badge.label}
+                        </span>
+                      )}
+                      {isGm && session.playerVisible && (
+                        <span className="material-symbols-outlined text-[13px] text-secondary/60 flex-shrink-0" title="Visible to players">
+                          visibility
                         </span>
                       )}
                     </button>

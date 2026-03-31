@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useGroups } from '@/features/groups/api';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { LocationIcon, RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
@@ -216,6 +216,8 @@ export default function NpcListPage() {
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: npcs, isLoading, isError } = useNpcs(campaignId ?? '');
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const [search, setSearch] = useState('');
@@ -341,6 +343,11 @@ export default function NpcListPage() {
                       <span className={`w-1 h-1 rounded-full ${st.dot}`} />
                       {st.label}
                     </span>
+                    {isGm && npc.playerVisible && (
+                      <span className="material-symbols-outlined text-[13px] text-secondary/60 flex-shrink-0" title="Visible to players">
+                        visibility
+                      </span>
+                    )}
                   </button>
                 );
               })}

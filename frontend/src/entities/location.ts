@@ -33,5 +33,7 @@ export interface Location {
   image?: string;
   gmNotes?: string;
   mapMarkers?: MapMarker[];
+  playerVisible?: boolean;
+  playerVisibleFields?: string[];
   createdAt: string;
 }

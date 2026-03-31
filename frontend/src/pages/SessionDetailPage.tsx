@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useSessions, useSaveSession, useDeleteSession } from '@/features/sessions/api/queries';
+import { useSessions, useSaveSession, useDeleteSession, useSetSessionVisibility } from '@/features/sessions/api/queries';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
+import { SESSION_VISIBILITY_FIELDS, SESSION_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useQuests } from '@/features/quests/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
-import { BackLink, LocationIcon, InlineRichField, SectionDisabled } from '@/shared/ui';
+import { BackLink, LocationIcon, InlineRichField, SectionDisabled, VisibilityPanel } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { QuestStatus } from '@/entities/quest';
@@ -84,8 +85,10 @@ export default function SessionDetailPage() {
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allQuests } = useQuests(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const saveSession = useSaveSession(campaignId ?? '');
   const deleteSession = useDeleteSession(campaignId ?? '');
+  const setSessionVisibility = useSetSessionVisibility();
   const navigate = useNavigate();
 
   const [npcSearch, setNpcSearch] = useState('');
@@ -588,6 +591,34 @@ export default function SessionDetailPage() {
                 </section>
               );
             })()}
+
+            {/* Player Visibility */}
+            {isGm && session && (
+              <VisibilityPanel
+                playerVisible={session.playerVisible ?? false}
+                playerVisibleFields={session.playerVisibleFields ?? []}
+                fields={SESSION_VISIBILITY_FIELDS}
+                basicPreset={SESSION_BASIC_PRESET}
+                onToggleVisible={(v) => setSessionVisibility.mutate({
+                  campaignId: campaignId!, id: session.id,
+                  playerVisible: v, playerVisibleFields: session.playerVisibleFields ?? [],
+                })}
+                onToggleField={(f, on) => {
+                  const fields = on
+                    ? [...(session.playerVisibleFields ?? []), f]
+                    : (session.playerVisibleFields ?? []).filter((x) => x !== f);
+                  setSessionVisibility.mutate({
+                    campaignId: campaignId!, id: session.id,
+                    playerVisible: session.playerVisible ?? false, playerVisibleFields: fields,
+                  });
+                }}
+                onSetPreset={(fields) => setSessionVisibility.mutate({
+                  campaignId: campaignId!, id: session.id,
+                  playerVisible: session.playerVisible ?? false, playerVisibleFields: fields,
+                })}
+                isPending={setSessionVisibility.isPending}
+              />
+            )}
 
           </div>
 

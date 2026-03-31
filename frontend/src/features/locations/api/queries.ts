@@ -8,7 +8,9 @@ const LOCATIONS_QUERY = gql`
   query Locations($campaignId: ID!) {
     locations(campaignId: $campaignId) {
       id campaignId name aliases type settlementPopulation biome
-      parentLocationId description image gmNotes createdAt
+      parentLocationId description image gmNotes
+      playerVisible playerVisibleFields
+      createdAt
       mapMarkers { id x y label linkedLocationId linkedNpcId }
     }
   }
@@ -18,7 +20,9 @@ const LOCATION_QUERY = gql`
   query Location($campaignId: ID!, $id: ID!) {
     location(campaignId: $campaignId, id: $id) {
       id campaignId name aliases type settlementPopulation biome
-      parentLocationId description image gmNotes createdAt
+      parentLocationId description image gmNotes
+      playerVisible playerVisibleFields
+      createdAt
       mapMarkers { id x y label linkedLocationId linkedNpcId }
       children { id name type }
       npcsHere { id name status }
@@ -34,6 +38,14 @@ const SAVE_LOCATION = gql`
       id campaignId name aliases type settlementPopulation biome
       parentLocationId description image gmNotes createdAt
       mapMarkers { id x y label linkedLocationId linkedNpcId }
+    }
+  }
+`;
+
+const SET_LOCATION_VISIBILITY = gql`
+  mutation SetLocationVisibility($campaignId: ID!, $id: ID!, $input: SetEntityVisibilityInput!) {
+    setLocationVisibility(campaignId: $campaignId, id: $id, input: $input) {
+      id playerVisible playerVisibleFields
     }
   }
 `;
@@ -88,6 +100,25 @@ export const useSaveLocation = (campaignId: string) => {
     isLoading: loading,
     isPending: loading,
     isError: !!error,
+  };
+};
+
+export const useSetLocationVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_LOCATION_VISIBILITY);
+  return {
+    mutate: (
+      vars: { campaignId: string; id: string; playerVisible: boolean; playerVisibleFields: string[] },
+    ) => {
+      execute({
+        variables: {
+          campaignId: vars.campaignId,
+          id: vars.id,
+          input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
+        },
+        refetchQueries: ['Locations', 'Location'],
+      });
+    },
+    isPending: loading,
   };
 };
 
