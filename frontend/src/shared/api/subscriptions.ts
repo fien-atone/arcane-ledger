@@ -11,3 +11,12 @@ export const CAMPAIGN_EVENT_SUBSCRIPTION = gql`
     }
   }
 `;
+
+export const USER_EVENT_SUBSCRIPTION = gql`
+  subscription UserEvent($userId: ID!) {
+    userEvent(userId: $userId) {
+      type
+      entityId
+    }
+  }
+`;

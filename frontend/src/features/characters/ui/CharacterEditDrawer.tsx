@@ -53,7 +53,7 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
     const record: PlayerCharacter = {
       id: character?.id ?? '',
       campaignId,
-      userId: character?.userId ?? 'gm',
+      userId: character?.userId,
       image: character?.image,
       gmNotes: character?.gmNotes ?? '',
       groupMemberships: character?.groupMemberships ?? [],

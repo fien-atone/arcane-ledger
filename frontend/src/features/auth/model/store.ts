@@ -20,6 +20,7 @@ const LOGIN_MUTATION = gql`
 `;
 
 export interface AuthUser {
+  id: string;
   email: string;
   name: string;
   systemRole: 'admin' | 'user';
@@ -51,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
 
             set({
               user: {
+                id: user.id,
                 email: user.email,
                 name: user.name,
                 systemRole: (user.role?.toLowerCase() === 'admin' ? 'admin' : 'user') as 'admin' | 'user',

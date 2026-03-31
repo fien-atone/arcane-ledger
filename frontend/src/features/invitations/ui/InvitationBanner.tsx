@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { useSubscription } from '@apollo/client/react';
 import { useMyInvitations, useRespondToInvitation } from '@/features/invitations/api/queries';
+import { useAuthStore } from '@/features/auth';
+import { USER_EVENT_SUBSCRIPTION } from '@/shared/api/subscriptions';
 import { D20Icon } from '@/shared/ui';
 
 function timeAgo(dateStr: string): string {
@@ -14,7 +17,20 @@ function timeAgo(dateStr: string): string {
 }
 
 export function InvitationBanner() {
-  const { data: invitations, isLoading } = useMyInvitations();
+  const { data: invitations, isLoading, refetch } = useMyInvitations();
+  const userId = useAuthStore((s) => s.user?.id);
+
+  // Subscribe to user events so new invitations appear in real-time
+  useSubscription<{ userEvent: { type: string; entityId: string } }>(USER_EVENT_SUBSCRIPTION, {
+    variables: { userId: userId ?? '' },
+    skip: !userId,
+    onData: ({ data }) => {
+      const event = data.data?.userEvent;
+      if (event?.type === 'INVITATION') {
+        refetch();
+      }
+    },
+  });
   const respond = useRespondToInvitation();
   const [decliningId, setDecliningId] = useState<string | null>(null);
 

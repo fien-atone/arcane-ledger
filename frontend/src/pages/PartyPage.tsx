@@ -152,7 +152,7 @@ function MemberCard({
   const char = slot.character;
   const assign = useAssignCharacterToPlayer();
   const kick = useRemoveCampaignMember();
-  const unassignConfirm = useInlineConfirm();
+  const unlinkConfirm = useInlineConfirm();
   const kickConfirm = useInlineConfirm();
   const [assigning, setAssigning] = useState(false);
 
@@ -160,170 +160,180 @@ function MemberCard({
   const resolvedCharImage = char ? resolveImageUrl(char.image) : undefined;
 
   return (
-    <div className="flex border border-outline-variant/10 bg-surface-container-low rounded-sm overflow-hidden">
-      {/* Player side */}
-      <div className="w-64 p-4 flex items-center gap-3 border-r border-outline-variant/10 flex-shrink-0">
-        <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0">
-          <span className="text-xs font-bold text-on-surface-variant/60">
-            {member.user.name?.charAt(0)?.toUpperCase() || '?'}
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-on-surface truncate">{member.user.name}</p>
-          <p className="text-[10px] text-on-surface-variant/50 truncate">{member.user.email}</p>
-        </div>
-      </div>
-
-      {/* Character side */}
-      <div className="flex-1 p-4 flex items-center gap-3">
-        {char ? (
-          <>
-            <div className="w-10 h-10 rounded-sm border border-outline-variant/20 overflow-hidden bg-surface-container-highest flex-shrink-0">
-              {resolvedCharImage ? (
-                <img src={resolvedCharImage} alt={char.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-[9px] font-bold text-on-surface-variant/50">{charInitials}</span>
+    <div className="border border-outline-variant/10 bg-surface-container-low rounded-sm overflow-hidden">
+      <div className="grid grid-cols-[1fr_auto_1fr] min-h-[72px]">
+        {/* Player column */}
+        <div className="p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-bold text-on-surface-variant/60">
+              {member.user.name?.charAt(0)?.toUpperCase() || '?'}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-on-surface truncate">{member.user.name}</p>
+            <p className="text-[10px] text-on-surface-variant/50 truncate">{member.user.email}</p>
+          </div>
+          {isGm && (
+            <div className="flex-shrink-0">
+              {kickConfirm.isConfirming('kick') ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] text-on-surface-variant/50">Kick?</span>
+                  <button
+                    onClick={() => {
+                      kick.mutate({ campaignId, userId: member.user.id });
+                      kickConfirm.cancel();
+                    }}
+                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => kickConfirm.cancel()}
+                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
+                  >
+                    No
+                  </button>
                 </div>
+              ) : (
+                <button
+                  onClick={() => kickConfirm.startConfirm('kick')}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant/40 hover:text-tertiary hover:border-tertiary/30 border border-transparent rounded-sm transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[14px]">person_remove</span>
+                  Kick
+                </button>
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-on-surface truncate">{char.name}</p>
-              <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
-                {[char.species, char.class].filter(Boolean).join(' \u00b7 ') || '\u2014'}
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+          )}
+        </div>
+
+        {/* Center divider with unlink action */}
+        <div className="flex flex-col items-center justify-center px-2 border-x border-outline-variant/10">
+          {char && isGm ? (
+            <>
+              {unlinkConfirm.isConfirming('unlink') ? (
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-on-surface-variant/50 uppercase tracking-wider">Unlink?</span>
+                  <button
+                    onClick={() => {
+                      assign.mutate({ characterId: char.id, userId: null });
+                      unlinkConfirm.cancel();
+                    }}
+                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => unlinkConfirm.cancel()}
+                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => unlinkConfirm.startConfirm('unlink')}
+                  className="flex flex-col items-center gap-0.5 p-1.5 text-on-surface-variant/30 hover:text-tertiary transition-colors"
+                  title="Unlink character from player"
+                >
+                  <span className="material-symbols-outlined text-[16px]">link_off</span>
+                  <span className="text-[7px] font-label uppercase tracking-wider">Unlink</span>
+                </button>
+              )}
+            </>
+          ) : (
+            <span className="material-symbols-outlined text-[16px] text-on-surface-variant/15">
+              {char ? 'link' : 'more_horiz'}
+            </span>
+          )}
+        </div>
+
+        {/* Character column */}
+        <div className="p-4 flex items-center gap-3">
+          {char ? (
+            <>
+              <div className="w-10 h-10 rounded-sm border border-outline-variant/20 overflow-hidden bg-surface-container-highest flex-shrink-0">
+                {resolvedCharImage ? (
+                  <img src={resolvedCharImage} alt={char.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-on-surface-variant/50">{charInitials}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-on-surface truncate">{char.name}</p>
+                <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
+                  {[char.species, char.class].filter(Boolean).join(' \u00b7 ') || '\u2014'}
+                </p>
+              </div>
               <button
                 onClick={() => onSelectCharacter(char)}
-                className="p-1.5 text-on-surface-variant/40 hover:text-primary transition-colors"
-                title="View character"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant/40 hover:text-primary hover:border-primary/30 border border-transparent rounded-sm transition-colors flex-shrink-0"
               >
-                <span className="material-symbols-outlined text-[16px]">open_in_full</span>
+                <span className="material-symbols-outlined text-[14px]">open_in_full</span>
+                View
               </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-10 h-10 rounded-sm border border-dashed border-outline-variant/20 bg-surface-container-highest/50 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-[16px] text-on-surface-variant/20">person_off</span>
+              </div>
+              <span className="text-xs text-on-surface-variant/40 italic flex-1">No character</span>
               {isGm && (
-                <>
-                  {unassignConfirm.isConfirming('unassign') ? (
-                    <div className="flex items-center gap-1">
-                      <span className="text-[9px] text-on-surface-variant/50">Unassign?</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {assigning ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-44">
+                        <Select
+                          value=""
+                          onChange={(v) => {
+                            if (v) {
+                              assign.mutate({ characterId: v, userId: member.user.id });
+                              setAssigning(false);
+                            }
+                          }}
+                          placeholder="Select character..."
+                          options={unassignedCharacters.map((c) => ({
+                            value: c.id,
+                            label: c.name,
+                          }))}
+                        />
+                      </div>
                       <button
-                        onClick={() => {
-                          assign.mutate({ characterId: char.id, userId: null });
-                          unassignConfirm.cancel();
-                        }}
-                        className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
+                        onClick={() => setAssigning(false)}
+                        className="p-1 text-on-surface-variant/40 hover:text-on-surface transition-colors"
                       >
-                        Yes
-                      </button>
-                      <button
-                        onClick={() => unassignConfirm.cancel()}
-                        className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
-                      >
-                        No
+                        <span className="material-symbols-outlined text-[16px]">close</span>
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => unassignConfirm.startConfirm('unassign')}
-                      className="p-1.5 text-on-surface-variant/40 hover:text-tertiary transition-colors"
-                      title="Unassign character"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">link_off</span>
-                    </button>
+                    <>
+                      {unassignedCharacters.length > 0 && (
+                        <button
+                          onClick={() => setAssigning(true)}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-secondary border border-secondary/30 rounded-sm hover:bg-secondary/10 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">link</span>
+                          Assign
+                        </button>
+                      )}
+                      <button
+                        onClick={onCreateCharacter}
+                        className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-primary border border-primary/30 rounded-sm hover:bg-primary/10 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">add</span>
+                        Create
+                      </button>
+                    </>
                   )}
-                </>
+                </div>
               )}
             </div>
-          </>
-        ) : (
-          <div className="flex items-center gap-3 flex-1">
-            <span className="text-xs text-on-surface-variant/40 italic flex-1">No character assigned</span>
-            {isGm && (
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {assigning ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-48">
-                      <Select
-                        value=""
-                        onChange={(v) => {
-                          if (v) {
-                            assign.mutate({ characterId: v, userId: member.user.id });
-                            setAssigning(false);
-                          }
-                        }}
-                        placeholder="Select character..."
-                        options={unassignedCharacters.map((c) => ({
-                          value: c.id,
-                          label: c.name,
-                        }))}
-                      />
-                    </div>
-                    <button
-                      onClick={() => setAssigning(false)}
-                      className="p-1 text-on-surface-variant/40 hover:text-on-surface transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">close</span>
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {unassignedCharacters.length > 0 && (
-                      <button
-                        onClick={() => setAssigning(true)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-secondary border border-secondary/30 rounded-sm hover:bg-secondary/10 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[14px]">link</span>
-                        Assign
-                      </button>
-                    )}
-                    <button
-                      onClick={onCreateCharacter}
-                      className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-primary border border-primary/30 rounded-sm hover:bg-primary/10 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">add</span>
-                      Create
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Kick button */}
-      {isGm && (
-        <div className="flex items-center px-3 border-l border-outline-variant/10">
-          {kickConfirm.isConfirming('kick') ? (
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[8px] text-on-surface-variant/50 uppercase tracking-wider">Kick?</span>
-              <button
-                onClick={() => {
-                  kick.mutate({ campaignId, userId: member.user.id });
-                  kickConfirm.cancel();
-                }}
-                className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => kickConfirm.cancel()}
-                className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
-              >
-                No
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => kickConfirm.startConfirm('kick')}
-              className="p-1.5 text-on-surface-variant/30 hover:text-tertiary transition-colors"
-              title="Remove from campaign"
-            >
-              <span className="material-symbols-outlined text-[16px]">person_remove</span>
-            </button>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -587,6 +597,12 @@ export default function PartyPage() {
                 {memberSlots.length > 0 && (
                   <section className="mb-8">
                     <SectionHeader title="Party Members" count={memberSlots.length} />
+                    {/* Column headers */}
+                    <div className="grid grid-cols-[1fr_auto_1fr] mb-2 px-1">
+                      <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">Player</span>
+                      <div className="w-[52px]" />
+                      <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">Character</span>
+                    </div>
                     <div className="space-y-3">
                       {memberSlots.map((slot) => (
                         <MemberCard
