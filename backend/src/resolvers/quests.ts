@@ -1,14 +1,25 @@
 import type { Context } from '../context.js';
-import { toEnum } from './utils.js';
+import { toEnum, getCampaignRole } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
 
 export const questResolvers = {
   Query: {
-    quests: (_: unknown, { campaignId }: { campaignId: string }, { prisma }: Context) =>
-      prisma.quest.findMany({ where: { campaignId } }),
+    quests: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      const isPlayer = role === 'PLAYER';
+      return ctx.prisma.quest.findMany({
+        where: { campaignId, ...(isPlayer ? { playerVisible: true } : {}) },
+      });
+    },
 
-    quest: (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) =>
-      prisma.quest.findFirst({ where: { id, campaignId } }),
+    quest: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      const isPlayer = role === 'PLAYER';
+      const quest = await ctx.prisma.quest.findFirst({ where: { id, campaignId } });
+      if (!quest) return null;
+      if (isPlayer && !quest.playerVisible) return null;
+      return quest;
+    },
   },
 
   Mutation: {

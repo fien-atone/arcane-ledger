@@ -201,9 +201,11 @@ export default function NpcDetailPage() {
               </div>
             </section>
 
-            <InlineRichField label="GM Notes" value={npc.gmNotes}
-              onSave={(html) => saveField('gmNotes', html)}
-              isGmNotes />
+            {isGm && (
+              <InlineRichField label="GM Notes" value={npc.gmNotes}
+                onSave={(html) => saveField('gmNotes', html)}
+                isGmNotes />
+            )}
 
             <InlineRichField label="Background" value={npc.description}
               onSave={(html) => saveField('description', html)}

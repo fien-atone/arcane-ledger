@@ -265,6 +265,8 @@ model Quest {
   reward      String?
   status      QuestStatus @default(UNDISCOVERED)
   notes       String      @default("")
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
   createdAt   DateTime    @default(now())
 
   sessionLinks SessionQuest[]
@@ -293,6 +295,8 @@ model Group {
   symbols       String?
   gmNotes       String?
   partyRelation String?
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

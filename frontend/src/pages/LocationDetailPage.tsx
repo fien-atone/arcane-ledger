@@ -1036,12 +1036,14 @@ export default function LocationDetailPage() {
             />
 
             {/* GM Notes */}
-            <InlineRichField
-              label="GM Notes"
-              value={location.gmNotes}
-              onSave={(html) => saveMutation.mutate({ ...location, gmNotes: html || undefined })}
-              isGmNotes
-            />
+            {isGm && (
+              <InlineRichField
+                label="GM Notes"
+                value={location.gmNotes}
+                onSave={(html) => saveMutation.mutate({ ...location, gmNotes: html || undefined })}
+                isGmNotes
+              />
+            )}
 
             {/* Adjacent / Reachable */}
             {adjacentLocations && adjacentLocations.length > 0 && (

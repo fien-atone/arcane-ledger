@@ -195,37 +195,41 @@ export default function SessionDetailPage() {
                       )}
                     </div>
                   )}
-                  {confirmDelete ? (
-                    <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                      <span className="text-[10px] text-on-surface-variant">Delete this session?</span>
+                  {isGm && (
+                    <>
+                      {confirmDelete ? (
+                        <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                          <span className="text-[10px] text-on-surface-variant">Delete this session?</span>
+                          <button
+                            onClick={() => deleteSession.mutate(session.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/sessions`) })}
+                            className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(false)}
+                            className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDelete(true)}
+                          className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      )}
                       <button
-                        onClick={() => deleteSession.mutate(session.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/sessions`) })}
-                        className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
+                        onClick={() => setEditOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
                       >
-                        Yes
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                        Edit
                       </button>
-                      <button
-                        onClick={() => setConfirmDelete(false)}
-                        className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-                      >
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmDelete(true)}
-                      className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </button>
+                    </>
                   )}
-                  <button
-                    onClick={() => setEditOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-sm">edit</span>
-                    Edit
-                  </button>
                 </div>
               </div>
               <h1 className="font-headline text-5xl font-bold text-on-surface tracking-tight leading-tight">
@@ -242,12 +246,14 @@ export default function SessionDetailPage() {
             />
 
             {/* Summary — GM only, inline editable */}
-            <InlineRichField
-              label="GM Notes"
-              value={session.summary}
-              onSave={(html) => saveField('summary', html)}
-              isGmNotes
-            />
+            {isGm && (
+              <InlineRichField
+                label="GM Notes"
+                value={session.summary}
+                onSave={(html) => saveField('summary', html)}
+                isGmNotes
+              />
+            )}
 
             {/* Prev / next navigation */}
             <div className="flex items-center justify-between pt-8 border-t border-outline-variant/10">

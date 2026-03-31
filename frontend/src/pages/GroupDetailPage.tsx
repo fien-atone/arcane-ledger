@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGroup, useSaveGroup, useDeleteGroup } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs, useAddNPCGroupMembership, useRemoveNPCGroupMembership } from '@/features/npcs/api/queries';
 import { useParty, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
@@ -121,6 +121,8 @@ export default function GroupDetailPage() {
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
   const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
@@ -238,13 +240,15 @@ export default function GroupDetailPage() {
               placeholder="Banners, colours, insignia…"
             />
 
-            {/* GM Notes — edit in place */}
-            <InlineRichField
-              label="GM Notes"
-              value={group.gmNotes}
-              onSave={(html) => saveField('gmNotes', html)}
-              isGmNotes
-            />
+            {/* GM Notes — edit in place, GM only */}
+            {isGm && (
+              <InlineRichField
+                label="GM Notes"
+                value={group.gmNotes}
+                onSave={(html) => saveField('gmNotes', html)}
+                isGmNotes
+              />
+            )}
 
             {/* Members */}
             {npcsEnabled && (
@@ -344,27 +348,29 @@ export default function GroupDetailPage() {
 
           {/* ��─ Right column (35%) ────────────────────────��─────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
-            <div className="flex justify-end gap-2">
-              {confirmDelete ? (
-                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[10px] text-on-surface-variant">Delete this group?</span>
-                  <button onClick={() => deleteGroup.mutate({ campaignId: campaignId ?? '', groupId: group.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/groups`) })}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                  <button onClick={() => setConfirmDelete(false)}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmDelete(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
-                  <span className="material-symbols-outlined text-sm">delete</span>
+            {isGm && (
+              <div className="flex justify-end gap-2">
+                {confirmDelete ? (
+                  <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                    <span className="text-[10px] text-on-surface-variant">Delete this group?</span>
+                    <button onClick={() => deleteGroup.mutate({ campaignId: campaignId ?? '', groupId: group.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/groups`) })}
+                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                    <button onClick={() => setConfirmDelete(false)}
+                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDelete(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                )}
+                <button onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors">
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                  Edit Group
                 </button>
-              )}
-              <button onClick={() => setEditOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors">
-                <span className="material-symbols-outlined text-sm">edit</span>
-                Edit Group
-              </button>
-            </div>
+              </div>
+            )}
           </div>
 
         </div>

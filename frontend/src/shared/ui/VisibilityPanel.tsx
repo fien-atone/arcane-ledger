@@ -79,6 +79,24 @@ export function VisibilityPanel({
           {/* Field controls (only when entity is visible) */}
           {playerVisible && (
             <>
+              {/* Name — always visible indicator */}
+              <div className="flex items-center gap-2.5 py-1 opacity-50">
+                <span className="inline-flex h-3.5 w-6.5 flex-shrink-0 rounded-full bg-secondary/70 border border-secondary/40 items-center justify-end pr-[2px]">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-on-surface shadow-sm" />
+                </span>
+                <span className="text-xs text-on-surface">Name</span>
+                <span className="text-[8px] text-on-surface-variant/40 uppercase tracking-wider">always</span>
+              </div>
+
+              {/* GM Notes — never visible indicator */}
+              <div className="flex items-center gap-2.5 py-1 opacity-50">
+                <span className="inline-flex h-3.5 w-6.5 flex-shrink-0 rounded-full bg-surface-container-highest border border-outline-variant/20 items-center pl-[2px]">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-on-surface-variant/50 shadow-sm" />
+                </span>
+                <span className="text-xs text-on-surface-variant/40">GM Notes</span>
+                <span className="text-[8px] text-on-surface-variant/30 uppercase tracking-wider">gm only</span>
+              </div>
+
               {/* Preset buttons */}
               <div className="flex items-center gap-2">
                 <button

@@ -1,17 +1,22 @@
 import type { Context } from '../context.js';
 import { publishCampaignEvent } from '../publish.js';
+import { getCampaignRole } from './utils.js';
 
 export const groupResolvers = {
   Query: {
-    groups: (_: unknown, { campaignId, search, type }: { campaignId: string; search?: string; type?: string }, { prisma }: Context) =>
-      prisma.group.findMany({
+    groups: async (_: unknown, { campaignId, search, type }: { campaignId: string; search?: string; type?: string }, ctx: Context) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      const isPlayer = role === 'PLAYER';
+      return ctx.prisma.group.findMany({
         where: {
           campaignId,
           ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
           ...(type ? { type } : {}),
+          ...(isPlayer ? { playerVisible: true } : {}),
         },
         orderBy: { name: 'asc' },
-      }),
+      });
+    },
 
     group: (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) =>
       prisma.group.findFirst({ where: { id, campaignId } }),
