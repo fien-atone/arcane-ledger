@@ -10,6 +10,8 @@ interface Props {
   onClose: () => void;
   campaignId: string;
   character?: PlayerCharacter;
+  /** Pre-assign to this user on create */
+  forUserId?: string;
 }
 
 const now = () => new Date().toISOString();
@@ -21,7 +23,7 @@ const inputCls =
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
-export function CharacterEditDrawer({ open, onClose, campaignId, character }: Props) {
+export function CharacterEditDrawer({ open, onClose, campaignId, character, forUserId }: Props) {
   const save = useSaveCharacter();
   const speciesEnabled = useSectionEnabled(campaignId, 'species');
   const { data: allSpecies } = useSpecies(campaignId);
@@ -53,7 +55,7 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
     const record: PlayerCharacter = {
       id: character?.id ?? '',
       campaignId,
-      userId: character?.userId,
+      userId: character?.userId ?? forUserId,
       image: character?.image,
       gmNotes: character?.gmNotes ?? '',
       groupMemberships: character?.groupMemberships ?? [],

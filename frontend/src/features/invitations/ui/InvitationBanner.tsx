@@ -26,7 +26,7 @@ export function InvitationBanner() {
     skip: !userId,
     onData: ({ data }) => {
       const event = data.data?.userEvent;
-      if (event?.type?.startsWith('INVITATION')) {
+      if (event?.type?.startsWith('INVITATION') || event?.type === 'MEMBER_REMOVED') {
         refetch();
       }
     },

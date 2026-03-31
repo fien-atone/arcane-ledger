@@ -59,6 +59,7 @@ const SAVE_CHARACTER = gql`
   mutation SaveCharacter(
     $campaignId: ID!
     $id: ID
+    $userId: ID
     $name: String!
     $gender: Gender
     $age: Int
@@ -77,6 +78,7 @@ const SAVE_CHARACTER = gql`
     saveCharacter(
       campaignId: $campaignId
       id: $id
+      userId: $userId
       name: $name
       gender: $gender
       age: $age
@@ -149,6 +151,7 @@ export const useSaveCharacter = () => {
         variables: {
           campaignId: character.campaignId,
           id: character.id || undefined,
+          userId: character.userId || undefined,
           name: character.name,
           gender: character.gender?.toUpperCase(),
           age: character.age,
@@ -163,7 +166,7 @@ export const useSaveCharacter = () => {
           flaws: character.flaws,
           gmNotes: character.gmNotes,
         },
-        refetchQueries: [{ query: PARTY_QUERY, variables: { campaignId: character.campaignId } }],
+        refetchQueries: [{ query: PARTY_QUERY, variables: { campaignId: character.campaignId } }, 'PartySlots'],
       }).then(() => options?.onSuccess?.());
     },
     isPending: loading,
@@ -215,7 +218,7 @@ export const useDeleteCharacter = () => {
     ) => {
       execute({
         variables: { campaignId, id: charId },
-        refetchQueries: ['Party'],
+        refetchQueries: ['Party', 'PartySlots'],
       }).then(() => opts?.onSuccess?.());
     },
     isPending: loading,

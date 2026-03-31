@@ -308,6 +308,13 @@ export const partyResolvers = {
       });
 
       publishCampaignEvent(campaignId, 'MEMBER', userId, 'DELETED');
+      // Notify the kicked player so their campaign list updates
+      publishUserEvent(userId, 'MEMBER_REMOVED', campaignId);
+      try {
+        pubsub.publish('CAMPAIGNS_CHANGED', {
+          campaignsChanged: { entityType: 'CAMPAIGN', entityId: campaignId, action: 'UPDATED', campaignId, relatedIds: [] },
+        });
+      } catch { /* ignore */ }
 
       return true;
     },

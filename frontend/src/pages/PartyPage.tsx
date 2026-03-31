@@ -146,7 +146,7 @@ function MemberCard({
   unassignedCharacters: PlayerCharacter[];
   isGm: boolean;
   onSelectCharacter: (char: PlayerCharacter) => void;
-  onCreateCharacter: () => void;
+  onCreateCharacter: (forUserId: string) => void;
 }) {
   const member = slot.member!;
   const char = slot.character;
@@ -160,8 +160,8 @@ function MemberCard({
   const resolvedCharImage = char ? resolveImageUrl(char.image) : undefined;
 
   return (
-    <div className="border border-outline-variant/10 bg-surface-container-low rounded-sm overflow-hidden">
-      <div className="grid grid-cols-[1fr_auto_1fr] min-h-[72px]">
+    <div className="border border-outline-variant/10 bg-surface-container-low rounded-sm">
+      <div className="grid grid-cols-[1fr_auto_1fr]">
         {/* Player column */}
         <div className="p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0">
@@ -207,42 +207,31 @@ function MemberCard({
           )}
         </div>
 
-        {/* Center divider with unlink action */}
-        <div className="flex flex-col items-center justify-center px-2 border-x border-outline-variant/10">
+        {/* Center divider */}
+        <div className="w-10 flex items-center justify-center border-x border-outline-variant/10">
           {char && isGm ? (
-            <>
-              {unlinkConfirm.isConfirming('unlink') ? (
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-[8px] text-on-surface-variant/50 uppercase tracking-wider">Unlink?</span>
-                  <button
-                    onClick={() => {
-                      assign.mutate({ characterId: char.id, userId: null });
-                      unlinkConfirm.cancel();
-                    }}
-                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
-                  >
-                    Yes
-                  </button>
-                  <button
-                    onClick={() => unlinkConfirm.cancel()}
-                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
-                  >
-                    No
-                  </button>
-                </div>
-              ) : (
+            unlinkConfirm.isConfirming('unlink') ? (
+              <div className="flex flex-col items-center gap-0.5">
                 <button
-                  onClick={() => unlinkConfirm.startConfirm('unlink')}
-                  className="flex flex-col items-center gap-0.5 p-1.5 text-on-surface-variant/30 hover:text-tertiary transition-colors"
-                  title="Unlink character from player"
-                >
-                  <span className="material-symbols-outlined text-[16px]">link_off</span>
-                  <span className="text-[7px] font-label uppercase tracking-wider">Unlink</span>
-                </button>
-              )}
-            </>
+                  onClick={() => { assign.mutate({ characterId: char.id, userId: null }); unlinkConfirm.cancel(); }}
+                  className="text-[9px] text-tertiary hover:text-tertiary/80"
+                >Yes</button>
+                <button
+                  onClick={() => unlinkConfirm.cancel()}
+                  className="text-[9px] text-on-surface-variant/40"
+                >No</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => unlinkConfirm.startConfirm('unlink')}
+                className="p-1 text-on-surface-variant/20 hover:text-tertiary transition-colors"
+                title="Unlink character from player"
+              >
+                <span className="material-symbols-outlined text-[16px]">link_off</span>
+              </button>
+            )
           ) : (
-            <span className="material-symbols-outlined text-[16px] text-on-surface-variant/15">
+            <span className="material-symbols-outlined text-[14px] text-on-surface-variant/10">
               {char ? 'link' : 'more_horiz'}
             </span>
           )}
@@ -271,7 +260,7 @@ function MemberCard({
                 onClick={() => onSelectCharacter(char)}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant/40 hover:text-primary hover:border-primary/30 border border-transparent rounded-sm transition-colors flex-shrink-0"
               >
-                <span className="material-symbols-outlined text-[14px]">open_in_full</span>
+                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                 View
               </button>
             </>
@@ -285,9 +274,10 @@ function MemberCard({
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {assigning ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-44">
+                      <div className="w-48 relative z-10">
                         <Select
                           value=""
+                          nullable={false}
                           onChange={(v) => {
                             if (v) {
                               assign.mutate({ characterId: v, userId: member.user.id });
@@ -320,7 +310,7 @@ function MemberCard({
                         </button>
                       )}
                       <button
-                        onClick={onCreateCharacter}
+                        onClick={() => onCreateCharacter(member.user.id)}
                         className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-primary border border-primary/30 rounded-sm hover:bg-primary/10 transition-colors"
                       >
                         <span className="material-symbols-outlined text-[14px]">add</span>
@@ -378,9 +368,10 @@ function UnassignedCharacterCard({
           <>
             {assigning ? (
               <div className="flex items-center gap-2">
-                <div className="w-44">
+                <div className="w-48 relative z-10">
                   <Select
                     value=""
+                    nullable={false}
                     onChange={(v) => {
                       if (v) {
                         assign.mutate({ characterId: char.id, userId: v });
@@ -417,7 +408,7 @@ function UnassignedCharacterCard({
           className="p-1.5 text-on-surface-variant/40 hover:text-primary transition-colors"
           title="View character"
         >
-          <span className="material-symbols-outlined text-[16px]">open_in_full</span>
+          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
         </button>
       </div>
     </div>
@@ -437,6 +428,7 @@ export default function PartyPage() {
 
   const [invitePanelOpen, setInvitePanelOpen] = useState(false);
   const [addCharOpen, setAddCharOpen] = useState(false);
+  const [createForUserId, setCreateForUserId] = useState<string | null>(null);
   const [selectedChar, setSelectedChar] = useState<PlayerCharacter | null>(null);
 
   const cancelConfirm = useInlineConfirm();
@@ -612,7 +604,7 @@ export default function PartyPage() {
                           unassignedCharacters={unassignedCharacters}
                           isGm={isGm}
                           onSelectCharacter={setSelectedChar}
-                          onCreateCharacter={() => setAddCharOpen(true)}
+                          onCreateCharacter={(forUserId) => { setCreateForUserId(forUserId); setAddCharOpen(true); }}
                         />
                       ))}
                     </div>
@@ -649,7 +641,7 @@ export default function PartyPage() {
                   to={`/campaigns/${campaignId}/characters/${selectedChar.id}`}
                   className="inline-flex items-center gap-1.5 px-3 py-2 bg-surface/80 backdrop-blur-sm border border-outline-variant/20 text-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[14px]">open_in_full</span>
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                   Open full page
                 </Link>
                 <button
@@ -666,8 +658,9 @@ export default function PartyPage() {
 
       <CharacterEditDrawer
         open={addCharOpen}
-        onClose={() => setAddCharOpen(false)}
+        onClose={() => { setAddCharOpen(false); setCreateForUserId(null); }}
         campaignId={campaignId ?? ''}
+        forUserId={createForUserId ?? undefined}
       />
     </main>
   );
