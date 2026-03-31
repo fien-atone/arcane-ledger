@@ -73,7 +73,6 @@ export function Sidebar() {
   const collapsed = useCampaignUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useCampaignUiStore((s) => s.toggleSidebar);
   const { data: campaign } = useCampaign(id ?? '');
-  const authUser = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const { mutate: updateSections } = useUpdateCampaignSections();
 
@@ -293,20 +292,6 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-outline-variant/10 px-2 py-3 space-y-0.5">
-        {/* Admin link (admin only) */}
-        {authUser?.systemRole === 'admin' && (
-          <Link
-            to="/admin/users"
-            title={collapsed ? 'Admin' : undefined}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
-          >
-            <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
-              admin_panel_settings
-            </span>
-            {!collapsed && <span className="whitespace-nowrap">Admin</span>}
-          </Link>
-        )}
-
         {/* Edit Sections (GM only) */}
         {isGm && !collapsed && (
           <button

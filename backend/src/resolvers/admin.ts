@@ -18,6 +18,10 @@ interface AdminUpdateUserInput {
 }
 
 export const adminResolvers = {
+  User: {
+    createdAt: (user: { createdAt: Date }) => user.createdAt.toISOString(),
+  },
+
   Query: {
     adminUsers: async (_: unknown, { search }: { search?: string }, { prisma, user }: Context) => {
       requireAdmin(user);

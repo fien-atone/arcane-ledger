@@ -16,6 +16,7 @@ export const typeDefs = `#graphql
     name: String!
     avatar: String
     role: SystemRole!
+    createdAt: String!
   }
 
   type AuthPayload {
