@@ -1,5 +1,6 @@
 import { Outlet, useParams, Link } from 'react-router-dom';
 import { Sidebar } from '@/widgets/Sidebar';
+import { Topbar } from '@/widgets/Topbar';
 import { DiceRoller } from '@/widgets/DiceRollerModal';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
 import { useCampaign } from '@/features/campaigns/api/queries';
@@ -44,13 +45,16 @@ export function CampaignShell() {
     <div className="flex h-screen bg-surface text-on-surface overflow-hidden">
       {!useMock && id && <CampaignSubscriptionManager campaignId={id} />}
       <Sidebar />
-      <main
-        className={`flex-1 overflow-auto transition-all duration-300 ${
+      <div
+        className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
           collapsed ? 'ml-16' : 'ml-64'
         }`}
       >
-        <Outlet />
-      </main>
+        <Topbar />
+        <main className="flex-1 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
       <DiceRoller />
     </div>
   );

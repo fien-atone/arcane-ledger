@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
 import { useCampaign, getEnabledSections, useUpdateCampaignSections } from '@/features/campaigns/api/queries';
-import { useAuthStore } from '@/features/auth';
 import { ChangelogDrawer, getHasUnread } from '@/widgets/Changelog/ChangelogDrawer';
 import { ALL_SECTIONS } from '@/entities/campaign';
 import type { CampaignSection } from '@/entities/campaign';
@@ -69,11 +68,10 @@ function SectionToggle({ on, onClick, small }: { on: boolean; onClick: () => voi
 export function Sidebar() {
   const { id } = useParams<{ id: string }>();
   const { pathname } = useLocation();
-  const navigate = useNavigate();
+
   const collapsed = useCampaignUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useCampaignUiStore((s) => s.toggleSidebar);
   const { data: campaign } = useCampaign(id ?? '');
-  const logout = useAuthStore((s) => s.logout);
   const { mutate: updateSections } = useUpdateCampaignSections();
 
   const [changelogOpen, setChangelogOpen] = useState(false);
@@ -142,10 +140,6 @@ export function Sidebar() {
     }).filter(Boolean) as Array<NavItem | NavSection>;
   }, [enabledSet, editMode]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
 
   const isActive = (to: string, exact: boolean) => {
     if (exact) return pathname === to;
@@ -334,18 +328,6 @@ export function Sidebar() {
           {!collapsed && <span className="whitespace-nowrap">What's New</span>}
         </button>
 
-        <div className="border-t border-outline-variant/10 my-1" />
-
-        <button
-          onClick={handleLogout}
-          title={collapsed ? 'Logout' : undefined}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
-        >
-          <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
-            logout
-          </span>
-          {!collapsed && <span className="whitespace-nowrap">Logout</span>}
-        </button>
       </div>
 
       {createPortal(

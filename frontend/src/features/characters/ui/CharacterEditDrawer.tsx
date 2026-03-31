@@ -111,7 +111,7 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
                 value={speciesId}
                 onChange={(v) => setSpeciesId(v)}
                 placeholder="— None —"
-                options={(allSpecies ?? [])
+                options={[...(allSpecies ?? [])]
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((s) => ({ value: s.id, label: s.name }))}
               />
