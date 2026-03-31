@@ -9,5 +9,9 @@ export const subscriptionResolvers = {
     campaignsChanged: {
       subscribe: () => pubsub.asyncIterableIterator('CAMPAIGNS_CHANGED'),
     },
+    userEvent: {
+      subscribe: (_: unknown, { userId }: { userId: string }) =>
+        pubsub.asyncIterableIterator(`USER_EVENT:${userId}`),
+    },
   },
 };

@@ -22,4 +22,5 @@ export const REFETCH_MAP: Record<string, string[]> = {
   GROUP_TYPE:             ['GroupTypes'],
   SPECIES_TYPE:           ['SpeciesTypes'],
   CONTAINMENT_RULE:       ['ContainmentRules'],
+  INVITATION:             ['MyInvitations', 'CampaignInvitations', 'PartySlots', 'Campaigns'],
 };

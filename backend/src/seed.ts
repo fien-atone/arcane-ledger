@@ -23,6 +23,7 @@ async function main() {
     prisma.quest.deleteMany(),
     prisma.session.deleteMany(),
     prisma.nPC.deleteMany(),
+    prisma.campaignInvitation.deleteMany(),
     prisma.playerCharacter.deleteMany(),
     prisma.group.deleteMany(),
     prisma.location.deleteMany(),
@@ -115,6 +116,28 @@ async function main() {
       { campaignId: 'campaign-drakkenheim', userId: 'user-natasha', role: 'PLAYER' },
       { campaignId: 'campaign-drakkenheim', userId: 'user-jess', role: 'PLAYER' },
     ],
+  });
+
+  // ── Campaign Invitations (sample) ──────────────────────────────────────────
+  // Adel has a pending invitation to Farchester (not yet a member there)
+  await prisma.campaignInvitation.create({
+    data: {
+      id: 'inv-adel-fc',
+      campaignId: 'campaign-farchester',
+      userId: 'user-adel',
+      invitedById: 'user-gm',
+      status: 'PENDING',
+    },
+  });
+  // Natasha has a pending invitation to Farchester
+  await prisma.campaignInvitation.create({
+    data: {
+      id: 'inv-natasha-fc',
+      campaignId: 'campaign-farchester',
+      userId: 'user-natasha',
+      invitedById: 'user-gm',
+      status: 'PENDING',
+    },
   });
 
   console.log('Seeding reference data...');
@@ -1206,6 +1229,8 @@ async function main() {
       { id: 'char-vermira', campaignId: 'campaign-drakkenheim', userId: 'user-adel', name: 'Vermira', gender: 'FEMALE', age: 68, species: 'Dwarf', speciesId: 'species-dwarf-dk', class: 'Paladin', gmNotes: '', createdAt: new Date('2025-09-01T00:00:00Z'), updatedAt: new Date('2025-09-01T00:00:00Z') },
       { id: 'char-sai', campaignId: 'campaign-drakkenheim', userId: 'user-natasha', name: 'Sai', gender: 'NONBINARY', age: 194, species: 'Elf', speciesId: 'species-elf-dk', gmNotes: '', createdAt: new Date('2025-09-01T00:00:00Z'), updatedAt: new Date('2025-09-01T00:00:00Z') },
       { id: 'char-patrikeyevna', campaignId: 'campaign-drakkenheim', userId: 'user-jess', name: 'Patrikeyevna', gender: 'FEMALE', age: 35, class: 'Monk', gmNotes: '', createdAt: new Date('2025-09-01T00:00:00Z'), updatedAt: new Date('2025-09-01T00:00:00Z') },
+      // Unassigned characters (GM-created, no player yet)
+      { id: 'char-unassigned-fc', campaignId: 'campaign-farchester', userId: null, name: 'Theron the Wanderer', gender: 'MALE', age: 45, species: 'Human', speciesId: 'species-human-fc', class: 'Fighter', gmNotes: 'Pre-built character for a new player.', createdAt: new Date('2026-02-01T00:00:00Z'), updatedAt: new Date('2026-02-01T00:00:00Z') },
     ],
   });
 

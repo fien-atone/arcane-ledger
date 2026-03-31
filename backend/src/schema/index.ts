@@ -7,6 +7,7 @@ export const typeDefs = `#graphql
   enum NPCStatus { ALIVE DEAD MISSING UNKNOWN }
   enum Gender { MALE FEMALE NONBINARY }
   enum QuestStatus { ACTIVE COMPLETED FAILED UNAVAILABLE UNDISCOVERED }
+  enum InvitationStatus { PENDING ACCEPTED DECLINED }
 
   # ── Auth ────────────────────────────────────────────────────
 
@@ -50,6 +51,23 @@ export const typeDefs = `#graphql
     user: User!
     role: CampaignRole!
     joinedAt: String!
+  }
+
+  type CampaignInvitation {
+    id: ID!
+    campaignId: ID!
+    campaign: Campaign!
+    user: User!
+    invitedBy: User!
+    status: InvitationStatus!
+    createdAt: String!
+    respondedAt: String
+  }
+
+  type PartySlot {
+    member: CampaignMember
+    character: PlayerCharacter
+    invitation: CampaignInvitation
   }
 
   # ── Session ────────────────────────────────────────────────
@@ -121,7 +139,8 @@ export const typeDefs = `#graphql
   type PlayerCharacter {
     id: ID!
     campaignId: ID!
-    userId: ID!
+    userId: ID
+    player: User
     name: String!
     gender: Gender
     age: Int
@@ -296,6 +315,12 @@ export const typeDefs = `#graphql
     # Characters
     party(campaignId: ID!): [PlayerCharacter!]!
 
+    # Party & Invitations
+    partySlots(campaignId: ID!): [PartySlot!]!
+    myInvitations: [CampaignInvitation!]!
+    campaignInvitations(campaignId: ID!): [CampaignInvitation!]!
+    searchUsers(campaignId: ID!, query: String!): [User!]!
+
     # Quests
     quests(campaignId: ID!): [Quest!]!
     quest(campaignId: ID!, id: ID!): Quest
@@ -467,8 +492,15 @@ export const typeDefs = `#graphql
     deleteSpecies(id: ID!): Boolean!
 
     # Characters
-    saveCharacter(campaignId: ID!, id: ID, name: String!, gender: Gender, age: Int, species: String, speciesId: String, class: String, appearance: String, background: String, personality: String, motivation: String, bonds: String, flaws: String, gmNotes: String, image: String): PlayerCharacter!
+    saveCharacter(campaignId: ID!, id: ID, userId: ID, name: String!, gender: Gender, age: Int, species: String, speciesId: String, class: String, appearance: String, background: String, personality: String, motivation: String, bonds: String, flaws: String, gmNotes: String, image: String): PlayerCharacter!
     deleteCharacter(campaignId: ID!, id: ID!): Boolean!
+
+    # Party & Invitations
+    invitePlayer(campaignId: ID!, userId: ID!): CampaignInvitation!
+    cancelInvitation(id: ID!): Boolean!
+    respondToInvitation(id: ID!, accept: Boolean!): CampaignInvitation!
+    assignCharacterToPlayer(characterId: ID!, userId: ID): PlayerCharacter!
+    removeCampaignMember(campaignId: ID!, userId: ID!): Boolean!
 
     # NPC sub-entities
     addNPCLocationPresence(npcId: ID!, locationId: ID!, note: String): NPC!
@@ -502,8 +534,14 @@ export const typeDefs = `#graphql
     relatedIds: [ID!]
   }
 
+  type UserEvent {
+    type: String!
+    entityId: ID!
+  }
+
   type Subscription {
     campaignEvent(campaignId: ID!): CampaignEvent!
     campaignsChanged: CampaignEvent!
+    userEvent(userId: ID!): UserEvent!
   }
 `;

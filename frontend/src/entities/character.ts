@@ -10,7 +10,8 @@ export interface CharacterGroupMembership {
 export interface PlayerCharacter {
   id: string;
   campaignId: string;
-  userId: string;
+  userId?: string;
+  player?: { id: string; name: string; email: string; avatar?: string };
   name: string;
   gender?: CharacterGender;
   age?: number;

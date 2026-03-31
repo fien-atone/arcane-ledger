@@ -84,7 +84,7 @@ export const campaignResolvers = {
 
     saveCharacter: async (
       _: unknown,
-      args: { campaignId: string; id?: string; name: string; gender?: string; age?: number; species?: string; speciesId?: string; class?: string; appearance?: string; background?: string; personality?: string; motivation?: string; bonds?: string; flaws?: string; gmNotes?: string; image?: string },
+      args: { campaignId: string; id?: string; userId?: string | null; name: string; gender?: string; age?: number; species?: string; speciesId?: string; class?: string; appearance?: string; background?: string; personality?: string; motivation?: string; bonds?: string; flaws?: string; gmNotes?: string; image?: string },
       { prisma, user }: Context,
     ) => {
       if (!user) throw new Error('Not authenticated');
@@ -106,12 +106,24 @@ export const campaignResolvers = {
       };
       if (args.image !== undefined) data.image = args.image ?? null;
 
+      // Allow GM to set userId on update
       if (args.id) {
+        if (args.userId !== undefined) data.userId = args.userId || null;
         const result = await prisma.playerCharacter.update({ where: { id: args.id }, data });
         publishCampaignEvent(args.campaignId, 'CHARACTER', result.id, 'UPDATED');
         return result;
       }
-      const result = await prisma.playerCharacter.create({ data: { ...data, campaignId: args.campaignId, userId: user.id } });
+
+      // On create: use provided userId if given, otherwise null (unassigned)
+      const member = await prisma.campaignMember.findUnique({
+        where: { campaignId_userId: { campaignId: args.campaignId, userId: user.id } },
+      });
+      const isGM = member?.role === 'GM';
+      const assignedUserId = isGM
+        ? (args.userId || null)  // GM can assign or leave unassigned
+        : user.id;              // Non-GM always owns their character
+
+      const result = await prisma.playerCharacter.create({ data: { ...data, campaignId: args.campaignId, userId: assignedUserId } as Parameters<typeof prisma.playerCharacter.create>[0]['data'] });
       publishCampaignEvent(args.campaignId, 'CHARACTER', result.id, 'CREATED');
       return result;
     },
@@ -154,6 +166,8 @@ export const campaignResolvers = {
   PlayerCharacter: {
     groupMemberships: (character: { id: string }, _: unknown, { prisma }: Context) =>
       prisma.characterGroupMembership.findMany({ where: { characterId: character.id }, include: { group: true } }),
+    player: (character: { userId: string | null }, _: unknown, { prisma }: Context) =>
+      character.userId ? prisma.user.findUnique({ where: { id: character.userId } }) : null,
   },
 
   Campaign: {

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CampaignCreateDrawer, useCampaigns } from '@/features/campaigns';
 import { useSessions } from '@/features/sessions/api/queries';
+import { InvitationBanner } from '@/features/invitations/ui/InvitationBanner';
 import type { CampaignSummary } from '@/entities/campaign';
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -302,6 +303,9 @@ export default function CampaignsPage() {
           <p className="text-on-surface-variant/50 text-sm">Create the first campaign to get started.</p>
         </div>
       )}
+
+      {/* Pending invitations */}
+      <InvitationBanner />
 
       {/* Active */}
       {active.length > 0 && (

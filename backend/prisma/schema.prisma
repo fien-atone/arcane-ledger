@@ -23,8 +23,10 @@ model User {
   role      SystemRole @default(USER)
   createdAt DateTime   @default(now())
 
-  campaignMembers CampaignMember[]
-  characters      PlayerCharacter[]
+  campaignMembers     CampaignMember[]
+  characters          PlayerCharacter[]
+  invitationsReceived CampaignInvitation[] @relation("InvitedUser")
+  invitationsSent     CampaignInvitation[] @relation("InvitedBy")
 }
 
 // ── Campaigns ────────────────────────────────────────────────────────────────
@@ -49,6 +51,7 @@ model Campaign {
   locations     Location[]
   relations     Relation[]
   characters    PlayerCharacter[]
+  invitations   CampaignInvitation[]
 }
 
 model CampaignMember {
@@ -66,6 +69,29 @@ model CampaignMember {
 enum CampaignRole {
   GM
   PLAYER
+}
+
+// ── Campaign Invitations ─────────────────────────────────────────────────────
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model CampaignInvitation {
+  id          String           @id @default(uuid())
+  campaign    Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  user        User             @relation("InvitedUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  invitedBy   User             @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+  invitedById String
+  status      InvitationStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  respondedAt DateTime?
+
+  @@unique([campaignId, userId])
 }
 
 // ── Sessions ─────────────────────────────────────────────────────────────────
@@ -186,8 +212,8 @@ model PlayerCharacter {
   id          String   @id @default(uuid())
   campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId  String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      String?
   name        String
   gender      Gender?
   age         Int?
