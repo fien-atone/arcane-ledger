@@ -29,7 +29,7 @@ interface LocationPlaceholderProps {
   markers?: MapMarker[];
   childLocations?: { id: string; name: string; type: string }[];
   typeMap?: TypeMap;
-  onUpload: (file: File) => void;
+  onUpload?: (file: File) => void;
   onOpenMap: () => void;
 }
 
@@ -77,8 +77,10 @@ function LocationPlaceholder({ name, imageUrl, markers, childLocations, typeMap,
         image={imageUrl}
         name={name}
         className="w-full aspect-[4/3]"
-        onUpload={onUpload}
+        onUpload={onUpload ?? (() => {})}
         onView={imageUrl ? onOpenMap : undefined}
+        hideControls={!onUpload}
+        uploadLabel="Upload Map"
         onLoad={recalc}
       />
       {/* Map markers overlay */}
@@ -1093,13 +1095,15 @@ export default function LocationDetailPage() {
                   NPCs Here
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
-                <button
-                  onClick={() => { setAddNpcOpen((v) => !v); setAddNpcSearch(''); }}
-                  className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-                >
-                  <span className="material-symbols-outlined text-[13px]">person_add</span>
-                  Add
-                </button>
+                {isGm && (
+                  <button
+                    onClick={() => { setAddNpcOpen((v) => !v); setAddNpcSearch(''); }}
+                    className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">person_add</span>
+                    Add
+                  </button>
+                )}
               </div>
 
               {/* NPC picker */}
@@ -1188,7 +1192,7 @@ export default function LocationDetailPage() {
                               arrow_forward
                             </span>
                           </Link>
-                          {confirmRemoveNpcId === npc.id ? (
+                          {isGm && (confirmRemoveNpcId === npc.id ? (
                             <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                               <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
                               <button
@@ -1213,7 +1217,7 @@ export default function LocationDetailPage() {
                             >
                               <span className="material-symbols-outlined text-[14px]">person_remove</span>
                             </button>
-                          )}
+                          ))}
                         </div>
                         {/* Presence note */}
                         {isEditingNote ? (
@@ -1313,30 +1317,32 @@ export default function LocationDetailPage() {
           {/* ── Right column (35%) ──────────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            {/* Actions */}
-            <div className="flex justify-end gap-2">
-              {confirmDelete ? (
-                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[10px] text-on-surface-variant">Delete this location?</span>
-                  <button onClick={() => deleteLocation.mutate(location.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/locations`) })}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                  <button onClick={() => setConfirmDelete(false)}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmDelete(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
-                  <span className="material-symbols-outlined text-sm">delete</span>
+            {/* Actions (GM only) */}
+            {isGm && (
+              <div className="flex justify-end gap-2">
+                {confirmDelete ? (
+                  <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                    <span className="text-[10px] text-on-surface-variant">Delete this location?</span>
+                    <button onClick={() => deleteLocation.mutate(location.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/locations`) })}
+                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                    <button onClick={() => setConfirmDelete(false)}
+                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDelete(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                  Edit Location
                 </button>
-              )}
-              <button
-                onClick={() => setEditOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">edit</span>
-                Edit Location
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Image / Map */}
             <LocationPlaceholder
@@ -1345,7 +1351,7 @@ export default function LocationDetailPage() {
               markers={location.mapMarkers}
               childLocations={childLocations}
               typeMap={locationTypesEnabled ? typeMap : undefined}
-              onUpload={handleImageUpload}
+              onUpload={isGm ? handleImageUpload : undefined}
               onOpenMap={() => setMapOpen(true)}
             />
 
@@ -1426,16 +1432,19 @@ export default function LocationDetailPage() {
                     Notable Places
                   </h4>
                   <div className="h-px flex-1 bg-outline-variant/10" />
-                  <button
+                  {isGm && <button
                     onClick={() => setAddChildLocOpen(true)}
                     className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                   >
                     <span className="material-symbols-outlined text-[13px]">add_location_alt</span>
                     Add
-                  </button>
+                  </button>}
                 </div>
 
                 <div className="space-y-1.5">
+                  {childLocations.length === 0 && (
+                    <p className="text-xs text-on-surface-variant/40 italic py-2">No notable places yet.</p>
+                  )}
                   {childLocations.map((child) => {
                     const hasMarker = (location.mapMarkers ?? []).some((mk) => mk.linkedLocationId === child.id);
                     const te = locationTypesEnabled ? typeMap.get(child.type) : undefined;
@@ -1480,6 +1489,7 @@ export default function LocationDetailPage() {
                 playerVisibleFields={location.playerVisibleFields ?? []}
                 fields={LOCATION_VISIBILITY_FIELDS}
                 basicPreset={LOCATION_BASIC_PRESET}
+                autoVisibleLabels={['Type']}
                 onToggleVisible={(v) => setLocationVisibility.mutate({
                   campaignId: campaignId!, id: location.id,
                   playerVisible: v, playerVisibleFields: location.playerVisibleFields ?? [],

@@ -6,6 +6,8 @@ interface VisibilityPanelProps {
   playerVisibleFields: string[];
   fields: VisibilityFieldDef[];
   basicPreset: string[];
+  /** Extra always-visible field labels (besides Name) */
+  autoVisibleLabels?: string[];
   onToggleVisible: (visible: boolean) => void;
   onToggleField: (field: string, checked: boolean) => void;
   onSetPreset: (fields: string[]) => void;
@@ -17,6 +19,7 @@ export function VisibilityPanel({
   playerVisibleFields,
   fields,
   basicPreset,
+  autoVisibleLabels,
   onToggleVisible,
   onToggleField,
   onSetPreset,
@@ -87,6 +90,17 @@ export function VisibilityPanel({
                 <span className="text-xs text-on-surface">Name</span>
                 <span className="text-[8px] text-on-surface-variant/40 uppercase tracking-wider">always</span>
               </div>
+
+              {/* Extra auto-visible fields */}
+              {(autoVisibleLabels ?? []).map((label) => (
+                <div key={label} className="flex items-center gap-2.5 py-1 opacity-50">
+                  <span className="inline-flex h-3.5 w-6.5 flex-shrink-0 rounded-full bg-secondary/70 border border-secondary/40 items-center justify-end pr-[2px]">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-on-surface shadow-sm" />
+                  </span>
+                  <span className="text-xs text-on-surface">{label}</span>
+                  <span className="text-[8px] text-on-surface-variant/40 uppercase tracking-wider">always</span>
+                </div>
+              ))}
 
               {/* GM Notes — never visible indicator */}
               <div className="flex items-center gap-2.5 py-1 opacity-50">

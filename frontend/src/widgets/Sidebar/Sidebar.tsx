@@ -14,6 +14,7 @@ interface NavItem {
   exact: boolean;
   sub?: boolean;
   sectionId?: CampaignSection;
+  gmOnly?: boolean;
 }
 
 interface NavSection {
@@ -29,12 +30,12 @@ const NAV: Array<NavItem | NavSection> = [
     sectionIds: ['locations', 'location_types', 'npcs', 'groups', 'group_types', 'species', 'species_types'],
     items: [
       { label: 'Locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false, sectionId: 'locations' },
-      { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true, sectionId: 'location_types' },
+      { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true, sectionId: 'location_types', gmOnly: true },
       { label: 'NPCs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false, sectionId: 'npcs' },
       { label: 'Groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false, sectionId: 'groups' },
-      { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true, sectionId: 'group_types' },
-      { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false, sectionId: 'species' },
-      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true, sectionId: 'species_types' },
+      { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true, sectionId: 'group_types', gmOnly: true },
+      { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false, sectionId: 'species', gmOnly: true },
+      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true, sectionId: 'species_types', gmOnly: true },
     ],
   },
   {
@@ -131,14 +132,16 @@ export function Sidebar() {
     return NAV.map((entry) => {
       if ('section' in entry) {
         const items = entry.items.filter(
-          (item) => !item.sectionId || enabledSet.has(item.sectionId),
+          (item) =>
+            (!item.sectionId || enabledSet.has(item.sectionId)) &&
+            (!item.gmOnly || isGm),
         );
         if (items.length === 0) return null;
         return { ...entry, items };
       }
       return entry;
     }).filter(Boolean) as Array<NavItem | NavSection>;
-  }, [enabledSet, editMode]);
+  }, [enabledSet, editMode, isGm]);
 
 
   const isActive = (to: string, exact: boolean) => {

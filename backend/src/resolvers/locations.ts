@@ -110,9 +110,21 @@ export const locationResolvers = {
       }
       return presences.map((p) => p.npc);
     },
-    mapMarkers: (loc: { mapMarkers: unknown }) => {
-      if (typeof loc.mapMarkers === 'string') return JSON.parse(loc.mapMarkers);
-      return loc.mapMarkers ?? [];
+    mapMarkers: async (loc: { mapMarkers: unknown; campaignId: string }, _: unknown, ctx: Context) => {
+      const raw = typeof loc.mapMarkers === 'string' ? JSON.parse(loc.mapMarkers) : (loc.mapMarkers ?? []);
+      const role = await getCampaignRole(ctx, loc.campaignId);
+      if (role !== 'PLAYER') return raw;
+      // Filter out markers linked to hidden locations
+      const markers = raw as { id: string; linkedLocationId?: string; [k: string]: unknown }[];
+      if (markers.length === 0) return [];
+      const linkedLocIds = markers.map((m) => m.linkedLocationId).filter(Boolean) as string[];
+      if (linkedLocIds.length === 0) return markers;
+      const visibleLocs = await ctx.prisma.location.findMany({
+        where: { id: { in: linkedLocIds }, playerVisible: true },
+        select: { id: true },
+      });
+      const visibleSet = new Set(visibleLocs.map((l) => l.id));
+      return markers.filter((m) => !m.linkedLocationId || visibleSet.has(m.linkedLocationId));
     },
   },
 };

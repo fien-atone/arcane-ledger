@@ -23,10 +23,10 @@ export const NPC_FIELDS: EntityFieldDefs = {
 };
 
 export const LOCATION_FIELDS: EntityFieldDefs = {
-  alwaysVisible: ['id', 'campaignId', 'name', 'createdAt', 'playerVisible', 'playerVisibleFields'],
+  alwaysVisible: ['id', 'campaignId', 'name', 'type', 'biome', 'parentLocationId', 'mapMarkers', 'createdAt', 'playerVisible', 'playerVisibleFields'],
   shareable: [
-    'aliases', 'type', 'description', 'image', 'mapMarkers', 'biome',
-    'settlementPopulation', 'parentLocationId',
+    'aliases', 'description', 'image',
+    'settlementPopulation',
   ],
   neverVisible: ['gmNotes'],
 };
@@ -39,14 +39,23 @@ export const SESSION_FIELDS: EntityFieldDefs = {
 
 // ── Redaction function ──────────────────────────────────────────────────────
 
+/** Return a safe "empty" value that won't violate GraphQL non-nullable constraints. */
+function emptyValue(val: unknown): unknown {
+  if (Array.isArray(val)) return [];
+  if (typeof val === 'string') return '';
+  if (typeof val === 'number') return null;
+  if (typeof val === 'boolean') return false;
+  return null;
+}
+
 /**
  * Redact fields on an entity for player visibility.
  *
  * - `alwaysVisible` fields are never redacted.
- * - `neverVisible` fields are always set to null.
- * - All other fields are set to null unless they appear in `visibleFields`.
+ * - `neverVisible` fields are always blanked.
+ * - All other fields are blanked unless they appear in `visibleFields`.
  *
- * Returns a shallow copy with hidden fields nulled out.
+ * Returns a shallow copy with hidden fields set to safe empty values.
  */
 export function redactEntity<T extends Record<string, unknown>>(
   entity: T,
@@ -57,11 +66,11 @@ export function redactEntity<T extends Record<string, unknown>>(
   for (const key of Object.keys(result)) {
     if (fieldDefs.alwaysVisible.includes(key)) continue;
     if (fieldDefs.neverVisible.includes(key)) {
-      (result as Record<string, unknown>)[key] = null;
+      (result as Record<string, unknown>)[key] = emptyValue(result[key]);
       continue;
     }
     if (!visibleFields.includes(key)) {
-      (result as Record<string, unknown>)[key] = null;
+      (result as Record<string, unknown>)[key] = emptyValue(result[key]);
     }
   }
   return result;

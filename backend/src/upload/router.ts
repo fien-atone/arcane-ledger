@@ -5,6 +5,7 @@ import type { PrismaClient } from '@prisma/client';
 import { authenticate } from '../auth/middleware.js';
 import { saveFile, deleteFile } from './storage.js';
 import { validateFile } from './validation.js';
+import { publishCampaignEvent } from '../publish.js';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -110,6 +111,10 @@ uploadRouter.post(
 
       // 7. Update DB record
       await updateEntityImage(prisma, entity, entityId, relativePath);
+
+      // Publish event so other clients see the image update
+      const entityTypeMap: Record<string, string> = { npc: 'NPC', location: 'LOCATION', character: 'CHARACTER', species: 'SPECIES' };
+      publishCampaignEvent(campaignId, entityTypeMap[entity] ?? entity.toUpperCase(), entityId, 'UPDATED');
 
       res.json({ path: relativePath });
     } catch (err) {

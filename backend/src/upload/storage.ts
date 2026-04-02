@@ -12,7 +12,8 @@ export async function saveFile(
 ): Promise<string> {
   const dir = path.join(UPLOADS_ROOT, 'campaign', campaignId, entity);
   await fs.mkdir(dir, { recursive: true });
-  const filename = `${entityId}${ext}`;
+  const timestamp = Date.now();
+  const filename = `${entityId}-${timestamp}${ext}`;
   const filePath = path.join(dir, filename);
   await fs.writeFile(filePath, buffer);
   return `/uploads/campaign/${campaignId}/${entity}/${filename}`;
