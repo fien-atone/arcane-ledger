@@ -20,12 +20,12 @@ function formatDateTime(iso: string) {
   return `${date}, ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-const QUEST_STATUS_PILL: Record<QuestStatus, string> = {
-  active:      'bg-secondary/10 text-secondary border-secondary/20',
-  completed:   'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  failed:      'bg-rose-500/10 text-rose-400 border-rose-500/20',
-  unavailable: 'bg-surface-container-highest text-on-surface-variant/50 border-outline-variant/20',
-  undiscovered: 'bg-surface-variant text-on-surface-variant border-outline-variant/10',
+const QUEST_STATUS_PILL: Record<QuestStatus, { cls: string; icon: string; iconColor: string }> = {
+  active:      { cls: 'bg-secondary/10 text-secondary border-secondary/20', icon: 'bolt',           iconColor: 'text-secondary' },
+  completed:   { cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: 'check_circle',   iconColor: 'text-emerald-400' },
+  failed:      { cls: 'bg-rose-500/10 text-rose-400 border-rose-500/20', icon: 'cancel',         iconColor: 'text-rose-400' },
+  unavailable: { cls: 'bg-surface-container-highest text-on-surface-variant/50 border-outline-variant/20', icon: 'block',          iconColor: 'text-on-surface-variant/40' },
+  undiscovered: { cls: 'bg-surface-variant text-on-surface-variant border-outline-variant/10', icon: 'visibility_off', iconColor: 'text-on-surface-variant/30' },
 };
 
 function toGoogleCalUrl(title: string, datetime: string, description?: string): string {
@@ -317,12 +317,12 @@ export default function SessionDetailPage() {
                 .filter((n) => !npcSearch.trim() || n.name.toLowerCase().includes(npcSearch.toLowerCase()))
                 .sort((a, b) => a.name.localeCompare(b.name));
 
-              const addNpc = (id: string) => {
-                saveSession.mutate({ ...session, npcIds: [...npcIds, id] });
+              const addNpc = async (id: string) => {
+                await saveSession.mutate({ ...session, npcIds: [...npcIds, id] }, { only: 'npcIds' });
                 setNpcSearchOpen(false); setNpcSearch('');
               };
-              const removeNpc = (id: string) => {
-                saveSession.mutate({ ...session, npcIds: npcIds.filter((x) => x !== id) });
+              const removeNpc = async (id: string) => {
+                await saveSession.mutate({ ...session, npcIds: npcIds.filter((x) => x !== id) }, { only: 'npcIds' });
                 setConfirmRemoveNpcId(null);
               };
 
@@ -425,12 +425,12 @@ export default function SessionDetailPage() {
                 .filter((l) => !locSearch.trim() || l.name.toLowerCase().includes(locSearch.toLowerCase()))
                 .sort((a, b) => a.name.localeCompare(b.name));
 
-              const addLoc = (id: string) => {
-                saveSession.mutate({ ...session, locationIds: [...locationIds, id] });
+              const addLoc = async (id: string) => {
+                await saveSession.mutate({ ...session, locationIds: [...locationIds, id] }, { only: 'locationIds' });
                 setLocSearchOpen(false); setLocSearch('');
               };
-              const removeLoc = (id: string) => {
-                saveSession.mutate({ ...session, locationIds: locationIds.filter((x) => x !== id) });
+              const removeLoc = async (id: string) => {
+                await saveSession.mutate({ ...session, locationIds: locationIds.filter((x) => x !== id) }, { only: 'locationIds' });
                 setConfirmRemoveLocId(null);
               };
 
@@ -519,12 +519,12 @@ export default function SessionDetailPage() {
                 .filter((q) => !questSearch.trim() || q.title.toLowerCase().includes(questSearch.toLowerCase()))
                 .sort((a, b) => a.title.localeCompare(b.title));
 
-              const addQuest = (id: string) => {
-                saveSession.mutate({ ...session, questIds: [...questIds, id] });
+              const addQuest = async (id: string) => {
+                await saveSession.mutate({ ...session, questIds: [...questIds, id] }, { only: 'questIds' });
                 setQuestSearchOpen(false); setQuestSearch('');
               };
-              const removeQuest = (id: string) => {
-                saveSession.mutate({ ...session, questIds: questIds.filter((x) => x !== id) });
+              const removeQuest = async (id: string) => {
+                await saveSession.mutate({ ...session, questIds: questIds.filter((x) => x !== id) }, { only: 'questIds' });
                 setConfirmRemoveQuestId(null);
               };
 
@@ -561,9 +561,8 @@ export default function SessionDetailPage() {
                         ) : available.map((q) => (
                           <button key={q.id} onClick={() => addQuest(q.id)}
                             className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-surface-container transition-colors">
-                            <span className="material-symbols-outlined text-[13px] text-on-surface-variant/40">flag</span>
+                            <span className={`material-symbols-outlined text-[14px] ${QUEST_STATUS_PILL[q.status?.toLowerCase() as QuestStatus]?.iconColor ?? 'text-on-surface-variant/40'}`}>{QUEST_STATUS_PILL[q.status?.toLowerCase() as QuestStatus]?.icon ?? 'flag'}</span>
                             <span className="text-xs text-on-surface">{q.title}</span>
-                            <span className={`ml-auto px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider rounded-full border ${QUEST_STATUS_PILL[q.status]}`}>{q.status}</span>
                           </button>
                         ))}
                       </div>
@@ -579,13 +578,10 @@ export default function SessionDetailPage() {
                           <div className="flex items-stretch">
                             <Link to={`/campaigns/${campaignId}/quests/${quest.id}`}
                               className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0">
-                              <span className="material-symbols-outlined text-[16px] text-on-surface-variant/40">flag</span>
+                              <span className={`material-symbols-outlined text-[16px] ${QUEST_STATUS_PILL[quest.status?.toLowerCase() as QuestStatus]?.iconColor ?? 'text-on-surface-variant/40'}`}>{QUEST_STATUS_PILL[quest.status?.toLowerCase() as QuestStatus]?.icon ?? 'flag'}</span>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">{quest.title}</p>
                               </div>
-                              <span className={`flex-shrink-0 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider rounded-full border ${QUEST_STATUS_PILL[quest.status as QuestStatus] ?? ''}`}>
-                                {quest.status}
-                              </span>
                               <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                             </Link>
                             {isGm && (confirmRemoveQuestId === quest.id ? (

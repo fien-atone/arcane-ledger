@@ -130,7 +130,7 @@ export const useSaveSession = (campaignId: string) => {
   });
 
   return {
-    mutate: (session: Session, options?: { onSuccess?: () => void }) => {
+    mutate: (session: Session, options?: { onSuccess?: () => void; only?: 'npcIds' | 'locationIds' | 'questIds' }) =>
       saveSession({
         variables: {
           campaignId,
@@ -141,13 +141,12 @@ export const useSaveSession = (campaignId: string) => {
             datetime: session.datetime || undefined,
             brief: session.brief,
             summary: session.summary,
-            npcIds: session.npcIds,
-            locationIds: session.locationIds,
-            questIds: session.questIds,
+            npcIds: !options?.only || options.only === 'npcIds' ? session.npcIds : undefined,
+            locationIds: !options?.only || options.only === 'locationIds' ? session.locationIds : undefined,
+            questIds: !options?.only || options.only === 'questIds' ? session.questIds : undefined,
           },
         },
-      }).then(() => options?.onSuccess?.());
-    },
+      }).then(() => options?.onSuccess?.()),
     isPending: loading,
   };
 };

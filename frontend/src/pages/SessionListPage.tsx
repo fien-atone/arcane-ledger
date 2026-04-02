@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSessions } from '@/features/sessions/api/queries';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
-import { useNpcs } from '@/features/npcs/api/queries';
-import { useLocations } from '@/features/locations/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
 import { LocationIcon, RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
 import type { Session } from '@/entities/session';
+import type { QuestStatus } from '@/entities/quest';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -21,18 +20,22 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
+const QUEST_STATUS_ICON: Record<QuestStatus, { icon: string; iconColor: string }> = {
+  active:      { icon: 'bolt',           iconColor: 'text-secondary' },
+  completed:   { icon: 'check_circle',   iconColor: 'text-emerald-400' },
+  failed:      { icon: 'cancel',         iconColor: 'text-rose-400' },
+  unavailable: { icon: 'block',          iconColor: 'text-on-surface-variant/40' },
+  undiscovered: { icon: 'visibility_off', iconColor: 'text-on-surface-variant/30' },
+};
+
 function SessionDetail({ session, campaignId }: { session: Session; campaignId: string }) {
   const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
-  const { data: allNpcs } = useNpcs(campaignId);
-  const { data: allLocations } = useLocations(campaignId);
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
+  const questsEnabled = useSectionEnabled(campaignId, 'quests');
 
-  const linkedNpcs = (session.npcIds ?? [])
-    .map((id) => allNpcs?.find((n) => n.id === id))
-    .filter(Boolean) as NonNullable<typeof allNpcs>[number][];
-
-  const linkedLocations = (session.locationIds ?? [])
-    .map((id) => allLocations?.find((l) => l.id === id))
-    .filter(Boolean) as NonNullable<typeof allLocations>[number][];
+  const linkedNpcs = [...(session.npcs ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+  const linkedLocations = [...(session.locations ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+  const linkedQuests = [...(session.quests ?? [])].sort((a, b) => a.title.localeCompare(b.title));
 
   return (
     <div className="flex flex-col overflow-y-auto h-full px-10 py-8">
@@ -53,9 +56,8 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
         </div>
       )}
 
-
       {/* NPCs */}
-      {linkedNpcs.length > 0 && (
+      {npcsEnabled && linkedNpcs.length > 0 && (
         <div className="mb-6">
           <SectionHeader title={`NPCs (${linkedNpcs.length})`} />
           <div className="flex flex-wrap gap-2">
@@ -84,10 +86,32 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
                 to={`/campaigns/${campaignId}/locations/${loc.id}`}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
               >
-                <LocationIcon locationType={loc.type} size="text-[13px]" generic={!locationTypesEnabled} />
+                <LocationIcon locationType={loc.type ?? ''} size="text-[13px]" generic={!locationTypesEnabled} />
                 {loc.name}
               </Link>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Quests */}
+      {questsEnabled && linkedQuests.length > 0 && (
+        <div className="mb-6">
+          <SectionHeader title={`Quests (${linkedQuests.length})`} />
+          <div className="flex flex-wrap gap-2">
+            {linkedQuests.map((quest) => {
+              const st = QUEST_STATUS_ICON[quest.status?.toLowerCase() as QuestStatus];
+              return (
+                <Link
+                  key={quest.id}
+                  to={`/campaigns/${campaignId}/quests/${quest.id}`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
+                >
+                  <span className={`material-symbols-outlined text-[13px] ${st?.iconColor ?? 'text-on-surface-variant/40'}`}>{st?.icon ?? 'flag'}</span>
+                  {quest.title}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
