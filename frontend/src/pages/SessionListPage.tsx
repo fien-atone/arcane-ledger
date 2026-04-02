@@ -99,6 +99,18 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
         </div>
       )}
 
+      {/* My Notes preview */}
+      {session.myNote?.content && (
+        <div className="mb-6">
+          <SectionHeader title="My Notes" />
+          <div className="border-l-2 border-secondary/30 pl-3">
+            <RichContent
+              value={session.myNote.content}
+              className="prose-p:text-sm prose-p:text-on-surface-variant/70 prose-p:leading-relaxed line-clamp-3"
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );
@@ -134,13 +146,15 @@ export default function SessionListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Sessions</h1>
             <p className="text-on-surface-variant text-sm mt-1">Chronicle of all gathered sessions, newest first.</p>
           </div>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            <span className="font-label text-xs uppercase tracking-widest">New Session</span>
-          </button>
+          {isGm && (
+            <button
+              onClick={() => setAddOpen(true)}
+              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="font-label text-xs uppercase tracking-widest">New Session</span>
+            </button>
+          )}
         </div>
       </header>
 

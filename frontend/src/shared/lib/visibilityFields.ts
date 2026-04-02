@@ -37,8 +37,6 @@ export const LOCATION_BASIC_PRESET = ['description', 'image'];
 // ── Session ─────────────────────────────────────────────────────────────────
 
 export const SESSION_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
-  { key: 'number', label: 'Session number' },
-  { key: 'datetime', label: 'Date' },
   { key: 'brief', label: 'Brief' },
   { key: 'summary', label: 'Summary' },
   { key: 'npcs', label: 'Linked NPCs' },
@@ -46,4 +44,4 @@ export const SESSION_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
   { key: 'quests', label: 'Linked quests' },
 ];
 
-export const SESSION_BASIC_PRESET = ['number', 'datetime', 'brief'];
+export const SESSION_BASIC_PRESET = ['brief'];

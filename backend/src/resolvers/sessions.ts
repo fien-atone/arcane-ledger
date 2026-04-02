@@ -7,11 +7,9 @@ export const sessionResolvers = {
   Query: {
     sessions: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
       const role = await getCampaignRole(ctx, campaignId);
-      const where = role === 'PLAYER'
-        ? { campaignId, playerVisible: true as const }
-        : { campaignId };
-      const sessions = await ctx.prisma.session.findMany({ where, orderBy: { number: 'desc' } });
+      const sessions = await ctx.prisma.session.findMany({ where: { campaignId }, orderBy: { number: 'desc' } });
       if (role === 'PLAYER') {
+        // Sessions always visible (dates are planning info), but content is redacted
         return sessions.map((s) => redactEntity(s, s.playerVisibleFields, SESSION_FIELDS));
       }
       return sessions;
@@ -91,6 +89,23 @@ export const sessionResolvers = {
       return true;
     },
 
+    saveSessionNote: async (
+      _: unknown,
+      { sessionId, content }: { sessionId: string; content: string },
+      ctx: Context,
+    ) => {
+      if (!ctx.user) throw new Error('Not authenticated');
+      // Verify session exists and get campaignId for subscription event
+      const session = await ctx.prisma.session.findUniqueOrThrow({ where: { id: sessionId } });
+      const note = await ctx.prisma.sessionNote.upsert({
+        where: { sessionId_userId: { sessionId, userId: ctx.user.id } },
+        create: { sessionId, userId: ctx.user.id, content },
+        update: { content },
+      });
+      publishCampaignEvent(session.campaignId, 'SESSION_NOTE', note.id, 'UPDATED');
+      return note;
+    },
+
     setSessionVisibility: async (
       _: unknown,
       { campaignId, id, input }: { campaignId: string; id: string; input: { playerVisible: boolean; playerVisibleFields: string[] } },
@@ -141,7 +156,18 @@ export const sessionResolvers = {
         return [];
       }
       const links = await ctx.prisma.sessionQuest.findMany({ where: { sessionId: session.id }, include: { quest: true } });
+      // For players, filter out hidden quests
+      if (role === 'PLAYER') {
+        return links.filter((l) => l.quest.playerVisible).map((l) => l.quest);
+      }
       return links.map((l) => l.quest);
+    },
+
+    myNote: async (session: { id: string }, _: unknown, ctx: Context) => {
+      if (!ctx.user) return null;
+      return ctx.prisma.sessionNote.findUnique({
+        where: { sessionId_userId: { sessionId: session.id, userId: ctx.user.id } },
+      });
     },
   },
 };

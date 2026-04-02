@@ -27,6 +27,7 @@ model User {
   characters          PlayerCharacter[]
   invitationsReceived CampaignInvitation[] @relation("InvitedUser")
   invitationsSent     CampaignInvitation[] @relation("InvitedBy")
+  sessionNotes        SessionNote[]
 }
 
 // ── Campaigns ────────────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ model Session {
   npcLinks      SessionNPC[]
   locationLinks SessionLocation[]
   questLinks    SessionQuest[]
+  notes         SessionNote[]
 }
 
 model SessionNPC {
@@ -140,6 +142,18 @@ model SessionQuest {
   questId   String
 
   @@id([sessionId, questId])
+}
+
+model SessionNote {
+  id        String   @id @default(uuid())
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  content   String   @default("")
+  updatedAt DateTime @updatedAt
+
+  @@unique([sessionId, userId])
 }
 
 // ── NPCs ─────────────────────────────────────────────────────────────────────

@@ -11,5 +11,6 @@ export interface Session {
   questIds?: string[];
   playerVisible?: boolean;
   playerVisibleFields?: string[];
+  myNote?: { id: string; content: string; updatedAt: string };
   createdAt: string;
 }

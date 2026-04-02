@@ -20,6 +20,7 @@ const SESSIONS_QUERY = gql`
       npcs { id }
       locations { id }
       quests { id }
+      myNote { id content updatedAt }
     }
   }
 `;
@@ -53,6 +54,16 @@ const DELETE_SESSION = gql`
   }
 `;
 
+const SAVE_SESSION_NOTE = gql`
+  mutation SaveSessionNote($sessionId: ID!, $content: String!) {
+    saveSessionNote(sessionId: $sessionId, content: $content) {
+      id
+      content
+      updatedAt
+    }
+  }
+`;
+
 // ── Helpers ───────────────────────────────────────────────────────
 
 /** Map the GraphQL response (which has nested npc/location/quest objects) back
@@ -72,6 +83,7 @@ function mapSession(raw: any): Session {
     npcIds: raw.npcs?.map((n: any) => n.id),
     locationIds: raw.locations?.map((l: any) => l.id),
     questIds: raw.quests?.map((q: any) => q.id),
+    myNote: raw.myNote ?? undefined,
   };
 }
 
@@ -160,6 +172,19 @@ export const useDeleteSession = (campaignId: string) => {
       deleteSession({
         variables: { campaignId, id },
       }).then(() => options?.onSuccess?.());
+    },
+    isPending: loading,
+  };
+};
+
+export const useSessionNote = (campaignId: string) => {
+  const [saveNote, { loading }] = useMutation(SAVE_SESSION_NOTE, {
+    refetchQueries: [{ query: SESSIONS_QUERY, variables: { campaignId } }],
+  });
+
+  return {
+    mutate: (sessionId: string, content: string) => {
+      saveNote({ variables: { sessionId, content } });
     },
     isPending: loading,
   };

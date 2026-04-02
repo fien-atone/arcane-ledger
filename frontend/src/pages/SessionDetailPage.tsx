@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useSessions, useSaveSession, useDeleteSession, useSetSessionVisibility } from '@/features/sessions/api/queries';
+import { useSessions, useSaveSession, useDeleteSession, useSetSessionVisibility, useSessionNote } from '@/features/sessions/api/queries';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { SESSION_VISIBILITY_FIELDS, SESSION_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useQuests } from '@/features/quests/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
-import { BackLink, LocationIcon, InlineRichField, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { BackLink, LocationIcon, InlineRichField, RichContent, SectionDisabled, VisibilityPanel } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { QuestStatus } from '@/entities/quest';
@@ -89,6 +89,7 @@ export default function SessionDetailPage() {
   const saveSession = useSaveSession(campaignId ?? '');
   const deleteSession = useDeleteSession(campaignId ?? '');
   const setSessionVisibility = useSetSessionVisibility();
+  const sessionNote = useSessionNote(campaignId ?? '');
   const navigate = useNavigate();
 
   const [npcSearch, setNpcSearch] = useState('');
@@ -237,23 +238,61 @@ export default function SessionDetailPage() {
               </h1>
             </header>
 
-            {/* Brief — public description, inline editable */}
-            <InlineRichField
-              label="Brief"
-              value={session.brief}
-              onSave={(html) => saveField('brief', html)}
-              placeholder="Public session brief — what the players know…"
-            />
+            {/* Brief — editable for GM, read-only for players */}
+            {isGm ? (
+              <InlineRichField
+                label="Brief"
+                value={session.brief}
+                onSave={(html) => saveField('brief', html)}
+                placeholder="Public session brief — what the players know…"
+              />
+            ) : session.brief ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Brief</h2>
+                  <div className="h-px flex-1 bg-outline-variant/20" />
+                </div>
+                <RichContent value={session.brief} className="prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1" />
+              </div>
+            ) : null}
 
-            {/* Summary — GM only, inline editable */}
-            {isGm && (
+            {/* Summary — editable for GM, read-only for players */}
+            {isGm ? (
               <InlineRichField
                 label="GM Notes"
                 value={session.summary}
                 onSave={(html) => saveField('summary', html)}
                 isGmNotes
               />
-            )}
+            ) : session.summary ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Summary</h2>
+                  <div className="h-px flex-1 bg-outline-variant/20" />
+                </div>
+                <RichContent value={session.summary} className="prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1" />
+              </div>
+            ) : null}
+
+            {/* My Notes — personal notes, editable for all users */}
+            <section className="bg-surface-container-low/50 p-6 border border-secondary/15 rounded-sm relative overflow-hidden group/section">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/section:opacity-10 transition-opacity pointer-events-none">
+                <span className="material-symbols-outlined text-5xl text-secondary">edit_note</span>
+              </div>
+              <div className="relative z-10 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary text-sm">edit_note</span>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-secondary">My Notes</h3>
+                  <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 border border-outline-variant/15 px-1.5 py-0.5 rounded-full">Private</span>
+                </div>
+                <InlineRichField
+                  label=""
+                  value={session.myNote?.content}
+                  onSave={(html) => sessionNote.mutate(session.id, html)}
+                  placeholder="Add your personal notes for this session…"
+                />
+              </div>
+            </section>
 
             {/* Prev / next navigation */}
             <div className="flex items-center justify-between pt-8 border-t border-outline-variant/10">
@@ -322,16 +361,18 @@ export default function SessionDetailPage() {
                       NPCs
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
-                    <button
-                      onClick={() => { setNpcSearchOpen((v) => !v); setNpcSearch(''); }}
-                      className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[13px]">person_add</span>
-                      Add
-                    </button>
+                    {isGm && (
+                      <button
+                        onClick={() => { setNpcSearchOpen((v) => !v); setNpcSearch(''); }}
+                        className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">person_add</span>
+                        Add
+                      </button>
+                    )}
                   </div>
 
-                  {npcSearchOpen && (
+                  {isGm && npcSearchOpen && (
                     <div className="border border-outline-variant/20 bg-surface-container-low">
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
@@ -380,7 +421,7 @@ export default function SessionDetailPage() {
                                 </div>
                                 <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                               </Link>
-                              {confirmRemoveNpcId === npc.id ? (
+                              {isGm && (confirmRemoveNpcId === npc.id ? (
                                 <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                                   <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
                                   <button onClick={() => removeNpc(npc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
@@ -391,7 +432,7 @@ export default function SessionDetailPage() {
                                   className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                                   <span className="material-symbols-outlined text-[14px]">person_remove</span>
                                 </button>
-                              )}
+                              ))}
                             </div>
                           </div>
                         );
@@ -431,16 +472,18 @@ export default function SessionDetailPage() {
                       Locations
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
-                    <button
-                      onClick={() => { setLocSearchOpen((v) => !v); setLocSearch(''); }}
-                      className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[13px]">add_location</span>
-                      Add
-                    </button>
+                    {isGm && (
+                      <button
+                        onClick={() => { setLocSearchOpen((v) => !v); setLocSearch(''); }}
+                        className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">add_location</span>
+                        Add
+                      </button>
+                    )}
                   </div>
 
-                  {locSearchOpen && (
+                  {isGm && locSearchOpen && (
                     <div className="border border-outline-variant/20 bg-surface-container-low">
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
@@ -476,7 +519,7 @@ export default function SessionDetailPage() {
                               <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate flex-1">{loc.name}</p>
                               <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                             </Link>
-                            {confirmRemoveLocId === loc.id ? (
+                            {isGm && (confirmRemoveLocId === loc.id ? (
                               <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                                 <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
                                 <button onClick={() => removeLoc(loc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
@@ -487,7 +530,7 @@ export default function SessionDetailPage() {
                                 className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                                 <span className="material-symbols-outlined text-[14px]">close</span>
                               </button>
-                            )}
+                            ))}
                           </div>
                         </div>
                       ))}
@@ -526,16 +569,18 @@ export default function SessionDetailPage() {
                       Quests
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
-                    <button
-                      onClick={() => { setQuestSearchOpen((v) => !v); setQuestSearch(''); }}
-                      className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[13px]">add_task</span>
-                      Add
-                    </button>
+                    {isGm && (
+                      <button
+                        onClick={() => { setQuestSearchOpen((v) => !v); setQuestSearch(''); }}
+                        className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">add_task</span>
+                        Add
+                      </button>
+                    )}
                   </div>
 
-                  {questSearchOpen && (
+                  {isGm && questSearchOpen && (
                     <div className="border border-outline-variant/20 bg-surface-container-low">
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
@@ -577,7 +622,7 @@ export default function SessionDetailPage() {
                               </span>
                               <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                             </Link>
-                            {confirmRemoveQuestId === quest.id ? (
+                            {isGm && (confirmRemoveQuestId === quest.id ? (
                               <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                                 <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
                                 <button onClick={() => removeQuest(quest.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
@@ -588,7 +633,7 @@ export default function SessionDetailPage() {
                                 className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                                 <span className="material-symbols-outlined text-[14px]">close</span>
                               </button>
-                            )}
+                            ))}
                           </div>
                         </div>
                       ))}
@@ -605,6 +650,7 @@ export default function SessionDetailPage() {
                 playerVisibleFields={session.playerVisibleFields ?? []}
                 fields={SESSION_VISIBILITY_FIELDS}
                 basicPreset={SESSION_BASIC_PRESET}
+                autoVisibleLabels={['Session #', 'Date']}
                 onToggleVisible={(v) => setSessionVisibility.mutate({
                   campaignId: campaignId!, id: session.id,
                   playerVisible: v, playerVisibleFields: session.playerVisibleFields ?? [],

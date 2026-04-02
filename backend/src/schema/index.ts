@@ -72,6 +72,14 @@ export const typeDefs = `#graphql
 
   # ── Session ────────────────────────────────────────────────
 
+  type SessionNote {
+    id: ID!
+    sessionId: ID!
+    userId: ID!
+    content: String!
+    updatedAt: String!
+  }
+
   type Session {
     id: ID!
     campaignId: ID!
@@ -86,6 +94,7 @@ export const typeDefs = `#graphql
     npcs: [NPC!]!
     locations: [Location!]!
     quests: [Quest!]!
+    myNote: SessionNote
   }
 
   # ── NPC ────────────────────────────────────────────────────
@@ -510,6 +519,9 @@ export const typeDefs = `#graphql
     respondToInvitation(id: ID!, accept: Boolean!): CampaignInvitation!
     assignCharacterToPlayer(characterId: ID!, userId: ID): PlayerCharacter!
     removeCampaignMember(campaignId: ID!, userId: ID!): Boolean!
+
+    # Session Notes
+    saveSessionNote(sessionId: ID!, content: String!): SessionNote!
 
     # NPC sub-entities
     addNPCLocationPresence(npcId: ID!, locationId: ID!, note: String): NPC!
