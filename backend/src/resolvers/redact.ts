@@ -11,15 +11,18 @@ export interface EntityFieldDefs {
   alwaysVisible: string[];
   shareable: string[];
   neverVisible: string[];
+  /** Fields that are GraphQL enums — must be nulled (not emptied to "") when hidden */
+  enumFields?: string[];
 }
 
 export const NPC_FIELDS: EntityFieldDefs = {
-  alwaysVisible: ['id', 'campaignId', 'name', 'createdAt', 'updatedAt', 'playerVisible', 'playerVisibleFields'],
+  alwaysVisible: ['id', 'campaignId', 'name', 'status', 'createdAt', 'updatedAt', 'playerVisible', 'playerVisibleFields'],
   shareable: [
-    'aliases', 'status', 'gender', 'age', 'species', 'speciesId',
+    'aliases', 'gender', 'age', 'species', 'speciesId',
     'appearance', 'personality', 'description', 'motivation', 'flaws', 'image',
   ],
   neverVisible: ['gmNotes'],
+  enumFields: ['status', 'gender'],
 };
 
 export const LOCATION_FIELDS: EntityFieldDefs = {
@@ -35,6 +38,13 @@ export const QUEST_FIELDS: EntityFieldDefs = {
   alwaysVisible: ['id', 'campaignId', 'title', 'status', 'createdAt', 'playerVisible', 'playerVisibleFields'],
   shareable: ['description', 'reward', 'giverId'],
   neverVisible: ['notes'],
+  enumFields: ['status'],
+};
+
+export const GROUP_FIELDS: EntityFieldDefs = {
+  alwaysVisible: ['id', 'campaignId', 'name', 'type', 'createdAt', 'updatedAt', 'playerVisible', 'playerVisibleFields'],
+  shareable: ['aliases', 'description', 'goals', 'symbols', 'partyRelation'],
+  neverVisible: ['gmNotes'],
 };
 
 export const SESSION_FIELDS: EntityFieldDefs = {
@@ -69,14 +79,15 @@ export function redactEntity<T extends Record<string, unknown>>(
   fieldDefs: EntityFieldDefs,
 ): T {
   const result = { ...entity };
+  const enumSet = new Set(fieldDefs.enumFields ?? []);
   for (const key of Object.keys(result)) {
     if (fieldDefs.alwaysVisible.includes(key)) continue;
     if (fieldDefs.neverVisible.includes(key)) {
-      (result as Record<string, unknown>)[key] = emptyValue(result[key]);
+      (result as Record<string, unknown>)[key] = enumSet.has(key) ? null : emptyValue(result[key]);
       continue;
     }
     if (!visibleFields.includes(key)) {
-      (result as Record<string, unknown>)[key] = emptyValue(result[key]);
+      (result as Record<string, unknown>)[key] = enumSet.has(key) ? null : emptyValue(result[key]);
     }
   }
   return result;

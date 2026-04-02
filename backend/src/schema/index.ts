@@ -206,6 +206,8 @@ export const typeDefs = `#graphql
     partyRelation: String
     createdAt: String!
     updatedAt: String!
+    playerVisible: Boolean!
+    playerVisibleFields: [String!]!
     members: [NPCGroupMembership!]!
   }
 
@@ -536,6 +538,7 @@ export const typeDefs = `#graphql
     setLocationVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Location!
     setSessionVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Session!
     setQuestVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Quest!
+    setGroupVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Group!
 
     # Character sub-entities
     addCharacterGroupMembership(characterId: ID!, groupId: ID!, relation: String, subfaction: String): PlayerCharacter!

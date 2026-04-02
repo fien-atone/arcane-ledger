@@ -8,6 +8,8 @@ export interface Group {
   goals?: string;
   symbols?: string;
   gmNotes?: string;
+  playerVisible?: boolean;
+  playerVisibleFields?: string[];
   createdAt: string;
   updatedAt: string;
 }

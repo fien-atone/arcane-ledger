@@ -1,1 +1,1 @@
-export { useGroups, useGroup, useSaveGroup, useDeleteGroup } from './queries';
+export { useGroups, useGroup, useSaveGroup, useDeleteGroup, useSetGroupVisibility } from './queries';

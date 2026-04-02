@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useGroup, useSaveGroup, useDeleteGroup } from '@/features/groups/api';
+import { useGroup, useSaveGroup, useDeleteGroup, useSetGroupVisibility } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs, useAddNPCGroupMembership, useRemoveNPCGroupMembership } from '@/features/npcs/api/queries';
 import { useParty, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
-import { BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
+import { BackLink, InlineRichField, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { GROUP_VISIBILITY_FIELDS, GROUP_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import type { NPC, NpcStatus } from '@/entities/npc';
 import type { Group } from '@/entities/group';
 
@@ -120,7 +121,6 @@ export default function GroupDetailPage() {
   const { id: campaignId, groupId } = useParams<{ id: string; groupId: string }>();
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
-  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: group, isLoading, isError } = useGroup(campaignId ?? '', groupId ?? '');
@@ -132,6 +132,7 @@ export default function GroupDetailPage() {
   const removeCharMembership = useRemoveCharacterGroupMembership();
   const saveGroup = useSaveGroup();
   const deleteGroup = useDeleteGroup();
+  const setGroupVisibility = useSetGroupVisibility();
   const navigate = useNavigate();
 
   const [editOpen, setEditOpen] = useState(false);
@@ -222,6 +223,7 @@ export default function GroupDetailPage() {
               value={group.description}
               onSave={(html) => saveField('description', html)}
               placeholder="Describe this group…"
+              readOnly={!isGm}
             />
 
             {/* Goals — edit in place */}
@@ -230,6 +232,7 @@ export default function GroupDetailPage() {
               value={group.goals}
               onSave={(html) => saveField('goals', html)}
               placeholder="What are their objectives…"
+              readOnly={!isGm}
             />
 
             {/* Symbols — edit in place */}
@@ -238,6 +241,7 @@ export default function GroupDetailPage() {
               value={group.symbols}
               onSave={(html) => saveField('symbols', html)}
               placeholder="Banners, colours, insignia…"
+              readOnly={!isGm}
             />
 
             {/* GM Notes — edit in place, GM only */}
@@ -251,17 +255,18 @@ export default function GroupDetailPage() {
             )}
 
             {/* Members */}
-            {npcsEnabled && (
             <section className="space-y-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Members</h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 {(members.length + charMembers.length) > 0 && <span className="text-xs font-bold text-on-surface-variant/40">{members.length + charMembers.length}</span>}
-                <button onClick={() => setAddMemberOpen(true)}
-                  className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
-                  <span className="material-symbols-outlined text-[13px]">person_add</span>
-                  Add
-                </button>
+                {isGm && (
+                  <button onClick={() => setAddMemberOpen(true)}
+                    className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
+                    <span className="material-symbols-outlined text-[13px]">person_add</span>
+                    Add
+                  </button>
+                )}
               </div>
               {members.length === 0 && charMembers.length === 0 ? (
                 <p className="text-sm text-on-surface-variant/40 italic">No members yet.</p>
@@ -287,7 +292,7 @@ export default function GroupDetailPage() {
                             </p>
                           </div>
                         </Link>
-                        {confirmRemoveId === npc.id ? (
+                        {isGm && (confirmRemoveId === npc.id ? (
                           <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5 flex-shrink-0">
                             <span className="text-[10px] text-on-surface-variant">Remove?</span>
                             <button onClick={() => { handleRemoveMember(npc); setConfirmRemoveId(null); }}
@@ -300,7 +305,7 @@ export default function GroupDetailPage() {
                             className="flex-shrink-0 opacity-0 group-hover/card:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all">
                             <span className="material-symbols-outlined text-[16px]">person_remove</span>
                           </button>
-                        )}
+                        ))}
                       </div>
                     );
                   })}
@@ -323,7 +328,7 @@ export default function GroupDetailPage() {
                             </p>
                           </div>
                         </Link>
-                        {confirmRemoveCharId === char.id ? (
+                        {isGm && (confirmRemoveCharId === char.id ? (
                           <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5 flex-shrink-0">
                             <span className="text-[10px] text-on-surface-variant">Remove?</span>
                             <button onClick={() => { removeCharMembership.mutate({ characterId: char.id, groupId: groupId! }); setConfirmRemoveCharId(null); }}
@@ -336,14 +341,13 @@ export default function GroupDetailPage() {
                             className="flex-shrink-0 opacity-0 group-hover/card:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all">
                             <span className="material-symbols-outlined text-[16px]">person_remove</span>
                           </button>
-                        )}
+                        ))}
                       </div>
                     );
                   })}
                 </div>
               )}
             </section>
-            )}
           </div>
 
           {/* ��─ Right column (35%) ────────────────────────��─────── */}
@@ -370,6 +374,34 @@ export default function GroupDetailPage() {
                   Edit Group
                 </button>
               </div>
+            )}
+
+            {/* Player Visibility */}
+            {isGm && group && (
+              <VisibilityPanel
+                playerVisible={group.playerVisible ?? false}
+                playerVisibleFields={group.playerVisibleFields ?? []}
+                fields={GROUP_VISIBILITY_FIELDS}
+                basicPreset={GROUP_BASIC_PRESET}
+                onToggleVisible={(v) => setGroupVisibility.mutate({
+                  campaignId: campaignId!, id: group.id,
+                  playerVisible: v, playerVisibleFields: group.playerVisibleFields ?? [],
+                })}
+                onToggleField={(f, on) => {
+                  const fields = on
+                    ? [...(group.playerVisibleFields ?? []), f]
+                    : (group.playerVisibleFields ?? []).filter((x) => x !== f);
+                  setGroupVisibility.mutate({
+                    campaignId: campaignId!, id: group.id,
+                    playerVisible: group.playerVisible ?? false, playerVisibleFields: fields,
+                  });
+                }}
+                onSetPreset={(fields) => setGroupVisibility.mutate({
+                  campaignId: campaignId!, id: group.id,
+                  playerVisible: group.playerVisible ?? false, playerVisibleFields: fields,
+                })}
+                isPending={setGroupVisibility.isPending}
+              />
             )}
           </div>
 

@@ -1,13 +1,14 @@
 import type { Context } from '../context.js';
 import { publishCampaignEvent } from '../publish.js';
 import { getCampaignRole } from './utils.js';
+import { redactEntity, GROUP_FIELDS } from './redact.js';
 
 export const groupResolvers = {
   Query: {
     groups: async (_: unknown, { campaignId, search, type }: { campaignId: string; search?: string; type?: string }, ctx: Context) => {
       const role = await getCampaignRole(ctx, campaignId);
       const isPlayer = role === 'PLAYER';
-      return ctx.prisma.group.findMany({
+      const groups = await ctx.prisma.group.findMany({
         where: {
           campaignId,
           ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
@@ -16,10 +17,23 @@ export const groupResolvers = {
         },
         orderBy: { name: 'asc' },
       });
+      if (isPlayer) {
+        return groups.map((g) => redactEntity(g, g.playerVisibleFields, GROUP_FIELDS));
+      }
+      return groups;
     },
 
-    group: (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) =>
-      prisma.group.findFirst({ where: { id, campaignId } }),
+    group: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      const isPlayer = role === 'PLAYER';
+      const group = await ctx.prisma.group.findFirst({ where: { id, campaignId } });
+      if (!group) return null;
+      if (isPlayer && !group.playerVisible) return null;
+      if (isPlayer) {
+        return redactEntity(group, group.playerVisibleFields, GROUP_FIELDS);
+      }
+      return group;
+    },
   },
 
   Mutation: {
@@ -54,10 +68,28 @@ export const groupResolvers = {
       publishCampaignEvent(campaignId, 'GROUP', id, 'DELETED');
       return true;
     },
+
+    setGroupVisibility: async (
+      _: unknown,
+      { campaignId, id, input }: { campaignId: string; id: string; input: { playerVisible: boolean; playerVisibleFields: string[] } },
+      ctx: Context,
+    ) => {
+      const role = await getCampaignRole(ctx, campaignId);
+      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      const result = await ctx.prisma.group.update({
+        where: { id },
+        data: {
+          playerVisible: input.playerVisible,
+          playerVisibleFields: input.playerVisibleFields,
+        },
+      });
+      publishCampaignEvent(campaignId, 'GROUP', result.id, 'UPDATED');
+      return result;
+    },
   },
 
   Group: {
     members: (group: { id: string }, _: unknown, { prisma }: Context) =>
-      prisma.nPCGroupMembership.findMany({ where: { groupId: group.id }, include: { npc: true } }),
+      prisma.nPCGroupMembership.findMany({ where: { groupId: group.id } }),
   },
 };

@@ -8,7 +8,8 @@ const GROUPS_QUERY = gql`
   query Groups($campaignId: ID!, $search: String, $type: String) {
     groups(campaignId: $campaignId, search: $search, type: $type) {
       id campaignId name type aliases description goals symbols
-      gmNotes  createdAt updatedAt
+      gmNotes playerVisible playerVisibleFields
+      createdAt updatedAt
       members { groupId relation subfaction }
     }
   }
@@ -18,7 +19,8 @@ const GROUP_QUERY = gql`
   query Group($campaignId: ID!, $id: ID!) {
     group(campaignId: $campaignId, id: $id) {
       id campaignId name type aliases description goals symbols
-      gmNotes  createdAt updatedAt
+      gmNotes playerVisible playerVisibleFields
+      createdAt updatedAt
       members { groupId relation subfaction }
     }
   }
@@ -35,11 +37,29 @@ const SAVE_GROUP = gql`
   }
 `;
 
+const SET_GROUP_VISIBILITY = gql`
+  mutation SetGroupVisibility($campaignId: ID!, $id: ID!, $input: SetEntityVisibilityInput!) {
+    setGroupVisibility(campaignId: $campaignId, id: $id, input: $input) {
+      id playerVisible playerVisibleFields
+    }
+  }
+`;
+
 const DELETE_GROUP = gql`
   mutation DeleteGroup($campaignId: ID!, $id: ID!) {
     deleteGroup(campaignId: $campaignId, id: $id)
   }
 `;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function mapGroup(raw: any): Group {
+  return {
+    ...raw,
+    playerVisible: raw.playerVisible ?? false,
+    playerVisibleFields: raw.playerVisibleFields ?? [],
+  };
+}
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
@@ -48,7 +68,7 @@ export const useGroups = (campaignId: string, opts?: { search?: string; type?: s
     variables: { campaignId, search: opts?.search?.trim() || null, type: opts?.type || null },
     fetchPolicy: 'cache-and-network',
   });
-  return { data: data?.groups as Group[] | undefined, isLoading: loading, isError: !!error, error };
+  return { data: data?.groups?.map(mapGroup) as Group[] | undefined, isLoading: loading, isError: !!error, error };
 };
 
 export const useGroup = (campaignId: string, groupId: string) => {
@@ -56,7 +76,7 @@ export const useGroup = (campaignId: string, groupId: string) => {
     variables: { campaignId, id: groupId },
     skip: !groupId,
   });
-  return { data: data?.group as Group | undefined, isLoading: loading, isError: !!error, error };
+  return { data: data?.group ? mapGroup(data.group) as Group : undefined, isLoading: loading, isError: !!error, error };
 };
 
 export const useSaveGroup = () => {
@@ -98,5 +118,24 @@ export const useDeleteGroup = () => {
     isLoading: loading,
     isPending: loading,
     isError: !!error,
+  };
+};
+
+export const useSetGroupVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_GROUP_VISIBILITY);
+  return {
+    mutate: (
+      vars: { campaignId: string; id: string; playerVisible: boolean; playerVisibleFields: string[] },
+    ) => {
+      execute({
+        variables: {
+          campaignId: vars.campaignId,
+          id: vars.id,
+          input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
+        },
+        refetchQueries: 'active',
+      });
+    },
+    isPending: loading,
   };
 };

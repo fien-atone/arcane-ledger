@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useGroups } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
 import { RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
@@ -70,9 +70,10 @@ function GroupPreview({ group, memberCount, groupTypes, typesEnabled }: {
 
 export default function GroupListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
-  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
 
@@ -97,7 +98,7 @@ export default function GroupListPage() {
   }
 
   const getMemberCount = (groupId: string) =>
-    npcsEnabled ? (allNpcs?.filter((n) => n.groupMemberships.some((m) => m.groupId === groupId)).length ?? 0) : 0;
+    (allNpcs?.filter((n) => n.groupMemberships.some((m) => m.groupId === groupId)).length ?? 0);
 
   const typeFilterItems: Array<{ value: string; label: string }> = groupTypesEnabled ? [
     { value: 'all', label: 'All' },
@@ -112,13 +113,15 @@ export default function GroupListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Groups</h1>
             <p className="text-on-surface-variant text-sm mt-1">Factions, guilds, families, and other social structures.</p>
           </div>
-          <button
-            onClick={() => { setEditingGroup(undefined); setAddOpen(true); }}
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            <span className="font-label text-xs uppercase tracking-widest">Add Group</span>
-          </button>
+          {isGm && (
+            <button
+              onClick={() => { setEditingGroup(undefined); setAddOpen(true); }}
+              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="font-label text-xs uppercase tracking-widest">Add Group</span>
+            </button>
+          )}
         </div>
       </header>
 

@@ -133,7 +133,9 @@ export function InlineRichField({ label, value, onSave, isGmNotes, placeholder =
         ${readOnly ? '' : 'cursor-text group/prose hover:prose-p:text-on-surface'} transition-colors`}
       dangerouslySetInnerHTML={{ __html: value }}
     />
-  ) : readOnly ? null : (
+  ) : readOnly ? (
+    <p className="text-xs text-on-surface-variant/30 italic">{placeholder}</p>
+  ) : (
     <button
       onClick={() => setIsEditing(true)}
       className="w-full flex items-center justify-between py-3 px-4 border border-dashed border-outline-variant/20 rounded-sm hover:border-primary/30 hover:bg-primary/3 transition-all group/empty"

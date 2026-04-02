@@ -7,7 +7,6 @@ export interface VisibilityFieldDef {
 
 export const NPC_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
   { key: 'aliases', label: 'Aliases' },
-  { key: 'status', label: 'Status' },
   { key: 'gender', label: 'Gender' },
   { key: 'age', label: 'Age' },
   { key: 'species', label: 'Species' },
@@ -22,7 +21,7 @@ export const NPC_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
   { key: 'questsGiven', label: 'Quests given' },
 ];
 
-export const NPC_BASIC_PRESET = ['aliases', 'status', 'species', 'description', 'image'];
+export const NPC_BASIC_PRESET = ['aliases', 'species', 'description', 'image'];
 
 // ── Location ────────────────────────────────────────────────────────────────
 
@@ -43,6 +42,17 @@ export const QUEST_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
 ];
 
 export const QUEST_BASIC_PRESET = ['description'];
+
+// ── Group ──────────────────────────────────────────────────────────────────
+
+export const GROUP_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
+  { key: 'description', label: 'Description' },
+  { key: 'goals', label: 'Goals' },
+  { key: 'symbols', label: 'Symbols' },
+  { key: 'aliases', label: 'Aliases' },
+];
+
+export const GROUP_BASIC_PRESET = ['description'];
 
 // ── Session ─────────────────────────────────────────────────────────────────
 

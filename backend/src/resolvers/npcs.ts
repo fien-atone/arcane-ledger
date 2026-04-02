@@ -159,12 +159,14 @@ export const npcResolvers = {
       }
       return presences;
     },
-    groupMemberships: async (npc: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+    groupMemberships: async (npc: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
+      const memberships = await ctx.prisma.nPCGroupMembership.findMany({ where: { npcId: npc.id }, include: { group: true } });
       const role = await getCampaignRole(ctx, npc.campaignId);
-      if (role === 'PLAYER' && !(npc.playerVisibleFields ?? []).includes('groupMemberships')) {
-        return [];
+      // For players, only show memberships in visible groups
+      if (role === 'PLAYER') {
+        return memberships.filter((m) => m.group.playerVisible);
       }
-      return ctx.prisma.nPCGroupMembership.findMany({ where: { npcId: npc.id }, include: { group: true } });
+      return memberships;
     },
     sessions: async (npc: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
       const role = await getCampaignRole(ctx, npc.campaignId);
