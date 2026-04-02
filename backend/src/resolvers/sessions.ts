@@ -125,11 +125,8 @@ export const sessionResolvers = {
   },
 
   Session: {
-    npcs: async (session: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+    npcs: async (session: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
       const role = await getCampaignRole(ctx, session.campaignId);
-      if (role === 'PLAYER' && !(session.playerVisibleFields ?? []).includes('npcs')) {
-        return [];
-      }
       const links = await ctx.prisma.sessionNPC.findMany({ where: { sessionId: session.id }, include: { npc: true } });
       // For players, filter out hidden NPCs
       if (role === 'PLAYER') {
@@ -137,25 +134,17 @@ export const sessionResolvers = {
       }
       return links.map((l) => l.npc);
     },
-    locations: async (session: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+    locations: async (session: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
       const role = await getCampaignRole(ctx, session.campaignId);
-      if (role === 'PLAYER' && !(session.playerVisibleFields ?? []).includes('locations')) {
-        return [];
-      }
       const links = await ctx.prisma.sessionLocation.findMany({ where: { sessionId: session.id }, include: { location: true } });
-      // For players, filter out hidden locations
       if (role === 'PLAYER') {
         return links.filter((l) => l.location.playerVisible).map((l) => l.location);
       }
       return links.map((l) => l.location);
     },
-    quests: async (session: { id: string; campaignId: string; playerVisibleFields?: string[] }, _: unknown, ctx: Context) => {
+    quests: async (session: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
       const role = await getCampaignRole(ctx, session.campaignId);
-      if (role === 'PLAYER' && !(session.playerVisibleFields ?? []).includes('quests')) {
-        return [];
-      }
       const links = await ctx.prisma.sessionQuest.findMany({ where: { sessionId: session.id }, include: { quest: true } });
-      // For players, filter out hidden quests
       if (role === 'PLAYER') {
         return links.filter((l) => l.quest.playerVisible).map((l) => l.quest);
       }
