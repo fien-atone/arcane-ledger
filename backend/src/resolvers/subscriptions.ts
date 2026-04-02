@@ -13,5 +13,8 @@ export const subscriptionResolvers = {
       subscribe: (_: unknown, { userId }: { userId: string }) =>
         pubsub.asyncIterableIterator(`USER_EVENT:${userId}`),
     },
+    usersChanged: {
+      subscribe: () => pubsub.asyncIterableIterator('USERS_CHANGED'),
+    },
   },
 };

@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useQuery, useMutation, useSubscription, useApolloClient } from '@apollo/client/react';
 import type { User } from '@/entities/user';
 
 // ── Queries ──────────────────────────────────────────────────────────────────
@@ -17,10 +17,22 @@ const ADMIN_USERS = gql`
   }
 `;
 
+const USERS_CHANGED_SUBSCRIPTION = gql`
+  subscription UsersChanged {
+    usersChanged
+  }
+`;
+
 export function useAdminUsers(search?: string) {
+  const client = useApolloClient();
   const { data, loading, error, refetch } = useQuery<any>(ADMIN_USERS, {
     variables: { search: search || undefined },
     fetchPolicy: 'cache-and-network',
+  });
+  useSubscription(USERS_CHANGED_SUBSCRIPTION, {
+    onData: () => {
+      client.refetchQueries({ include: ['AdminUsers'] }).catch(() => {});
+    },
   });
   return { data: data?.adminUsers as User[] | undefined, isLoading: loading, isError: !!error, refetch };
 }

@@ -55,6 +55,14 @@ export function Topbar() {
               <p className="text-on-surface text-sm font-medium">{user?.name}</p>
               <p className="text-on-surface-variant text-xs truncate">{user?.email}</p>
             </div>
+            <Link
+              to="/profile"
+              onClick={() => setAvatarOpen(false)}
+              className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-base">person</span>
+              Profile
+            </Link>
             {user?.systemRole === 'admin' && (
               <Link
                 to="/admin/users"

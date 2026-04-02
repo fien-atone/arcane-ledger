@@ -465,6 +465,8 @@ export const typeDefs = `#graphql
   type Mutation {
     # Auth
     login(email: String!, password: String!): AuthPayload!
+    updateProfile(name: String!): User!
+    changePassword(currentPassword: String!, newPassword: String!, confirmPassword: String!): Boolean!
 
     # Campaigns
     createCampaign(title: String!, description: String): Campaign!
@@ -575,5 +577,6 @@ export const typeDefs = `#graphql
     campaignEvent(campaignId: ID!): CampaignEvent!
     campaignsChanged: CampaignEvent!
     userEvent(userId: ID!): UserEvent!
+    usersChanged: Boolean!
   }
 `;

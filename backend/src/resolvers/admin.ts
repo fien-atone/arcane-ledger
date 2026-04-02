@@ -2,6 +2,11 @@ import type { Context } from '../context.js';
 import bcrypt from 'bcryptjs';
 import { GraphQLError } from 'graphql';
 import { requireAdmin } from './utils.js';
+import { pubsub } from '../pubsub.js';
+
+function notifyUsersChanged() {
+  try { pubsub.publish('USERS_CHANGED', { usersChanged: true }); } catch { /* ignore */ }
+}
 
 interface AdminCreateUserInput {
   name: string;
@@ -54,7 +59,7 @@ export const adminResolvers = {
       const role = input.role ? input.role.toUpperCase() : 'USER';
 
       try {
-        return await prisma.user.create({
+        const result = await prisma.user.create({
           data: {
             email: input.email,
             name: input.name,
@@ -62,6 +67,8 @@ export const adminResolvers = {
             role: role as 'ADMIN' | 'USER',
           },
         });
+        notifyUsersChanged();
+        return result;
       } catch (err: unknown) {
         if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
           throw new GraphQLError('A user with this email already exists', {
@@ -95,7 +102,9 @@ export const adminResolvers = {
       }
 
       try {
-        return await prisma.user.update({ where: { id }, data });
+        const result = await prisma.user.update({ where: { id }, data });
+        notifyUsersChanged();
+        return result;
       } catch (err: unknown) {
         if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
           throw new GraphQLError('A user with this email already exists', {
@@ -120,6 +129,7 @@ export const adminResolvers = {
       }
 
       await prisma.user.delete({ where: { id } });
+      notifyUsersChanged();
       return true;
     },
   },

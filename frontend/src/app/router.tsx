@@ -27,6 +27,7 @@ const GroupTypesPage = lazy(() => import('@/pages/GroupTypesPage'));
 const SpeciesTypesPage = lazy(() => import('@/pages/SpeciesTypesPage'));
 const LocationTypesPage = lazy(() => import('@/pages/LocationTypesPage'));
 const SocialGraphPage = lazy(() => import('@/pages/SocialGraphPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const AdminUsersPage = lazy(() => import('@/pages/AdminUsersPage'));
 
 const Fallback = () => (
@@ -52,11 +53,12 @@ export const router = createBrowserRouter(
     {
       element: <ProtectedRoute />,
       children: [
-        // Campaigns list — with Topbar
+        // Campaigns list + Profile — with Topbar
         {
           element: <AppLayout />,
           children: [
             { path: '/campaigns', element: withSuspense(CampaignsPage) },
+            { path: '/profile', element: withSuspense(ProfilePage) },
           ],
         },
         // Admin routes — with Topbar, no Sidebar

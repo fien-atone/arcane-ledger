@@ -30,6 +30,7 @@ interface AuthState {
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  updateUser: (patch: Partial<Pick<AuthUser, 'name'>>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -75,6 +76,12 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem('auth_token');
         apolloClient.clearStore();
         set({ user: null });
+      },
+
+      updateUser: (patch) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, ...patch } : null,
+        }));
       },
 
     }),
