@@ -17,9 +17,9 @@ const SESSIONS_QUERY = gql`
       playerVisible
       playerVisibleFields
       createdAt
-      npcs { id }
-      locations { id }
-      quests { id }
+      npcs { id name status species image }
+      locations { id name type }
+      quests { id title status }
       myNote { id content updatedAt }
     }
   }
@@ -83,6 +83,9 @@ function mapSession(raw: any): Session {
     npcIds: raw.npcs?.map((n: any) => n.id),
     locationIds: raw.locations?.map((l: any) => l.id),
     questIds: raw.quests?.map((q: any) => q.id),
+    npcs: raw.npcs ?? [],
+    locations: raw.locations ?? [],
+    quests: raw.quests ?? [],
     myNote: raw.myNote ?? undefined,
   };
 }

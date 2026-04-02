@@ -310,10 +310,7 @@ export default function SessionDetailPage() {
             {/* NPCs in this session */}
             {(() => {
               const npcIds = session.npcIds ?? [];
-              const linked = npcIds
-                .map((id) => allNpcs?.find((n) => n.id === id))
-                .filter(Boolean) as NonNullable<typeof allNpcs>[number][];
-              linked.sort((a, b) => a.name.localeCompare(b.name));
+              const linked = [...(session.npcs ?? [])].sort((a, b) => a.name.localeCompare(b.name));
 
               const available = (allNpcs ?? [])
                 .filter((n) => !npcIds.includes(n.id))
@@ -421,10 +418,7 @@ export default function SessionDetailPage() {
             {/* Locations in this session */}
             {(() => {
               const locationIds = session.locationIds ?? [];
-              const linked = locationIds
-                .map((id) => allLocations?.find((l) => l.id === id))
-                .filter(Boolean) as NonNullable<typeof allLocations>[number][];
-              linked.sort((a, b) => a.name.localeCompare(b.name));
+              const linked = [...(session.locations ?? [])].sort((a, b) => a.name.localeCompare(b.name));
 
               const available = (allLocations ?? [])
                 .filter((l) => !locationIds.includes(l.id))
@@ -490,7 +484,7 @@ export default function SessionDetailPage() {
                           <div className="flex items-stretch">
                             <Link to={`/campaigns/${campaignId}/locations/${loc.id}`}
                               className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0">
-                              <LocationIcon locationType={loc.type} size="text-[16px]" generic={!locationTypesEnabled} />
+                              <LocationIcon locationType={loc.type ?? ''} size="text-[16px]" generic={!locationTypesEnabled} />
                               <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate flex-1">{loc.name}</p>
                               <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                             </Link>
@@ -518,10 +512,7 @@ export default function SessionDetailPage() {
             {/* Quests in this session */}
             {(() => {
               const questIds = session.questIds ?? [];
-              const linked = questIds
-                .map((id) => allQuests?.find((q) => q.id === id))
-                .filter(Boolean) as NonNullable<typeof allQuests>[number][];
-              linked.sort((a, b) => a.title.localeCompare(b.title));
+              const linked = [...(session.quests ?? [])].sort((a, b) => a.title.localeCompare(b.title));
 
               const available = (allQuests ?? [])
                 .filter((q) => !questIds.includes(q.id))
@@ -592,7 +583,7 @@ export default function SessionDetailPage() {
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">{quest.title}</p>
                               </div>
-                              <span className={`flex-shrink-0 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider rounded-full border ${QUEST_STATUS_PILL[quest.status]}`}>
+                              <span className={`flex-shrink-0 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider rounded-full border ${QUEST_STATUS_PILL[quest.status as QuestStatus] ?? ''}`}>
                                 {quest.status}
                               </span>
                               <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
