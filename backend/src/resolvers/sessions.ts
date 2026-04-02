@@ -125,29 +125,16 @@ export const sessionResolvers = {
   },
 
   Session: {
-    npcs: async (session: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
-      const role = await getCampaignRole(ctx, session.campaignId);
-      const links = await ctx.prisma.sessionNPC.findMany({ where: { sessionId: session.id }, include: { npc: true } });
-      // For players, filter out hidden NPCs
-      if (role === 'PLAYER') {
-        return links.filter((l) => l.npc.playerVisible).map((l) => l.npc);
-      }
+    npcs: async (session: { id: string }, _: unknown, { prisma }: Context) => {
+      const links = await prisma.sessionNPC.findMany({ where: { sessionId: session.id }, include: { npc: true } });
       return links.map((l) => l.npc);
     },
-    locations: async (session: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
-      const role = await getCampaignRole(ctx, session.campaignId);
-      const links = await ctx.prisma.sessionLocation.findMany({ where: { sessionId: session.id }, include: { location: true } });
-      if (role === 'PLAYER') {
-        return links.filter((l) => l.location.playerVisible).map((l) => l.location);
-      }
+    locations: async (session: { id: string }, _: unknown, { prisma }: Context) => {
+      const links = await prisma.sessionLocation.findMany({ where: { sessionId: session.id }, include: { location: true } });
       return links.map((l) => l.location);
     },
-    quests: async (session: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
-      const role = await getCampaignRole(ctx, session.campaignId);
-      const links = await ctx.prisma.sessionQuest.findMany({ where: { sessionId: session.id }, include: { quest: true } });
-      if (role === 'PLAYER') {
-        return links.filter((l) => l.quest.playerVisible).map((l) => l.quest);
-      }
+    quests: async (session: { id: string }, _: unknown, { prisma }: Context) => {
+      const links = await prisma.sessionQuest.findMany({ where: { sessionId: session.id }, include: { quest: true } });
       return links.map((l) => l.quest);
     },
 
