@@ -35,7 +35,13 @@ const SAVE_SESSION = gql`
       datetime
       brief
       summary
+      playerVisible
+      playerVisibleFields
       createdAt
+      npcs { id name status species image }
+      locations { id name type }
+      quests { id title status }
+      myNote { id content updatedAt }
     }
   }
 `;
