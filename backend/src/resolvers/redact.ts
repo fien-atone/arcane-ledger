@@ -31,6 +31,12 @@ export const LOCATION_FIELDS: EntityFieldDefs = {
   neverVisible: ['gmNotes'],
 };
 
+export const QUEST_FIELDS: EntityFieldDefs = {
+  alwaysVisible: ['id', 'campaignId', 'title', 'status', 'createdAt', 'playerVisible', 'playerVisibleFields'],
+  shareable: ['description', 'reward', 'giverId'],
+  neverVisible: ['notes'],
+};
+
 export const SESSION_FIELDS: EntityFieldDefs = {
   alwaysVisible: ['id', 'campaignId', 'number', 'title', 'datetime', 'createdAt', 'playerVisible', 'playerVisibleFields'],
   shareable: ['brief'],

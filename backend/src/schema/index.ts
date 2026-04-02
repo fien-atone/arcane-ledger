@@ -187,6 +187,8 @@ export const typeDefs = `#graphql
     notes: String!
     createdAt: String!
     sessions: [Session!]!
+    playerVisible: Boolean!
+    playerVisibleFields: [String!]!
   }
 
   # ── Group ──────────────────────────────────────────────────
@@ -533,6 +535,7 @@ export const typeDefs = `#graphql
     setNPCVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): NPC!
     setLocationVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Location!
     setSessionVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Session!
+    setQuestVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Quest!
 
     # Character sub-entities
     addCharacterGroupMembership(characterId: ID!, groupId: ID!, relation: String, subfaction: String): PlayerCharacter!

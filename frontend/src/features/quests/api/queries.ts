@@ -4,18 +4,26 @@ import type { Quest } from '@/entities/quest';
 
 // ── GraphQL documents ─────────────────────────────────────────────
 
+const QUEST_FIELDS = `
+  id
+  campaignId
+  title
+  description
+  giverId
+  reward
+  status
+  notes
+  playerVisible
+  playerVisibleFields
+  createdAt
+  giver { id name species image }
+  sessions { id number title datetime }
+`;
+
 const QUESTS_QUERY = gql`
   query Quests($campaignId: ID!) {
     quests(campaignId: $campaignId) {
-      id
-      campaignId
-      title
-      description
-      giverId
-      reward
-      status
-      notes
-      createdAt
+      ${QUEST_FIELDS}
     }
   }
 `;
@@ -23,15 +31,7 @@ const QUESTS_QUERY = gql`
 const QUEST_QUERY = gql`
   query Quest($campaignId: ID!, $id: ID!) {
     quest(campaignId: $campaignId, id: $id) {
-      id
-      campaignId
-      title
-      description
-      giverId
-      reward
-      status
-      notes
-      createdAt
+      ${QUEST_FIELDS}
     }
   }
 `;
@@ -39,15 +39,15 @@ const QUEST_QUERY = gql`
 const SAVE_QUEST = gql`
   mutation SaveQuest($campaignId: ID!, $id: ID, $input: QuestInput!) {
     saveQuest(campaignId: $campaignId, id: $id, input: $input) {
-      id
-      campaignId
-      title
-      description
-      giverId
-      reward
-      status
-      notes
-      createdAt
+      ${QUEST_FIELDS}
+    }
+  }
+`;
+
+const SET_QUEST_VISIBILITY = gql`
+  mutation SetQuestVisibility($campaignId: ID!, $id: ID!, $input: SetEntityVisibilityInput!) {
+    setQuestVisibility(campaignId: $campaignId, id: $id, input: $input) {
+      id playerVisible playerVisibleFields
     }
   }
 `;
@@ -65,6 +65,10 @@ function mapQuest(raw: any): Quest {
   return {
     ...raw,
     status: raw.status?.toLowerCase(),
+    playerVisible: raw.playerVisible ?? false,
+    playerVisibleFields: raw.playerVisibleFields ?? [],
+    giver: raw.giver ?? undefined,
+    sessions: raw.sessions ?? [],
   };
 }
 
@@ -126,6 +130,25 @@ export const useSaveQuest = (campaignId: string) => {
           },
         },
       }).then(() => options?.onSuccess?.());
+    },
+    isPending: loading,
+  };
+};
+
+export const useSetQuestVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_QUEST_VISIBILITY);
+  return {
+    mutate: (
+      vars: { campaignId: string; id: string; playerVisible: boolean; playerVisibleFields: string[] },
+    ) => {
+      execute({
+        variables: {
+          campaignId: vars.campaignId,
+          id: vars.id,
+          input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
+        },
+        refetchQueries: 'active',
+      });
     },
     isPending: loading,
   };

@@ -7,7 +7,7 @@
  */
 export const REFETCH_MAP: Record<string, string[]> = {
   NPC:                    ['Npcs', 'Npc', 'Sessions'],
-  SESSION:                ['Sessions'],
+  SESSION:                ['Sessions', 'Quests', 'Quest'],
   SESSION_NOTE:           ['Sessions'],
   LOCATION:               ['Locations', 'Location', 'Sessions'],
   QUEST:                  ['Quests', 'Quest', 'Sessions'],

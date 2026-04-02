@@ -53,6 +53,7 @@ _Nothing currently in progress._
 | T-5 | 🟢 | Containment rules: seed data not migrated to Postgres yet | — |
 | T-6 | 🟢 | Group types: seed data not migrated to Postgres yet | — |
 | T-7 | 🔴 | Backend authorization audit: all mutations hidden from players on frontend must also enforce GM-only on backend (prevent GraphQL injection). Verify every mutation checks role before executing. | — |
+| T-8 | 🟡 | Input sanitization audit: verify all user-submitted fields (rich text, names, descriptions) are sanitized against XSS/HTML injection before storage and rendering. Prisma parameterizes SQL, but stored HTML rendered via `dangerouslySetInnerHTML` (RichContent/TipTap) needs sanitization layer. | — |
 
 ---
 

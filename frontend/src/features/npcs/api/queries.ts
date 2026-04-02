@@ -234,7 +234,7 @@ export const useSetNpcVisibility = () => {
           id: vars.id,
           input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
         },
-        refetchQueries: ['Npcs'],
+        refetchQueries: 'active',
       });
     },
     isPending: loading,

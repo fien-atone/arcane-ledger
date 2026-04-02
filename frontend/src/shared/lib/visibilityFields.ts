@@ -34,6 +34,16 @@ export const LOCATION_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
 
 export const LOCATION_BASIC_PRESET = ['description', 'image'];
 
+// ── Quest ───────────────────────────────────────────────────────────────────
+
+export const QUEST_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
+  { key: 'description', label: 'Description' },
+  { key: 'reward', label: 'Reward' },
+  { key: 'giverId', label: 'Quest Giver' },
+];
+
+export const QUEST_BASIC_PRESET = ['description'];
+
 // ── Session ─────────────────────────────────────────────────────────────────
 
 export const SESSION_VISIBILITY_FIELDS: VisibilityFieldDef[] = [

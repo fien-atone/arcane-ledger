@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuest, useSaveQuest, useDeleteQuest } from '@/features/quests/api/queries';
+import { useQuest, useSaveQuest, useDeleteQuest, useSetQuestVisibility } from '@/features/quests/api/queries';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
-import { useNpcs } from '@/features/npcs/api/queries';
-import { useSessions } from '@/features/sessions/api';
 import { QuestEditDrawer } from '@/features/quests/ui';
-import { BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
+import { BackLink, InlineRichField, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { QUEST_VISIBILITY_FIELDS, QUEST_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Quest, QuestStatus } from '@/entities/quest';
 
@@ -25,10 +24,9 @@ export default function QuestDetailPage() {
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: quest, isLoading, isError } = useQuest(campaignId ?? '', questId ?? '');
-  const { data: npcs } = useNpcs(campaignId ?? '');
-  const { data: allSessions } = useSessions(campaignId ?? '');
   const saveQuest = useSaveQuest(campaignId ?? '');
   const deleteQuest = useDeleteQuest(campaignId ?? '');
+  const setQuestVisibility = useSetQuestVisibility();
   const navigate = useNavigate();
 
   const [editOpen, setEditOpen] = useState(false);
@@ -63,7 +61,8 @@ export default function QuestDetailPage() {
   }
 
   const st = STATUS_CONFIG[quest.status];
-  const giver = quest.giverId ? npcs?.find((n) => n.id === quest.giverId) : undefined;
+  const giver = quest.giver;
+  const linkedSessions = [...(quest.sessions ?? [])].sort((a, b) => b.number - a.number);
 
   return (
     <main className="flex-1 min-h-screen bg-surface">
@@ -80,14 +79,21 @@ export default function QuestDetailPage() {
             {/* Quest header */}
             <header className="space-y-4">
               <div className="flex flex-wrap items-center gap-3 relative">
-                <button
-                  onClick={() => setStatusOpen((v) => !v)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:opacity-80 transition-opacity ${st.pill}`}
-                >
-                  <span className="material-symbols-outlined text-[13px]">{st.icon}</span>
-                  {st.label}
-                  <span className="material-symbols-outlined text-[11px] ml-0.5">expand_more</span>
-                </button>
+                {isGm ? (
+                  <button
+                    onClick={() => setStatusOpen((v) => !v)}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:opacity-80 transition-opacity ${st.pill}`}
+                  >
+                    <span className="material-symbols-outlined text-[13px]">{st.icon}</span>
+                    {st.label}
+                    <span className="material-symbols-outlined text-[11px] ml-0.5">expand_more</span>
+                  </button>
+                ) : (
+                  <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${st.pill}`}>
+                    <span className="material-symbols-outlined text-[13px]">{st.icon}</span>
+                    {st.label}
+                  </span>
+                )}
                 {statusOpen && (
                   <div className="absolute top-full left-0 mt-1 z-50 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl py-1 min-w-[160px]">
                     {(Object.entries(STATUS_CONFIG) as [QuestStatus, typeof st][]).map(([key, cfg]) => (
@@ -111,12 +117,13 @@ export default function QuestDetailPage() {
               </h1>
             </header>
 
-            {/* Description — inline editable */}
+            {/* Description */}
             <InlineRichField
               label="Description"
               value={quest.description}
               onSave={(html) => saveField('description', html)}
               placeholder="What is this quest about…"
+              readOnly={!isGm}
             />
 
             {/* GM Notes — inline editable, GM only */}
@@ -220,50 +227,73 @@ export default function QuestDetailPage() {
                 value={quest.reward}
                 onSave={(html) => saveField('reward', html)}
                 placeholder="Gold, items, reputation…"
+                readOnly={!isGm}
               />
             </section>
 
+            {/* Player Visibility */}
+            {isGm && quest && (
+              <VisibilityPanel
+                playerVisible={quest.playerVisible ?? false}
+                playerVisibleFields={quest.playerVisibleFields ?? []}
+                fields={QUEST_VISIBILITY_FIELDS}
+                basicPreset={QUEST_BASIC_PRESET}
+                onToggleVisible={(v) => setQuestVisibility.mutate({
+                  campaignId: campaignId!, id: quest.id,
+                  playerVisible: v, playerVisibleFields: quest.playerVisibleFields ?? [],
+                })}
+                onToggleField={(f, on) => {
+                  const fields = on
+                    ? [...(quest.playerVisibleFields ?? []), f]
+                    : (quest.playerVisibleFields ?? []).filter((x) => x !== f);
+                  setQuestVisibility.mutate({
+                    campaignId: campaignId!, id: quest.id,
+                    playerVisible: quest.playerVisible ?? false, playerVisibleFields: fields,
+                  });
+                }}
+                onSetPreset={(fields) => setQuestVisibility.mutate({
+                  campaignId: campaignId!, id: quest.id,
+                  playerVisible: quest.playerVisible ?? false, playerVisibleFields: fields,
+                })}
+                isPending={setQuestVisibility.isPending}
+              />
+            )}
+
             {/* Session Appearances */}
-            {sessionsEnabled && (() => {
-              const questSessions = (allSessions ?? [])
-                .filter((s) => s.questIds?.includes(questId ?? ''))
-                .sort((a, b) => b.number - a.number);
-              if (questSessions.length === 0) return null;
-              return (
-                <section>
-                  <div className="flex items-center gap-4 mb-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                      Sessions
-                    </h2>
-                    <div className="h-px flex-1 bg-outline-variant/20" />
-                  </div>
-                  <div className="space-y-2">
-                    {questSessions.map((s) => (
-                      <Link
-                        key={s.id}
-                        to={`/campaigns/${campaignId}/sessions/${s.id}`}
-                        className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
-                      >
-                        <div className="w-8 h-8 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0 border border-outline-variant/15">
-                          <span className="font-headline text-xs font-bold italic text-on-surface-variant/50">
-                            {String(s.number).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{s.title}</p>
-                          {s.datetime && (
-                            <p className="text-[10px] text-on-surface-variant/40">
-                              {new Date(s.datetime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </p>
-                          )}
-                        </div>
-                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              );
-            })()}
+            {sessionsEnabled && linkedSessions.length > 0 && (
+              <section>
+                <div className="flex items-center gap-4 mb-4">
+                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                    Sessions
+                  </h2>
+                  <div className="h-px flex-1 bg-outline-variant/20" />
+                </div>
+                <div className="space-y-2">
+                  {linkedSessions.map((s) => (
+                    <Link
+                      key={s.id}
+                      to={`/campaigns/${campaignId}/sessions/${s.id}`}
+                      className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
+                    >
+                      <div className="w-8 h-8 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0 border border-outline-variant/15">
+                        <span className="font-headline text-xs font-bold italic text-on-surface-variant/50">
+                          {String(s.number).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{s.title}</p>
+                        {s.datetime && (
+                          <p className="text-[10px] text-on-surface-variant/40">
+                            {new Date(s.datetime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        )}
+                      </div>
+                      <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
 
           </div>
 

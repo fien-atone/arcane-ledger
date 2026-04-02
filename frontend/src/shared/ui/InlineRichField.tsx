@@ -106,9 +106,10 @@ interface Props {
   onSave: (html: string) => void;
   isGmNotes?: boolean;
   placeholder?: string;
+  readOnly?: boolean;
 }
 
-export function InlineRichField({ label, value, onSave, isGmNotes, placeholder = 'Not recorded yet.' }: Props) {
+export function InlineRichField({ label, value, onSave, isGmNotes, placeholder = 'Not recorded yet.', readOnly }: Props) {
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSave = (html: string) => {
@@ -120,8 +121,8 @@ export function InlineRichField({ label, value, onSave, isGmNotes, placeholder =
 
   const readView = value ? (
     <div
-      onClick={() => setIsEditing(true)}
-      className="cursor-text group/prose prose prose-sm prose-invert max-w-none font-sans
+      onClick={readOnly ? undefined : () => setIsEditing(true)}
+      className={`prose prose-sm prose-invert max-w-none font-sans
         prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1
         prose-strong:text-on-surface prose-strong:font-semibold
         prose-em:text-on-surface-variant/80
@@ -129,10 +130,10 @@ export function InlineRichField({ label, value, onSave, isGmNotes, placeholder =
         prose-li:my-0.5 prose-li:marker:text-primary/50
         prose-blockquote:border-l-primary/40 prose-blockquote:text-on-surface-variant/70 prose-blockquote:italic
         prose-hr:border-outline-variant/20
-        hover:prose-p:text-on-surface transition-colors"
+        ${readOnly ? '' : 'cursor-text group/prose hover:prose-p:text-on-surface'} transition-colors`}
       dangerouslySetInnerHTML={{ __html: value }}
     />
-  ) : (
+  ) : readOnly ? null : (
     <button
       onClick={() => setIsEditing(true)}
       className="w-full flex items-center justify-between py-3 px-4 border border-dashed border-outline-variant/20 rounded-sm hover:border-primary/30 hover:bg-primary/3 transition-all group/empty"

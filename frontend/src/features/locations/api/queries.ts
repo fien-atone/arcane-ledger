@@ -117,7 +117,7 @@ export const useSetLocationVisibility = () => {
           id: vars.id,
           input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
         },
-        refetchQueries: ['Locations'],
+        refetchQueries: 'active',
       });
     },
     isPending: loading,
