@@ -6,11 +6,11 @@ import { redactEntity, SESSION_FIELDS } from './redact.js';
 export const sessionResolvers = {
   Query: {
     sessions: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
-      const role = await getCampaignRole(ctx, campaignId);
       const sessions = await ctx.prisma.session.findMany({ where: { campaignId }, orderBy: { number: 'desc' } });
+      const role = await getCampaignRole(ctx, campaignId);
+      // Sessions always fully visible to all — only summary (legacy GM notes) is hidden from players
       if (role === 'PLAYER') {
-        // Sessions always visible (dates are planning info), but content is redacted
-        return sessions.map((s) => redactEntity(s, s.playerVisibleFields, SESSION_FIELDS));
+        return sessions.map((s) => ({ ...s, summary: '' }));
       }
       return sessions;
     },
@@ -20,8 +20,7 @@ export const sessionResolvers = {
       if (!entity) return null;
       const role = await getCampaignRole(ctx, campaignId);
       if (role === 'PLAYER') {
-        if (!entity.playerVisible) return null;
-        return redactEntity(entity, entity.playerVisibleFields, SESSION_FIELDS);
+        return { ...entity, summary: '' };
       }
       return entity;
     },

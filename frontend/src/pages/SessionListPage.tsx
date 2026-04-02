@@ -239,11 +239,6 @@ export default function SessionListPage() {
                           {badge.label}
                         </span>
                       )}
-                      {isGm && session.playerVisible && (
-                        <span className="material-symbols-outlined text-[13px] text-secondary/60 flex-shrink-0" title="Visible to players">
-                          visibility
-                        </span>
-                      )}
                     </button>
                   );
                 });
