@@ -256,42 +256,22 @@ export default function SessionDetailPage() {
               </div>
             ) : null}
 
-            {/* Summary — editable for GM, read-only for players */}
-            {isGm ? (
-              <InlineRichField
-                label="GM Notes"
-                value={session.summary}
-                onSave={(html) => saveField('summary', html)}
-                isGmNotes
-              />
-            ) : session.summary ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Summary</h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                </div>
-                <RichContent value={session.summary} className="prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1" />
-              </div>
-            ) : null}
-
-            {/* My Notes — personal notes, editable for all users */}
-            <section className="bg-surface-container-low/50 p-6 border border-secondary/15 rounded-sm relative overflow-hidden group/section">
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/section:opacity-10 transition-opacity pointer-events-none">
-                <span className="material-symbols-outlined text-5xl text-secondary">edit_note</span>
-              </div>
-              <div className="relative z-10 space-y-3">
-                <div className="flex items-center gap-2">
+            {/* Notes — GM sees as "GM Notes" with isGmNotes styling, players see as "My Notes" */}
+            <section className={isGm ? '' : 'bg-surface-container-low/50 p-6 border border-secondary/15 rounded-sm relative overflow-hidden'}>
+              {!isGm && (
+                <div className="flex items-center gap-2 mb-3">
                   <span className="material-symbols-outlined text-secondary text-sm">edit_note</span>
                   <h3 className="text-sm font-bold uppercase tracking-widest text-secondary">My Notes</h3>
                   <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 border border-outline-variant/15 px-1.5 py-0.5 rounded-full">Private</span>
                 </div>
-                <InlineRichField
-                  label=""
-                  value={session.myNote?.content}
-                  onSave={(html) => sessionNote.mutate(session.id, html)}
-                  placeholder="Add your personal notes for this session…"
-                />
-              </div>
+              )}
+              <InlineRichField
+                label={isGm ? 'GM Notes' : ''}
+                value={session.myNote?.content}
+                onSave={(html) => sessionNote.mutate(session.id, html)}
+                placeholder={isGm ? 'Your private GM notes for this session…' : 'Add your personal notes for this session…'}
+                isGmNotes={isGm}
+              />
             </section>
 
             {/* Prev / next navigation */}

@@ -6,10 +6,11 @@
  * Operation names MUST match the `query OperationName(...)` in each queries.ts file.
  */
 export const REFETCH_MAP: Record<string, string[]> = {
-  NPC:                    ['Npcs', 'Npc'],
+  NPC:                    ['Npcs', 'Npc', 'Sessions'],
   SESSION:                ['Sessions'],
-  LOCATION:               ['Locations', 'Location'],
-  QUEST:                  ['Quests', 'Quest'],
+  SESSION_NOTE:           ['Sessions'],
+  LOCATION:               ['Locations', 'Location', 'Sessions'],
+  QUEST:                  ['Quests', 'Quest', 'Sessions'],
   GROUP:                  ['Groups', 'Group'],
   RELATION:               ['RelationsForCampaign', 'RelationsForEntity'],
   CHARACTER:              ['Party'],

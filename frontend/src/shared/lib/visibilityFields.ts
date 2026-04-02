@@ -38,7 +38,6 @@ export const LOCATION_BASIC_PRESET = ['description', 'image'];
 
 export const SESSION_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
   { key: 'brief', label: 'Brief' },
-  { key: 'summary', label: 'Summary' },
   { key: 'npcs', label: 'Linked NPCs' },
   { key: 'locations', label: 'Linked locations' },
   { key: 'quests', label: 'Linked quests' },

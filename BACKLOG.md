@@ -52,6 +52,7 @@ _Nothing currently in progress._
 | T-4 | 🟢 | Add error boundaries and proper GraphQL error handling in UI | — |
 | T-5 | 🟢 | Containment rules: seed data not migrated to Postgres yet | — |
 | T-6 | 🟢 | Group types: seed data not migrated to Postgres yet | — |
+| T-7 | 🔴 | Backend authorization audit: all mutations hidden from players on frontend must also enforce GM-only on backend (prevent GraphQL injection). Verify every mutation checks role before executing. | — |
 
 ---
 

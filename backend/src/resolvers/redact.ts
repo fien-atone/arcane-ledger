@@ -33,8 +33,8 @@ export const LOCATION_FIELDS: EntityFieldDefs = {
 
 export const SESSION_FIELDS: EntityFieldDefs = {
   alwaysVisible: ['id', 'campaignId', 'number', 'title', 'datetime', 'createdAt', 'playerVisible', 'playerVisibleFields'],
-  shareable: ['brief', 'summary'],
-  neverVisible: [],
+  shareable: ['brief'],
+  neverVisible: ['summary'],
 };
 
 // ── Redaction function ──────────────────────────────────────────────────────

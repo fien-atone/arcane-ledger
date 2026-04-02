@@ -54,12 +54,6 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
         </div>
       )}
 
-      {session.summary && (
-        <div className="mb-6">
-          <SectionHeader title="Summary" />
-          <RichContent value={session.summary} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
-        </div>
-      )}
 
       {/* NPCs */}
       {npcsEnabled && linkedNpcs.length > 0 && (
