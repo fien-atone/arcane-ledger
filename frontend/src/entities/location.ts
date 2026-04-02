@@ -21,7 +21,6 @@ export interface Location {
   id: string;
   campaignId: string;
   name: string;
-  aliases: string[];
   type: LocationType;
   /** Population count — for settlement types (city, town, village, etc.) */
   settlementPopulation?: number;

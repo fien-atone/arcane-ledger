@@ -155,9 +155,6 @@ function LocationDetail({
             </p>
           )}
           <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{loc.name}</h2>
-          {loc.aliases.length > 0 && (
-            <p className="text-xs text-on-surface-variant/40 italic mt-0.5">{loc.aliases.join(', ')}</p>
-          )}
         </div>
 
         {/* Stats row */}
@@ -315,7 +312,6 @@ export default function LocationListPage() {
       const matchesSearch =
         !search ||
         l.name.toLowerCase().includes(search.toLowerCase()) ||
-        l.aliases.some((a) => a.toLowerCase().includes(search.toLowerCase())) ||
         l.description.toLowerCase().includes(search.toLowerCase());
       return matchesType && matchesSearch;
     }) ?? [];

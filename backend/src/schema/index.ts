@@ -213,7 +213,6 @@ export const typeDefs = `#graphql
     id: ID!
     campaignId: ID!
     name: String!
-    aliases: [String!]!
     type: String
     settlementPopulation: Int
     biome: String
@@ -412,7 +411,6 @@ export const typeDefs = `#graphql
 
   input LocationInput {
     name: String!
-    aliases: [String!]
     type: String
     settlementPopulation: Int
     biome: String

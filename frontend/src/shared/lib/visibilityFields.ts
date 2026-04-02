@@ -27,13 +27,12 @@ export const NPC_BASIC_PRESET = ['aliases', 'status', 'species', 'description', 
 // ── Location ────────────────────────────────────────────────────────────────
 
 export const LOCATION_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
-  { key: 'aliases', label: 'Aliases' },
   { key: 'description', label: 'Description' },
   { key: 'image', label: 'Image / Map' },
   { key: 'settlementPopulation', label: 'Population' },
 ];
 
-export const LOCATION_BASIC_PRESET = ['aliases', 'description', 'image'];
+export const LOCATION_BASIC_PRESET = ['description', 'image'];
 
 // ── Session ─────────────────────────────────────────────────────────────────
 

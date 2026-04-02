@@ -32,12 +32,11 @@ export const locationResolvers = {
   Mutation: {
     saveLocation: async (
       _: unknown,
-      { campaignId, id, input }: { campaignId: string; id?: string; input: { name: string; aliases?: string[]; type: string; settlementPopulation?: number; biome?: string; parentLocationId?: string; description?: string; image?: string; gmNotes?: string; mapMarkers?: string } },
+      { campaignId, id, input }: { campaignId: string; id?: string; input: { name: string; type: string; settlementPopulation?: number; biome?: string; parentLocationId?: string; description?: string; image?: string; gmNotes?: string; mapMarkers?: string } },
       { prisma }: Context,
     ) => {
       const data: Record<string, unknown> = {
         name: input.name,
-        aliases: input.aliases ?? [],
         type: input.type || null,
         settlementPopulation: input.settlementPopulation ?? null,
         biome: input.biome ?? null,

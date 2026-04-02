@@ -311,7 +311,6 @@ model Location {
   campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId           String
   name                 String
-  aliases              String[]  @default([])
   type                 String?
   locationType         LocationType? @relation(fields: [type], references: [id], onDelete: SetNull)
   settlementPopulation Int?

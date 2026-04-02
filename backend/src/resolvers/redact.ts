@@ -25,7 +25,7 @@ export const NPC_FIELDS: EntityFieldDefs = {
 export const LOCATION_FIELDS: EntityFieldDefs = {
   alwaysVisible: ['id', 'campaignId', 'name', 'type', 'biome', 'parentLocationId', 'mapMarkers', 'createdAt', 'playerVisible', 'playerVisibleFields'],
   shareable: [
-    'aliases', 'description', 'image',
+    'description', 'image',
     'settlementPopulation',
   ],
   neverVisible: ['gmNotes'],

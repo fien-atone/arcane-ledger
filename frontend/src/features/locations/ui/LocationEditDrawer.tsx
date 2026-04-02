@@ -95,7 +95,6 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
     const record: Location = {
       id: location?.id ?? '',
       campaignId,
-      aliases: location?.aliases ?? [],
       createdAt: location?.createdAt ?? ts,
       ...(location ?? {}),
       name: name.trim(),
@@ -105,7 +104,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
       biome: biomeOptions.length > 0 && biome ? biome : undefined,
       description: location?.description ?? '',
     };
-    save.mutate(record, { onSuccess: () => { onSaved?.(record); onClose(); } });
+    save.mutate(record, { onSuccess: (saved) => { onSaved?.(saved); onClose(); } });
   };
 
   if (!open) return null;
@@ -153,8 +152,8 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
             </div>
           )}
 
-          {/* Parent location */}
-          {locationTypesEnabled && parentOptions.length > 0 && (
+          {/* Parent location — hidden when creating from map (auto-assigned) */}
+          {locationTypesEnabled && !initialParentId && parentOptions.length > 0 && (
             <div>
               <label className={labelCls}>Part of</label>
               <Select
