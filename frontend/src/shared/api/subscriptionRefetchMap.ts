@@ -13,7 +13,7 @@ export const REFETCH_MAP: Record<string, string[]> = {
   QUEST:                  ['Quests', 'Quest', 'Sessions'],
   GROUP:                  ['Groups', 'Group'],
   RELATION:               ['RelationsForCampaign', 'RelationsForEntity'],
-  CHARACTER:              ['Party'],
+  CHARACTER:              ['Party', 'PartySlots'],
   SPECIES:                ['Species'],
   CAMPAIGN:               ['Campaign', 'Campaigns'],
   NPC_MEMBERSHIP:         ['Npcs', 'Npc', 'Groups', 'Group'],
@@ -23,5 +23,6 @@ export const REFETCH_MAP: Record<string, string[]> = {
   GROUP_TYPE:             ['GroupTypes'],
   SPECIES_TYPE:           ['SpeciesTypes'],
   CONTAINMENT_RULE:       ['ContainmentRules'],
+  MEMBER:                 ['PartySlots', 'Party', 'CampaignInvitations'],
   INVITATION:             ['MyInvitations', 'CampaignInvitations', 'PartySlots', 'Campaigns'],
 };

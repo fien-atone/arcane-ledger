@@ -42,7 +42,6 @@ export const partyResolvers = {
 
     campaignInvitations: async (_: unknown, { campaignId }: { campaignId: string }, { prisma, user }: Context) => {
       requireAuth(user);
-      await requireGM(prisma, campaignId, user.id);
       return prisma.campaignInvitation.findMany({
         where: { campaignId },
         include: { campaign: true, user: true, invitedBy: true },

@@ -530,7 +530,7 @@ export default function PartyPage() {
             {!isEmpty && (
               <>
                 {/* Pending Invitations */}
-                {isGm && invitationSlots.length > 0 && (
+                {invitationSlots.length > 0 && (
                   <section className="mb-8">
                     <SectionHeader title="Pending Invitations" count={invitationSlots.length} />
                     <div className="space-y-2">
@@ -549,36 +549,38 @@ export default function PartyPage() {
                           <span className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-secondary bg-secondary/10 border border-secondary/20 rounded-full">
                             Pending
                           </span>
-                          <div className="flex-shrink-0">
-                            {cancelConfirm.isConfirming(inv.id) ? (
-                              <div className="flex items-center gap-1">
-                                <span className="text-[9px] text-on-surface-variant/50">Cancel?</span>
+                          {isGm && (
+                            <div className="flex-shrink-0">
+                              {cancelConfirm.isConfirming(inv.id) ? (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[9px] text-on-surface-variant/50">Cancel?</span>
+                                  <button
+                                    onClick={() => {
+                                      cancelInvitation.mutate(inv.id);
+                                      cancelConfirm.cancel();
+                                    }}
+                                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
+                                  >
+                                    Yes
+                                  </button>
+                                  <button
+                                    onClick={() => cancelConfirm.cancel()}
+                                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              ) : (
                                 <button
-                                  onClick={() => {
-                                    cancelInvitation.mutate(inv.id);
-                                    cancelConfirm.cancel();
-                                  }}
-                                  className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
+                                  onClick={() => cancelConfirm.startConfirm(inv.id)}
+                                  className="p-1.5 text-on-surface-variant/30 hover:text-tertiary transition-colors"
+                                  title="Cancel invitation"
                                 >
-                                  Yes
+                                  <span className="material-symbols-outlined text-[16px]">close</span>
                                 </button>
-                                <button
-                                  onClick={() => cancelConfirm.cancel()}
-                                  className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
-                                >
-                                  No
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => cancelConfirm.startConfirm(inv.id)}
-                                className="p-1.5 text-on-surface-variant/30 hover:text-tertiary transition-colors"
-                                title="Cancel invitation"
-                              >
-                                <span className="material-symbols-outlined text-[16px]">close</span>
-                              </button>
-                            )}
-                          </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
