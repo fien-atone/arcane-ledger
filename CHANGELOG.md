@@ -4,7 +4,67 @@ All notable changes to Arcane Ledger are documented here.
 
 ---
 
-## [Unreleased] — 2026-03-29
+## [0.3.0] — 2026-04-05
+
+### Entity Visibility System
+- **Per-entity visibility** — GM controls what players can see for NPCs, Locations, Quests, and Groups
+- **Per-field visibility** — GM toggles individual fields (appearance, description, portrait, etc.) via VisibilityPanel
+- **Per-link visibility** — GM reveals specific NPC↔Group and NPC↔Location connections independently
+- **Auto-reveal** — making a link visible automatically reveals both connected entities
+- **Field redaction** — hidden fields return empty values to players; enum fields return null
+- **Visibility toggles on list pages** — eye icon on every NPC, Location, Quest, Group list item
+- **Visibility toggles on detail pages** — eye icon on group members, location NPCs, child locations, and NPC quests
+
+### Real-Time Subscriptions
+- **GraphQL Subscriptions** via WebSocket (graphql-ws) for all campaign entities
+- **CampaignSubscriptionManager** — renderless component, auto-refetches relevant queries on events
+- **Live updates** across tabs — GM changes visibility, players see updates instantly
+- **Per-entity refetch map** — only affected queries refresh, not the whole page
+- **Admin user list** — live updates via `usersChanged` subscription
+
+### Player Role Restrictions
+- **All entity pages** — edit/delete/add buttons hidden for players
+- **InlineRichField** — `readOnly` prop, shows placeholder for empty fields
+- **ImageUpload** — `hideControls` for read-only mode
+- **SocialRelationsSection** — `readOnly` prop, hides add/edit/delete
+- **NPC social relations** — completely hidden from players
+- **Character visibility** — owner sees all, other players see only photo/name/appearance/age/class/species
+- **Party page** — "My Character" section shown separately for players
+- **Dashboard** — sections/archive/title editing hidden for players
+- **Session notes** — per-user private notes (SessionNote model)
+
+### Campaign & Party Management
+- **Campaign invitations** — GM invites players by email, accept/decline flow
+- **Party slots** — player↔character linking, GM assigns characters to players
+- **Campaign section toggles** — GM enables/disables sidebar sections with cascade
+- **Pending invitations** visible to all members (cancel button GM-only)
+
+### User Management
+- **Admin panel** — CRUD for users (create, edit, delete, role management)
+- **User profile page** (`/profile`) — edit name, change password with confirmation
+- **System roles** — ADMIN and USER with route protection
+
+### Social Graph
+- **Force-directed layout** — interactive NPC relationship visualization
+- **Chord diagram** — alternative circular view of relationships
+- **Filters** — by status, group, search
+- **Group hulls** — convex hull overlays for group membership
+
+### File Upload System
+- **REST upload endpoint** with JWT auth, GM role check, 5MB limit
+- **Local file storage** organized as `uploads/campaign/{campaignId}/{entity}/{uuid}.ext`
+- **Cache-busting** with timestamp in filename
+
+### Infrastructure
+- **Apollo Client** — cache disabled globally (`no-cache`) for reliable real-time data
+- **Loading guards** — `isLoading && !data` prevents flicker on subscription refetch
+- **Backend sorting** — all entity lists sorted alphabetically on server
+- **NPC status** always visible (not shareable), enum fields redact to null
+- **Session visibility removed** — sessions always visible to all members
+
+---
+
+## [0.2.0] — 2026-03-29
 
 ### File Upload System
 - **REST upload endpoint** `POST /api/upload/:campaignId/:entity/:entityId` — multer, JWT auth, GM role check, 5MB limit
