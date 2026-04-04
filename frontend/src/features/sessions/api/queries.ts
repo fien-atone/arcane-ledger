@@ -163,7 +163,7 @@ export const useSetSessionVisibility = () => {
           id: vars.id,
           input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
         },
-        refetchQueries: 'active',
+
       });
     },
     isPending: loading,

@@ -16,6 +16,7 @@ import { useGroups } from '@/features/groups/api';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { RichContent, EmptyState, SectionDisabled, Select } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
+import { useAuthStore } from '@/features/auth';
 import type { PartySlot } from '@/entities/partySlot';
 
 // ── Inline confirm helper ─────────────────────────────────────────
@@ -44,7 +45,9 @@ function SectionHeader({ title, count }: { title: string; count?: number }) {
 
 // ── Character detail (reused from old layout) ─────────────────────
 
-function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaignId: string }) {
+function CharacterDetail({ char, campaignId, isGm }: { char: PlayerCharacter; campaignId: string; isGm: boolean }) {
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const canViewAll = isGm || (!!char.userId && char.userId === currentUserId);
   const initials = char.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const specEnabled = useSectionEnabled(campaignId, 'species');
   const groupsEnabled = useSectionEnabled(campaignId, 'groups');
@@ -90,19 +93,19 @@ function CharacterDetail({ char, campaignId }: { char: PlayerCharacter; campaign
             <RichContent value={char.appearance} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
-        {char.personality && (
+        {canViewAll && char.personality && (
           <div>
             <SectionHeader title="Personality" />
             <RichContent value={char.personality} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
-        {char.background && (
+        {canViewAll && char.background && (
           <div>
             <SectionHeader title="Background" />
             <RichContent value={char.background} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
-        {groupsEnabled && (char.groupMemberships ?? []).length > 0 && (
+        {canViewAll && groupsEnabled && (char.groupMemberships ?? []).length > 0 && (
           <div>
             <SectionHeader title="Groups" />
             <div className="flex flex-wrap gap-2">
@@ -435,8 +438,12 @@ export default function PartyPage() {
 
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
 
+  const currentUserId = useAuthStore((s) => s.user?.id);
+
   // Derived data
   const memberSlots = (slots ?? []).filter((s) => s.member);
+  const mySlot = !isGm ? memberSlots.find((s) => s.member!.user.id === currentUserId) : undefined;
+  const otherSlots = mySlot ? memberSlots.filter((s) => s !== mySlot) : memberSlots;
   const invitationSlots = (invitations ?? []).filter((inv) => inv.status === 'pending');
   const unassignedCharacters = (characters ?? []).filter((c) => !c.userId);
   const membersWithoutCharacter = memberSlots
@@ -587,10 +594,38 @@ export default function PartyPage() {
                   </section>
                 )}
 
-                {/* Party Members */}
-                {memberSlots.length > 0 && (
+                {/* My Character — shown separately for players */}
+                {mySlot && mySlot.character && (
                   <section className="mb-8">
-                    <SectionHeader title="Party Members" count={memberSlots.length} />
+                    <SectionHeader title="My Character" />
+                    <div
+                      className="border border-primary/20 bg-surface-container-low rounded-sm p-4 flex items-center gap-4 cursor-pointer hover:border-primary/40 transition-colors"
+                      onClick={() => setSelectedChar(mySlot.character!)}
+                    >
+                      <div className="w-14 h-14 rounded-sm border border-primary/20 overflow-hidden bg-surface-container-highest flex-shrink-0">
+                        {resolveImageUrl(mySlot.character.image) ? (
+                          <img src={resolveImageUrl(mySlot.character.image)} alt={mySlot.character.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="text-sm font-bold text-primary/40">{mySlot.character.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-lg font-headline font-bold text-primary truncate">{mySlot.character.name}</p>
+                        <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/50 mt-0.5">
+                          {[mySlot.character.species, mySlot.character.class].filter(Boolean).join(' \u00b7 ') || '\u2014'}
+                        </p>
+                      </div>
+                      <span className="material-symbols-outlined text-primary/40 text-[18px]">arrow_forward</span>
+                    </div>
+                  </section>
+                )}
+
+                {/* Party Members */}
+                {otherSlots.length > 0 && (
+                  <section className="mb-8">
+                    <SectionHeader title="Party Members" count={otherSlots.length} />
                     {/* Column headers */}
                     <div className="grid grid-cols-[1fr_auto_1fr] mb-2 px-1">
                       <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">Player</span>
@@ -598,7 +633,7 @@ export default function PartyPage() {
                       <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">Character</span>
                     </div>
                     <div className="space-y-3">
-                      {memberSlots.map((slot) => (
+                      {otherSlots.map((slot) => (
                         <MemberCard
                           key={slot.member!.id}
                           slot={slot}
@@ -637,7 +672,7 @@ export default function PartyPage() {
           {/* Right panel — character detail */}
           {selectedChar && (
             <div className="flex-1 overflow-hidden relative border-l border-outline-variant/10">
-              <CharacterDetail char={selectedChar} campaignId={campaignId ?? ''} />
+              <CharacterDetail char={selectedChar} campaignId={campaignId ?? ''} isGm={isGm} />
               <div className="absolute top-3 right-4 z-20 flex items-center gap-2">
                 <Link
                   to={`/campaigns/${campaignId}/characters/${selectedChar.id}`}

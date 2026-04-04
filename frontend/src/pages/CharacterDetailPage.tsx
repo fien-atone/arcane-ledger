@@ -9,17 +9,21 @@ import { SocialRelationsSection } from '@/features/relations/ui';
 import { ImageUpload, BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
+import { useAuthStore } from '@/features/auth';
 import type { PlayerCharacter } from '@/entities/character';
 
 export default function CharacterDetailPage() {
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
   const { data: characters, isLoading, isError, refetch } = useParty(campaignId ?? '');
   const character = characters?.find((c) => c.id === charId);
+  const isOwner = !!character?.userId && character.userId === currentUserId;
+  const canViewAll = isGm || isOwner; // GM and owner see everything; other players see limited fields
   const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: groups } = useGroups(campaignId ?? '');
   const saveCharacter = useSaveCharacter();
@@ -119,6 +123,7 @@ export default function CharacterDetailPage() {
                   className="relative w-48 h-64"
                   onUpload={handleImageUpload}
                   onView={character.image ? () => setLightbox(true) : undefined}
+                  hideControls={!isGm}
                 />
               </div>
 
@@ -139,12 +144,15 @@ export default function CharacterDetailPage() {
               <InlineRichField label="GM Notes" value={character.gmNotes} isGmNotes
                 onSave={(html) => saveField('gmNotes', html)} />
             )}
+            {canViewAll && (
             <InlineRichField label="Backstory" value={character.background}
               onSave={(html) => saveField('background', html)}
-              placeholder="History, origin, key events…" />
+              placeholder="History, origin, key events…"
+              readOnly={!isGm} />
+            )}
 
-            {/* Group Memberships */}
-            {groupsEnabled && (() => {
+            {/* Group Memberships — GM only */}
+            {canViewAll && groupsEnabled && (() => {
               const memberGroupIds = new Set((character.groupMemberships ?? []).map((m) => m.groupId));
               const availableGroups = (groups ?? [])
                 .filter((g) => !memberGroupIds.has(g.id))
@@ -173,6 +181,7 @@ export default function CharacterDetailPage() {
                       Group Memberships
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
+                    {isGm && (
                     <button
                       onClick={() => { setAddGroupOpen((v) => !v); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); }}
                       className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
@@ -180,6 +189,7 @@ export default function CharacterDetailPage() {
                       <span className="material-symbols-outlined text-[13px]">group_add</span>
                       Add
                     </button>
+                    )}
                   </div>
 
                   {addGroupOpen && (
@@ -277,7 +287,7 @@ export default function CharacterDetailPage() {
                               arrow_forward
                             </span>
                           </Link>
-                          {confirmRemoveGroupId === m.groupId ? (
+                          {isGm && (confirmRemoveGroupId === m.groupId ? (
                             <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
                               <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
                               <button
@@ -301,7 +311,7 @@ export default function CharacterDetailPage() {
                             >
                               <span className="material-symbols-outlined text-[14px]">close</span>
                             </button>
-                          )}
+                          ))}
                         </div>
                       ))}
                     </div>
@@ -310,7 +320,7 @@ export default function CharacterDetailPage() {
               );
             })()}
 
-            <SocialRelationsSection campaignId={campaignId ?? ''} entityId={charId ?? ''} />
+            {isGm && <SocialRelationsSection campaignId={campaignId ?? ''} entityId={charId ?? ''} />}
           </div>
 
           {/* ── Right column ────────────────────────────────────── */}
@@ -342,19 +352,21 @@ export default function CharacterDetailPage() {
 
             <InlineRichField label="Appearance" value={character.appearance}
               onSave={(html) => saveField('appearance', html)}
-              placeholder="Physical description…" />
+              placeholder="Physical description…" readOnly={!isGm} />
+            {canViewAll && (<>
             <InlineRichField label="Personality" value={character.personality}
               onSave={(html) => saveField('personality', html)}
-              placeholder="Traits, mannerisms, quirks…" />
+              placeholder="Traits, mannerisms, quirks…" readOnly={!isGm} />
             <InlineRichField label="Motivation & Ideals" value={character.motivation}
               onSave={(html) => saveField('motivation', html)}
-              placeholder="What drives them, what they believe in…" />
+              placeholder="What drives them, what they believe in…" readOnly={!isGm} />
             <InlineRichField label="Bonds" value={character.bonds}
               onSave={(html) => saveField('bonds', html)}
-              placeholder="People, places, things they hold dear…" />
+              placeholder="People, places, things they hold dear…" readOnly={!isGm} />
             <InlineRichField label="Flaws" value={character.flaws}
               onSave={(html) => saveField('flaws', html)}
-              placeholder="Weaknesses, vices, fears…" />
+              placeholder="Weaknesses, vices, fears…" readOnly={!isGm} />
+            </>)}
 
           </div>
         </div>

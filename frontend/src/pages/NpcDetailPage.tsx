@@ -83,7 +83,7 @@ export default function NpcDetailPage() {
     saveNpc.mutate({ ...npc, [field]: html || undefined, updatedAt: new Date().toISOString() });
   }, [npc, saveNpc]);
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUpload = useCallback(async (file: File) => {
     if (import.meta.env.VITE_USE_MOCK !== 'false') {
       const reader = new FileReader();
       reader.onload = (ev) => saveNpc.mutate({ ...npc!, image: ev.target?.result as string, updatedAt: new Date().toISOString() });
@@ -97,7 +97,9 @@ export default function NpcDetailPage() {
     } catch (err) {
       console.error('Upload failed:', err);
     }
-  };
+  }, [campaignId, npc, saveNpc, refetch]);
+
+  const handleViewImage = useCallback(() => setLightbox(true), []);
 
   const groupNameById = (id: string) => groups?.find((g) => g.id === id)?.name ?? id;
 
@@ -143,13 +145,28 @@ export default function NpcDetailPage() {
             <section className="flex flex-col md:flex-row gap-8 items-start">
               <div className="relative group flex-shrink-0">
                 <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                <ImageUpload
-                  image={resolveImageUrl(npc.image, imgVersion)}
-                  name={npc.name}
-                  className="relative w-48 h-64"
-                  onUpload={handleImageUpload}
-                  onView={npc.image ? () => setLightbox(true) : undefined}
-                />
+                {isGm ? (
+                  <ImageUpload
+                    image={resolveImageUrl(npc.image, imgVersion)}
+                    name={npc.name}
+                    className="relative w-48 h-64"
+                    onUpload={handleImageUpload}
+                    onView={handleViewImage}
+                  />
+                ) : (
+                  <div className="relative w-48 h-64 rounded-sm bg-surface-container-low flex items-center justify-center overflow-hidden">
+                    {resolveImageUrl(npc.image) ? (
+                      <>
+                        <img src={resolveImageUrl(npc.image)} aria-hidden alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40 pointer-events-none" />
+                        <img src={resolveImageUrl(npc.image)} alt={npc.name} className="relative w-full h-full object-contain drop-shadow-2xl" />
+                      </>
+                    ) : (
+                      <span className="font-headline text-[8rem] font-bold text-on-surface-variant/10 select-none leading-none">
+                        {npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 pt-4 space-y-4">
@@ -209,7 +226,8 @@ export default function NpcDetailPage() {
 
             <InlineRichField label="Background" value={npc.description}
               onSave={(html) => saveField('description', html)}
-              placeholder="History, role, key facts…" />
+              placeholder="History, role, key facts…"
+              readOnly={!isGm} />
 
             {/* Group Memberships */}
             {groupsEnabled && (() => {
@@ -239,6 +257,7 @@ export default function NpcDetailPage() {
                       Group Memberships
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
+                    {isGm && (
                     <button
                       onClick={() => { setAddGroupOpen((v) => !v); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); }}
                       className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
@@ -246,6 +265,7 @@ export default function NpcDetailPage() {
                       <span className="material-symbols-outlined text-[13px]">group_add</span>
                       Add
                     </button>
+                    )}
                   </div>
 
                   {addGroupOpen && (
@@ -343,7 +363,7 @@ export default function NpcDetailPage() {
                               arrow_forward
                             </span>
                           </Link>
-                          {confirmRemoveGroupId === m.groupId ? (
+                          {isGm && (confirmRemoveGroupId === m.groupId ? (
                             <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
                               <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
                               <button
@@ -367,7 +387,7 @@ export default function NpcDetailPage() {
                             >
                               <span className="material-symbols-outlined text-[14px]">close</span>
                             </button>
-                          )}
+                          ))}
                         </div>
                       ))}
                     </div>
@@ -421,7 +441,7 @@ export default function NpcDetailPage() {
             )}
 
             {/* Social Relations */}
-            <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />
+            <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} readOnly={!isGm} />
 
             {/* Quests (given by this NPC) */}
             {questsEnabled && (() => {
@@ -504,6 +524,7 @@ export default function NpcDetailPage() {
           {/* ── Right column (35%) ─────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
+            {isGm && (
             <div className="flex justify-end gap-2">
               {confirmDelete ? (
                 <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
@@ -527,22 +548,27 @@ export default function NpcDetailPage() {
                 Edit Record
               </button>
             </div>
+            )}
 
             <InlineRichField label="Appearance" value={npc.appearance}
               onSave={(html) => saveField('appearance', html)}
-              placeholder="Physical description…" />
+              placeholder="Physical description…"
+              readOnly={!isGm} />
 
             <InlineRichField label="Personality" value={npc.personality}
               onSave={(html) => saveField('personality', html)}
-              placeholder="Traits, mannerisms, quirks…" />
+              placeholder="Traits, mannerisms, quirks…"
+              readOnly={!isGm} />
 
             <InlineRichField label="Motivation & Ideals" value={npc.motivation}
               onSave={(html) => saveField('motivation', html)}
-              placeholder="What drives them, what they believe in…" />
+              placeholder="What drives them, what they believe in…"
+              readOnly={!isGm} />
 
             <InlineRichField label="Flaws" value={npc.flaws}
               onSave={(html) => saveField('flaws', html)}
-              placeholder="Weaknesses, vices, fears…" />
+              placeholder="Weaknesses, vices, fears…"
+              readOnly={!isGm} />
 
             {/* Locations section */}
             {locationsEnabled && (() => {
@@ -579,6 +605,7 @@ export default function NpcDetailPage() {
                       Locations
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
+                    {isGm && (
                     <button
                       onClick={() => { setAddLocOpen((v) => !v); setAddLocSearch(''); }}
                       className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
@@ -586,6 +613,7 @@ export default function NpcDetailPage() {
                       <span className="material-symbols-outlined text-[13px]">add_location</span>
                       Add
                     </button>
+                    )}
                   </div>
 
                   {addLocOpen && (
@@ -642,7 +670,7 @@ export default function NpcDetailPage() {
                                   arrow_forward
                                 </span>
                               </Link>
-                              {confirmRemoveLocId === loc.id ? (
+                              {isGm && (confirmRemoveLocId === loc.id ? (
                                 <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                                   <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
                                   <button
@@ -666,10 +694,10 @@ export default function NpcDetailPage() {
                                 >
                                   <span className="material-symbols-outlined text-[14px]">close</span>
                                 </button>
-                              )}
+                              ))}
                             </div>
                             {/* Presence note */}
-                            {isEditingNote ? (
+                            {isGm && isEditingNote ? (
                               <div className="px-3 pb-3 flex items-center gap-2">
                                 <input
                                   autoFocus
@@ -697,23 +725,17 @@ export default function NpcDetailPage() {
                                 </button>
                               </div>
                             ) : (
-                              <div
-                                className="px-3 pb-2.5 flex items-center gap-1.5 cursor-pointer group/note"
-                                onClick={() => {
-                                  setEditingNoteForLocId(loc.id);
-                                  setNoteInput(presence?.note ?? '');
-                                }}
-                              >
+                              <div className="px-3 pb-2.5 flex items-center gap-1.5">
                                 {presence?.note ? (
                                   <p className="text-[11px] text-on-surface-variant/60 italic flex-1">{presence.note}</p>
-                                ) : (
-                                  <p className="text-[10px] text-on-surface-variant/20 italic flex-1 opacity-0 group-hover/note:opacity-100 transition-opacity">
+                                ) : isGm ? (
+                                  <p
+                                    className="text-[10px] text-on-surface-variant/20 italic flex-1 cursor-pointer opacity-0 group-hover/card:opacity-100 transition-opacity"
+                                    onClick={() => { setEditingNoteForLocId(loc.id); setNoteInput(''); }}
+                                  >
                                     Add presence note…
                                   </p>
-                                )}
-                                <span className="material-symbols-outlined text-[12px] text-on-surface-variant/20 group-hover/note:text-primary/50 transition-colors opacity-0 group-hover/note:opacity-100">
-                                  edit
-                                </span>
+                                ) : null}
                               </div>
                             )}
                           </div>

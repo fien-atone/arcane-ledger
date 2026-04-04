@@ -10,7 +10,7 @@ export const npcResolvers = {
       const where = role === 'PLAYER'
         ? { campaignId, playerVisible: true as const }
         : { campaignId };
-      const npcs = await ctx.prisma.nPC.findMany({ where });
+      const npcs = await ctx.prisma.nPC.findMany({ where, orderBy: { name: 'asc' } });
       if (role === 'PLAYER') {
         return npcs.map((npc) => redactEntity(npc, npc.playerVisibleFields, NPC_FIELDS));
       }

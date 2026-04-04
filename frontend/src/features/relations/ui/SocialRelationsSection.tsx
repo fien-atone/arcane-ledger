@@ -15,6 +15,7 @@ import type { EntityRef, Relation } from '@/entities/relation';
 interface Props {
   campaignId: string;
   entityId: string;
+  readOnly?: boolean;
 }
 
 const SEGMENTS = [
@@ -50,7 +51,7 @@ function FriendlinessBar({ score }: { score: number }) {
   );
 }
 
-export function SocialRelationsSection({ campaignId, entityId }: Props) {
+export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props) {
   const { data: relations } = useRelationsForEntity(campaignId, entityId);
   const { data: allNpcs } = useNpcs(campaignId);
   const { data: allChars } = useParty(campaignId);
@@ -222,7 +223,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
         </Link>
         <div className="relative flex items-center flex-shrink-0">
           <FriendlinessBar score={rel.friendliness} />
-          {direction === 'out' && (
+          {direction === 'out' && !readOnly && (
             confirmDeleteId === rel.id ? (
               <div className="absolute inset-0 flex items-center justify-end gap-1 bg-surface-container-low/95 backdrop-blur-sm">
                 <span className="text-[9px] text-on-surface-variant">Remove?</span>
@@ -252,6 +253,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
           Social Relations
         </h2>
         <div className="h-px flex-1 bg-outline-variant/20" />
+        {!readOnly && (
         <button
           onClick={() => { setAddOpen((v) => !v); setAddSearch(''); }}
           className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
@@ -259,6 +261,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
           <span className="material-symbols-outlined text-[13px]">person_add</span>
           Add
         </button>
+        )}
       </div>
 
       {addOpen && (

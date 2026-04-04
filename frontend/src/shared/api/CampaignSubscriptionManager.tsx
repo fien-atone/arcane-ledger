@@ -30,15 +30,8 @@ export function CampaignSubscriptionManager({ campaignId }: Props) {
       const queryNames = REFETCH_MAP[event.entityType] ?? [];
       if (!queryNames.length) return;
 
-      client.refetchQueries({
-        include: 'active',
-        onQueryUpdated(observableQuery) {
-          if (observableQuery.queryName && queryNames.includes(observableQuery.queryName)) {
-            return observableQuery.refetch();
-          }
-          return false;
-        },
-      }).catch(() => {});
+      // Refetch by operation names — warnings for inactive queries are harmless
+      client.refetchQueries({ include: queryNames }).catch(() => {});
     },
   });
 

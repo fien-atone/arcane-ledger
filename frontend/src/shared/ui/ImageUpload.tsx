@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, memo } from 'react';
 
 interface ImageUploadProps {
   image?: string;
@@ -14,7 +14,7 @@ interface ImageUploadProps {
   uploadLabel?: string;
 }
 
-export function ImageUpload({ image, name, className = 'w-full aspect-[16/9]', onUpload, onView, onLoad, hideControls, uploadLabel = 'Upload Portrait' }: ImageUploadProps) {
+export const ImageUpload = memo(function ImageUpload({ image, name, className = 'w-full aspect-[16/9]', onUpload, onView, onLoad, hideControls, uploadLabel = 'Upload Portrait' }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initials = name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
@@ -75,4 +75,4 @@ export function ImageUpload({ image, name, className = 'w-full aspect-[16/9]', o
       />
     </div>
   );
-}
+});

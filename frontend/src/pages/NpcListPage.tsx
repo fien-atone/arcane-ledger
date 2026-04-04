@@ -271,6 +271,7 @@ export default function NpcListPage() {
               </Link>
             </div>
             )}
+            {isGm && (
             <button
               onClick={() => setAddOpen(true)}
               className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
@@ -278,6 +279,7 @@ export default function NpcListPage() {
               <span className="material-symbols-outlined text-[20px]">add</span>
               <span className="font-label text-xs uppercase tracking-widest">Add NPC</span>
             </button>
+            )}
           </div>
         </div>
       </header>
