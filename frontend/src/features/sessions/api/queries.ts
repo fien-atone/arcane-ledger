@@ -15,9 +15,10 @@ const SESSIONS_QUERY = gql`
       brief
       summary
       createdAt
-      npcs { id }
-      locations { id }
-      quests { id }
+      npcs { id name status species image }
+      locations { id name type }
+      quests { id title status }
+      myNote { id content updatedAt }
     }
   }
 `;
@@ -33,6 +34,10 @@ const SAVE_SESSION = gql`
       brief
       summary
       createdAt
+      npcs { id name status species image }
+      locations { id name type }
+      quests { id title status }
+      myNote { id content updatedAt }
     }
   }
 `;
@@ -40,6 +45,16 @@ const SAVE_SESSION = gql`
 const DELETE_SESSION = gql`
   mutation DeleteSession($campaignId: ID!, $id: ID!) {
     deleteSession(campaignId: $campaignId, id: $id)
+  }
+`;
+
+const SAVE_SESSION_NOTE = gql`
+  mutation SaveSessionNote($sessionId: ID!, $content: String!) {
+    saveSessionNote(sessionId: $sessionId, content: $content) {
+      id
+      content
+      updatedAt
+    }
   }
 `;
 
@@ -60,6 +75,10 @@ function mapSession(raw: any): Session {
     npcIds: raw.npcs?.map((n: any) => n.id),
     locationIds: raw.locations?.map((l: any) => l.id),
     questIds: raw.quests?.map((q: any) => q.id),
+    npcs: raw.npcs ?? [],
+    locations: raw.locations ?? [],
+    quests: raw.quests ?? [],
+    myNote: raw.myNote ?? undefined,
   };
 }
 
@@ -97,24 +116,23 @@ export const useSaveSession = (campaignId: string) => {
   });
 
   return {
-    mutate: (session: Session, options?: { onSuccess?: () => void }) => {
+    mutate: (session: Session, options?: { onSuccess?: () => void; only?: 'npcIds' | 'locationIds' | 'questIds' }) =>
       saveSession({
         variables: {
           campaignId,
-          id: session.id,
+          id: session.id || undefined,
           input: {
             number: session.number,
             title: session.title,
             datetime: session.datetime || undefined,
             brief: session.brief,
             summary: session.summary,
-            npcIds: session.npcIds,
-            locationIds: session.locationIds,
-            questIds: session.questIds,
+            npcIds: !options?.only || options.only === 'npcIds' ? session.npcIds : undefined,
+            locationIds: !options?.only || options.only === 'locationIds' ? session.locationIds : undefined,
+            questIds: !options?.only || options.only === 'questIds' ? session.questIds : undefined,
           },
         },
-      }).then(() => options?.onSuccess?.());
-    },
+      }).then(() => options?.onSuccess?.()),
     isPending: loading,
   };
 };
@@ -129,6 +147,19 @@ export const useDeleteSession = (campaignId: string) => {
       deleteSession({
         variables: { campaignId, id },
       }).then(() => options?.onSuccess?.());
+    },
+    isPending: loading,
+  };
+};
+
+export const useSessionNote = (campaignId: string) => {
+  const [saveNote, { loading }] = useMutation(SAVE_SESSION_NOTE, {
+    refetchQueries: [{ query: SESSIONS_QUERY, variables: { campaignId } }],
+  });
+
+  return {
+    mutate: (sessionId: string, content: string) => {
+      saveNote({ variables: { sessionId, content } });
     },
     isPending: loading,
   };

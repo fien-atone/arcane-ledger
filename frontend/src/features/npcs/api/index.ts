@@ -1,1 +1,1 @@
-export { useNpcs, useNpc, useSaveNpc, useDeleteNpc } from './queries';
+export { useNpcs, useNpc, useSaveNpc, useDeleteNpc, useAddNPCGroupMembership, useRemoveNPCGroupMembership } from './queries';

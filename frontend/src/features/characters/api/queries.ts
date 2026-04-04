@@ -24,9 +24,34 @@ const PARTY_QUERY = gql`
       flaws
       gmNotes
       image
+      groupMemberships { groupId relation subfaction }
       createdAt
       updatedAt
     }
+  }
+`;
+
+const ADD_CHARACTER_GROUP_MEMBERSHIP = gql`
+  mutation AddCharacterGroupMembership($characterId: ID!, $groupId: ID!, $relation: String, $subfaction: String) {
+    addCharacterGroupMembership(characterId: $characterId, groupId: $groupId, relation: $relation, subfaction: $subfaction) {
+      id
+      groupMemberships { groupId relation subfaction }
+    }
+  }
+`;
+
+const REMOVE_CHARACTER_GROUP_MEMBERSHIP = gql`
+  mutation RemoveCharacterGroupMembership($characterId: ID!, $groupId: ID!) {
+    removeCharacterGroupMembership(characterId: $characterId, groupId: $groupId) {
+      id
+      groupMemberships { groupId relation subfaction }
+    }
+  }
+`;
+
+const DELETE_CHARACTER = gql`
+  mutation DeleteCharacter($campaignId: ID!, $id: ID!) {
+    deleteCharacter(campaignId: $campaignId, id: $id)
   }
 `;
 
@@ -34,6 +59,7 @@ const SAVE_CHARACTER = gql`
   mutation SaveCharacter(
     $campaignId: ID!
     $id: ID
+    $userId: ID
     $name: String!
     $gender: Gender
     $age: Int
@@ -52,6 +78,7 @@ const SAVE_CHARACTER = gql`
     saveCharacter(
       campaignId: $campaignId
       id: $id
+      userId: $userId
       name: $name
       gender: $gender
       age: $age
@@ -97,19 +124,21 @@ function mapCharacter(raw: any): PlayerCharacter {
   return {
     ...raw,
     gender: raw.gender?.toLowerCase(),
+    groupMemberships: raw.groupMemberships ?? [],
   };
 }
 
 // ── Hooks ─────────────────────────────────────────────────────────
 
 export const useParty = (campaignId: string) => {
-  const { data, loading, error } = useQuery<any>(PARTY_QUERY, {
+  const { data, loading, error, refetch } = useQuery<any>(PARTY_QUERY, {
     variables: { campaignId },
   });
   return {
     data: data?.party?.map(mapCharacter) as PlayerCharacter[] | undefined,
     isLoading: loading,
     isError: !!error,
+    refetch,
   };
 };
 
@@ -121,7 +150,8 @@ export const useSaveCharacter = () => {
       saveCharacter({
         variables: {
           campaignId: character.campaignId,
-          id: character.id,
+          id: character.id || undefined,
+          userId: character.userId || undefined,
           name: character.name,
           gender: character.gender?.toUpperCase(),
           age: character.age,
@@ -135,10 +165,61 @@ export const useSaveCharacter = () => {
           bonds: character.bonds,
           flaws: character.flaws,
           gmNotes: character.gmNotes,
-          image: character.image,
         },
-        refetchQueries: [{ query: PARTY_QUERY, variables: { campaignId: character.campaignId } }],
+        refetchQueries: [{ query: PARTY_QUERY, variables: { campaignId: character.campaignId } }, 'PartySlots'],
       }).then(() => options?.onSuccess?.());
+    },
+    isPending: loading,
+  };
+};
+
+export const useAddCharacterGroupMembership = () => {
+  const [execute, { loading, error }] = useMutation(ADD_CHARACTER_GROUP_MEMBERSHIP);
+  return {
+    mutate: (
+      vars: { characterId: string; groupId: string; relation?: string; subfaction?: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Party', 'Groups'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useRemoveCharacterGroupMembership = () => {
+  const [execute, { loading, error }] = useMutation(REMOVE_CHARACTER_GROUP_MEMBERSHIP);
+  return {
+    mutate: (
+      vars: { characterId: string; groupId: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Party', 'Groups'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useDeleteCharacter = () => {
+  const [execute, { loading }] = useMutation(DELETE_CHARACTER);
+  return {
+    mutate: (
+      { campaignId, charId }: { campaignId: string; charId: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: { campaignId, id: charId },
+        refetchQueries: ['Party', 'PartySlots'],
+      }).then(() => opts?.onSuccess?.());
     },
     isPending: loading,
   };

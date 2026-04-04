@@ -6,7 +6,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-fc-farchester',
     campaignId: 'campaign-farchester',
     name: 'Фарчестер',
-    aliases: ['Farchester'],
     type: 'city',
     settlementPopulation: 12000,
     description:
@@ -19,7 +18,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-fc-rathusha',
     campaignId: 'campaign-farchester',
     name: 'Ратуша',
-    aliases: ['Town Hall'],
     type: 'building',
     parentLocationId: 'loc-fc-farchester',
     description: 'Центральная ратуша. Место встречи с бургомистром Стоунгривом. Рядом фонтан.',
@@ -29,7 +27,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-fc-residence',
     campaignId: 'campaign-farchester',
     name: 'Резиденция Кронхейва',
-    aliases: ["Kronhev's Residence"],
     type: 'building',
     parentLocationId: 'loc-fc-farchester',
     description: 'Большой дом с садом, много стражников в красном. Резиденция Лорд-Адмирала Кронхейва.',
@@ -39,7 +36,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-fc-tavern',
     campaignId: 'campaign-farchester',
     name: 'Таверна Ы Куру Айр',
-    aliases: ['Y Kuru Ayr', 'The Tavern'],
     type: 'building',
     parentLocationId: 'loc-fc-farchester',
     description: 'Таверна, где остановилась партия. Тавернщик Йорверт. Место отдыха и планирования.',
@@ -49,7 +45,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-fc-tower',
     campaignId: 'campaign-farchester',
     name: 'Башня мага',
-    aliases: ["Mage's Tower", "Tuts' Tower"],
     type: 'building',
     parentLocationId: 'loc-fc-farchester',
     description: 'Башня городского мага Тутса. Потрёпанная, но функционирующая.',
@@ -61,7 +56,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-region',
     campaignId: 'campaign-drakkenheim',
     name: 'Drakkenheim Region',
-    aliases: ['Регион Дракенхейма'],
     type: 'region',
     description:
       'Регион вокруг разрушенного Дракенхейма. Заражён делириумом. Искажённые мутанты бродят по руинам.',
@@ -71,7 +65,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-emberwood-region',
     campaignId: 'campaign-drakkenheim',
     name: 'Emberwood Village Region',
-    aliases: ['Регион Эмбервуда'],
     type: 'region',
     description: 'Регион вокруг Эмбервуда — относительно безопасная зона вдали от делириума.',
     createdAt: '2025-09-01T00:00:00Z',
@@ -82,7 +75,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-road',
     campaignId: 'campaign-drakkenheim',
     name: 'Road to Emberwood',
-    aliases: ['Дорога в Эмбервуд'],
     type: 'district',
     parentLocationId: 'loc-dk-emberwood-region',
     description:
@@ -93,7 +85,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-zoya-house',
     campaignId: 'campaign-drakkenheim',
     name: 'Zoya House',
-    aliases: ['Домик Зои'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood-region',
     description:
@@ -106,7 +97,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-emberwood',
     campaignId: 'campaign-drakkenheim',
     name: 'Emberwood Village',
-    aliases: ['Эмбервуд', 'Emberwood'],
     type: 'village',
     settlementPopulation: 340,
     parentLocationId: 'loc-dk-emberwood-region',
@@ -117,7 +107,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-marketplace',
     campaignId: 'campaign-drakkenheim',
     name: 'Marketplace',
-    aliases: ['Рынок в Эмбервуд', 'Emberwood City Centre'],
     type: 'district',
     parentLocationId: 'loc-dk-emberwood',
     description:
@@ -128,7 +117,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-bark',
     campaignId: 'campaign-drakkenheim',
     name: 'Bark and Buzzard',
-    aliases: ['Коршун и Ищейка'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood',
     description: 'Рекомендованная таверна. Еда 1gp, домик 2gp за человека. Хозяйка — Карин Альсберг.',
@@ -138,7 +126,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-skull',
     campaignId: 'campaign-drakkenheim',
     name: 'Skull and Sword Taphouse',
-    aliases: ['Меч и Череп'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood',
     description: "Таверна Людей Королевы. Подозрительная атмосфера. Место для контактов с Queen's Men.",
@@ -148,7 +135,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-red-lion',
     campaignId: 'campaign-drakkenheim',
     name: 'Red Lion Hotel',
-    aliases: ['Красный Лев'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood',
     description:
@@ -159,7 +145,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-gilded-lily',
     campaignId: 'campaign-drakkenheim',
     name: 'Gilded Lily',
-    aliases: ['Позолоченная Лилия'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood',
     description:
@@ -170,7 +155,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-smithy',
     campaignId: 'campaign-drakkenheim',
     name: 'Crowe and Sons Smithy',
-    aliases: ['Кузня Кроу'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood',
     description: 'Кузня Тобиаса Кроу. Дорогая, но делают на заказ.',
@@ -180,7 +164,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-chapel',
     campaignId: 'campaign-drakkenheim',
     name: 'Chapel of Saint Ardenna',
-    aliases: ['Часовня Святой Арденны'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood',
     description: 'База Рыцарей Серебряного Ордена в Эмбервуде. Центр Священного Пламени.',
@@ -190,7 +173,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-watchtower',
     campaignId: 'campaign-drakkenheim',
     name: 'Emberwood Watchtower',
-    aliases: ['Часовая Башня', 'Башня фонарей'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood',
     description:
@@ -201,7 +183,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-old-rattlecan',
     campaignId: 'campaign-drakkenheim',
     name: 'Old Rattlecan',
-    aliases: ['Старый Трещот'],
     type: 'building',
     parentLocationId: 'loc-dk-emberwood',
     description:
@@ -214,7 +195,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-eckerman-mill',
     campaignId: 'campaign-drakkenheim',
     name: 'Eckerman Mill',
-    aliases: ['Мельница Эккермена'],
     type: 'building',
     parentLocationId: 'loc-dk-region',
     description:
@@ -227,7 +207,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-city',
     campaignId: 'campaign-drakkenheim',
     name: 'Drakkenheim',
-    aliases: ['Дракенхейм', 'Драккенхейм'],
     type: 'city',
     settlementPopulation: 40000,
     parentLocationId: 'loc-dk-region',
@@ -239,7 +218,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-house-copperpot',
     campaignId: 'campaign-drakkenheim',
     name: "House with Copperpot's Corpse",
-    aliases: ['Домик с трупом Копперпота'],
     type: 'building',
     parentLocationId: 'loc-dk-city',
     description:
@@ -250,7 +228,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-champions-gate',
     campaignId: 'campaign-drakkenheim',
     name: "Champion's Gate",
-    aliases: ['Врата Чемпионов'],
     type: 'building',
     parentLocationId: 'loc-dk-city',
     description:
@@ -261,7 +238,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-bent-row',
     campaignId: 'campaign-drakkenheim',
     name: 'Bent Row',
-    aliases: ['Прогнутый ряд'],
     type: 'district',
     parentLocationId: 'loc-dk-city',
     description:
@@ -272,7 +248,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-rat-nest',
     campaignId: 'campaign-drakkenheim',
     name: 'Rat Nest',
-    aliases: ['Крысиное гнездо'],
     type: 'dungeon',
     parentLocationId: 'loc-dk-city',
     description: 'Гнездо крыс в руинах Дракенхейма. Здесь была заперта Петра Лэнг. Зачищено партией.',
@@ -284,7 +259,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-old-imperial-pub',
     campaignId: 'campaign-drakkenheim',
     name: 'Old Imperial Pub',
-    aliases: ['Старый Имперский Паб'],
     type: 'building',
     parentLocationId: 'loc-dk-bent-row',
     description:
@@ -295,7 +269,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-sweaty-bugbear',
     campaignId: 'campaign-drakkenheim',
     name: 'Sweaty Bugbear',
-    aliases: ['Трактир Потный Багбир'],
     type: 'building',
     parentLocationId: 'loc-dk-bent-row',
     description:
@@ -306,7 +279,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-smis-palace',
     campaignId: 'campaign-drakkenheim',
     name: "Smi's Palace",
-    aliases: ['Дворец Сми'],
     type: 'building',
     parentLocationId: 'loc-dk-bent-row',
     description:
@@ -317,7 +289,6 @@ export const MOCK_LOCATIONS: Location[] = [
     id: 'loc-dk-arena',
     campaignId: 'campaign-drakkenheim',
     name: 'Arena',
-    aliases: ['Подземная Арена'],
     type: 'dungeon',
     parentLocationId: 'loc-dk-bent-row',
     description:

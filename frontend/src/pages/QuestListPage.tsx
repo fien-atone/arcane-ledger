@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuests } from '@/features/quests/api';
-import { useNpcs } from '@/features/npcs/api/queries';
+import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
-import { RichContent } from '@/shared/ui';
+import { RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Quest, QuestStatus } from '@/entities/quest';
 
 const STATUS_CONFIG: Record<QuestStatus, { label: string; dot: string; pill: string; icon: string; iconColor: string }> = {
@@ -34,8 +35,12 @@ function SectionHeader({ title }: { title: string }) {
 
 function QuestPreview({ quest, campaignId }: { quest: Quest; campaignId: string }) {
   const st = STATUS_CONFIG[quest.status];
-  const { data: allNpcs } = useNpcs(campaignId);
-  const giver = quest.giverId ? allNpcs?.find((n) => n.id === quest.giverId) : undefined;
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
+  const sessionsEnabled = useSectionEnabled(campaignId, 'sessions');
+  const { data: campaign } = useCampaign(campaignId);
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
+  const giver = quest.giver;
+  const linkedSessions = [...(quest.sessions ?? [])].sort((a, b) => b.number - a.number);
 
   return (
     <div className="flex flex-col overflow-y-auto h-full px-10 py-8">
@@ -52,15 +57,29 @@ function QuestPreview({ quest, campaignId }: { quest: Quest; campaignId: string 
       </div>
 
       {/* Quest Giver */}
-      {giver && (
+      {npcsEnabled && giver && (
         <div className="mb-6">
           <SectionHeader title="Quest Giver" />
           <Link
             to={`/campaigns/${campaignId}/npcs/${giver.id}`}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors inline-flex"
+            className="group flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
           >
-            <span className="material-symbols-outlined text-[13px] text-on-surface-variant/40">person</span>
-            {giver.name}
+            <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
+              {giver.image ? (
+                <img src={resolveImageUrl(giver.image)} alt={giver.name} className="w-full h-full object-cover rounded-sm" />
+              ) : (
+                <span className="text-xs font-bold text-on-surface-variant/60">
+                  {giver.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{giver.name}</p>
+              {giver.species && (
+                <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-wider">{giver.species}</p>
+              )}
+            </div>
+            <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
           </Link>
         </div>
       )}
@@ -79,7 +98,27 @@ function QuestPreview({ quest, campaignId }: { quest: Quest; campaignId: string 
         </div>
       )}
 
-      {quest.notes && (
+      {/* Sessions */}
+      {sessionsEnabled && linkedSessions.length > 0 && (
+        <div className="mb-6">
+          <SectionHeader title={`Sessions (${linkedSessions.length})`} />
+          <div className="flex flex-wrap gap-2">
+            {linkedSessions.map((s) => (
+              <Link
+                key={s.id}
+                to={`/campaigns/${campaignId}/sessions/${s.id}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
+              >
+                <span className="font-headline text-[10px] font-bold italic text-on-surface-variant/50">#{String(s.number).padStart(2, '0')}</span>
+                {s.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* GM Notes */}
+      {isGm && quest.notes && (
         <div className="mb-6 relative pl-4">
           <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/40" />
           <div className="flex items-center gap-3 mb-2">
@@ -95,7 +134,11 @@ function QuestPreview({ quest, campaignId }: { quest: Quest; campaignId: string 
 
 export default function QuestListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: quests, isLoading, isError } = useQuests(campaignId ?? '');
+  const setQuestVisibility = useSetQuestVisibility();
   const [statusFilter, setStatusFilter] = useState<QuestStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -109,6 +152,10 @@ export default function QuestListPage() {
 
   const selected = quests?.find((q) => q.id === selectedId) ?? filtered[0] ?? null;
 
+  if (!questsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
+
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
       <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5">
@@ -117,13 +164,15 @@ export default function QuestListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Quests</h1>
             <p className="text-on-surface-variant text-sm mt-1">Active threads and chronicle of completed tasks.</p>
           </div>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            <span className="font-label text-xs uppercase tracking-widest">New Quest</span>
-          </button>
+          {isGm && (
+            <button
+              onClick={() => setAddOpen(true)}
+              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="font-label text-xs uppercase tracking-widest">New Quest</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -165,7 +214,7 @@ export default function QuestListPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {filtered.length === 0 && <p className="text-xs text-on-surface-variant/40 italic p-6">No quests found.</p>}
+              {filtered.length === 0 && <EmptyState icon="map" title="No quests found." subtitle="Create a quest to track objectives." />}
               {filtered.map((quest) => {
                 const st = STATUS_CONFIG[quest.status];
                 const isSelected = selected?.id === quest.id;
@@ -185,6 +234,29 @@ export default function QuestListPage() {
                       <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : quest.status === 'unavailable' ? 'text-on-surface/50 line-through' : 'text-on-surface font-medium'}`}>{quest.title}</p>
                       <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>{st.label}</p>
                     </div>
+                    {isGm && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuestVisibility.mutate({
+                            campaignId: campaignId!,
+                            id: quest.id,
+                            playerVisible: !quest.playerVisible,
+                            playerVisibleFields: quest.playerVisibleFields ?? [],
+                          });
+                        }}
+                        title={quest.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                        className={`flex-shrink-0 p-1 transition-colors ${
+                          quest.playerVisible
+                            ? 'text-primary/60 hover:text-primary'
+                            : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">
+                          {quest.playerVisible ? 'visibility' : 'visibility_off'}
+                        </span>
+                      </button>
+                    )}
                   </button>
                 );
               })}

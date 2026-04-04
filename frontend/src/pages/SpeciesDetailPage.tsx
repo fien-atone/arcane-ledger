@@ -1,16 +1,11 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useSpeciesById } from '@/features/species/api';
+import { useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSpeciesById, useSaveSpecies, useDeleteSpecies } from '@/features/species/api';
+import { useSpeciesTypes } from '@/features/speciesTypes/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { SpeciesEditDrawer } from '@/features/species/ui';
-import { BackLink } from '@/shared/ui';
-import type { SpeciesSize, SpeciesType } from '@/entities/species';
-
-const TYPE_LABEL: Record<SpeciesType, string> = {
-  humanoid: 'Humanoid', beast: 'Beast', undead: 'Undead', construct: 'Construct',
-  fey: 'Fey', fiend: 'Fiend', celestial: 'Celestial', dragon: 'Dragon',
-  elemental: 'Elemental', giant: 'Giant', monstrosity: 'Monstrosity',
-  plant: 'Plant', ooze: 'Ooze', aberration: 'Aberration',
-};
+import { BackLink, InlineRichField } from '@/shared/ui';
+import type { SpeciesSize } from '@/entities/species';
 
 const SIZE_LABEL: Record<SpeciesSize, string> = {
   tiny: 'Tiny', small: 'Small', medium: 'Medium',
@@ -21,8 +16,19 @@ const SIZE_ORDER: SpeciesSize[] = ['tiny', 'small', 'medium', 'large', 'huge', '
 
 export default function SpeciesDetailPage() {
   const { id: campaignId, speciesId } = useParams<{ id: string; speciesId: string }>();
-  const { data: species, isLoading, isError } = useSpeciesById(speciesId);
+  const { data: species, isLoading, isError } = useSpeciesById(campaignId, speciesId);
+  const { data: speciesTypes } = useSpeciesTypes(campaignId);
+  const typesEnabled = useSectionEnabled(campaignId ?? '', 'species_types');
+  const saveSpecies = useSaveSpecies(campaignId ?? '');
+  const deleteSpecies = useDeleteSpecies();
+  const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const saveDescription = useCallback((html: string) => {
+    if (!species) return;
+    saveSpecies.mutate({ ...species, description: html || undefined });
+  }, [species, saveSpecies]);
 
   if (isLoading) {
     return (
@@ -59,16 +65,34 @@ export default function SpeciesDetailPage() {
             )}
           </div>
           <div className="flex flex-col items-end gap-3">
-            <span className="px-3 py-1 bg-surface-container border border-outline-variant/20 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant rounded-sm">
-              {TYPE_LABEL[species.type]}
-            </span>
-            <button
-              onClick={() => setEditOpen(true)}
-              className="flex items-center gap-2 px-5 py-2 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm hover:opacity-90 transition-opacity"
-            >
-              <span className="material-symbols-outlined text-[16px]">edit</span>
-              Edit Species
-            </button>
+            {typesEnabled && (
+              <span className="px-3 py-1 bg-surface-container border border-outline-variant/20 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant rounded-sm">
+                {speciesTypes?.find((t) => t.id === species.type)?.name ?? species.type}
+              </span>
+            )}
+            <div className="flex gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[10px] text-on-surface-variant">Delete?</span>
+                  <button onClick={() => deleteSpecies.mutate(species.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/species`) })}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase text-error">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-0.5 text-[10px] font-label uppercase text-on-surface-variant">No</button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
+              <button
+                onClick={() => setEditOpen(true)}
+                className="flex items-center gap-2 px-5 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">edit</span>
+                Edit Species
+              </button>
+            </div>
           </div>
         </div>
 
@@ -92,16 +116,15 @@ export default function SpeciesDetailPage() {
           </div>
         </div>
 
-        {/* Description */}
-        {species.description && (
-          <section className="mb-10">
-            <div className="flex items-center gap-4 mb-4">
-              <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Overview</h2>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <p className="text-on-surface-variant leading-loose text-base">{species.description}</p>
-          </section>
-        )}
+        {/* Description — edit in place */}
+        <div className="mb-10">
+          <InlineRichField
+            label="Overview"
+            value={species.description}
+            onSave={saveDescription}
+            placeholder="Describe this species…"
+          />
+        </div>
 
         {/* Traits */}
         {species.traits && species.traits.length > 0 && (
@@ -124,7 +147,7 @@ export default function SpeciesDetailPage() {
         )}
       </div>
 
-      <SpeciesEditDrawer
+      <SpeciesEditDrawer campaignId={campaignId ?? ""}
         open={editOpen}
         onClose={() => setEditOpen(false)}
         species={species}

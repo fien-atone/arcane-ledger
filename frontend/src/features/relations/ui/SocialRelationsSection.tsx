@@ -4,6 +4,7 @@ import { useRelationsForEntity, useSaveRelation, useDeleteRelation } from '../ap
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useParty } from '@/features/characters/api/queries';
 import { useGroups } from '@/features/groups/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import {
   friendlinessLabel,
   friendlinessColor,
@@ -14,6 +15,7 @@ import type { EntityRef, Relation } from '@/entities/relation';
 interface Props {
   campaignId: string;
   entityId: string;
+  readOnly?: boolean;
 }
 
 const SEGMENTS = [
@@ -49,11 +51,14 @@ function FriendlinessBar({ score }: { score: number }) {
   );
 }
 
-export function SocialRelationsSection({ campaignId, entityId }: Props) {
+export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props) {
   const { data: relations } = useRelationsForEntity(campaignId, entityId);
   const { data: allNpcs } = useNpcs(campaignId);
   const { data: allChars } = useParty(campaignId);
   const { data: allGroups } = useGroups(campaignId);
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
+  const partyEnabled = useSectionEnabled(campaignId, 'party');
+  const groupsEnabled = useSectionEnabled(campaignId, 'groups');
   const saveRelation = useSaveRelation(campaignId);
   const deleteRelation = useDeleteRelation(campaignId);
 
@@ -78,12 +83,19 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
     return '#';
   }
 
-  const outgoing = (relations ?? []).filter((r) => r.fromEntity.id === entityId);
-  const incoming = (relations ?? []).filter((r) => r.toEntity.id === entityId);
+  // Filter out relations to disabled entity types
+  const isEntityVisible = (ref: EntityRef) => {
+    if (ref.type === 'npc' && !npcsEnabled) return false;
+    if (ref.type === 'character' && !partyEnabled) return false;
+    if (ref.type === 'group' && !groupsEnabled) return false;
+    return true;
+  };
+  const outgoing = (relations ?? []).filter((r) => r.fromEntity.id === entityId && isEntityVisible(r.toEntity));
+  const incoming = (relations ?? []).filter((r) => r.toEntity.id === entityId && isEntityVisible(r.fromEntity));
 
   // NPCs available to add (not already in outgoing)
   const existingTargetIds = new Set(outgoing.map((r) => r.toEntity.id));
-  const availableNpcs = (allNpcs ?? [])
+  const availableNpcs = (!npcsEnabled ? [] : (allNpcs ?? []))
     .filter((n) => n.id !== entityId && !existingTargetIds.has(n.id))
     .filter((n) => !addSearch.trim() || n.name.toLowerCase().includes(addSearch.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -91,7 +103,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
   const handleAdd = (targetId: string) => {
     const now = new Date().toISOString();
     saveRelation.mutate({
-      id: `rel-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: '',
       campaignId,
       fromEntity: { type: 'npc', id: entityId },
       toEntity: { type: 'npc', id: targetId },
@@ -211,7 +223,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
         </Link>
         <div className="relative flex items-center flex-shrink-0">
           <FriendlinessBar score={rel.friendliness} />
-          {direction === 'out' && (
+          {direction === 'out' && !readOnly && (
             confirmDeleteId === rel.id ? (
               <div className="absolute inset-0 flex items-center justify-end gap-1 bg-surface-container-low/95 backdrop-blur-sm">
                 <span className="text-[9px] text-on-surface-variant">Remove?</span>
@@ -241,6 +253,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
           Social Relations
         </h2>
         <div className="h-px flex-1 bg-outline-variant/20" />
+        {!readOnly && (
         <button
           onClick={() => { setAddOpen((v) => !v); setAddSearch(''); }}
           className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
@@ -248,6 +261,7 @@ export function SocialRelationsSection({ campaignId, entityId }: Props) {
           <span className="material-symbols-outlined text-[13px]">person_add</span>
           Add
         </button>
+        )}
       </div>
 
       {addOpen && (

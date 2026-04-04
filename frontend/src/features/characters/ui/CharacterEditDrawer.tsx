@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveCharacter } from '@/features/characters/api/queries';
 import { useSpecies } from '@/features/species/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui';
 import type { PlayerCharacter, CharacterGender } from '@/entities/character';
 
@@ -9,13 +10,11 @@ interface Props {
   onClose: () => void;
   campaignId: string;
   character?: PlayerCharacter;
+  /** Pre-assign to this user on create */
+  forUserId?: string;
 }
 
 const now = () => new Date().toISOString();
-
-function generateId() {
-  return `char-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
 
 const inputCls =
   'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
@@ -24,9 +23,10 @@ const inputCls =
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
-export function CharacterEditDrawer({ open, onClose, campaignId, character }: Props) {
+export function CharacterEditDrawer({ open, onClose, campaignId, character, forUserId }: Props) {
   const save = useSaveCharacter();
-  const { data: allSpecies } = useSpecies();
+  const speciesEnabled = useSectionEnabled(campaignId, 'species');
+  const { data: allSpecies } = useSpecies(campaignId);
   const isNew = !character;
 
   const [name, setName] = useState('');
@@ -53,11 +53,12 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
     const selectedSpecies = allSpecies?.find((s) => s.id === speciesId);
     const ts = now();
     const record: PlayerCharacter = {
-      id: character?.id ?? generateId(),
+      id: character?.id ?? '',
       campaignId,
-      userId: character?.userId ?? 'gm',
+      userId: character?.userId ?? forUserId,
       image: character?.image,
       gmNotes: character?.gmNotes ?? '',
+      groupMemberships: character?.groupMemberships ?? [],
       createdAt: character?.createdAt ?? ts,
       ...(character ?? {}),
       name: name.trim(),
@@ -104,18 +105,20 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character }: Pr
           </div>
 
           {/* Species / Class */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${speciesEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {speciesEnabled && (
             <div>
               <label className={labelCls}>Species</label>
               <Select
                 value={speciesId}
                 onChange={(v) => setSpeciesId(v)}
                 placeholder="— None —"
-                options={(allSpecies ?? [])
+                options={[...(allSpecies ?? [])]
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((s) => ({ value: s.id, label: s.name }))}
               />
             </div>
+            )}
             <div>
               <label className={labelCls}>Class</label>
               <input type="text" value={cls} onChange={(e) => setCls(e.target.value)}

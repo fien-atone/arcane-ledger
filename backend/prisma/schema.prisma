@@ -9,35 +9,50 @@ datasource db {
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
+enum SystemRole {
+  ADMIN
+  USER
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
   password  String
   name      String
   avatar    String?
-  createdAt DateTime @default(now())
+  role      SystemRole @default(USER)
+  createdAt DateTime   @default(now())
 
-  campaignMembers CampaignMember[]
-  characters      PlayerCharacter[]
+  campaignMembers     CampaignMember[]
+  characters          PlayerCharacter[]
+  invitationsReceived CampaignInvitation[] @relation("InvitedUser")
+  invitationsSent     CampaignInvitation[] @relation("InvitedBy")
+  sessionNotes        SessionNote[]
 }
 
 // ── Campaigns ────────────────────────────────────────────────────────────────
 
 model Campaign {
-  id          String    @id @default(uuid())
-  title       String
-  description String?
-  createdAt   DateTime  @default(now())
-  archivedAt  DateTime?
+  id              String    @id @default(uuid())
+  title           String
+  description     String?
+  enabledSections String[]  @default([])
+  createdAt       DateTime  @default(now())
+  archivedAt      DateTime?
 
-  members    CampaignMember[]
-  sessions   Session[]
-  npcs       NPC[]
-  quests     Quest[]
-  groups     Group[]
-  locations  Location[]
-  relations  Relation[]
-  characters PlayerCharacter[]
+  members       CampaignMember[]
+  sessions      Session[]
+  npcs          NPC[]
+  quests        Quest[]
+  groups        Group[]
+  locationTypes LocationType[]
+  groupTypes    GroupType[]
+  speciesTypes  SpeciesType[]
+  species       Species[]
+  locations     Location[]
+  relations     Relation[]
+  characters    PlayerCharacter[]
+  invitations   CampaignInvitation[]
 }
 
 model CampaignMember {
@@ -46,15 +61,38 @@ model CampaignMember {
   campaignId String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
-  role       Role     @default(PLAYER)
-  joinedAt   DateTime @default(now())
+  role       CampaignRole @default(PLAYER)
+  joinedAt   DateTime     @default(now())
 
   @@unique([campaignId, userId])
 }
 
-enum Role {
+enum CampaignRole {
   GM
   PLAYER
+}
+
+// ── Campaign Invitations ─────────────────────────────────────────────────────
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model CampaignInvitation {
+  id          String           @id @default(uuid())
+  campaign    Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  user        User             @relation("InvitedUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  invitedBy   User             @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+  invitedById String
+  status      InvitationStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  respondedAt DateTime?
+
+  @@unique([campaignId, userId])
 }
 
 // ── Sessions ─────────────────────────────────────────────────────────────────
@@ -73,6 +111,7 @@ model Session {
   npcLinks      SessionNPC[]
   locationLinks SessionLocation[]
   questLinks    SessionQuest[]
+  notes         SessionNote[]
 }
 
 model SessionNPC {
@@ -102,6 +141,18 @@ model SessionQuest {
   @@id([sessionId, questId])
 }
 
+model SessionNote {
+  id        String   @id @default(uuid())
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  content   String   @default("")
+  updatedAt DateTime @updatedAt
+
+  @@unique([sessionId, userId])
+}
+
 // ── NPCs ─────────────────────────────────────────────────────────────────────
 
 model NPC {
@@ -125,6 +176,9 @@ model NPC {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
+
   locationPresences NPCLocationPresence[]
   groupMemberships  NPCGroupMembership[]
   sessionLinks      SessionNPC[]
@@ -138,7 +192,6 @@ enum NPCStatus {
   DEAD
   MISSING
   UNKNOWN
-  HOSTILE
 }
 
 enum Gender {
@@ -148,24 +201,26 @@ enum Gender {
 }
 
 model NPCLocationPresence {
-  id         String   @id @default(uuid())
-  npc        NPC      @relation(fields: [npcId], references: [id], onDelete: Cascade)
-  npcId      String
-  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  locationId String
-  note       String?
+  id              String   @id @default(uuid())
+  npc             NPC      @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  npcId           String
+  location        Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  locationId      String
+  note            String?
+  playerVisible   Boolean  @default(false)
 
   @@unique([npcId, locationId])
 }
 
 model NPCGroupMembership {
-  id         String  @id @default(uuid())
-  npc        NPC     @relation(fields: [npcId], references: [id], onDelete: Cascade)
-  npcId      String
-  group      Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId    String
-  relation   String?
-  subfaction String?
+  id              String  @id @default(uuid())
+  npc             NPC     @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  npcId           String
+  group           Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId         String
+  relation        String?
+  subfaction      String?
+  playerVisible   Boolean @default(false)
 
   @@unique([npcId, groupId])
 }
@@ -176,8 +231,8 @@ model PlayerCharacter {
   id          String   @id @default(uuid())
   campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId  String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      String?
   name        String
   gender      Gender?
   age         Int?
@@ -194,6 +249,20 @@ model PlayerCharacter {
   image       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  groupMemberships CharacterGroupMembership[]
+}
+
+model CharacterGroupMembership {
+  id          String          @id @default(uuid())
+  character   PlayerCharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  characterId String
+  group       Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId     String
+  relation    String?
+  subfaction  String?
+
+  @@unique([characterId, groupId])
 }
 
 // ── Quests ────────────────────────────────────────────────────────────────────
@@ -209,6 +278,8 @@ model Quest {
   reward      String?
   status      QuestStatus @default(UNDISCOVERED)
   notes       String      @default("")
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
   createdAt   DateTime    @default(now())
 
   sessionLinks SessionQuest[]
@@ -229,17 +300,21 @@ model Group {
   campaign      Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId    String
   name          String
-  type          String
+  type          String?
+  groupType     GroupType? @relation(fields: [type], references: [id], onDelete: SetNull)
   aliases       String[] @default([])
   description   String   @default("")
   goals         String?
   symbols       String?
   gmNotes       String?
   partyRelation String?
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  members NPCGroupMembership[]
+  members          NPCGroupMembership[]
+  characterMembers CharacterGroupMembership[]
 }
 
 // ── Locations ────────────────────────────────────────────────────────────────
@@ -249,8 +324,8 @@ model Location {
   campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId           String
   name                 String
-  aliases              String[]  @default([])
-  type                 String
+  type                 String?
+  locationType         LocationType? @relation(fields: [type], references: [id], onDelete: SetNull)
   settlementPopulation Int?
   biome                String?
   parentLocation       Location? @relation("LocationHierarchy", fields: [parentLocationId], references: [id], onDelete: SetNull)
@@ -261,27 +336,38 @@ model Location {
   mapMarkers           Json      @default("[]") // MapMarker[]
   createdAt            DateTime  @default(now())
 
-  children      Location[]            @relation("LocationHierarchy")
-  npcPresences  NPCLocationPresence[]
-  sessionLinks  SessionLocation[]
+  playerVisible       Boolean  @default(false)
+  playerVisibleFields String[] @default([])
+
+  children     Location[]            @relation("LocationHierarchy")
+  npcPresences NPCLocationPresence[]
+  sessionLinks SessionLocation[]
 }
 
 // ── Location Types (global, not per-campaign) ────────────────────────────────
 
 model LocationType {
   id           String   @id @default(uuid())
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId   String
   name         String
   icon         String
-  category     String   // world, civilization, geographic, water, poi, travel
+  category     String // world, civilization, geographic, water, poi, travel
   biomeOptions String[] @default([])
   isSettlement Boolean  @default(false)
   builtin      Boolean  @default(false)
   createdAt    DateTime @default(now())
+
+  locations    Location[]
+  parentRules  LocationTypeContainmentRule[] @relation("ContainmentParent")
+  childRules   LocationTypeContainmentRule[] @relation("ContainmentChild")
 }
 
 model LocationTypeContainmentRule {
-  id           String @id @default(uuid())
+  id           String       @id @default(uuid())
+  parentType   LocationType @relation("ContainmentParent", fields: [parentTypeId], references: [id], onDelete: Cascade)
   parentTypeId String
+  childType    LocationType @relation("ContainmentChild", fields: [childTypeId], references: [id], onDelete: Cascade)
   childTypeId  String
 
   @@unique([parentTypeId, childTypeId])
@@ -291,23 +377,41 @@ model LocationTypeContainmentRule {
 
 model GroupType {
   id          String   @id @default(uuid())
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
   name        String
   icon        String   @default("groups")
   description String?
   createdAt   DateTime @default(now())
+
+  groups Group[]
 }
 
 // ── Species (global) ─────────────────────────────────────────────────────────
 
 model Species {
   id          String   @id @default(uuid())
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
   name        String
   pluralName  String?
-  type        String   // humanoid, beast, undead, etc.
-  size        String   // tiny, small, medium, large, huge, gargantuan
+  type        String // humanoid, beast, undead, etc.
+  size        String // tiny, small, medium, large, huge, gargantuan
   description String?
   traits      String[] @default([])
   image       String?
+  createdAt   DateTime @default(now())
+}
+
+// ── Species Types (per-campaign) ─────────────────────────────────────────────
+
+model SpeciesType {
+  id          String   @id @default(uuid())
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  name        String
+  icon        String   @default("blur_on")
+  description String?
   createdAt   DateTime @default(now())
 }
 
@@ -317,9 +421,9 @@ model Relation {
   id             String   @id @default(uuid())
   campaign       Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId     String
-  fromEntityType String   // npc, character, group
+  fromEntityType String // npc, character, group
   fromEntityId   String
-  toEntityType   String   // npc, character, group
+  toEntityType   String // npc, character, group
   toEntityId     String
   friendliness   Int      @default(0) // -80, -40, 0, 40, 80
   note           String?

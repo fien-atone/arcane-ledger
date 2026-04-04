@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSessions } from '@/features/sessions/api/queries';
-import { useNpcs } from '@/features/npcs/api/queries';
-import { useLocations } from '@/features/locations/api';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { SessionEditDrawer } from '@/features/sessions/ui';
-import { LocationIcon, RichContent } from '@/shared/ui';
+import { LocationIcon, RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
 import type { Session } from '@/entities/session';
+import type { QuestStatus } from '@/entities/quest';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -20,17 +20,22 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
+const QUEST_STATUS_ICON: Record<QuestStatus, { icon: string; iconColor: string }> = {
+  active:      { icon: 'bolt',           iconColor: 'text-secondary' },
+  completed:   { icon: 'check_circle',   iconColor: 'text-emerald-400' },
+  failed:      { icon: 'cancel',         iconColor: 'text-rose-400' },
+  unavailable: { icon: 'block',          iconColor: 'text-on-surface-variant/40' },
+  undiscovered: { icon: 'visibility_off', iconColor: 'text-on-surface-variant/30' },
+};
+
 function SessionDetail({ session, campaignId }: { session: Session; campaignId: string }) {
-  const { data: allNpcs } = useNpcs(campaignId);
-  const { data: allLocations } = useLocations(campaignId);
+  const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
+  const questsEnabled = useSectionEnabled(campaignId, 'quests');
 
-  const linkedNpcs = (session.npcIds ?? [])
-    .map((id) => allNpcs?.find((n) => n.id === id))
-    .filter(Boolean) as NonNullable<typeof allNpcs>[number][];
-
-  const linkedLocations = (session.locationIds ?? [])
-    .map((id) => allLocations?.find((l) => l.id === id))
-    .filter(Boolean) as NonNullable<typeof allLocations>[number][];
+  const linkedNpcs = [...(session.npcs ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+  const linkedLocations = [...(session.locations ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+  const linkedQuests = [...(session.quests ?? [])].sort((a, b) => a.title.localeCompare(b.title));
 
   return (
     <div className="flex flex-col overflow-y-auto h-full px-10 py-8">
@@ -47,19 +52,12 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
       {session.brief && (
         <div className="mb-6">
           <SectionHeader title="Brief" />
-          <p className="text-sm text-on-surface-variant leading-relaxed italic">{session.brief}</p>
-        </div>
-      )}
-
-      {session.summary && (
-        <div className="mb-6">
-          <SectionHeader title="Summary" />
-          <RichContent value={session.summary} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
+          <RichContent value={session.brief} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
         </div>
       )}
 
       {/* NPCs */}
-      {linkedNpcs.length > 0 && (
+      {npcsEnabled && linkedNpcs.length > 0 && (
         <div className="mb-6">
           <SectionHeader title={`NPCs (${linkedNpcs.length})`} />
           <div className="flex flex-wrap gap-2">
@@ -88,7 +86,7 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
                 to={`/campaigns/${campaignId}/locations/${loc.id}`}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
               >
-                <LocationIcon locationType={loc.type} size="text-[13px]" />
+                <LocationIcon locationType={loc.type ?? ''} size="text-[13px]" generic={!locationTypesEnabled} />
                 {loc.name}
               </Link>
             ))}
@@ -96,6 +94,40 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
         </div>
       )}
 
+      {/* Quests */}
+      {questsEnabled && linkedQuests.length > 0 && (
+        <div className="mb-6">
+          <SectionHeader title={`Quests (${linkedQuests.length})`} />
+          <div className="flex flex-wrap gap-2">
+            {linkedQuests.map((quest) => {
+              const st = QUEST_STATUS_ICON[quest.status?.toLowerCase() as QuestStatus];
+              return (
+                <Link
+                  key={quest.id}
+                  to={`/campaigns/${campaignId}/quests/${quest.id}`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
+                >
+                  <span className={`material-symbols-outlined text-[13px] ${st?.iconColor ?? 'text-on-surface-variant/40'}`}>{st?.icon ?? 'flag'}</span>
+                  {quest.title}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* My Notes preview */}
+      {session.myNote?.content && (
+        <div className="mb-6">
+          <SectionHeader title="My Notes" />
+          <div className="border-l-2 border-secondary/30 pl-3">
+            <RichContent
+              value={session.myNote.content}
+              className="prose-p:text-sm prose-p:text-on-surface-variant/70 prose-p:leading-relaxed line-clamp-3"
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );
@@ -103,10 +135,17 @@ function SessionDetail({ session, campaignId }: { session: Session; campaignId: 
 
 export default function SessionListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [addOpen, setAddOpen] = useState(false);
+
+  if (!sessionsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   const filtered = sessions?.filter((s) =>
     !search ||
@@ -124,13 +163,15 @@ export default function SessionListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Sessions</h1>
             <p className="text-on-surface-variant text-sm mt-1">Chronicle of all gathered sessions, newest first.</p>
           </div>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            <span className="font-label text-xs uppercase tracking-widest">New Session</span>
-          </button>
+          {isGm && (
+            <button
+              onClick={() => setAddOpen(true)}
+              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="font-label text-xs uppercase tracking-widest">New Session</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -156,7 +197,7 @@ export default function SessionListPage() {
             </div>
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
               {filtered.length === 0 && (
-                <p className="text-xs text-on-surface-variant/40 italic p-6">No sessions found.</p>
+                <EmptyState icon="auto_stories" title="No sessions found." subtitle="Log your first session to begin." />
               )}
               {(() => {
                 const now = new Date();

@@ -9,9 +9,10 @@ const NPCS_QUERY = gql`
     npcs(campaignId: $campaignId) {
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
+      playerVisible playerVisibleFields
       createdAt updatedAt
-      locationPresences { locationId note }
-      groupMemberships { groupId relation subfaction }
+      locationPresences { locationId note playerVisible }
+      groupMemberships { groupId relation subfaction playerVisible }
     }
   }
 `;
@@ -21,9 +22,10 @@ const NPC_QUERY = gql`
     npc(campaignId: $campaignId, id: $id) {
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
+      playerVisible playerVisibleFields
       createdAt updatedAt
-      locationPresences { locationId note }
-      groupMemberships { groupId relation subfaction }
+      locationPresences { locationId note playerVisible }
+      groupMemberships { groupId relation subfaction playerVisible }
     }
   }
 `;
@@ -36,8 +38,70 @@ const SAVE_NPC = gql`
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
       createdAt updatedAt
-      locationPresences { locationId note }
-      groupMemberships { groupId relation subfaction }
+      locationPresences { locationId note playerVisible }
+      groupMemberships { groupId relation subfaction playerVisible }
+    }
+  }
+`;
+
+const ADD_NPC_GROUP_MEMBERSHIP = gql`
+  mutation AddNPCGroupMembership($npcId: ID!, $groupId: ID!, $relation: String, $subfaction: String) {
+    addNPCGroupMembership(npcId: $npcId, groupId: $groupId, relation: $relation, subfaction: $subfaction) {
+      id
+      groupMemberships { groupId relation subfaction playerVisible }
+    }
+  }
+`;
+
+const REMOVE_NPC_GROUP_MEMBERSHIP = gql`
+  mutation RemoveNPCGroupMembership($npcId: ID!, $groupId: ID!) {
+    removeNPCGroupMembership(npcId: $npcId, groupId: $groupId) {
+      id
+      groupMemberships { groupId relation subfaction playerVisible }
+    }
+  }
+`;
+
+const ADD_NPC_LOCATION_PRESENCE = gql`
+  mutation AddNPCLocationPresence($npcId: ID!, $locationId: ID!, $note: String) {
+    addNPCLocationPresence(npcId: $npcId, locationId: $locationId, note: $note) {
+      id
+      locationPresences { locationId note playerVisible }
+    }
+  }
+`;
+
+const REMOVE_NPC_LOCATION_PRESENCE = gql`
+  mutation RemoveNPCLocationPresence($npcId: ID!, $locationId: ID!) {
+    removeNPCLocationPresence(npcId: $npcId, locationId: $locationId) {
+      id
+      locationPresences { locationId note playerVisible }
+    }
+  }
+`;
+
+const SET_NPC_GROUP_MEMBERSHIP_VISIBILITY = gql`
+  mutation SetNPCGroupMembershipVisibility($npcId: ID!, $groupId: ID!, $playerVisible: Boolean!) {
+    setNPCGroupMembershipVisibility(npcId: $npcId, groupId: $groupId, playerVisible: $playerVisible) {
+      id
+      groupMemberships { groupId relation subfaction playerVisible }
+    }
+  }
+`;
+
+const SET_NPC_LOCATION_PRESENCE_VISIBILITY = gql`
+  mutation SetNPCLocationPresenceVisibility($npcId: ID!, $locationId: ID!, $playerVisible: Boolean!) {
+    setNPCLocationPresenceVisibility(npcId: $npcId, locationId: $locationId, playerVisible: $playerVisible) {
+      id
+      locationPresences { locationId note playerVisible }
+    }
+  }
+`;
+
+const SET_NPC_VISIBILITY = gql`
+  mutation SetNPCVisibility($campaignId: ID!, $id: ID!, $input: SetEntityVisibilityInput!) {
+    setNPCVisibility(campaignId: $campaignId, id: $id, input: $input) {
+      id playerVisible playerVisibleFields
     }
   }
 `;
@@ -48,36 +112,171 @@ const DELETE_NPC = gql`
   }
 `;
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Normalise GraphQL enum fields (UPPER_CASE) to the frontend's lowercase types. */
+function mapNpc(raw: any): NPC {
+  return {
+    ...raw,
+    status: raw.status?.toLowerCase(),
+    gender: raw.gender?.toLowerCase(),
+  };
+}
+
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
 export const useNpcs = (campaignId: string) => {
   const { data, loading, error } = useQuery<any>(NPCS_QUERY, {
     variables: { campaignId },
   });
-  return { data: data?.npcs as NPC[] | undefined, isLoading: loading, isError: !!error, error };
+  return { data: data?.npcs?.map(mapNpc) as NPC[] | undefined, isLoading: loading, isError: !!error, error };
 };
 
 export const useNpc = (campaignId: string, npcId: string) => {
-  const { data, loading, error } = useQuery<any>(NPC_QUERY, {
+  const { data, loading, error, refetch } = useQuery<any>(NPC_QUERY, {
     variables: { campaignId, id: npcId },
     skip: !npcId,
+    fetchPolicy: 'cache-and-network',
   });
-  return { data: data?.npc as NPC | undefined, isLoading: loading, isError: !!error, error };
+  return { data: data?.npc ? mapNpc(data.npc) as NPC : undefined, isLoading: loading, isError: !!error, error, refetch };
 };
 
 export const useSaveNpc = () => {
   const [execute, { loading, error }] = useMutation(SAVE_NPC);
   return {
     mutate: (npc: NPC, opts?: { onSuccess?: () => void }) => {
-      const { id, campaignId, createdAt, updatedAt, ...rest } = npc;
+      const input = {
+        name: npc.name,
+        aliases: npc.aliases,
+        status: npc.status?.toUpperCase(),
+        gender: npc.gender?.toUpperCase() || undefined,
+        age: npc.age,
+        species: npc.species,
+        speciesId: npc.speciesId,
+        appearance: npc.appearance,
+        personality: npc.personality,
+        description: npc.description,
+        motivation: npc.motivation,
+        flaws: npc.flaws,
+        gmNotes: npc.gmNotes,
+      };
       execute({
-        variables: { campaignId, id, input: rest },
-        refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId } }],
+        variables: { campaignId: npc.campaignId, id: npc.id || undefined, input },
+        refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId: npc.campaignId } }],
       }).then(() => opts?.onSuccess?.());
     },
     isLoading: loading,
     isPending: loading,
     isError: !!error,
+  };
+};
+
+export const useAddNPCGroupMembership = () => {
+  const [execute, { loading, error }] = useMutation(ADD_NPC_GROUP_MEMBERSHIP);
+  return {
+    mutate: (
+      vars: { npcId: string; groupId: string; relation?: string; subfaction?: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Npcs', 'Groups'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useRemoveNPCGroupMembership = () => {
+  const [execute, { loading, error }] = useMutation(REMOVE_NPC_GROUP_MEMBERSHIP);
+  return {
+    mutate: (
+      vars: { npcId: string; groupId: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Npcs', 'Groups'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isLoading: loading,
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useAddNPCLocationPresence = () => {
+  const [execute, { loading, error }] = useMutation(ADD_NPC_LOCATION_PRESENCE);
+  return {
+    mutate: (
+      vars: { npcId: string; locationId: string; note?: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Npcs'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useRemoveNPCLocationPresence = () => {
+  const [execute, { loading, error }] = useMutation(REMOVE_NPC_LOCATION_PRESENCE);
+  return {
+    mutate: (
+      vars: { npcId: string; locationId: string },
+      opts?: { onSuccess?: () => void },
+    ) => {
+      execute({
+        variables: vars,
+        refetchQueries: ['Npcs'],
+      }).then(() => opts?.onSuccess?.());
+    },
+    isPending: loading,
+    isError: !!error,
+  };
+};
+
+export const useSetNpcVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_NPC_VISIBILITY);
+  return {
+    mutate: (
+      vars: { campaignId: string; id: string; playerVisible: boolean; playerVisibleFields: string[] },
+    ) => {
+      execute({
+        variables: {
+          campaignId: vars.campaignId,
+          id: vars.id,
+          input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
+        },
+
+      });
+    },
+    isPending: loading,
+  };
+};
+
+export const useSetNPCGroupMembershipVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_NPC_GROUP_MEMBERSHIP_VISIBILITY);
+  return {
+    mutate: (vars: { npcId: string; groupId: string; playerVisible: boolean }) => {
+      execute({ variables: vars });
+    },
+    isPending: loading,
+  };
+};
+
+export const useSetNPCLocationPresenceVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_NPC_LOCATION_PRESENCE_VISIBILITY);
+  return {
+    mutate: (vars: { npcId: string; locationId: string; playerVisible: boolean }) => {
+      execute({ variables: vars });
+    },
+    isPending: loading,
   };
 };
 

@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useNpcs } from '@/features/npcs/api/queries';
+import { useNpcs, useSetNpcVisibility } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useGroups } from '@/features/groups/api';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
-import { LocationIcon, RichContent } from '@/shared/ui';
+import { LocationIcon, RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { NPC, NpcStatus } from '@/entities/npc';
 
 type StatusFilter = 'all' | NpcStatus;
@@ -16,22 +18,27 @@ const STATUS_PILLS: { label: string; value: StatusFilter }[] = [
   { label: 'Dead', value: 'dead' },
   { label: 'Missing', value: 'missing' },
   { label: 'Unknown', value: 'unknown' },
-  { label: 'Hostile', value: 'hostile' },
 ];
 
 const STATUS_STYLES: Record<NpcStatus, { pill: string; dot: string; label: string; icon: string }> = {
-  alive:   { pill: 'bg-secondary-container/20 text-secondary border border-secondary-container/30', dot: 'bg-secondary',                label: 'Alive',   icon: 'person' },
+  alive:   { pill: 'bg-primary/10 text-primary border border-primary/20', dot: 'bg-primary',                label: 'Alive',   icon: 'person' },
   dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20', dot: 'bg-outline-variant', label: 'Dead',    icon: 'skull' },
   missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20', dot: 'bg-on-surface-variant', label: 'Missing', icon: 'person_search' },
   unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10', dot: 'bg-outline',                     label: 'Unknown', icon: 'help' },
-  hostile: { pill: 'bg-primary/10 text-primary border border-primary/20', dot: 'bg-primary animate-pulse',                               label: 'Hostile', icon: 'warning' },
 };
 
-function NpcInitials({ name }: { name: string }) {
+function NpcAvatar({ name, image }: { name: string; image?: string }) {
   const initials = name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  const resolved = resolveImageUrl(image);
   return (
-    <div className="w-10 h-10 bg-surface-container-highest rounded-sm border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
-      <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
+    <div className="w-10 h-10 rounded-sm border border-outline-variant/20 flex-shrink-0 overflow-hidden bg-surface-container-highest">
+      {resolved ? (
+        <img src={resolved} alt={name} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -48,10 +55,14 @@ function SectionHeader({ title }: { title: string }) {
 function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
   const st = STATUS_STYLES[npc.status];
   const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-  const { data: allSpecies } = useSpecies();
+  const specEnabled = useSectionEnabled(campaignId, 'species');
+  const groupsEnabled = useSectionEnabled(campaignId, 'groups');
+  const locationsEnabled = useSectionEnabled(campaignId, 'locations');
+  const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
+  const { data: allSpecies } = useSpecies(campaignId ?? '');
   const { data: allLocations } = useLocations(campaignId);
   const { data: allGroups } = useGroups(campaignId);
-  const matchedSpecies = npc.species
+  const matchedSpecies = specEnabled && npc.species
     ? allSpecies?.find((s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase())
     : undefined;
 
@@ -63,55 +74,64 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
     })
     .filter(Boolean) as { loc: NonNullable<typeof allLocations>[number]; note?: string }[];
 
+  const resolvedImage = resolveImageUrl(npc.image);
+  const displayName = specEnabled ? (matchedSpecies?.name ?? npc.species) : undefined;
+  const genderLabel = npc.gender
+    ? (npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1))
+    : null;
+  const metaParts = [displayName, genderLabel, npc.age != null ? `Age ${npc.age}` : null].filter(Boolean);
+
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      {/* Header image / placeholder */}
-      <div className="relative w-full h-52 flex-shrink-0 bg-surface-container-low overflow-hidden">
-        {npc.image ? (
-          <img src={npc.image} alt={npc.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="font-headline text-[6rem] font-bold text-on-surface-variant/8 select-none leading-none">{initials}</span>
+      {/* Character card header */}
+      <div className="flex-shrink-0 flex gap-6 p-8 pb-6">
+        {/* Portrait */}
+        <div className="w-36 h-48 rounded-sm border border-outline-variant/20 overflow-hidden bg-surface-container-low flex-shrink-0">
+          {resolvedImage ? (
+            <img src={resolvedImage} alt={npc.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="font-headline text-5xl font-bold text-on-surface-variant/8 select-none leading-none">{initials}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex flex-col justify-center gap-3 min-w-0">
+          <div>
+            <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{npc.name}</h2>
+            {npc.aliases.length > 0 && (
+              <p className="text-xs text-on-surface-variant/40 italic mt-0.5">{npc.aliases.join(', ')}</p>
+            )}
           </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent pointer-events-none" />
-        <div className="absolute top-4 left-4 flex items-center gap-1.5">
-          {(() => {
-            const displayName = matchedSpecies?.name ?? npc.species;
-            const genderLabel = npc.gender
-              ? (npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1))
-              : null;
-            const parts = [
-              displayName ?? null,
-              genderLabel,
-              npc.age != null ? `Age ${npc.age}` : null,
-            ].filter(Boolean);
-            if (parts.length === 0) return null;
-            const text = parts.join(' · ');
-            const cls = 'flex items-center gap-1.5 px-2.5 py-1 bg-surface-container/90 backdrop-blur-sm border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant';
-            const icon = <span className="material-symbols-outlined text-[13px]">person</span>;
-            return matchedSpecies ? (
-              <Link to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`} className={`${cls} hover:border-primary/30 hover:text-primary transition-colors`}>
-                {icon}{text}
-              </Link>
-            ) : (
-              <span className={cls}>{icon}{text}</span>
-            );
-          })()}
-          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container/90 backdrop-blur-sm border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+
+          {metaParts.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              {matchedSpecies ? (
+                <Link to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:border-primary/30 hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined text-[13px]">person</span>
+                  {metaParts.join(' · ')}
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[13px]">person</span>
+                  {metaParts.join(' · ')}
+                </span>
+              )}
+            </div>
+          )}
+
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest w-fit ${st.pill}`}>
             <span className="material-symbols-outlined text-[13px]">{st.icon}</span>
             {st.label}
           </span>
         </div>
       </div>
 
+      <div className="border-t border-outline-variant/10 mx-8" />
+
       <div className="px-8 py-6 flex flex-col gap-5">
-        <div>
-          <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{npc.name}</h2>
-          {npc.aliases.length > 0 && (
-            <p className="text-xs text-on-surface-variant/40 italic mt-0.5">{npc.aliases.join(', ')}</p>
-          )}
-        </div>
 
         {npc.appearance && (
           <div>
@@ -142,7 +162,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
         )}
 
         {/* Group Memberships */}
-        {npc.groupMemberships.length > 0 && (
+        {groupsEnabled && npc.groupMemberships.length > 0 && (
           <div>
             <SectionHeader title="Groups" />
             <div className="flex flex-wrap gap-2">
@@ -155,7 +175,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
                     to={`/campaigns/${campaignId}/groups/${m.groupId}`}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant/15 hover:border-primary/30 rounded-sm transition-colors group"
                   >
-                    <span className="material-symbols-outlined text-primary/60 text-[13px]">groups</span>
+                    <span className="material-symbols-outlined text-primary text-[13px]">groups</span>
                     <span className="text-xs text-on-surface group-hover:text-primary transition-colors">{label}</span>
                     {m.relation && (
                       <span className="text-[9px] text-on-surface-variant/40 uppercase tracking-wider">{m.relation}</span>
@@ -168,7 +188,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
         )}
 
         {/* Locations */}
-        {linkedLocations.length > 0 && (
+        {locationsEnabled && linkedLocations.length > 0 && (
           <div>
             <SectionHeader title={`Locations (${linkedLocations.length})`} />
             <div className="flex flex-wrap gap-2">
@@ -178,7 +198,7 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
                   to={`/campaigns/${campaignId}/locations/${loc.id}`}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
                 >
-                  <LocationIcon locationType={loc.type} size="text-[13px]" />
+                  <LocationIcon locationType={loc.type} size="text-[13px]" generic={!locationTypesEnabled} />
                   {loc.name}
                 </Link>
               ))}
@@ -193,15 +213,25 @@ function NpcDetail({ npc, campaignId }: { npc: NPC; campaignId: string }) {
 
 export default function NpcListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
+  const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
+  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
+  const setNpcVisibility = useSetNpcVisibility();
   const { data: npcs, isLoading, isError } = useNpcs(campaignId ?? '');
-  const { data: allSpecies } = useSpecies();
+  const { data: allSpecies } = useSpecies(campaignId ?? '');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
+  if (!npcsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
+
   const resolveSpeciesName = (npc: NPC) =>
-    allSpecies?.find((s) => s.id === npc.speciesId)?.name ?? npc.species;
+    speciesEnabled ? (allSpecies?.find((s) => s.id === npc.speciesId)?.name ?? npc.species) : undefined;
 
   const filtered = useMemo(() => {
     if (!npcs) return [];
@@ -222,13 +252,36 @@ export default function NpcListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">NPCs</h1>
             <p className="text-on-surface-variant text-sm mt-1">Inhabitants, allies, and adversaries.</p>
           </div>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-[20px]">add</span>
-            <span className="font-label text-xs uppercase tracking-widest">Add NPC</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* View toggle */}
+            {socialGraphEnabled && (
+            <div className="flex bg-surface-container rounded-sm border border-outline-variant/20 overflow-hidden">
+              <button
+                className="p-2 bg-primary/15 text-primary"
+                title="List view"
+                disabled
+              >
+                <span className="material-symbols-outlined text-[20px]">list</span>
+              </button>
+              <Link
+                to={`/campaigns/${campaignId}/npcs/relationships`}
+                className="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors"
+                title="Graph view"
+              >
+                <span className="material-symbols-outlined text-[20px]">hub</span>
+              </Link>
+            </div>
+            )}
+            {isGm && (
+            <button
+              onClick={() => setAddOpen(true)}
+              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[20px]">add</span>
+              <span className="font-label text-xs uppercase tracking-widest">Add NPC</span>
+            </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -271,9 +324,8 @@ export default function NpcListPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {filtered.length === 0 && <p className="text-xs text-on-surface-variant/40 italic p-6">No NPCs found.</p>}
+              {filtered.length === 0 && <EmptyState icon="person_off" title="No NPCs found." subtitle="Create your first NPC to get started." />}
               {filtered.map((npc) => {
-                const st = STATUS_STYLES[npc.status];
                 const isSelected = selected?.id === npc.id;
                 return (
                   <button
@@ -284,15 +336,34 @@ export default function NpcListPage() {
                       isSelected ? 'bg-primary/8 border-l-2 border-l-primary' : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
                     }`}
                   >
-                    <NpcInitials name={npc.name} />
+                    <NpcAvatar name={npc.name} image={npc.image} />
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>{npc.name}</p>
                       <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>{resolveSpeciesName(npc) ?? '—'}</p>
                     </div>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider flex-shrink-0 ${st.pill}`}>
-                      <span className={`w-1 h-1 rounded-full ${st.dot}`} />
-                      {st.label}
-                    </span>
+                    {isGm && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNpcVisibility.mutate({
+                            campaignId: campaignId!,
+                            id: npc.id,
+                            playerVisible: !npc.playerVisible,
+                            playerVisibleFields: npc.playerVisibleFields ?? [],
+                          });
+                        }}
+                        title={npc.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                        className={`flex-shrink-0 p-1 transition-colors ${
+                          npc.playerVisible
+                            ? 'text-primary/60 hover:text-primary'
+                            : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">
+                          {npc.playerVisible ? 'visibility' : 'visibility_off'}
+                        </span>
+                      </button>
+                    )}
                   </button>
                 );
               })}

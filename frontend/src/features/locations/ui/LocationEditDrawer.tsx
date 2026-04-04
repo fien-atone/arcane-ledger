@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSaveLocation, useLocations } from '@/features/locations/api/queries';
 import { useLocationTypes, useContainmentRules } from '@/features/locationTypes';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Location, LocationType } from '@/entities/location';
@@ -27,16 +28,12 @@ interface Props {
   elevated?: boolean;
 }
 
-function generateId() {
-  return `loc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-}
-
 export function LocationEditDrawer({ open, onClose, campaignId, location, initialParentId, onSaved, elevated }: Props) {
   const save = useSaveLocation(campaignId);
-  const { data: locationTypes = [] } = useLocationTypes();
+  const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
+  const { data: locationTypes = [] } = useLocationTypes(campaignId);
   const { data: containmentRules = [] } = useContainmentRules();
   const { data: allLocations = [] } = useLocations(campaignId);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const isNew = !location;
 
   const locationTypeOptions = useMemo<SelectOption<string>[]>(
@@ -75,7 +72,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
 
   const [settlementPopulation, setSettlementPopulation] = useState('');
   const [biome, setBiome] = useState('');
-  const [image, setImage] = useState<string | undefined>(undefined);
+
 
   useEffect(() => {
     if (!open) return;
@@ -85,41 +82,29 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
       setParentLocationId(location.parentLocationId ?? '');
       setSettlementPopulation(location.settlementPopulation?.toString() ?? '');
       setBiome(location.biome ?? '');
-      setImage(location.image);
     } else {
       setName(''); setType(locationTypes[0]?.id ?? 'building');
       setParentLocationId(initialParentId ?? ''); setSettlementPopulation(''); setBiome('');
-      setImage(undefined);
     }
   }, [open, location]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setImage(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  };
 
   const handleSave = () => {
     if (!name.trim()) return;
     const pop = parseInt(settlementPopulation, 10);
     const ts = new Date().toISOString();
     const record: Location = {
-      id: location?.id ?? generateId(),
+      id: location?.id ?? '',
       campaignId,
-      aliases: location?.aliases ?? [],
       createdAt: location?.createdAt ?? ts,
       ...(location ?? {}),
       name: name.trim(),
-      type,
+      type: locationTypesEnabled ? type : (location?.type ?? ''),
       parentLocationId: parentLocationId || undefined,
       settlementPopulation: selectedTypeEntry?.isSettlement && !isNaN(pop) && pop > 0 ? pop : undefined,
       biome: biomeOptions.length > 0 && biome ? biome : undefined,
       description: location?.description ?? '',
-      image,
     };
-    save.mutate(record, { onSuccess: () => { onSaved?.(record); onClose(); } });
+    save.mutate(record, { onSuccess: (saved) => { onSaved?.(saved); onClose(); } });
   };
 
   if (!open) return null;
@@ -154,19 +139,21 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           </div>
 
           {/* Location Type */}
-          <div>
-            <label className={labelCls}>Type</label>
-            <Select
-              value={type}
-              options={locationTypeOptions}
-              nullable={false}
-              searchable
-              onChange={(v) => { setType(v || (locationTypes[0]?.id ?? 'building')); setParentLocationId(initialParentId ?? ''); }}
-            />
-          </div>
+          {locationTypesEnabled && (
+            <div>
+              <label className={labelCls}>Type</label>
+              <Select
+                value={type}
+                options={locationTypeOptions}
+                nullable={false}
+                searchable
+                onChange={(v) => { setType(v || (locationTypes[0]?.id ?? 'building')); setParentLocationId(initialParentId ?? ''); }}
+              />
+            </div>
+          )}
 
-          {/* Parent location */}
-          {parentOptions.length > 0 && (
+          {/* Parent location — hidden when creating from map (auto-assigned) */}
+          {locationTypesEnabled && !initialParentId && parentOptions.length > 0 && (
             <div>
               <label className={labelCls}>Part of</label>
               <Select
@@ -179,7 +166,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           )}
 
           {/* Population — only for settlement types */}
-          {selectedTypeEntry?.isSettlement && (
+          {locationTypesEnabled && selectedTypeEntry?.isSettlement && (
             <div>
               <label className={labelCls}>Population</label>
               <input
@@ -194,7 +181,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           )}
 
           {/* Biome / terrain sub-type */}
-          {biomeOptions.length > 0 && (
+          {locationTypesEnabled && biomeOptions.length > 0 && (
             <div>
               <label className={labelCls}>Terrain</label>
               <Select
@@ -206,41 +193,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
             </div>
           )}
 
-          {/* Map / Image */}
-          <div>
-            <label className={labelCls}>Map / Image</label>
-            {image && (
-              <div className="mb-3 relative">
-                <img
-                  src={image}
-                  alt="Location preview"
-                  className="w-full aspect-video object-cover rounded-sm border border-outline-variant/20"
-                />
-                <button
-                  onClick={() => setImage(undefined)}
-                  className="absolute top-2 right-2 p-1 bg-surface/80 rounded-sm text-on-surface-variant hover:text-error transition-colors"
-                  title="Remove image"
-                >
-                  <span className="material-symbols-outlined text-sm">delete</span>
-                </button>
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:border-outline-variant/60 text-xs font-label uppercase tracking-widest rounded-sm transition-colors w-full justify-center"
-            >
-              <span className="material-symbols-outlined text-sm">photo_camera</span>
-              {image ? 'Replace Image' : 'Upload Image'}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </div>
+          {/* Image upload is available on the location detail page after creation */}
         </div>
 
         {/* Footer */}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSaveNpc } from '@/features/npcs/api';
 import { useSpecies } from '@/features/species/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { NPC, NpcGender, NpcStatus } from '@/entities/npc';
@@ -12,17 +13,13 @@ interface Props {
   npc?: NPC;
 }
 
-const STATUS_OPTIONS: NpcStatus[] = ['alive', 'dead', 'missing', 'unknown', 'hostile'];
+const STATUS_OPTIONS: NpcStatus[] = ['alive', 'dead', 'missing', 'unknown'];
 
 const GENDER_OPTIONS: SelectOption<NpcGender | ''>[] = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
   { value: 'nonbinary', label: 'Non-binary' },
 ];
-
-function generateId() {
-  return `npc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
 
 const now = () => new Date().toISOString();
 
@@ -44,7 +41,8 @@ const labelCls =
 
 export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   const save = useSaveNpc();
-  const { data: allSpecies } = useSpecies();
+  const speciesEnabled = useSectionEnabled(campaignId, 'species');
+  const { data: allSpecies } = useSpecies(campaignId);
   const isEdit = !!npc;
 
   const statusOptions = useMemo<SelectOption<NpcStatus>[]>(
@@ -53,7 +51,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   );
 
   const speciesOptions = useMemo<SelectOption<string>[]>(
-    () => (allSpecies ?? []).sort((a, b) => a.name.localeCompare(b.name)).map((s) => ({ value: s.id, label: s.name })),
+    () => [...(allSpecies ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map((s) => ({ value: s.id, label: s.name })),
     [allSpecies],
   );
 
@@ -83,7 +81,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
     const ts = now();
     const selectedSpecies = allSpecies?.find((s) => s.id === speciesId);
     const record: NPC = {
-      id: npc?.id ?? generateId(),
+      id: npc?.id ?? '',
       campaignId,
       name: name.trim(),
       aliases: toArray(aliases),
@@ -205,6 +203,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           </div>
 
           {/* Species */}
+          {speciesEnabled && (
           <div>
             <label className={labelCls}>Species</label>
             <Select
@@ -215,6 +214,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
               onChange={(v) => setSpeciesId(v ?? '')}
             />
           </div>
+          )}
 
         </div>
 

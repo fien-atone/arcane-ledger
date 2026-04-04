@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Select } from '@/shared/ui';
+import { useParams } from 'react-router-dom';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { Select, EmptyState, SectionDisabled } from '@/shared/ui';
 import {
   useLocationTypes,
   useContainmentRules,
@@ -197,13 +199,13 @@ function LocationTypeDetail({
   const toggleContain = (childId: string) => {
     const rule = containRules.find((r) => r.parentTypeId === entry.id && r.childTypeId === childId);
     if (rule) deleteContain.mutate(rule.id);
-    else saveContain.mutate({ id: `cr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, parentTypeId: entry.id, childTypeId: childId });
+    else saveContain.mutate({ id: '', parentTypeId: entry.id, childTypeId: childId });
   };
 
   const toggleChildOf = (parentId: string) => {
     const rule = containRules.find((r) => r.parentTypeId === parentId && r.childTypeId === entry.id);
     if (rule) deleteContain.mutate(rule.id);
-    else saveContain.mutate({ id: `cr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, parentTypeId: parentId, childTypeId: entry.id });
+    else saveContain.mutate({ id: '', parentTypeId: parentId, childTypeId: entry.id });
   };
 
   // Active relations
@@ -359,10 +361,9 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
 
   const handleCreate = () => {
     if (!name.trim()) return;
-    const id = `lt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     saveType.mutate(
-      { id, name: name.trim(), icon, category: cat, biomeOptions: [], isSettlement: false, createdAt: new Date().toISOString() },
-      { onSuccess: () => onCreated(id) },
+      { id: '', name: name.trim(), icon, category: cat, biomeOptions: [], isSettlement: false, createdAt: new Date().toISOString() },
+      { onSuccess: () => onCreated('') },
     );
   };
 
@@ -506,10 +507,12 @@ function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: bo
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LocationTypesPage() {
-  const { data: types,        isLoading: loadingTypes }   = useLocationTypes();
+  const { id: campaignId } = useParams<{ id: string }>();
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
+  const { data: types,        isLoading: loadingTypes }   = useLocationTypes(campaignId);
   const { data: containRules, isLoading: loadingContain } = useContainmentRules();
 
-  const saveType    = useSaveLocationType();
+  const saveType    = useSaveLocationType(campaignId ?? '');
   const deleteType  = useDeleteLocationType();
   const saveContain = useSaveContainmentRule();
   const delContain  = useDeleteContainmentRule();
@@ -529,6 +532,10 @@ export default function LocationTypesPage() {
     : sorted;
 
   const selected = types?.find((t) => t.id === selectedId) ?? sorted[0] ?? null;
+
+  if (!locationsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
@@ -578,8 +585,8 @@ export default function LocationTypesPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {search.trim() && filtered.length === 0 && (
-                <p className="text-xs text-on-surface-variant/40 italic p-6">No types match.</p>
+              {filtered.length === 0 && (
+                <EmptyState icon="account_tree" title={search.trim() ? "No types match." : "No location types yet."} subtitle={search.trim() ? undefined : "Create your first location type to get started."} />
               )}
               {search.trim() ? (
                 // Flat list when searching

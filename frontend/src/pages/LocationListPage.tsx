@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useLocations } from '@/features/locations/api';
+import { useLocations, useSetLocationVisibility } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
+import { EmptyState, RichContent, SectionDisabled } from '@/shared/ui';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
 import type { Location, LocationType } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
 import { CATEGORY_ICON_COLOR, CATEGORY_HEX_COLOR, CATEGORY_BADGE_CLS } from '@/entities/locationType';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 
 const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', 'travel'];
 
@@ -23,6 +26,9 @@ function LocationRow({
   onSelect,
   typeFilter,
   typeMap,
+  hideTypes,
+  isGm,
+  onToggleVisibility,
 }: {
   loc: Location;
   depth: number;
@@ -30,10 +36,13 @@ function LocationRow({
   onSelect: () => void;
   typeFilter: LocationType | 'all';
   typeMap: TypeMap;
+  hideTypes?: boolean;
+  isGm?: boolean;
+  onToggleVisibility: (loc: Location) => void;
 }) {
   const isTopLevel = depth === 0;
   const indent = typeFilter === 'all' ? DEPTH_INDENT[Math.min(depth, DEPTH_INDENT.length - 1)] : '';
-  const typeEntry = typeMap.get(loc.type);
+  const typeEntry = hideTypes ? undefined : typeMap.get(loc.type);
   return (
     <button
       type="button"
@@ -65,10 +74,30 @@ function LocationRow({
         }`}>
           {loc.name}
         </p>
-        <p className={`text-[9px] uppercase tracking-widest mt-0.5 transition-colors ${selected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>
-          {typeEntry?.name ?? loc.type}
-        </p>
+        {!hideTypes && (
+          <p className={`text-[9px] uppercase tracking-widest mt-0.5 transition-colors ${selected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>
+            {typeEntry?.name ?? loc.type}
+          </p>
+        )}
       </div>
+      {isGm && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleVisibility(loc);
+          }}
+          title={loc.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+          className={`flex-shrink-0 p-1 transition-colors ${
+            loc.playerVisible
+              ? 'text-primary/60 hover:text-primary'
+              : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[14px]">
+            {loc.playerVisible ? 'visibility' : 'visibility_off'}
+          </span>
+        </button>
+      )}
     </button>
   );
 }
@@ -80,12 +109,15 @@ function LocationDetail({
   allLocations,
   campaignId,
   typeMap,
+  hideTypes,
 }: {
   loc: Location;
   allLocations: Location[];
   campaignId: string;
   typeMap: TypeMap;
+  hideTypes?: boolean;
 }) {
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
   const { data: allNpcs } = useNpcs(campaignId);
   const children = allLocations.filter((l) => l.parentLocationId === loc.id).sort((a, b) => {
     const catA = CATEGORY_ORDER.indexOf(typeMap.get(a.type)?.category ?? '');
@@ -106,7 +138,7 @@ function LocationDetail({
       {/* Image / placeholder */}
       <div className="relative w-full h-56 flex-shrink-0 bg-surface-container-low overflow-hidden">
         {loc.image ? (
-          <img src={loc.image} alt={loc.name} className="w-full h-full object-cover" />
+          <img src={resolveImageUrl(loc.image)} alt={loc.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="font-headline text-[6rem] font-bold text-on-surface-variant/8 select-none leading-none">
@@ -116,14 +148,16 @@ function LocationDetail({
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent pointer-events-none" />
         {/* Type badge */}
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 backdrop-blur-sm border rounded-sm text-[10px] font-bold uppercase tracking-widest ${
-            typeEntry ? CATEGORY_BADGE_CLS[typeEntry.category] : 'bg-surface-container/90 border-outline-variant/20 text-on-surface-variant'
-          }`}>
-            <span className="material-symbols-outlined text-[13px]">{typeEntry?.icon ?? 'location_on'}</span>
-            {typeEntry?.name ?? loc.type}
-          </span>
-        </div>
+        {!hideTypes && (
+          <div className="absolute top-4 left-4 flex items-center gap-2">
+            <span className={`flex items-center gap-1.5 px-2.5 py-1 backdrop-blur-sm border rounded-sm text-[10px] font-bold uppercase tracking-widest ${
+              typeEntry ? CATEGORY_BADGE_CLS[typeEntry.category] : 'bg-surface-container/90 border-outline-variant/20 text-on-surface-variant'
+            }`}>
+              <span className="material-symbols-outlined text-[13px]">{typeEntry?.icon ?? 'location_on'}</span>
+              {typeEntry?.name ?? loc.type}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="px-8 py-6 flex flex-col gap-6">
@@ -131,18 +165,15 @@ function LocationDetail({
         <div>
           {parent && (
             <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 mb-1 flex items-center gap-1">
-              {(() => { const te = typeMap.get(parent.type); return <span className={`material-symbols-outlined text-[11px] ${te ? CATEGORY_ICON_COLOR[te.category] : ''}`}>{te?.icon ?? 'location_on'}</span>; })()}
+              {(() => { const te = hideTypes ? undefined : typeMap.get(parent.type); return <span className={`material-symbols-outlined text-[11px] ${te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/40'}`}>{te?.icon ?? 'location_on'}</span>; })()}
               {parent.name}
             </p>
           )}
           <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{loc.name}</h2>
-          {loc.aliases.length > 0 && (
-            <p className="text-xs text-on-surface-variant/40 italic mt-0.5">{loc.aliases.join(', ')}</p>
-          )}
         </div>
 
         {/* Stats row */}
-        {(loc.settlementPopulation || loc.biome) && (
+        {(loc.settlementPopulation || (!hideTypes && loc.biome)) && (
           <div className="flex flex-wrap gap-4">
             {loc.settlementPopulation && (
               <div>
@@ -150,7 +181,7 @@ function LocationDetail({
                 <p className="text-sm font-bold text-on-surface">{loc.settlementPopulation.toLocaleString()}</p>
               </div>
             )}
-            {loc.biome && (
+            {!hideTypes && loc.biome && (
               <div>
                 <p className="text-[9px] uppercase tracking-[0.18em] text-on-surface-variant/40 font-bold">Terrain</p>
                 <p className="text-sm font-bold text-on-surface">
@@ -168,7 +199,7 @@ function LocationDetail({
               <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Overview</h3>
               <div className="h-px flex-1 bg-outline-variant/20" />
             </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{loc.description}</p>
+            <RichContent value={loc.description} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
           </div>
         )}
 
@@ -188,7 +219,7 @@ function LocationDetail({
                   to={`/campaigns/${campaignId}/locations/${child.id}`}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
                 >
-                  {(() => { const te = typeMap.get(child.type); return <span className={`material-symbols-outlined text-[13px] ${te ? '' : 'text-on-surface-variant/40'}`} style={te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined}>{te?.icon ?? 'location_on'}</span>; })()}
+                  {(() => { const te = hideTypes ? undefined : typeMap.get(child.type); return <span className={`material-symbols-outlined text-[13px] ${te ? '' : 'text-on-surface-variant/40'}`} style={te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined}>{te?.icon ?? 'location_on'}</span>; })()}
                   {child.name}
                 </Link>
               ))}
@@ -197,7 +228,7 @@ function LocationDetail({
         )}
 
         {/* NPCs */}
-        {npcsHere.length > 0 && (
+        {npcsEnabled && npcsHere.length > 0 && (
           <div>
             <div className="flex items-center gap-4 mb-3">
               <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">
@@ -229,8 +260,13 @@ function LocationDetail({
 
 export default function LocationListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
+  const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: locations, isLoading, isError } = useLocations(campaignId ?? '');
-  const { data: locationTypes = [] } = useLocationTypes();
+  const setLocationVisibility = useSetLocationVisibility();
+  const { data: locationTypes = [] } = useLocationTypes(campaignId);
   const [typeFilter, setTypeFilter] = useState<LocationType | 'all'>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -292,7 +328,6 @@ export default function LocationListPage() {
       const matchesSearch =
         !search ||
         l.name.toLowerCase().includes(search.toLowerCase()) ||
-        l.aliases.some((a) => a.toLowerCase().includes(search.toLowerCase())) ||
         l.description.toLowerCase().includes(search.toLowerCase());
       return matchesType && matchesSearch;
     }) ?? [];
@@ -326,6 +361,10 @@ export default function LocationListPage() {
 
   const selected = locations?.find((l) => l.id === selectedId) ?? filtered[0] ?? null;
 
+  if (!locationsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
+
   return (
     <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
       {/* Sticky header */}
@@ -335,6 +374,7 @@ export default function LocationListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Locations</h1>
             <p className="text-on-surface-variant text-sm mt-1">Known places, landmarks, and territories.</p>
           </div>
+          {isGm && (
           <button
             onClick={() => setAddOpen(true)}
             className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
@@ -342,6 +382,7 @@ export default function LocationListPage() {
             <span className="material-symbols-outlined text-[18px]">add_location</span>
             <span className="font-label text-xs uppercase tracking-widest">Add Location</span>
           </button>
+          )}
         </div>
       </header>
 
@@ -375,7 +416,7 @@ export default function LocationListPage() {
             </div>
 
             {/* Type filter pills */}
-            <div className="px-4 pb-3 flex flex-wrap gap-1.5 flex-shrink-0">
+            {locationTypesEnabled && <div className="px-4 pb-3 flex flex-wrap gap-1.5 flex-shrink-0">
               {typeFilters.map(({ value, label }) => {
                 const count = value === 'all'
                   ? (locations?.length ?? 0)
@@ -399,12 +440,12 @@ export default function LocationListPage() {
                   </button>
                 );
               })}
-            </div>
+            </div>}
 
             {/* List */}
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
               {filtered.length === 0 && (
-                <p className="text-xs text-on-surface-variant/40 italic p-6">No locations found.</p>
+                <EmptyState icon="location_on" title="No locations found." />
               )}
               {filtered.map((loc) => (
                 <LocationRow
@@ -415,6 +456,16 @@ export default function LocationListPage() {
                   onSelect={() => setSelectedId(loc.id)}
                   typeFilter={typeFilter}
                   typeMap={typeMap}
+                  hideTypes={!locationTypesEnabled}
+                  isGm={isGm}
+                  onToggleVisibility={(loc) => {
+                    setLocationVisibility.mutate({
+                      campaignId: campaignId!,
+                      id: loc.id,
+                      playerVisible: !loc.playerVisible,
+                      playerVisibleFields: loc.playerVisibleFields ?? [],
+                    });
+                  }}
                 />
               ))}
             </div>
@@ -429,6 +480,7 @@ export default function LocationListPage() {
                   allLocations={locations ?? []}
                   campaignId={campaignId ?? ''}
                   typeMap={typeMap}
+                  hideTypes={!locationTypesEnabled}
                 />
                 <Link
                   to={`/campaigns/${campaignId}/locations/${selected.id}`}

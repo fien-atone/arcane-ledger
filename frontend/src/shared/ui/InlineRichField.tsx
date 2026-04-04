@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
@@ -106,9 +106,10 @@ interface Props {
   onSave: (html: string) => void;
   isGmNotes?: boolean;
   placeholder?: string;
+  readOnly?: boolean;
 }
 
-export function InlineRichField({ label, value, onSave, isGmNotes, placeholder = 'Not recorded yet.' }: Props) {
+export const InlineRichField = memo(function InlineRichField({ label, value, onSave, isGmNotes, placeholder = 'Not recorded yet.', readOnly }: Props) {
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSave = (html: string) => {
@@ -120,8 +121,8 @@ export function InlineRichField({ label, value, onSave, isGmNotes, placeholder =
 
   const readView = value ? (
     <div
-      onClick={() => setIsEditing(true)}
-      className="cursor-text group/prose prose prose-sm prose-invert max-w-none font-sans
+      onClick={readOnly ? undefined : () => setIsEditing(true)}
+      className={`prose prose-sm prose-invert max-w-none font-sans
         prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1
         prose-strong:text-on-surface prose-strong:font-semibold
         prose-em:text-on-surface-variant/80
@@ -129,9 +130,11 @@ export function InlineRichField({ label, value, onSave, isGmNotes, placeholder =
         prose-li:my-0.5 prose-li:marker:text-primary/50
         prose-blockquote:border-l-primary/40 prose-blockquote:text-on-surface-variant/70 prose-blockquote:italic
         prose-hr:border-outline-variant/20
-        hover:prose-p:text-on-surface transition-colors"
+        ${readOnly ? '' : 'cursor-text group/prose hover:prose-p:text-on-surface'} transition-colors`}
       dangerouslySetInnerHTML={{ __html: value }}
     />
+  ) : readOnly ? (
+    <p className="text-xs text-on-surface-variant/30 italic">{placeholder}</p>
   ) : (
     <button
       onClick={() => setIsEditing(true)}
@@ -185,4 +188,4 @@ export function InlineRichField({ label, value, onSave, isGmNotes, placeholder =
       {content}
     </div>
   );
-}
+}, (prev, next) => prev.value === next.value && prev.label === next.label && prev.readOnly === next.readOnly && prev.isGmNotes === next.isGmNotes);

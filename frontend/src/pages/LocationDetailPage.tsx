@@ -1,11 +1,17 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useLocation, useLocations, useSaveLocation } from '@/features/locations/api';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useLocation, useLocations, useSaveLocation, useDeleteLocation } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
-import { useNpcs, useSaveNpc } from '@/features/npcs/api/queries';
+import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPresence, useSetNPCLocationPresenceVisibility } from '@/features/npcs/api/queries';
 import { useSessions } from '@/features/sessions/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, ImageUpload, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { useCampaign } from '@/features/campaigns/api/queries';
+import { useSetLocationVisibility } from '@/features/locations/api';
+import { LOCATION_VISIBILITY_FIELDS, LOCATION_BASIC_PRESET } from '@/shared/lib/visibilityFields';
+import { uploadFile } from '@/shared/api/uploadFile';
+import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Location, MapMarker } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
 import { CATEGORY_ICON_COLOR, CATEGORY_HEX_COLOR, CATEGORY_BADGE_CLS, CATEGORY_TILE_CLS, CATEGORY_LABEL } from '@/entities/locationType';
@@ -20,89 +26,87 @@ type TypeMap = Map<string, LocationTypeEntry>;
 interface LocationPlaceholderProps {
   name: string;
   imageUrl?: string;
-  onUpload: (dataUrl: string) => void;
+  markers?: MapMarker[];
+  childLocations?: { id: string; name: string; type: string }[];
+  typeMap?: TypeMap;
+  onUpload?: (file: File) => void;
   onOpenMap: () => void;
 }
 
-function LocationPlaceholder({ name, imageUrl, onUpload, onOpenMap }: LocationPlaceholderProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+function LocationPlaceholder({ name, imageUrl, markers, childLocations, typeMap, onUpload, onOpenMap }: LocationPlaceholderProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [imgBounds, setImgBounds] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
+  // Recalculate image bounds within object-contain container
+  const recalc = useCallback(() => {
+    const el = containerRef.current;
+    if (!el || !imageUrl) return;
+    const img = el.querySelector('img[alt]') as HTMLImageElement | null;
+    if (!img || !img.naturalWidth) return;
+    const cW = el.offsetWidth;
+    const cH = el.offsetHeight;
+    const imgRatio = img.naturalWidth / img.naturalHeight;
+    const containerRatio = cW / cH;
+    let w: number, h: number;
+    if (imgRatio > containerRatio) {
+      w = cW; h = cW / imgRatio;
+    } else {
+      h = cH; w = cH * imgRatio;
+    }
+    setImgBounds({ left: (cW - w) / 2, top: (cH - h) / 2, width: w, height: h });
+  }, [imageUrl]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      onUpload(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-    // Reset so the same file can be re-selected
-    e.target.value = '';
-  };
+  useEffect(() => {
+    recalc();
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
+  }, [recalc]);
+
+  const pins = (markers ?? []).map((m) => {
+    const child = childLocations?.find((c) => c.id === m.linkedLocationId);
+    const te = child && typeMap ? typeMap.get(child.type) : undefined;
+    const icon = te?.icon ?? 'location_on';
+    const iconColor = te ? CATEGORY_ICON_COLOR[te.category] : 'text-on-surface-variant/60';
+    const bubbleCls = te ? (CATEGORY_MARKER_CLS[te.category]?.bubble ?? MARKER_DEFAULT_CLS.bubble) : MARKER_DEFAULT_CLS.bubble;
+    return { ...m, icon, iconColor, bubbleCls, label: m.label || child?.name };
+  });
 
   return (
-    <div className="relative group w-full">
-      <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-transparent blur-xl opacity-50 group-hover:opacity-100 transition duration-1000" />
-      <div className="relative w-full h-80 overflow-hidden rounded-sm bg-surface-container-low flex items-center justify-center">
-        {imageUrl ? (
-          <>
-            <img
-              src={imageUrl}
-              alt={name}
-              className="w-full h-full object-cover"
-            />
-            {/* Open Map overlay */}
-            <button
-              type="button"
-              onClick={onOpenMap}
-              className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30"
-              title="Open Map"
-            >
-              <span className="material-symbols-outlined text-white text-4xl drop-shadow-lg">map</span>
-              <span className="text-white text-xs font-label uppercase tracking-widest mt-1 drop-shadow">Open Map</span>
-            </button>
-            {/* Re-upload button (bottom-right, does NOT open map) */}
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-              className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5"
-              title="Replace image"
-            >
-              <span className="material-symbols-outlined text-white text-base">photo_camera</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <span className="font-headline text-[8rem] font-bold text-on-surface-variant/10 select-none leading-none">
-              {initials}
-            </span>
-            {/* Upload overlay */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20"
-              title="Upload Map"
-            >
-              <span className="material-symbols-outlined text-white text-4xl drop-shadow-lg">photo_camera</span>
-              <span className="text-white text-xs font-label uppercase tracking-widest mt-1 drop-shadow">Upload Map</span>
-            </button>
-          </>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none" />
-      </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
+    <div className="relative group/loc" ref={containerRef}>
+      <ImageUpload
+        image={imageUrl}
+        name={name}
+        className="w-full aspect-[4/3]"
+        onUpload={onUpload ?? (() => {})}
+        onView={imageUrl ? onOpenMap : undefined}
+        hideControls={!onUpload}
+        uploadLabel="Upload Map"
+        onLoad={recalc}
       />
+      {/* Map markers overlay */}
+      {imageUrl && pins.length > 0 && imgBounds && (
+        <div
+          className="absolute pointer-events-none overflow-hidden group-hover/loc:opacity-0 transition-opacity"
+          style={{ left: imgBounds.left, top: imgBounds.top, width: imgBounds.width, height: imgBounds.height }}
+        >
+          {pins.map((pin) => (
+            <div
+              key={pin.id}
+              className="absolute flex flex-col items-center"
+              style={{ left: `${pin.x}%`, top: `${pin.y}%`, transform: 'translate(-50%, -14px)' }}
+            >
+              <div className={`w-5 h-5 rounded-full border-2 ${pin.bubbleCls} shadow-[0_2px_6px_rgba(0,0,0,0.6)] flex items-center justify-center`}>
+                <span className={`material-symbols-outlined text-[10px] ${pin.iconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{pin.icon}</span>
+              </div>
+              {pin.label && (
+                <div className="mt-0.5 px-1 py-px rounded-sm text-[7px] font-medium text-on-surface bg-surface-container/90 border border-outline-variant/30 leading-tight whitespace-nowrap shadow-sm max-w-[80px] truncate">
+                  {pin.label}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -191,6 +195,7 @@ interface MapViewerProps {
   npcsHere: NPC[];
   campaignId: string;
   typeMap: TypeMap;
+  hideTypes?: boolean;
   onClose: () => void;
   onSave: (markers: MapMarker[]) => void;
   onRequestAddLocation: (point: { x: number; y: number }) => void;
@@ -217,6 +222,7 @@ function MapViewer({
   npcsHere,
   campaignId,
   typeMap,
+  hideTypes,
   onClose,
   onSave,
   onRequestAddLocation,
@@ -537,7 +543,7 @@ function MapViewer({
             >
               {(() => {
                 const linkedType = childLocations.find((l) => l.id === m.linkedLocationId)?.type ?? '';
-                const te = typeMap.get(linkedType);
+                const te = hideTypes ? undefined : typeMap.get(linkedType);
                 const cls = te ? (CATEGORY_MARKER_CLS[te.category] ?? MARKER_DEFAULT_CLS) : MARKER_DEFAULT_CLS;
                 return (
                 <div className="flex flex-col items-center" style={{ userSelect: 'none' }}>
@@ -688,13 +694,14 @@ function MapViewer({
             // Group child locations by category, sorted by CATEGORY_ORDER then name
             const grouped = new Map<string, Location[]>();
             const sortedLocs = [...childLocations].sort((a, b) => {
+              if (hideTypes) return a.name.localeCompare(b.name);
               const catA = CATEGORY_ORDER.indexOf(typeMap.get(a.type)?.category ?? '');
               const catB = CATEGORY_ORDER.indexOf(typeMap.get(b.type)?.category ?? '');
               if (catA !== catB) return catA - catB;
               return a.name.localeCompare(b.name);
             });
             for (const loc of sortedLocs) {
-              const cat = typeMap.get(loc.type)?.category ?? '';
+              const cat = hideTypes ? '' : (typeMap.get(loc.type)?.category ?? '');
               if (!grouped.has(cat)) grouped.set(cat, []);
               grouped.get(cat)!.push(loc);
             }
@@ -709,13 +716,15 @@ function MapViewer({
                 {/* Locations grouped by category */}
                 {[...grouped.entries()].map(([cat, locs], gi) => (
                   <div key={cat || gi}>
-                    <div className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/30 flex items-center gap-2">
-                      <span>{CATEGORY_LABEL[cat as keyof typeof CATEGORY_LABEL] ?? cat}</span>
-                      <div className="flex-1 h-px bg-outline-variant/10" />
-                    </div>
+                    {!hideTypes && cat && (
+                      <div className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/30 flex items-center gap-2">
+                        <span>{CATEGORY_LABEL[cat as keyof typeof CATEGORY_LABEL] ?? cat}</span>
+                        <div className="flex-1 h-px bg-outline-variant/10" />
+                      </div>
+                    )}
                     {locs.map((loc) => {
                       const marker = markerByLocId.get(loc.id) ?? null;
-                      const te = typeMap.get(loc.type);
+                      const te = hideTypes ? undefined : typeMap.get(loc.type);
                       const markerId = marker?.id ?? null;
                       const isHovered = hoveredMarkerId === markerId && markerId !== null;
                       const isSelected = selectedMarkerId === markerId && markerId !== null;
@@ -831,6 +840,7 @@ const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', '
 
 export default function LocationDetailPage() {
   const { id: campaignId, locationId } = useParams<{ id: string; locationId: string }>();
+  const [imgVersion, setImgVersion] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [editingNoteForNpcId, setEditingNoteForNpcId] = useState<string | null>(null);
@@ -843,13 +853,26 @@ export default function LocationDetailPage() {
   const [mapAddLocDrawerOpen, setMapAddLocDrawerOpen] = useState(false);
   const [mapExternalMarker, setMapExternalMarker] = useState<MapMarker | null>(null);
 
-  const { data: location, isLoading, isError } = useLocation(campaignId ?? '', locationId ?? '');
+  const { data: location, isLoading, isError, refetch } = useLocation(campaignId ?? '', locationId ?? '');
   const { data: allLocations } = useLocations(campaignId ?? '');
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: allSessions } = useSessions(campaignId ?? '');
-  const { data: locationTypes = [] } = useLocationTypes();
+  const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
+  const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
+  const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
+  const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
+  const { data: locationTypes = [] } = useLocationTypes(campaignId ?? '');
+  const { data: campaign } = useCampaign(campaignId ?? '');
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const saveMutation = useSaveLocation(campaignId ?? '');
+  const deleteLocation = useDeleteLocation(campaignId ?? '');
+  const setLocationVisibility = useSetLocationVisibility();
+  const navigate = useNavigate();
   const saveNpc = useSaveNpc();
+  const addNpcPresence = useAddNPCLocationPresence();
+  const removeNpcPresence = useRemoveNPCLocationPresence();
+  const setPresenceVisibility = useSetNPCLocationPresenceVisibility();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const typeMap = useMemo<TypeMap>(
     () => new Map(locationTypes.map((t) => [t.id, t])),
@@ -867,7 +890,11 @@ export default function LocationDetailPage() {
     [allLocations, location?.id, typeMap],
   );
 
-  if (isLoading) {
+  if (!locationsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
+
+  if (isLoading && !location) {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
@@ -916,35 +943,38 @@ export default function LocationDetailPage() {
     .filter((s) => s.locationIds?.includes(location.id))
     .sort((a, b) => b.number - a.number);
 
-  const handleImageUpload = (dataUrl: string) => {
-    saveMutation.mutate({ ...location, image: dataUrl });
+  const handleImageUpload = async (file: File) => {
+    if (import.meta.env.VITE_USE_MOCK !== 'false') {
+      const reader = new FileReader();
+      reader.onload = (ev) => saveMutation.mutate({ ...location, image: ev.target?.result as string });
+      reader.readAsDataURL(file);
+      return;
+    }
+    try {
+      await uploadFile(campaignId!, 'location', location.id, file);
+      setImgVersion((v) => v + 1);
+      refetch();
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
   };
 
   const handleAddNpc = (npc: NPC) => {
-    const presences = [...(npc.locationPresences ?? [])];
-    if (!presences.find((p) => p.locationId === location.id)) {
-      presences.push({ locationId: location.id });
-    }
-    saveNpc.mutate({ ...npc, locationPresences: presences }, {
-      onSuccess: () => { setAddNpcOpen(false); setAddNpcSearch(''); },
-    });
+    addNpcPresence.mutate(
+      { npcId: npc.id, locationId: location.id },
+      { onSuccess: () => { setAddNpcOpen(false); setAddNpcSearch(''); } },
+    );
   };
 
   const handleRemoveNpc = (npc: NPC) => {
-    saveNpc.mutate({ ...npc, locationPresences: (npc.locationPresences ?? []).filter((p) => p.locationId !== location.id) });
+    removeNpcPresence.mutate({ npcId: npc.id, locationId: location.id });
   };
 
   const handleSaveNote = (npc: NPC, note: string) => {
-    const presences = npc.locationPresences ? [...npc.locationPresences] : [];
-    const idx = presences.findIndex((p) => p.locationId === location.id);
-    if (idx >= 0) {
-      presences[idx] = { ...presences[idx], note: note.trim() || undefined };
-    } else {
-      presences.push({ locationId: location.id, note: note.trim() || undefined });
-    }
-    saveNpc.mutate({ ...npc, locationPresences: presences }, {
-      onSuccess: () => setEditingNoteForNpcId(null),
-    });
+    addNpcPresence.mutate(
+      { npcId: npc.id, locationId: location.id, note: note.trim() || undefined },
+      { onSuccess: () => setEditingNoteForNpcId(null) },
+    );
   };
 
   return (
@@ -960,16 +990,6 @@ export default function LocationDetailPage() {
         </Link>
       </div>
 
-      {/* Hero image — full width */}
-      <div className="px-10 pt-4">
-        <LocationPlaceholder
-          name={location.name}
-          imageUrl={location.image}
-          onUpload={handleImageUpload}
-          onOpenMap={() => setMapOpen(true)}
-        />
-      </div>
-
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
         <div className="flex flex-col lg:flex-row gap-16">
 
@@ -979,7 +999,7 @@ export default function LocationDetailPage() {
             {/* Header */}
             <header className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                {(() => {
+                {locationTypesEnabled && (() => {
                   const te = typeMap.get(location.type);
                   return (
                     <span className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-label tracking-widest uppercase rounded-sm border ${
@@ -998,7 +1018,7 @@ export default function LocationDetailPage() {
                     {location.settlementPopulation.toLocaleString()}
                   </span>
                 )}
-                {location.biome && (
+                {locationTypesEnabled && location.biome && (
                   <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/20">
                     <span className="material-symbols-outlined text-[13px]">terrain</span>
                     {location.biome.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -1016,15 +1036,18 @@ export default function LocationDetailPage() {
               value={location.description}
               onSave={(html) => saveMutation.mutate({ ...location, description: html })}
               placeholder="Describe this location…"
+              readOnly={!isGm}
             />
 
             {/* GM Notes */}
-            <InlineRichField
-              label="GM Notes"
-              value={location.gmNotes}
-              onSave={(html) => saveMutation.mutate({ ...location, gmNotes: html || undefined })}
-              isGmNotes
-            />
+            {isGm && (
+              <InlineRichField
+                label="GM Notes"
+                value={location.gmNotes}
+                onSave={(html) => saveMutation.mutate({ ...location, gmNotes: html || undefined })}
+                isGmNotes
+              />
+            )}
 
             {/* Adjacent / Reachable */}
             {adjacentLocations && adjacentLocations.length > 0 && (
@@ -1043,17 +1066,19 @@ export default function LocationDetailPage() {
                       className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
                     >
                       <span className={`material-symbols-outlined text-[18px] ${
-                        (() => { const te = typeMap.get(adj.type); return te ? '' : 'text-on-surface-variant/40'; })()
-                      }`} style={(() => { const te = typeMap.get(adj.type); return te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined; })()}>
-                        {typeMap.get(adj.type)?.icon ?? 'location_on'}
+                        (() => { const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined; return te ? '' : 'text-on-surface-variant/40'; })()
+                      }`} style={(() => { const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined; return te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined; })()}>
+                        {(locationTypesEnabled ? typeMap.get(adj.type)?.icon : undefined) ?? 'location_on'}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-headline text-on-surface group-hover:text-secondary transition-colors truncate">
                           {adj.name}
                         </p>
-                        <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
-                          {typeMap.get(adj.type)?.name ?? adj.type}
-                        </p>
+                        {locationTypesEnabled && (
+                          <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
+                            {typeMap.get(adj.type)?.name ?? adj.type}
+                          </p>
+                        )}
                       </div>
                       <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-secondary/60 opacity-0 group-hover:opacity-100 transition-opacity">
                         arrow_forward
@@ -1065,19 +1090,22 @@ export default function LocationDetailPage() {
             )}
 
             {/* NPCs Here */}
+            {npcsEnabled && (
             <section className="space-y-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
                   NPCs Here
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
-                <button
-                  onClick={() => { setAddNpcOpen((v) => !v); setAddNpcSearch(''); }}
-                  className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-                >
-                  <span className="material-symbols-outlined text-[13px]">person_add</span>
-                  Add
-                </button>
+                {isGm && (
+                  <button
+                    onClick={() => { setAddNpcOpen((v) => !v); setAddNpcSearch(''); }}
+                    className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">person_add</span>
+                    Add
+                  </button>
+                )}
               </div>
 
               {/* NPC picker */}
@@ -1147,7 +1175,7 @@ export default function LocationDetailPage() {
                           >
                             <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
                               {npc.image ? (
-                                <img src={npc.image} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
+                                <img src={resolveImageUrl(npc.image)} alt={npc.name} className="w-full h-full object-cover rounded-sm" />
                               ) : (
                                 <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
                               )}
@@ -1166,7 +1194,7 @@ export default function LocationDetailPage() {
                               arrow_forward
                             </span>
                           </Link>
-                          {confirmRemoveNpcId === npc.id ? (
+                          {isGm && (confirmRemoveNpcId === npc.id ? (
                             <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                               <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
                               <button
@@ -1191,10 +1219,25 @@ export default function LocationDetailPage() {
                             >
                               <span className="material-symbols-outlined text-[14px]">person_remove</span>
                             </button>
+                          ))}
+                          {isGm && presence && (
+                            <button
+                              onClick={() => setPresenceVisibility.mutate({ npcId: npc.id, locationId: location.id, playerVisible: !presence.playerVisible })}
+                              title={presence.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                              className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
+                                presence.playerVisible
+                                  ? 'text-primary/60 hover:text-primary'
+                                  : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[14px]">
+                                {presence.playerVisible ? 'visibility' : 'visibility_off'}
+                              </span>
+                            </button>
                           )}
                         </div>
                         {/* Presence note */}
-                        {isEditingNote ? (
+                        {isGm && isEditingNote ? (
                           <div className="px-3 pb-3 flex items-center gap-2" onClick={(e) => e.preventDefault()}>
                             <input
                               autoFocus
@@ -1223,23 +1266,17 @@ export default function LocationDetailPage() {
                             </button>
                           </div>
                         ) : (
-                          <div
-                            className="px-3 pb-2.5 flex items-center gap-1.5 cursor-pointer group/note"
-                            onClick={() => {
-                              setEditingNoteForNpcId(npc.id);
-                              setNoteInput(presence?.note ?? '');
-                            }}
-                          >
+                          <div className="px-3 pb-2.5 flex items-center gap-1.5">
                             {presence?.note ? (
                               <p className="text-[11px] text-on-surface-variant/60 italic flex-1">{presence.note}</p>
-                            ) : (
-                              <p className="text-[10px] text-on-surface-variant/20 italic flex-1 opacity-0 group-hover/note:opacity-100 transition-opacity">
+                            ) : isGm ? (
+                              <p
+                                className="text-[10px] text-on-surface-variant/20 italic flex-1 cursor-pointer opacity-0 group-hover/card:opacity-100 transition-opacity"
+                                onClick={() => { setEditingNoteForNpcId(npc.id); setNoteInput(''); }}
+                              >
                                 Add presence note…
                               </p>
-                            )}
-                            <span className="material-symbols-outlined text-[12px] text-on-surface-variant/20 group-hover/note:text-primary/50 transition-colors opacity-0 group-hover/note:opacity-100">
-                              edit
-                            </span>
+                            ) : null}
                           </div>
                         )}
                       </div>
@@ -1248,8 +1285,10 @@ export default function LocationDetailPage() {
                 </div>
               ) : null}
             </section>
+            )}
 
             {/* Session Appearances */}
+            {sessionsEnabled && (
             <section className="space-y-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
@@ -1283,21 +1322,49 @@ export default function LocationDetailPage() {
                 </div>
               )}
             </section>
+            )}
           </div>
 
           {/* ── Right column (35%) ──────────────────────────────── */}
           <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
 
-            {/* Edit button */}
-            <div className="flex justify-end">
-              <button
-                onClick={() => setEditOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">edit</span>
-                Edit Location
-              </button>
-            </div>
+            {/* Actions (GM only) */}
+            {isGm && (
+              <div className="flex justify-end gap-2">
+                {confirmDelete ? (
+                  <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
+                    <span className="text-[10px] text-on-surface-variant">Delete this location?</span>
+                    <button onClick={() => deleteLocation.mutate(location.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/locations`) })}
+                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                    <button onClick={() => setConfirmDelete(false)}
+                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDelete(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                  Edit Location
+                </button>
+              </div>
+            )}
+
+            {/* Image / Map */}
+            <LocationPlaceholder
+              name={location.name}
+              imageUrl={resolveImageUrl(location.image, imgVersion)}
+              markers={location.mapMarkers}
+              childLocations={childLocations}
+              typeMap={locationTypesEnabled ? typeMap : undefined}
+              onUpload={isGm ? handleImageUpload : undefined}
+              onOpenMap={() => setMapOpen(true)}
+            />
 
             {/* Parent location */}
             {parentLocation && (
@@ -1310,7 +1377,7 @@ export default function LocationDetailPage() {
                   className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all rounded-sm"
                 >
                   {(() => {
-                    const te = typeMap.get(parentLocation.type);
+                    const te = locationTypesEnabled ? typeMap.get(parentLocation.type) : undefined;
                     return (
                       <span className={`w-10 h-10 rounded-sm flex items-center justify-center border flex-shrink-0 transition-all ${
                         te ? CATEGORY_TILE_CLS[te.category] : 'bg-surface-container-highest border-outline-variant/20'
@@ -1325,9 +1392,11 @@ export default function LocationDetailPage() {
                     <p className="text-sm font-headline text-on-surface group-hover:text-primary transition-colors truncate">
                       {parentLocation.name}
                     </p>
-                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
-                      {typeMap.get(parentLocation.type)?.name ?? parentLocation.type}
-                    </p>
+                    {locationTypesEnabled && (
+                      <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
+                        {typeMap.get(parentLocation.type)?.name ?? parentLocation.type}
+                      </p>
+                    )}
                   </div>
                   <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
                     arrow_forward
@@ -1348,13 +1417,13 @@ export default function LocationDetailPage() {
                   className="block relative group/minimap rounded-sm overflow-hidden"
                 >
                   <MiniMapPreview
-                    imageUrl={parentLocation.image}
+                    imageUrl={resolveImageUrl(parentLocation.image)!}
                     markerX={parentMarker.x}
                     markerY={parentMarker.y}
                     markerLabel={parentMarker.label}
-                    markerIcon={typeMap.get(location.type)?.icon ?? 'location_on'}
-                    markerIconColor={(() => { const te = typeMap.get(location.type); return te ? CATEGORY_ICON_COLOR[te.category] : 'text-primary'; })()}
-                    markerBubbleCls={(() => { const te = typeMap.get(location.type); return te ? (CATEGORY_MARKER_CLS[te.category]?.bubble ?? MARKER_DEFAULT_CLS.bubble) : MARKER_DEFAULT_CLS.bubble; })()}
+                    markerIcon={(locationTypesEnabled ? typeMap.get(location.type)?.icon : undefined) ?? 'location_on'}
+                    markerIconColor={(() => { const te = locationTypesEnabled ? typeMap.get(location.type) : undefined; return te ? CATEGORY_ICON_COLOR[te.category] : 'text-primary'; })()}
+                    markerBubbleCls={(() => { const te = locationTypesEnabled ? typeMap.get(location.type) : undefined; return te ? (CATEGORY_MARKER_CLS[te.category]?.bubble ?? MARKER_DEFAULT_CLS.bubble) : MARKER_DEFAULT_CLS.bubble; })()}
                   />
                   {/* Hover overlay */}
                   <div className="absolute inset-0 flex items-end justify-end p-2.5 opacity-0 group-hover/minimap:opacity-100 transition-opacity pointer-events-none">
@@ -1374,51 +1443,105 @@ export default function LocationDetailPage() {
                     Notable Places
                   </h4>
                   <div className="h-px flex-1 bg-outline-variant/10" />
-                  <button
+                  {isGm && <button
                     onClick={() => setAddChildLocOpen(true)}
                     className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                   >
                     <span className="material-symbols-outlined text-[13px]">add_location_alt</span>
                     Add
-                  </button>
+                  </button>}
                 </div>
 
                 <div className="space-y-1.5">
+                  {childLocations.length === 0 && (
+                    <p className="text-xs text-on-surface-variant/40 italic py-2">No notable places yet.</p>
+                  )}
                   {childLocations.map((child) => {
                     const hasMarker = (location.mapMarkers ?? []).some((mk) => mk.linkedLocationId === child.id);
-                    const te = typeMap.get(child.type);
+                    const te = locationTypesEnabled ? typeMap.get(child.type) : undefined;
                     return (
-                      <Link
-                        key={child.id}
-                        to={`/campaigns/${campaignId}/locations/${child.id}`}
-                        className="group flex items-center gap-2.5 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all rounded-sm"
-                      >
-                        <span className={`material-symbols-outlined text-[16px] ${te ? '' : 'text-on-surface-variant/40'}`}
-                          style={te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined}>
-                          {te?.icon ?? 'location_on'}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">
-                            {child.name}
-                          </p>
-                          <p className="text-[9px] uppercase tracking-wider text-on-surface-variant/40">
-                            {te?.name ?? child.type}
-                          </p>
-                        </div>
-                        {hasMarker && (
-                          <span className="material-symbols-outlined text-[13px] text-on-surface-variant/30 flex-shrink-0">
-                            location_on
+                      <div key={child.id} className="flex items-stretch bg-surface-container-low border border-outline-variant/10 rounded-sm">
+                        <Link
+                          to={`/campaigns/${campaignId}/locations/${child.id}`}
+                          className="group flex items-center gap-2.5 p-3 hover:bg-surface-container transition-all flex-1 min-w-0"
+                        >
+                          <span className={`material-symbols-outlined text-[16px] ${te ? '' : 'text-on-surface-variant/40'}`}
+                            style={te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined}>
+                            {te?.icon ?? 'location_on'}
                           </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">
+                              {child.name}
+                            </p>
+                            {locationTypesEnabled && (
+                              <p className="text-[9px] uppercase tracking-wider text-on-surface-variant/40">
+                                {te?.name ?? child.type}
+                              </p>
+                            )}
+                          </div>
+                          {hasMarker && (
+                            <span className="material-symbols-outlined text-[13px] text-on-surface-variant/30 flex-shrink-0">
+                              location_on
+                            </span>
+                          )}
+                          <span className="material-symbols-outlined text-[12px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                            arrow_forward
+                          </span>
+                        </Link>
+                        {isGm && (
+                          <button
+                            onClick={() => setLocationVisibility.mutate({
+                              campaignId: campaignId!,
+                              id: child.id,
+                              playerVisible: !(child as any).playerVisible,
+                              playerVisibleFields: (child as any).playerVisibleFields ?? [],
+                            })}
+                            title={(child as any).playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                            className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
+                              (child as any).playerVisible
+                                ? 'text-primary/60 hover:text-primary'
+                                : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              {(child as any).playerVisible ? 'visibility' : 'visibility_off'}
+                            </span>
+                          </button>
                         )}
-                        <span className="material-symbols-outlined text-[12px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
-                          arrow_forward
-                        </span>
-                      </Link>
+                      </div>
                     );
                   })}
                 </div>
             </div>
 
+            {/* Player Visibility */}
+            {isGm && location && (
+              <VisibilityPanel
+                playerVisible={location.playerVisible ?? false}
+                playerVisibleFields={location.playerVisibleFields ?? []}
+                fields={LOCATION_VISIBILITY_FIELDS}
+                basicPreset={LOCATION_BASIC_PRESET}
+                autoVisibleLabels={['Type']}
+                onToggleVisible={(v) => setLocationVisibility.mutate({
+                  campaignId: campaignId!, id: location.id,
+                  playerVisible: v, playerVisibleFields: location.playerVisibleFields ?? [],
+                })}
+                onToggleField={(f, on) => {
+                  const fields = on
+                    ? [...(location.playerVisibleFields ?? []), f]
+                    : (location.playerVisibleFields ?? []).filter((x) => x !== f);
+                  setLocationVisibility.mutate({
+                    campaignId: campaignId!, id: location.id,
+                    playerVisible: location.playerVisible ?? false, playerVisibleFields: fields,
+                  });
+                }}
+                onSetPreset={(fields) => setLocationVisibility.mutate({
+                  campaignId: campaignId!, id: location.id,
+                  playerVisible: location.playerVisible ?? false, playerVisibleFields: fields,
+                })}
+                isPending={setLocationVisibility.isPending}
+              />
+            )}
 
           </div>
         </div>
@@ -1439,7 +1562,7 @@ export default function LocationDetailPage() {
 
       {mapOpen && location.image && (
         <MapViewer
-          imageUrl={location.image}
+          imageUrl={resolveImageUrl(location.image, imgVersion)!}
           locationId={location.id}
           locationName={location.name}
           initialMarkers={location.mapMarkers ?? []}
@@ -1447,6 +1570,7 @@ export default function LocationDetailPage() {
           npcsHere={npcsHere}
           campaignId={campaignId ?? ''}
           typeMap={typeMap}
+          hideTypes={!locationTypesEnabled}
           onClose={() => setMapOpen(false)}
           onSave={(markers) => saveMutation.mutate({ ...location, mapMarkers: markers })}
           onRequestAddLocation={(point) => {

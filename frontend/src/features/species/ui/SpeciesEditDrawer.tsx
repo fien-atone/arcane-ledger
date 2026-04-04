@@ -1,26 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSaveSpecies } from '../api';
+import { useSpeciesTypes } from '@/features/speciesTypes/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui/Select';
-import { RichTextEditor } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
-import type { Species, SpeciesType, SpeciesSize } from '@/entities/species';
-
-const TYPE_OPTIONS: SelectOption<SpeciesType>[] = [
-  { value: 'humanoid',    label: 'Humanoid' },
-  { value: 'beast',       label: 'Beast' },
-  { value: 'undead',      label: 'Undead' },
-  { value: 'construct',   label: 'Construct' },
-  { value: 'fey',         label: 'Fey' },
-  { value: 'fiend',       label: 'Fiend' },
-  { value: 'celestial',   label: 'Celestial' },
-  { value: 'dragon',      label: 'Dragon' },
-  { value: 'elemental',   label: 'Elemental' },
-  { value: 'giant',       label: 'Giant' },
-  { value: 'monstrosity', label: 'Monstrosity' },
-  { value: 'plant',       label: 'Plant' },
-  { value: 'ooze',        label: 'Ooze' },
-  { value: 'aberration',  label: 'Aberration' },
-];
+import type { Species, SpeciesSize } from '@/entities/species';
 
 const SIZE_OPTIONS: SelectOption<SpeciesSize>[] = [
   { value: 'tiny',       label: 'Tiny' },
@@ -40,23 +24,26 @@ const labelCls =
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Pass existing species to edit, undefined to create new */
+  campaignId: string;
   species?: Species;
 }
 
-function newId() {
-  return `species-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
 
-export function SpeciesEditDrawer({ open, onClose, species }: Props) {
-  const save = useSaveSpecies();
+export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props) {
+  const save = useSaveSpecies(campaignId);
+  const typesEnabled = useSectionEnabled(campaignId, 'species_types');
+  const { data: speciesTypes } = useSpeciesTypes(campaignId);
   const isNew = !species;
+
+  const typeOptions = useMemo<SelectOption<string>[]>(
+    () => (speciesTypes ?? []).map((t) => ({ value: t.id, label: t.name, icon: t.icon })),
+    [speciesTypes],
+  );
 
   const [name, setName] = useState('');
   const [pluralName, setPluralName] = useState('');
-  const [type, setType] = useState<SpeciesType>('humanoid');
+  const [type, setType] = useState<string>('humanoid');
   const [size, setSize] = useState<SpeciesSize>('medium');
-  const [description, setDescription] = useState('');
   const [traitsRaw, setTraitsRaw] = useState('');
 
   useEffect(() => {
@@ -65,7 +52,6 @@ export function SpeciesEditDrawer({ open, onClose, species }: Props) {
     setPluralName(species?.pluralName ?? '');
     setType(species?.type ?? 'humanoid');
     setSize(species?.size ?? 'medium');
-    setDescription(species?.description ?? '');
     setTraitsRaw(species?.traits?.join(', ') ?? '');
   }, [open, species]);
 
@@ -76,14 +62,14 @@ export function SpeciesEditDrawer({ open, onClose, species }: Props) {
       .map((t) => t.trim())
       .filter(Boolean);
     const record: Species = {
-      id: species?.id ?? newId(),
+      id: species?.id ?? '',
+      campaignId,
       name: name.trim(),
       pluralName: pluralName.trim() || undefined,
       type,
       size,
-      description: description.trim() || undefined,
+      description: species?.description,
       traits: traits.length > 0 ? traits : undefined,
-      image: species?.image,
       createdAt: species?.createdAt ?? new Date().toISOString(),
     };
     save.mutate(record, { onSuccess: onClose });
@@ -142,16 +128,18 @@ export function SpeciesEditDrawer({ open, onClose, species }: Props) {
           </div>
 
           {/* Type + Size */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Type</label>
-              <Select
-                value={type}
-                options={TYPE_OPTIONS}
-                nullable={false}
-                onChange={(v) => setType((v || 'humanoid') as SpeciesType)}
-              />
-            </div>
+          <div className={`grid gap-4 ${typesEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {typesEnabled && (
+              <div>
+                <label className={labelCls}>Type</label>
+                <Select<string>
+                  value={type}
+                  options={typeOptions}
+                  searchable
+                  onChange={(v) => setType(v || 'humanoid')}
+                />
+              </div>
+            )}
             <div>
               <label className={labelCls}>Size</label>
               <Select
@@ -161,12 +149,6 @@ export function SpeciesEditDrawer({ open, onClose, species }: Props) {
                 onChange={(v) => setSize((v || 'medium') as SpeciesSize)}
               />
             </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className={labelCls}>Description</label>
-            <RichTextEditor value={description} onChange={setDescription} placeholder="Describe this species…" minHeight="7rem" />
           </div>
 
           {/* Traits */}

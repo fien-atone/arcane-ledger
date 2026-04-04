@@ -1,10 +1,18 @@
 import { useState } from 'react';
-import { useGroupTypes, useDeleteGroupType } from '@/features/groupTypes/api';
+import { useParams } from 'react-router-dom';
+import { useGroupTypes, useDeleteGroupType, useSaveGroupType } from '@/features/groupTypes/api';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import { GroupTypeEditDrawer } from '@/features/groupTypes/ui';
+import { InlineRichField, EmptyState, SectionDisabled } from '@/shared/ui';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 export default function GroupTypesPage() {
-  const { data: groupTypes, isLoading } = useGroupTypes();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
+  const { id: campaignId } = useParams<{ id: string }>();
+  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
+  const { data: groupTypes, isLoading } = useGroupTypes(campaignId, debouncedSearch);
   const deleteGroupType = useDeleteGroupType();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -30,6 +38,10 @@ export default function GroupTypesPage() {
       },
     });
   };
+
+  if (!groupsEnabled) {
+    return <SectionDisabled campaignId={campaignId ?? ''} />;
+  }
 
   return (
     <main className="flex-1 h-full bg-surface flex flex-col overflow-hidden">
@@ -64,36 +76,42 @@ export default function GroupTypesPage() {
 
           {/* Left panel: list */}
           <div className="w-full lg:w-[420px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-y-auto">
+            <div className="px-3 py-2.5 border-b border-outline-variant/10 flex-shrink-0">
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
+                <input
+                  type="text"
+                  placeholder="Search types…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-surface-container border-0 border-b border-outline-variant/20 focus:ring-0 focus:border-primary text-on-surface text-sm placeholder:text-on-surface-variant/30 transition-colors"
+                />
+              </div>
+            </div>
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {(!groupTypes || groupTypes.length === 0) && (
-                <p className="text-xs text-on-surface-variant/40 italic p-6">No group types found.</p>
-              )}
-              {(groupTypes ?? []).map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setSelectedId(t.id)}
-                  className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
-                    selected?.id === t.id
-                      ? 'bg-primary/8 border-l-2 border-l-primary'
-                      : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
-                  }`}
-                >
-                  <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border ${selected?.id === t.id ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
-                    <span className={`material-symbols-outlined text-[18px] ${selected?.id === t.id ? 'text-primary' : 'text-on-surface-variant/50'}`}>
-                      {t.icon}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm truncate transition-colors ${selected?.id === t.id ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>
-                      {t.name}
-                    </p>
-                    {t.description && (
-                      <p className={`text-[9px] mt-0.5 truncate ${selected?.id === t.id ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>
-                        {t.description}
+              {(!groupTypes || groupTypes.length === 0) ? (
+                <EmptyState icon="category" title="No group types found." />
+              ) : groupTypes.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setSelectedId(t.id)}
+                    className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
+                      selected?.id === t.id
+                        ? 'bg-primary/8 border-l-2 border-l-primary'
+                        : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border ${selected?.id === t.id ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
+                      <span className={`material-symbols-outlined text-[18px] ${selected?.id === t.id ? 'text-primary' : 'text-on-surface-variant/50'}`}>
+                        {t.icon}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm truncate transition-colors ${selected?.id === t.id ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>
+                        {t.name}
                       </p>
-                    )}
-                  </div>
-                </button>
+                    </div>
+                  </button>
               ))}
             </div>
 
@@ -111,6 +129,7 @@ export default function GroupTypesPage() {
             {selected ? (
               <GroupTypeDetail
                 entry={selected}
+                campaignId={campaignId ?? ''}
                 onEdit={() => handleOpenEdit(selected)}
                 onDelete={() => handleDelete(selected.id)}
               />
@@ -126,6 +145,7 @@ export default function GroupTypesPage() {
       <GroupTypeEditDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        campaignId={campaignId ?? ''}
         groupType={editingType}
       />
     </main>
@@ -134,14 +154,17 @@ export default function GroupTypesPage() {
 
 function GroupTypeDetail({
   entry,
+  campaignId,
   onEdit,
   onDelete,
 }: {
   entry: GroupTypeEntry;
+  campaignId: string;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const saveType = useSaveGroupType(campaignId);
   return (
     <div className="flex flex-col flex-1">
       <div className="px-12 py-8 flex flex-col gap-8">
@@ -193,32 +216,14 @@ function GroupTypeDetail({
           </div>
         </div>
 
-        {/* Description */}
-        {entry.description && (
-          <div>
-            <div className="flex items-center gap-4 mb-4">
-              <h3 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                Description
-              </h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <p className="text-on-surface-variant leading-relaxed text-base">
-              {entry.description}
-            </p>
-          </div>
-        )}
+        {/* Description — edit in place */}
+        <InlineRichField
+          label="Description"
+          value={entry.description}
+          onSave={(html) => saveType.mutate({ ...entry, description: html || undefined })}
+          placeholder="Describe this group type…"
+        />
 
-        {/* Usage note */}
-        <div className="p-4 bg-surface-container-low border border-outline-variant/15 rounded-sm">
-          <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 font-bold mb-1">
-            Usage
-          </p>
-          <p className="text-sm text-on-surface-variant/70 leading-relaxed">
-            This type is used to classify groups across your campaign. Groups assigned this type will display the{' '}
-            <span className="font-mono text-primary">{entry.icon}</span> icon and the label{' '}
-            <span className="font-semibold text-on-surface">{entry.name}</span>.
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -207,6 +207,7 @@ CREATE TABLE "Location" (
 -- CreateTable
 CREATE TABLE "LocationType" (
     "id" TEXT NOT NULL,
+    "campaignId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "icon" TEXT NOT NULL,
     "category" TEXT NOT NULL,
@@ -230,8 +231,10 @@ CREATE TABLE "LocationTypeContainmentRule" (
 -- CreateTable
 CREATE TABLE "GroupType" (
     "id" TEXT NOT NULL,
+    "campaignId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "icon" TEXT NOT NULL DEFAULT 'groups',
+    "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "GroupType_pkey" PRIMARY KEY ("id")
@@ -240,6 +243,7 @@ CREATE TABLE "GroupType" (
 -- CreateTable
 CREATE TABLE "Species" (
     "id" TEXT NOT NULL,
+    "campaignId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "pluralName" TEXT,
     "type" TEXT NOT NULL,
@@ -250,6 +254,18 @@ CREATE TABLE "Species" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Species_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SpeciesType" (
+    "id" TEXT NOT NULL,
+    "campaignId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "icon" TEXT NOT NULL DEFAULT 'blur_on',
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SpeciesType_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -348,6 +364,18 @@ ALTER TABLE "Location" ADD CONSTRAINT "Location_campaignId_fkey" FOREIGN KEY ("c
 
 -- AddForeignKey
 ALTER TABLE "Location" ADD CONSTRAINT "Location_parentLocationId_fkey" FOREIGN KEY ("parentLocationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LocationType" ADD CONSTRAINT "LocationType_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "GroupType" ADD CONSTRAINT "GroupType_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Species" ADD CONSTRAINT "Species_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SpeciesType" ADD CONSTRAINT "SpeciesType_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Relation" ADD CONSTRAINT "Relation_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;

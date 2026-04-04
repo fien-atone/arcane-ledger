@@ -1,4 +1,4 @@
-export type NpcStatus = 'alive' | 'dead' | 'missing' | 'unknown' | 'hostile';
+export type NpcStatus = 'alive' | 'dead' | 'missing' | 'unknown';
 export type NpcGender = 'male' | 'female' | 'nonbinary';
 
 export type NpcRelationType =
@@ -21,6 +21,7 @@ export interface NPCRelation {
 export interface NPCLocationPresence {
   locationId: string;
   note?: string;
+  playerVisible?: boolean;
 }
 
 export interface NPCGroupMembership {
@@ -28,6 +29,7 @@ export interface NPCGroupMembership {
   groupId: string;
   relation?: string;
   subfaction?: string;
+  playerVisible?: boolean;
 }
 
 export interface NPC {
@@ -51,6 +53,8 @@ export interface NPC {
   relations?: NPCRelation[];
   motivation?: string;
   flaws?: string;
+  playerVisible?: boolean;
+  playerVisibleFields?: string[];
   createdAt: string;
   updatedAt: string;
 }

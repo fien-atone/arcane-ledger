@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaveQuest } from '@/features/quests/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
+import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Quest } from '@/entities/quest';
@@ -17,12 +18,9 @@ const inputCls =
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
-function generateId() {
-  return `quest-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
   const save = useSaveQuest(campaignId);
+  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
   const { data: allNpcs } = useNpcs(campaignId);
   const isEdit = !!quest;
 
@@ -47,7 +45,7 @@ export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
   const handleSave = () => {
     if (!title.trim()) return;
     const record: Quest = {
-      id: quest?.id ?? generateId(),
+      id: quest?.id ?? '',
       campaignId,
       title: title.trim(),
       description: quest?.description ?? '',
@@ -91,6 +89,7 @@ export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
             />
           </div>
 
+          {npcsEnabled && (
           <div>
             <label className={labelCls}>Quest Giver</label>
             <Select<string>
@@ -102,6 +101,7 @@ export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
               searchable
             />
           </div>
+          )}
 
         </div>
 

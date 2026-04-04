@@ -1,1 +1,1 @@
-export { useQuests, useActiveQuests, useQuest } from './queries';
+export { useQuests, useActiveQuests, useQuest, useSetQuestVisibility } from './queries';

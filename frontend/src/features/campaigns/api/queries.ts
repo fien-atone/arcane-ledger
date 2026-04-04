@@ -1,5 +1,17 @@
 import { gql } from '@apollo/client';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
+import { ALL_SECTIONS } from '@/entities/campaign';
+import type { CampaignSection, CampaignSummary } from '@/entities/campaign';
+
+const CAMPAIGNS_CHANGED_SUBSCRIPTION = gql`
+  subscription CampaignsChanged {
+    campaignsChanged {
+      entityType
+      action
+      campaignId
+    }
+  }
+`;
 
 // ── GraphQL documents ─────────────────────────────────────────────
 
@@ -12,6 +24,7 @@ const CAMPAIGNS_QUERY = gql`
       createdAt
       archivedAt
       myRole
+      enabledSections
       sessionCount
       memberCount
       lastSession {
@@ -31,6 +44,7 @@ const CAMPAIGN_QUERY = gql`
       createdAt
       archivedAt
       myRole
+      enabledSections
       sessionCount
       memberCount
       lastSession {
@@ -75,10 +89,38 @@ const UPDATE_CAMPAIGN = gql`
   }
 `;
 
+const UPDATE_CAMPAIGN_SECTIONS = gql`
+  mutation UpdateCampaignSections($campaignId: ID!, $sections: [String!]!) {
+    updateCampaignSections(campaignId: $campaignId, sections: $sections) {
+      id
+      enabledSections
+    }
+  }
+`;
+
+// ── Helpers ───────────────────────────────────────────────────────
+
+/** Returns effective enabled sections. undefined/null = all enabled (campaign not loaded yet). Empty array = nothing enabled. */
+export function getEnabledSections(campaign: CampaignSummary | undefined): CampaignSection[] {
+  if (!campaign || campaign.enabledSections == null) return ALL_SECTIONS;
+  return campaign.enabledSections.map((s) => s.toLowerCase() as CampaignSection);
+}
+
+/** Hook: check if a specific section is enabled for a campaign. */
+export function useSectionEnabled(campaignId: string, section: CampaignSection): boolean {
+  const { data: campaign } = useCampaign(campaignId);
+  const enabled = getEnabledSections(campaign);
+  return new Set(enabled).has(section);
+}
+
 // ── Hooks ─────────────────────────────────────────────────────────
 
 export const useCampaigns = () => {
-  const { data, loading, error } = useQuery<any>(CAMPAIGNS_QUERY);
+  const { data, loading, error, refetch } = useQuery<any>(CAMPAIGNS_QUERY);
+  // Subscribe to campaign-level changes (create, archive, restore)
+  useSubscription(CAMPAIGNS_CHANGED_SUBSCRIPTION, {
+    onData: () => { refetch(); },
+  });
   return {
     data: data?.campaigns as import('@/entities/campaign').CampaignSummary[] | undefined,
     isLoading: loading,
@@ -99,9 +141,7 @@ export const useCampaign = (id: string) => {
 };
 
 export const useSaveCampaign = () => {
-  const [updateCampaign, { loading }] = useMutation(UPDATE_CAMPAIGN, {
-    refetchQueries: [{ query: CAMPAIGNS_QUERY }],
-  });
+  const [updateCampaign, { loading }] = useMutation(UPDATE_CAMPAIGN);
 
   return {
     mutate: (
@@ -113,8 +153,12 @@ export const useSaveCampaign = () => {
           id: campaign.id,
           title: campaign.title,
           description: campaign.description,
-          archivedAt: campaign.archivedAt,
+          archivedAt: campaign.archivedAt ?? null,
         },
+        refetchQueries: [
+          { query: CAMPAIGN_QUERY, variables: { id: campaign.id } },
+        ],
+        awaitRefetchQueries: true,
       }).then(() => options?.onSuccess?.());
     },
     isPending: loading,
@@ -141,6 +185,18 @@ export const useCreateCampaign = () => {
         options?.onSuccess?.(created);
       });
     },
+    isPending: loading,
+  };
+};
+
+export const useUpdateCampaignSections = () => {
+  const [mutate, { loading }] = useMutation(UPDATE_CAMPAIGN_SECTIONS);
+  return {
+    mutate: (campaignId: string, sections: CampaignSection[]) =>
+      mutate({
+        variables: { campaignId, sections: sections.map((s) => s.toUpperCase()) },
+        refetchQueries: [{ query: CAMPAIGN_QUERY, variables: { id: campaignId } }],
+      }),
     isPending: loading,
   };
 };
