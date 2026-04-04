@@ -89,8 +89,6 @@ export const typeDefs = `#graphql
     brief: String
     summary: String!
     createdAt: String!
-    playerVisible: Boolean!
-    playerVisibleFields: [String!]!
     npcs: [NPC!]!
     locations: [Location!]!
     quests: [Quest!]!
@@ -103,6 +101,7 @@ export const typeDefs = `#graphql
     locationId: ID!
     location: Location!
     note: String
+    playerVisible: Boolean!
   }
 
   type NPCGroupMembership {
@@ -110,6 +109,7 @@ export const typeDefs = `#graphql
     group: Group!
     relation: String
     subfaction: String
+    playerVisible: Boolean!
   }
 
   type NPC {
@@ -535,10 +535,13 @@ export const typeDefs = `#graphql
     addNPCGroupMembership(npcId: ID!, groupId: ID!, relation: String, subfaction: String): NPC!
     removeNPCGroupMembership(npcId: ID!, groupId: ID!): NPC!
 
+    # NPC link visibility
+    setNPCGroupMembershipVisibility(npcId: ID!, groupId: ID!, playerVisible: Boolean!): NPC!
+    setNPCLocationPresenceVisibility(npcId: ID!, locationId: ID!, playerVisible: Boolean!): NPC!
+
     # Entity Visibility (GM-only)
     setNPCVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): NPC!
     setLocationVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Location!
-    setSessionVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Session!
     setQuestVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Quest!
     setGroupVisibility(campaignId: ID!, id: ID!, input: SetEntityVisibilityInput!): Group!
 

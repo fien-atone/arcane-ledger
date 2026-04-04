@@ -24,7 +24,7 @@ const LOCATION_QUERY = gql`
       playerVisible playerVisibleFields
       createdAt
       mapMarkers { id x y label linkedLocationId linkedNpcId }
-      children { id name type }
+      children { id name type playerVisible playerVisibleFields }
       npcsHere { id name status }
     }
   }

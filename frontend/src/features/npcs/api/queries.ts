@@ -11,8 +11,8 @@ const NPCS_QUERY = gql`
       appearance personality description motivation flaws gmNotes image
       playerVisible playerVisibleFields
       createdAt updatedAt
-      locationPresences { locationId note }
-      groupMemberships { groupId relation subfaction }
+      locationPresences { locationId note playerVisible }
+      groupMemberships { groupId relation subfaction playerVisible }
     }
   }
 `;
@@ -24,8 +24,8 @@ const NPC_QUERY = gql`
       appearance personality description motivation flaws gmNotes image
       playerVisible playerVisibleFields
       createdAt updatedAt
-      locationPresences { locationId note }
-      groupMemberships { groupId relation subfaction }
+      locationPresences { locationId note playerVisible }
+      groupMemberships { groupId relation subfaction playerVisible }
     }
   }
 `;
@@ -38,8 +38,8 @@ const SAVE_NPC = gql`
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
       createdAt updatedAt
-      locationPresences { locationId note }
-      groupMemberships { groupId relation subfaction }
+      locationPresences { locationId note playerVisible }
+      groupMemberships { groupId relation subfaction playerVisible }
     }
   }
 `;
@@ -48,7 +48,7 @@ const ADD_NPC_GROUP_MEMBERSHIP = gql`
   mutation AddNPCGroupMembership($npcId: ID!, $groupId: ID!, $relation: String, $subfaction: String) {
     addNPCGroupMembership(npcId: $npcId, groupId: $groupId, relation: $relation, subfaction: $subfaction) {
       id
-      groupMemberships { groupId relation subfaction }
+      groupMemberships { groupId relation subfaction playerVisible }
     }
   }
 `;
@@ -57,7 +57,7 @@ const REMOVE_NPC_GROUP_MEMBERSHIP = gql`
   mutation RemoveNPCGroupMembership($npcId: ID!, $groupId: ID!) {
     removeNPCGroupMembership(npcId: $npcId, groupId: $groupId) {
       id
-      groupMemberships { groupId relation subfaction }
+      groupMemberships { groupId relation subfaction playerVisible }
     }
   }
 `;
@@ -66,7 +66,7 @@ const ADD_NPC_LOCATION_PRESENCE = gql`
   mutation AddNPCLocationPresence($npcId: ID!, $locationId: ID!, $note: String) {
     addNPCLocationPresence(npcId: $npcId, locationId: $locationId, note: $note) {
       id
-      locationPresences { locationId note }
+      locationPresences { locationId note playerVisible }
     }
   }
 `;
@@ -75,7 +75,25 @@ const REMOVE_NPC_LOCATION_PRESENCE = gql`
   mutation RemoveNPCLocationPresence($npcId: ID!, $locationId: ID!) {
     removeNPCLocationPresence(npcId: $npcId, locationId: $locationId) {
       id
-      locationPresences { locationId note }
+      locationPresences { locationId note playerVisible }
+    }
+  }
+`;
+
+const SET_NPC_GROUP_MEMBERSHIP_VISIBILITY = gql`
+  mutation SetNPCGroupMembershipVisibility($npcId: ID!, $groupId: ID!, $playerVisible: Boolean!) {
+    setNPCGroupMembershipVisibility(npcId: $npcId, groupId: $groupId, playerVisible: $playerVisible) {
+      id
+      groupMemberships { groupId relation subfaction playerVisible }
+    }
+  }
+`;
+
+const SET_NPC_LOCATION_PRESENCE_VISIBILITY = gql`
+  mutation SetNPCLocationPresenceVisibility($npcId: ID!, $locationId: ID!, $playerVisible: Boolean!) {
+    setNPCLocationPresenceVisibility(npcId: $npcId, locationId: $locationId, playerVisible: $playerVisible) {
+      id
+      locationPresences { locationId note playerVisible }
     }
   }
 `;
@@ -237,6 +255,26 @@ export const useSetNpcVisibility = () => {
         },
 
       });
+    },
+    isPending: loading,
+  };
+};
+
+export const useSetNPCGroupMembershipVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_NPC_GROUP_MEMBERSHIP_VISIBILITY);
+  return {
+    mutate: (vars: { npcId: string; groupId: string; playerVisible: boolean }) => {
+      execute({ variables: vars });
+    },
+    isPending: loading,
+  };
+};
+
+export const useSetNPCLocationPresenceVisibility = () => {
+  const [execute, { loading }] = useMutation(SET_NPC_LOCATION_PRESENCE_VISIBILITY);
+  return {
+    mutate: (vars: { npcId: string; locationId: string; playerVisible: boolean }) => {
+      execute({ variables: vars });
     },
     isPending: loading,
   };

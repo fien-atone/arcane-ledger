@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuests } from '@/features/quests/api';
+import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
 import { RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
@@ -138,6 +138,7 @@ export default function QuestListPage() {
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: quests, isLoading, isError } = useQuests(campaignId ?? '');
+  const setQuestVisibility = useSetQuestVisibility();
   const [statusFilter, setStatusFilter] = useState<QuestStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -233,6 +234,29 @@ export default function QuestListPage() {
                       <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : quest.status === 'unavailable' ? 'text-on-surface/50 line-through' : 'text-on-surface font-medium'}`}>{quest.title}</p>
                       <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>{st.label}</p>
                     </div>
+                    {isGm && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuestVisibility.mutate({
+                            campaignId: campaignId!,
+                            id: quest.id,
+                            playerVisible: !quest.playerVisible,
+                            playerVisibleFields: quest.playerVisibleFields ?? [],
+                          });
+                        }}
+                        title={quest.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                        className={`flex-shrink-0 p-1 transition-colors ${
+                          quest.playerVisible
+                            ? 'text-primary/60 hover:text-primary'
+                            : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">
+                          {quest.playerVisible ? 'visibility' : 'visibility_off'}
+                        </span>
+                      </button>
+                    )}
                   </button>
                 );
               })}

@@ -21,6 +21,7 @@ export interface NPCRelation {
 export interface NPCLocationPresence {
   locationId: string;
   note?: string;
+  playerVisible?: boolean;
 }
 
 export interface NPCGroupMembership {
@@ -28,6 +29,7 @@ export interface NPCGroupMembership {
   groupId: string;
   relation?: string;
   subfaction?: string;
+  playerVisible?: boolean;
 }
 
 export interface NPC {

@@ -10,6 +10,7 @@ export const questResolvers = {
       const isPlayer = role === 'PLAYER';
       const quests = await ctx.prisma.quest.findMany({
         where: { campaignId, ...(isPlayer ? { playerVisible: true } : {}) },
+        orderBy: { title: 'asc' },
       });
       if (isPlayer) {
         return quests.map((q) => redactEntity(q, q.playerVisibleFields, QUEST_FIELDS));

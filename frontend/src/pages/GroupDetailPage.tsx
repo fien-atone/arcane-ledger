@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGroup, useSaveGroup, useDeleteGroup, useSetGroupVisibility } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
-import { useNpcs, useAddNPCGroupMembership, useRemoveNPCGroupMembership } from '@/features/npcs/api/queries';
+import { useNpcs, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useSetNPCGroupMembershipVisibility } from '@/features/npcs/api/queries';
 import { useParty, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
 import { BackLink, InlineRichField, SectionDisabled, VisibilityPanel } from '@/shared/ui';
@@ -129,6 +129,7 @@ export default function GroupDetailPage() {
   const { data: party } = useParty(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
   const removeMembership = useRemoveNPCGroupMembership();
+  const setMembershipVisibility = useSetNPCGroupMembershipVisibility();
   const removeCharMembership = useRemoveCharacterGroupMembership();
   const saveGroup = useSaveGroup();
   const deleteGroup = useDeleteGroup();
@@ -306,6 +307,21 @@ export default function GroupDetailPage() {
                             <span className="material-symbols-outlined text-[16px]">person_remove</span>
                           </button>
                         ))}
+                        {isGm && membership && (
+                          <button
+                            onClick={() => setMembershipVisibility.mutate({ npcId: npc.id, groupId: groupId!, playerVisible: !membership.playerVisible })}
+                            title={membership.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                            className={`flex-shrink-0 p-1.5 transition-colors ${
+                              membership.playerVisible
+                                ? 'text-primary/60 hover:text-primary'
+                                : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              {membership.playerVisible ? 'visibility' : 'visibility_off'}
+                            </span>
+                          </button>
+                        )}
                       </div>
                     );
                   })}

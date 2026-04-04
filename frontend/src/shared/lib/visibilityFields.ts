@@ -49,14 +49,3 @@ export const GROUP_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
 ];
 
 export const GROUP_BASIC_PRESET = ['description'];
-
-// ── Session ─────────────────────────────────────────────────────────────────
-
-export const SESSION_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
-  { key: 'brief', label: 'Brief' },
-  { key: 'npcs', label: 'Linked NPCs' },
-  { key: 'locations', label: 'Linked locations' },
-  { key: 'quests', label: 'Linked quests' },
-];
-
-export const SESSION_BASIC_PRESET = ['brief'];

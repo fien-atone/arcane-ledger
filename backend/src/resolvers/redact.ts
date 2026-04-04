@@ -47,12 +47,6 @@ export const GROUP_FIELDS: EntityFieldDefs = {
   neverVisible: ['gmNotes'],
 };
 
-export const SESSION_FIELDS: EntityFieldDefs = {
-  alwaysVisible: ['id', 'campaignId', 'number', 'title', 'datetime', 'createdAt', 'playerVisible', 'playerVisibleFields'],
-  shareable: ['brief'],
-  neverVisible: ['summary'],
-};
-
 // ── Redaction function ──────────────────────────────────────────────────────
 
 /** Return a safe "empty" value that won't violate GraphQL non-nullable constraints. */

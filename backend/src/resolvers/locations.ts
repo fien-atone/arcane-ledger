@@ -10,7 +10,7 @@ export const locationResolvers = {
       const where = role === 'PLAYER'
         ? { campaignId, playerVisible: true as const }
         : { campaignId };
-      const locations = await ctx.prisma.location.findMany({ where });
+      const locations = await ctx.prisma.location.findMany({ where, orderBy: { name: 'asc' } });
       if (role === 'PLAYER') {
         return locations.map((loc) => redactEntity(loc, loc.playerVisibleFields, LOCATION_FIELDS));
       }

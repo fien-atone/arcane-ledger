@@ -124,6 +124,62 @@ export const npcResolvers = {
       return npc;
     },
 
+    setNPCGroupMembershipVisibility: async (
+      _: unknown,
+      { npcId, groupId, playerVisible }: { npcId: string; groupId: string; playerVisible: boolean },
+      ctx: Context,
+    ) => {
+      const npc = await ctx.prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      const role = await getCampaignRole(ctx, npc.campaignId);
+      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      await ctx.prisma.nPCGroupMembership.update({
+        where: { npcId_groupId: { npcId, groupId } },
+        data: { playerVisible },
+      });
+      // Auto-reveal both sides when making the link visible
+      if (playerVisible) {
+        if (!npc.playerVisible) {
+          await ctx.prisma.nPC.update({ where: { id: npcId }, data: { playerVisible: true } });
+          publishCampaignEvent(npc.campaignId, 'NPC', npcId, 'UPDATED');
+        }
+        const group = await ctx.prisma.group.findUnique({ where: { id: groupId } });
+        if (group && !group.playerVisible) {
+          await ctx.prisma.group.update({ where: { id: groupId }, data: { playerVisible: true } });
+          publishCampaignEvent(npc.campaignId, 'GROUP', groupId, 'UPDATED');
+        }
+      }
+      publishCampaignEvent(npc.campaignId, 'NPC_MEMBERSHIP', npcId, 'UPDATED', [groupId]);
+      return npc;
+    },
+
+    setNPCLocationPresenceVisibility: async (
+      _: unknown,
+      { npcId, locationId, playerVisible }: { npcId: string; locationId: string; playerVisible: boolean },
+      ctx: Context,
+    ) => {
+      const npc = await ctx.prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      const role = await getCampaignRole(ctx, npc.campaignId);
+      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      await ctx.prisma.nPCLocationPresence.update({
+        where: { npcId_locationId: { npcId, locationId } },
+        data: { playerVisible },
+      });
+      // Auto-reveal both sides when making the link visible
+      if (playerVisible) {
+        if (!npc.playerVisible) {
+          await ctx.prisma.nPC.update({ where: { id: npcId }, data: { playerVisible: true } });
+          publishCampaignEvent(npc.campaignId, 'NPC', npcId, 'UPDATED');
+        }
+        const location = await ctx.prisma.location.findUnique({ where: { id: locationId } });
+        if (location && !location.playerVisible) {
+          await ctx.prisma.location.update({ where: { id: locationId }, data: { playerVisible: true } });
+          publishCampaignEvent(npc.campaignId, 'LOCATION', locationId, 'UPDATED');
+        }
+      }
+      publishCampaignEvent(npc.campaignId, 'NPC_PRESENCE', npcId, 'UPDATED', [locationId]);
+      return npc;
+    },
+
     setNPCVisibility: async (
       _: unknown,
       { campaignId, id, input }: { campaignId: string; id: string; input: { playerVisible: boolean; playerVisibleFields: string[] } },
@@ -145,22 +201,21 @@ export const npcResolvers = {
 
   NPC: {
     locationPresences: async (npc: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
+      const role = await getCampaignRole(ctx, npc.campaignId);
       const presences = await ctx.prisma.nPCLocationPresence.findMany({
         where: { npcId: npc.id },
         include: { location: true },
       });
-      const role = await getCampaignRole(ctx, npc.campaignId);
       if (role === 'PLAYER') {
-        return presences.filter((p) => p.location.playerVisible);
+        return presences.filter((p) => p.playerVisible && p.location.playerVisible);
       }
       return presences;
     },
     groupMemberships: async (npc: { id: string; campaignId: string }, _: unknown, ctx: Context) => {
-      const memberships = await ctx.prisma.nPCGroupMembership.findMany({ where: { npcId: npc.id }, include: { group: true } });
       const role = await getCampaignRole(ctx, npc.campaignId);
-      // For players, only show memberships in visible groups
+      const memberships = await ctx.prisma.nPCGroupMembership.findMany({ where: { npcId: npc.id }, include: { group: true } });
       if (role === 'PLAYER') {
-        return memberships.filter((m) => m.group.playerVisible);
+        return memberships.filter((m) => m.playerVisible && m.group.playerVisible);
       }
       return memberships;
     },

@@ -124,6 +124,7 @@ export default function CampaignDashboardPage() {
   const campaignId = id ?? '';
 
   const { data: campaign, isLoading: campaignLoading } = useCampaign(campaignId);
+  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: sessions } = useSessions(campaignId);
   const { data: allQuests } = useQuests(campaignId);
   const { data: party } = useParty(campaignId);
@@ -190,7 +191,7 @@ export default function CampaignDashboardPage() {
     { label: 'Groups', section: 'groups' as CampaignSection, count: String(groupCount), icon: 'groups', to: 'groups' },
     { label: 'Quests', section: 'quests' as CampaignSection, count: `${questActiveCount}/${questTotal}`, sub: 'active', icon: 'auto_awesome', to: 'quests' },
     { label: 'Social Graph', section: 'social_graph' as CampaignSection, icon: 'hub', to: 'npcs/relationships' },
-    { label: 'Species', section: 'species' as CampaignSection, icon: 'blur_on', to: 'species' },
+    ...(isGm ? [{ label: 'Species', section: 'species' as CampaignSection, icon: 'blur_on', to: 'species' }] : []),
   ].filter((item) => enabledSet.has(item.section));
 
 
@@ -200,6 +201,7 @@ export default function CampaignDashboardPage() {
 
         {/* Campaign header */}
         <header className="mb-8">
+          {isGm && (
           <div className="flex items-center justify-end gap-2 mb-2">
             <button
               onClick={() => setSectionsOpen(true)}
@@ -244,7 +246,8 @@ export default function CampaignDashboardPage() {
               </button>
             )}
           </div>
-          {editingTitle ? (
+          )}
+          {isGm && editingTitle ? (
             <div className="flex items-center gap-3 mb-2">
               <input
                 autoFocus
@@ -277,7 +280,7 @@ export default function CampaignDashboardPage() {
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
-          ) : (
+          ) : isGm ? (
             <h1
               className="font-headline text-5xl lg:text-6xl font-bold text-on-surface mb-2 cursor-pointer hover:text-primary/80 transition-colors group"
               onClick={() => { setTitleDraft(campaign.title); setEditingTitle(true); }}
@@ -285,6 +288,10 @@ export default function CampaignDashboardPage() {
             >
               {campaign.title}
               <span className="material-symbols-outlined text-lg text-on-surface-variant/0 group-hover:text-primary/40 transition-colors ml-3 align-middle">edit</span>
+            </h1>
+          ) : (
+            <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface mb-2">
+              {campaign.title}
             </h1>
           )}
           <div>

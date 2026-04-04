@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLocation, useLocations, useSaveLocation, useDeleteLocation } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
-import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPresence } from '@/features/npcs/api/queries';
+import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPresence, useSetNPCLocationPresenceVisibility } from '@/features/npcs/api/queries';
 import { useSessions } from '@/features/sessions/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
@@ -871,6 +871,7 @@ export default function LocationDetailPage() {
   const saveNpc = useSaveNpc();
   const addNpcPresence = useAddNPCLocationPresence();
   const removeNpcPresence = useRemoveNPCLocationPresence();
+  const setPresenceVisibility = useSetNPCLocationPresenceVisibility();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const typeMap = useMemo<TypeMap>(
@@ -1035,6 +1036,7 @@ export default function LocationDetailPage() {
               value={location.description}
               onSave={(html) => saveMutation.mutate({ ...location, description: html })}
               placeholder="Describe this location…"
+              readOnly={!isGm}
             />
 
             {/* GM Notes */}
@@ -1218,9 +1220,24 @@ export default function LocationDetailPage() {
                               <span className="material-symbols-outlined text-[14px]">person_remove</span>
                             </button>
                           ))}
+                          {isGm && presence && (
+                            <button
+                              onClick={() => setPresenceVisibility.mutate({ npcId: npc.id, locationId: location.id, playerVisible: !presence.playerVisible })}
+                              title={presence.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                              className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
+                                presence.playerVisible
+                                  ? 'text-primary/60 hover:text-primary'
+                                  : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[14px]">
+                                {presence.playerVisible ? 'visibility' : 'visibility_off'}
+                              </span>
+                            </button>
+                          )}
                         </div>
                         {/* Presence note */}
-                        {isEditingNote ? (
+                        {isGm && isEditingNote ? (
                           <div className="px-3 pb-3 flex items-center gap-2" onClick={(e) => e.preventDefault()}>
                             <input
                               autoFocus
@@ -1249,23 +1266,17 @@ export default function LocationDetailPage() {
                             </button>
                           </div>
                         ) : (
-                          <div
-                            className="px-3 pb-2.5 flex items-center gap-1.5 cursor-pointer group/note"
-                            onClick={() => {
-                              setEditingNoteForNpcId(npc.id);
-                              setNoteInput(presence?.note ?? '');
-                            }}
-                          >
+                          <div className="px-3 pb-2.5 flex items-center gap-1.5">
                             {presence?.note ? (
                               <p className="text-[11px] text-on-surface-variant/60 italic flex-1">{presence.note}</p>
-                            ) : (
-                              <p className="text-[10px] text-on-surface-variant/20 italic flex-1 opacity-0 group-hover/note:opacity-100 transition-opacity">
+                            ) : isGm ? (
+                              <p
+                                className="text-[10px] text-on-surface-variant/20 italic flex-1 cursor-pointer opacity-0 group-hover/card:opacity-100 transition-opacity"
+                                onClick={() => { setEditingNoteForNpcId(npc.id); setNoteInput(''); }}
+                              >
                                 Add presence note…
                               </p>
-                            )}
-                            <span className="material-symbols-outlined text-[12px] text-on-surface-variant/20 group-hover/note:text-primary/50 transition-colors opacity-0 group-hover/note:opacity-100">
-                              edit
-                            </span>
+                            ) : null}
                           </div>
                         )}
                       </div>
@@ -1449,34 +1460,55 @@ export default function LocationDetailPage() {
                     const hasMarker = (location.mapMarkers ?? []).some((mk) => mk.linkedLocationId === child.id);
                     const te = locationTypesEnabled ? typeMap.get(child.type) : undefined;
                     return (
-                      <Link
-                        key={child.id}
-                        to={`/campaigns/${campaignId}/locations/${child.id}`}
-                        className="group flex items-center gap-2.5 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all rounded-sm"
-                      >
-                        <span className={`material-symbols-outlined text-[16px] ${te ? '' : 'text-on-surface-variant/40'}`}
-                          style={te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined}>
-                          {te?.icon ?? 'location_on'}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">
-                            {child.name}
-                          </p>
-                          {locationTypesEnabled && (
-                            <p className="text-[9px] uppercase tracking-wider text-on-surface-variant/40">
-                              {te?.name ?? child.type}
-                            </p>
-                          )}
-                        </div>
-                        {hasMarker && (
-                          <span className="material-symbols-outlined text-[13px] text-on-surface-variant/30 flex-shrink-0">
-                            location_on
+                      <div key={child.id} className="flex items-stretch bg-surface-container-low border border-outline-variant/10 rounded-sm">
+                        <Link
+                          to={`/campaigns/${campaignId}/locations/${child.id}`}
+                          className="group flex items-center gap-2.5 p-3 hover:bg-surface-container transition-all flex-1 min-w-0"
+                        >
+                          <span className={`material-symbols-outlined text-[16px] ${te ? '' : 'text-on-surface-variant/40'}`}
+                            style={te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined}>
+                            {te?.icon ?? 'location_on'}
                           </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate">
+                              {child.name}
+                            </p>
+                            {locationTypesEnabled && (
+                              <p className="text-[9px] uppercase tracking-wider text-on-surface-variant/40">
+                                {te?.name ?? child.type}
+                              </p>
+                            )}
+                          </div>
+                          {hasMarker && (
+                            <span className="material-symbols-outlined text-[13px] text-on-surface-variant/30 flex-shrink-0">
+                              location_on
+                            </span>
+                          )}
+                          <span className="material-symbols-outlined text-[12px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                            arrow_forward
+                          </span>
+                        </Link>
+                        {isGm && (
+                          <button
+                            onClick={() => setLocationVisibility.mutate({
+                              campaignId: campaignId!,
+                              id: child.id,
+                              playerVisible: !(child as any).playerVisible,
+                              playerVisibleFields: (child as any).playerVisibleFields ?? [],
+                            })}
+                            title={(child as any).playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                            className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
+                              (child as any).playerVisible
+                                ? 'text-primary/60 hover:text-primary'
+                                : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              {(child as any).playerVisible ? 'visibility' : 'visibility_off'}
+                            </span>
+                          </button>
                         )}
-                        <span className="material-symbols-outlined text-[12px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
-                          arrow_forward
-                        </span>
-                      </Link>
+                      </div>
                     );
                   })}
                 </div>

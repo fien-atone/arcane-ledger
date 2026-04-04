@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useLocations } from '@/features/locations/api';
+import { useLocations, useSetLocationVisibility } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { EmptyState, RichContent, SectionDisabled } from '@/shared/ui';
@@ -28,6 +28,7 @@ function LocationRow({
   typeMap,
   hideTypes,
   isGm,
+  onToggleVisibility,
 }: {
   loc: Location;
   depth: number;
@@ -37,6 +38,7 @@ function LocationRow({
   typeMap: TypeMap;
   hideTypes?: boolean;
   isGm?: boolean;
+  onToggleVisibility: (loc: Location) => void;
 }) {
   const isTopLevel = depth === 0;
   const indent = typeFilter === 'all' ? DEPTH_INDENT[Math.min(depth, DEPTH_INDENT.length - 1)] : '';
@@ -78,10 +80,23 @@ function LocationRow({
           </p>
         )}
       </div>
-      {isGm && loc.playerVisible && (
-        <span className="material-symbols-outlined text-[13px] text-secondary/60 flex-shrink-0" title="Visible to players">
-          visibility
-        </span>
+      {isGm && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleVisibility(loc);
+          }}
+          title={loc.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+          className={`flex-shrink-0 p-1 transition-colors ${
+            loc.playerVisible
+              ? 'text-primary/60 hover:text-primary'
+              : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[14px]">
+            {loc.playerVisible ? 'visibility' : 'visibility_off'}
+          </span>
+        </button>
       )}
     </button>
   );
@@ -250,6 +265,7 @@ export default function LocationListPage() {
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: locations, isLoading, isError } = useLocations(campaignId ?? '');
+  const setLocationVisibility = useSetLocationVisibility();
   const { data: locationTypes = [] } = useLocationTypes(campaignId);
   const [typeFilter, setTypeFilter] = useState<LocationType | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -358,6 +374,7 @@ export default function LocationListPage() {
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Locations</h1>
             <p className="text-on-surface-variant text-sm mt-1">Known places, landmarks, and territories.</p>
           </div>
+          {isGm && (
           <button
             onClick={() => setAddOpen(true)}
             className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
@@ -365,6 +382,7 @@ export default function LocationListPage() {
             <span className="material-symbols-outlined text-[18px]">add_location</span>
             <span className="font-label text-xs uppercase tracking-widest">Add Location</span>
           </button>
+          )}
         </div>
       </header>
 
@@ -440,6 +458,14 @@ export default function LocationListPage() {
                   typeMap={typeMap}
                   hideTypes={!locationTypesEnabled}
                   isGm={isGm}
+                  onToggleVisibility={(loc) => {
+                    setLocationVisibility.mutate({
+                      campaignId: campaignId!,
+                      id: loc.id,
+                      playerVisible: !loc.playerVisible,
+                      playerVisibleFields: loc.playerVisibleFields ?? [],
+                    });
+                  }}
                 />
               ))}
             </div>

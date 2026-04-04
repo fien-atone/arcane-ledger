@@ -1,10 +1,10 @@
 import { useState, useCallback, memo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useNpc, useNpcs, useSaveNpc, useDeleteNpc, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useAddNPCLocationPresence, useRemoveNPCLocationPresence } from '@/features/npcs/api/queries';
+import { useNpc, useNpcs, useSaveNpc, useDeleteNpc, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useAddNPCLocationPresence, useRemoveNPCLocationPresence, useSetNPCGroupMembershipVisibility, useSetNPCLocationPresenceVisibility } from '@/features/npcs/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { useLocations } from '@/features/locations/api';
 import { useSessions } from '@/features/sessions/api';
-import { useQuests } from '@/features/quests/api';
+import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
@@ -50,7 +50,7 @@ const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> 
 };
 
 const STATUS_STYLES: Record<NpcStatus, { pill: string; label: string }> = {
-  alive:   { pill: 'bg-secondary-container/30 text-secondary border border-secondary/20',                          label: 'Alive'   },
+  alive:   { pill: 'bg-primary/10 text-primary border border-primary/20',                                          label: 'Alive'   },
   dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20',     label: 'Dead'    },
   missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20',        label: 'Missing' },
   unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10',                  label: 'Unknown' },
@@ -82,6 +82,9 @@ export default function NpcDetailPage() {
   const removeGroupMembership = useRemoveNPCGroupMembership();
   const addLocationPresence = useAddNPCLocationPresence();
   const removeLocationPresence = useRemoveNPCLocationPresence();
+  const setGroupMembershipVisibility = useSetNPCGroupMembershipVisibility();
+  const setLocationPresenceVisibility = useSetNPCLocationPresenceVisibility();
+  const setQuestVisibility = useSetQuestVisibility();
   const [imgVersion, setImgVersion] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -180,7 +183,7 @@ export default function NpcDetailPage() {
 
               <div className="flex-1 pt-4 space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${st.pill}`}>
+                  <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-sm ${st.pill}`}>
                     {st.label}
                   </span>
                   {npc.gender && (
@@ -351,7 +354,7 @@ export default function NpcDetailPage() {
                     <p className="text-xs text-on-surface-variant/40 italic">No group memberships.</p>
                   ) : npc.groupMemberships.length > 0 ? (
                     <div className="flex flex-wrap gap-4">
-                      {npc.groupMemberships.map((m) => (
+                      {[...npc.groupMemberships].sort((a, b) => groupNameById(a.groupId).localeCompare(groupNameById(b.groupId))).map((m) => (
                         <div key={m.groupId} className="group/card flex items-center bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 transition-all">
                           <Link
                             to={`/campaigns/${campaignId}/groups/${m.groupId}`}
@@ -397,6 +400,21 @@ export default function NpcDetailPage() {
                               <span className="material-symbols-outlined text-[14px]">close</span>
                             </button>
                           ))}
+                          {isGm && (
+                            <button
+                              onClick={() => setGroupMembershipVisibility.mutate({ npcId: npc.id, groupId: m.groupId, playerVisible: !(m.playerVisible ?? true) })}
+                              title={m.playerVisible === false ? 'Hidden from players — click to show' : 'Visible to players — click to hide'}
+                              className={`px-2 py-3 border-l border-outline-variant/10 transition-colors ${
+                                m.playerVisible === false
+                                  ? 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                                  : 'text-primary/60 hover:text-primary'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[14px]">
+                                {m.playerVisible === false ? 'visibility_off' : 'visibility'}
+                              </span>
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -450,11 +468,11 @@ export default function NpcDetailPage() {
             )}
 
             {/* Social Relations */}
-            <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} readOnly={!isGm} />
+            {isGm && <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />}
 
             {/* Quests (given by this NPC) */}
             {questsEnabled && (() => {
-              const npcQuests = (allQuests ?? []).filter((q) => q.giverId === npcId);
+              const npcQuests = (allQuests ?? []).filter((q) => q.giverId === npcId).sort((a, b) => a.title.localeCompare(b.title));
               if (npcQuests.length === 0) return null;
               const statusDot: Record<string, string> = {
                 active: 'bg-secondary', completed: 'bg-emerald-400', failed: 'bg-rose-400',
@@ -470,22 +488,43 @@ export default function NpcDetailPage() {
                   </div>
                   <div className="space-y-2">
                     {npcQuests.map((q) => (
-                      <Link
-                        key={q.id}
-                        to={`/campaigns/${campaignId}/quests/${q.id}`}
-                        className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
-                      >
-                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDot[q.status] ?? 'bg-outline-variant'}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{q.title}</p>
-                          <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
-                            {q.status}
-                          </p>
-                        </div>
-                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">
-                          arrow_forward
-                        </span>
-                      </Link>
+                      <div key={q.id} className="flex items-stretch bg-surface-container-low border border-outline-variant/10 group/card">
+                        <Link
+                          to={`/campaigns/${campaignId}/quests/${q.id}`}
+                          className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0"
+                        >
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDot[q.status] ?? 'bg-outline-variant'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{q.title}</p>
+                            <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
+                              {q.status}
+                            </p>
+                          </div>
+                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">
+                            arrow_forward
+                          </span>
+                        </Link>
+                        {isGm && (
+                          <button
+                            onClick={() => setQuestVisibility.mutate({
+                              campaignId: campaignId!,
+                              id: q.id,
+                              playerVisible: !q.playerVisible,
+                              playerVisibleFields: q.playerVisibleFields ?? [],
+                            })}
+                            title={q.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                            className={`px-2 border-l border-outline-variant/10 transition-colors ${
+                              q.playerVisible
+                                ? 'text-primary/60 hover:text-primary'
+                                : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              {q.playerVisible ? 'visibility' : 'visibility_off'}
+                            </span>
+                          </button>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </section>
@@ -584,7 +623,8 @@ export default function NpcDetailPage() {
               const presences = npc.locationPresences ?? [];
               const linkedLocations = presences
                 .map((p) => allLocations?.find((l) => l.id === p.locationId))
-                .filter(Boolean) as NonNullable<typeof allLocations>[number][];
+                .filter(Boolean)
+                .sort((a, b) => a!.name.localeCompare(b!.name)) as NonNullable<typeof allLocations>[number][];
 
               const availableToAdd = (allLocations ?? [])
                 .filter((l) => !presences.some((p) => p.locationId === l.id))
@@ -704,6 +744,21 @@ export default function NpcDetailPage() {
                                   <span className="material-symbols-outlined text-[14px]">close</span>
                                 </button>
                               ))}
+                              {isGm && (
+                                <button
+                                  onClick={() => setLocationPresenceVisibility.mutate({ npcId: npc.id, locationId: loc.id, playerVisible: !(presence?.playerVisible ?? true) })}
+                                  title={presence?.playerVisible === false ? 'Hidden from players — click to show' : 'Visible to players — click to hide'}
+                                  className={`px-2 border-l border-outline-variant/10 transition-colors ${
+                                    presence?.playerVisible === false
+                                      ? 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                                      : 'text-primary/60 hover:text-primary'
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">
+                                    {presence?.playerVisible === false ? 'visibility_off' : 'visibility'}
+                                  </span>
+                                </button>
+                              )}
                             </div>
                             {/* Presence note */}
                             {isGm && isEditingNote ? (

@@ -1,7 +1,6 @@
 import type { Context } from '../context.js';
 import { getCampaignRole } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
-import { redactEntity, SESSION_FIELDS } from './redact.js';
 
 export const sessionResolvers = {
   Query: {
@@ -105,23 +104,6 @@ export const sessionResolvers = {
       return note;
     },
 
-    setSessionVisibility: async (
-      _: unknown,
-      { campaignId, id, input }: { campaignId: string; id: string; input: { playerVisible: boolean; playerVisibleFields: string[] } },
-      ctx: Context,
-    ) => {
-      const role = await getCampaignRole(ctx, campaignId);
-      if (role !== 'GM') throw new Error('Only the GM can change visibility');
-      const result = await ctx.prisma.session.update({
-        where: { id },
-        data: {
-          playerVisible: input.playerVisible,
-          playerVisibleFields: input.playerVisibleFields,
-        },
-      });
-      publishCampaignEvent(campaignId, 'SESSION', result.id, 'UPDATED');
-      return result;
-    },
   },
 
   Session: {

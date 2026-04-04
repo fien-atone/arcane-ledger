@@ -14,8 +14,6 @@ const SESSIONS_QUERY = gql`
       datetime
       brief
       summary
-      playerVisible
-      playerVisibleFields
       createdAt
       npcs { id name status species image }
       locations { id name type }
@@ -35,21 +33,11 @@ const SAVE_SESSION = gql`
       datetime
       brief
       summary
-      playerVisible
-      playerVisibleFields
       createdAt
       npcs { id name status species image }
       locations { id name type }
       quests { id title status }
       myNote { id content updatedAt }
-    }
-  }
-`;
-
-const SET_SESSION_VISIBILITY = gql`
-  mutation SetSessionVisibility($campaignId: ID!, $id: ID!, $input: SetEntityVisibilityInput!) {
-    setSessionVisibility(campaignId: $campaignId, id: $id, input: $input) {
-      id playerVisible playerVisibleFields
     }
   }
 `;
@@ -83,8 +71,6 @@ function mapSession(raw: any): Session {
     datetime: raw.datetime,
     brief: raw.brief,
     summary: raw.summary,
-    playerVisible: raw.playerVisible ?? false,
-    playerVisibleFields: raw.playerVisibleFields ?? [],
     createdAt: raw.createdAt,
     npcIds: raw.npcs?.map((n: any) => n.id),
     locationIds: raw.locations?.map((l: any) => l.id),
@@ -147,25 +133,6 @@ export const useSaveSession = (campaignId: string) => {
           },
         },
       }).then(() => options?.onSuccess?.()),
-    isPending: loading,
-  };
-};
-
-export const useSetSessionVisibility = () => {
-  const [execute, { loading }] = useMutation(SET_SESSION_VISIBILITY);
-  return {
-    mutate: (
-      vars: { campaignId: string; id: string; playerVisible: boolean; playerVisibleFields: string[] },
-    ) => {
-      execute({
-        variables: {
-          campaignId: vars.campaignId,
-          id: vars.id,
-          input: { playerVisible: vars.playerVisible, playerVisibleFields: vars.playerVisibleFields },
-        },
-
-      });
-    },
     isPending: loading,
   };
 };

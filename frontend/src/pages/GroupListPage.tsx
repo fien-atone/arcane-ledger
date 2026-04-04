@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useGroups } from '@/features/groups/api';
+import { useGroups, useSetGroupVisibility } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
@@ -77,6 +77,7 @@ export default function GroupListPage() {
   const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
 
+  const setGroupVisibility = useSetGroupVisibility();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const debouncedSearch = useDebouncedValue(search);
@@ -203,6 +204,29 @@ export default function GroupListPage() {
                         </p>
                       )}
                     </div>
+                    {isGm && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setGroupVisibility.mutate({
+                            campaignId: campaignId!,
+                            id: g.id,
+                            playerVisible: !g.playerVisible,
+                            playerVisibleFields: g.playerVisibleFields ?? [],
+                          });
+                        }}
+                        title={g.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                        className={`flex-shrink-0 p-1 transition-colors ${
+                          g.playerVisible
+                            ? 'text-primary/60 hover:text-primary'
+                            : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">
+                          {g.playerVisible ? 'visibility' : 'visibility_off'}
+                        </span>
+                      </button>
+                    )}
                   </button>
                 );
               })}
