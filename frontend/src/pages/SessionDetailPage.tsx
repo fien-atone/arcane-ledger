@@ -109,7 +109,7 @@ export default function SessionDetailPage() {
     return <SectionDisabled campaignId={campaignId ?? ''} />;
   }
 
-  if (isLoading) {
+  if (isLoading && !session) {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>

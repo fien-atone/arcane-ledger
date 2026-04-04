@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
@@ -109,7 +109,7 @@ interface Props {
   readOnly?: boolean;
 }
 
-export function InlineRichField({ label, value, onSave, isGmNotes, placeholder = 'Not recorded yet.', readOnly }: Props) {
+export const InlineRichField = memo(function InlineRichField({ label, value, onSave, isGmNotes, placeholder = 'Not recorded yet.', readOnly }: Props) {
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSave = (html: string) => {
@@ -188,4 +188,4 @@ export function InlineRichField({ label, value, onSave, isGmNotes, placeholder =
       {content}
     </div>
   );
-}
+}, (prev, next) => prev.value === next.value && prev.label === next.label && prev.readOnly === next.readOnly && prev.isGmNotes === next.isGmNotes);

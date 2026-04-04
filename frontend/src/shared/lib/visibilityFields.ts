@@ -16,9 +16,6 @@ export const NPC_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
   { key: 'motivation', label: 'Motivation' },
   { key: 'flaws', label: 'Flaws' },
   { key: 'image', label: 'Portrait' },
-  { key: 'locationPresences', label: 'Known locations' },
-  { key: 'groupMemberships', label: 'Group affiliations' },
-  { key: 'questsGiven', label: 'Quests given' },
 ];
 
 export const NPC_BASIC_PRESET = ['aliases', 'species', 'description', 'image'];
@@ -38,7 +35,6 @@ export const LOCATION_BASIC_PRESET = ['description', 'image'];
 export const QUEST_VISIBILITY_FIELDS: VisibilityFieldDef[] = [
   { key: 'description', label: 'Description' },
   { key: 'reward', label: 'Reward' },
-  { key: 'giverId', label: 'Quest Giver' },
 ];
 
 export const QUEST_BASIC_PRESET = ['description'];

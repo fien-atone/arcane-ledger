@@ -893,7 +893,7 @@ export default function LocationDetailPage() {
     return <SectionDisabled campaignId={campaignId ?? ''} />;
   }
 
-  if (isLoading) {
+  if (isLoading && !location) {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>

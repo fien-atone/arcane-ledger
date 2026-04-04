@@ -35,8 +35,8 @@ export const LOCATION_FIELDS: EntityFieldDefs = {
 };
 
 export const QUEST_FIELDS: EntityFieldDefs = {
-  alwaysVisible: ['id', 'campaignId', 'title', 'status', 'createdAt', 'playerVisible', 'playerVisibleFields'],
-  shareable: ['description', 'reward', 'giverId'],
+  alwaysVisible: ['id', 'campaignId', 'title', 'status', 'giverId', 'createdAt', 'playerVisible', 'playerVisibleFields'],
+  shareable: ['description', 'reward'],
   neverVisible: ['notes'],
   enumFields: ['status'],
 };

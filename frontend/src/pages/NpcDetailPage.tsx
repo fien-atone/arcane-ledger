@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useNpc, useNpcs, useSaveNpc, useDeleteNpc, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useAddNPCLocationPresence, useRemoveNPCLocationPresence } from '@/features/npcs/api/queries';
 import { useGroups } from '@/features/groups/api';
@@ -16,6 +16,26 @@ import { NPC_VISIBILITY_FIELDS, NPC_BASIC_PRESET } from '@/shared/lib/visibility
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { NPC, NpcStatus, NpcRelationType } from '@/entities/npc';
+
+/** Isolated portrait — only re-renders when image or name actually change */
+const NpcPortrait = memo(function NpcPortrait({ image, name }: { image?: string | null; name: string }) {
+  const resolved = resolveImageUrl(image);
+  const initials = name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  return (
+    <div className="relative w-48 h-64 rounded-sm bg-surface-container-low flex items-center justify-center overflow-hidden">
+      {resolved ? (
+        <>
+          <img src={resolved} aria-hidden alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40 pointer-events-none" />
+          <img src={resolved} alt={name} className="relative w-full h-full object-contain drop-shadow-2xl" />
+        </>
+      ) : (
+        <span className="font-headline text-[8rem] font-bold text-on-surface-variant/10 select-none leading-none">
+          {initials}
+        </span>
+      )}
+    </div>
+  );
+});
 
 const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
   sibling:      { label: 'Sibling',      icon: 'people' },
@@ -107,7 +127,7 @@ export default function NpcDetailPage() {
     return <SectionDisabled campaignId={campaignId ?? ''} />;
   }
 
-  if (isLoading) {
+  if (isLoading && !npc) {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
@@ -154,18 +174,7 @@ export default function NpcDetailPage() {
                     onView={handleViewImage}
                   />
                 ) : (
-                  <div className="relative w-48 h-64 rounded-sm bg-surface-container-low flex items-center justify-center overflow-hidden">
-                    {resolveImageUrl(npc.image) ? (
-                      <>
-                        <img src={resolveImageUrl(npc.image)} aria-hidden alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40 pointer-events-none" />
-                        <img src={resolveImageUrl(npc.image)} alt={npc.name} className="relative w-full h-full object-contain drop-shadow-2xl" />
-                      </>
-                    ) : (
-                      <span className="font-headline text-[8rem] font-bold text-on-surface-variant/10 select-none leading-none">
-                        {npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
-                      </span>
-                    )}
-                  </div>
+                  <NpcPortrait image={npc.image} name={npc.name} />
                 )}
               </div>
 

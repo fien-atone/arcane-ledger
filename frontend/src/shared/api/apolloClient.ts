@@ -54,9 +54,11 @@ export const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
   defaultOptions: {
     watchQuery: {
-      // Don't flip loading=true on refetch — prevents screen flicker
-      // when subscription-triggered refetches update the cache
+      fetchPolicy: 'no-cache',
       notifyOnNetworkStatusChange: false,
+    },
+    query: {
+      fetchPolicy: 'no-cache',
     },
   },
 });

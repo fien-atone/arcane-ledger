@@ -118,6 +118,7 @@ export const useNpc = (campaignId: string, npcId: string) => {
   const { data, loading, error, refetch } = useQuery<any>(NPC_QUERY, {
     variables: { campaignId, id: npcId },
     skip: !npcId,
+    fetchPolicy: 'cache-and-network',
   });
   return { data: data?.npc ? mapNpc(data.npc) as NPC : undefined, isLoading: loading, isError: !!error, error, refetch };
 };
