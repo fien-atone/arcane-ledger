@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet, useParams, Link } from 'react-router-dom';
 import { Sidebar } from '@/widgets/Sidebar';
 import { Topbar } from '@/widgets/Topbar';
@@ -7,10 +8,25 @@ import { useCampaign } from '@/features/campaigns/api/queries';
 import { CampaignSubscriptionManager } from '@/shared/api/CampaignSubscriptionManager';
 
 const useMock = import.meta.env.VITE_USE_MOCK === 'true';
+const COLLAPSE_BREAKPOINT = 1200;
 
 export function CampaignShell() {
   const { id } = useParams<{ id: string }>();
   const collapsed = useCampaignUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useCampaignUiStore((s) => s.setSidebarCollapsed);
+
+  // Auto-collapse sidebar on narrow screens
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${COLLAPSE_BREAKPOINT}px)`);
+    const handle = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (!useCampaignUiStore.getState().manualOverride) {
+        setSidebarCollapsed(e.matches);
+      }
+    };
+    handle(mq); // initial check
+    mq.addEventListener('change', handle);
+    return () => mq.removeEventListener('change', handle);
+  }, [setSidebarCollapsed]);
   const { data: campaign, isLoading, isError } = useCampaign(id ?? '');
 
   if (isLoading) {

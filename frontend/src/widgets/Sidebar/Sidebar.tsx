@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
@@ -80,6 +80,15 @@ export function Sidebar() {
   const setEditMode = useCampaignUiStore((s) => s.setEditMode);
   const [hasUnread, setHasUnread] = useState(false);
 
+  // Tooltip for collapsed sidebar — portal overlays both icon and label as one block
+  const [tooltip, setTooltip] = useState<{ label: string; top: number; height: number; icon: string } | null>(null);
+  const showTooltip = useCallback((label: string, el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    const icon = el.querySelector('.material-symbols-outlined')?.textContent ?? '';
+    setTooltip({ label, top: rect.top, height: rect.height, icon });
+  }, []);
+  const hideTooltip = useCallback(() => setTooltip(null), []);
+
   useEffect(() => {
     setHasUnread(getHasUnread());
   }, []);
@@ -157,7 +166,11 @@ export function Sidebar() {
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-outline-variant/10 min-h-[72px]">
-        {!collapsed && (
+        {collapsed ? (
+          <div className="w-8 h-8 bg-primary rounded-sm flex items-center justify-center flex-shrink-0">
+            <span className="text-[11px] font-bold text-on-primary tracking-tight">AL</span>
+          </div>
+        ) : (
           <div className="overflow-hidden">
             <span className="font-serif italic text-primary text-lg leading-tight block whitespace-nowrap">
               Arcane Ledger
@@ -167,15 +180,6 @@ export function Sidebar() {
             </span>
           </div>
         )}
-        <button
-          onClick={toggleSidebar}
-          className="ml-auto flex-shrink-0 w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-sm"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <span className="material-symbols-outlined text-xl">
-            {collapsed ? 'chevron_right' : 'chevron_left'}
-          </span>
-        </button>
       </div>
 
       {/* All Campaigns */}
@@ -225,20 +229,23 @@ export function Sidebar() {
                             <Link
                               to={editMode ? '#' : href}
                               onClick={editMode ? (e) => e.preventDefault() : undefined}
-                              title={collapsed ? label : undefined}
+                              onMouseEnter={collapsed ? (e) => showTooltip(label, e.currentTarget) : undefined}
+                              onMouseLeave={collapsed ? hideTooltip : undefined}
                               className={`flex-1 flex items-center gap-3 rounded-sm transition-all duration-200 font-medium ${
                                 sub
-                                  ? `px-3 py-1.5 ${collapsed ? '' : 'pl-9'} text-xs`
+                                  ? `px-3 ${collapsed ? 'py-2.5' : 'py-1.5 pl-9'} text-xs`
                                   : 'px-3 py-2.5 text-sm'
                               } ${
                                 active && !editMode
                                   ? 'text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary/10 to-transparent'
-                                  : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
+                                  : collapsed
+                                    ? 'text-on-surface-variant opacity-80'
+                                    : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
                               }`}
                             >
                               <span
                                 className={`material-symbols-outlined flex-shrink-0 ${active && !editMode ? 'text-primary' : ''}`}
-                                style={{ fontSize: sub ? '16px' : '20px' }}
+                                style={{ fontSize: collapsed ? '20px' : sub ? '16px' : '20px' }}
                               >
                                 {icon}
                               </span>
@@ -266,11 +273,14 @@ export function Sidebar() {
                 <Link
                   to={editMode ? '#' : href}
                   onClick={editMode ? (e) => e.preventDefault() : undefined}
-                  title={collapsed ? label : undefined}
+                  onMouseEnter={collapsed ? (e) => showTooltip(label, e.currentTarget) : undefined}
+                  onMouseLeave={collapsed ? hideTooltip : undefined}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-200 text-sm font-medium ${
                     active && !editMode
                       ? 'text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary/10 to-transparent'
-                      : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
+                      : collapsed
+                        ? 'text-on-surface-variant opacity-80 hover:bg-primary hover:text-on-primary'
+                        : 'text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface'
                   }`}
                 >
                   <span
@@ -331,6 +341,17 @@ export function Sidebar() {
           {!collapsed && <span className="whitespace-nowrap">What's New</span>}
         </button>
 
+        {/* Collapse/Expand toggle */}
+        <button
+          onClick={toggleSidebar}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
+            {collapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+          {!collapsed && <span className="whitespace-nowrap">Collapse</span>}
+        </button>
       </div>
 
       {createPortal(
@@ -338,6 +359,22 @@ export function Sidebar() {
           open={changelogOpen}
           onClose={() => setChangelogOpen(false)}
         />,
+        document.body,
+      )}
+
+      {/* Collapsed sidebar — animated slide-out bar */}
+      {collapsed && tooltip && createPortal(
+        <div
+          className="fixed z-50 pointer-events-none flex items-center bg-primary rounded-sm shadow-lg"
+          style={{ left: 8, top: tooltip.top, height: tooltip.height, paddingLeft: 12, paddingRight: 16, gap: 12 }}
+        >
+          <span className="material-symbols-outlined text-on-primary flex-shrink-0" style={{ fontSize: '20px' }}>
+            {tooltip.icon}
+          </span>
+          <span className="text-on-primary text-sm font-semibold whitespace-nowrap">
+            {tooltip.label}
+          </span>
+        </div>,
         document.body,
       )}
     </aside>

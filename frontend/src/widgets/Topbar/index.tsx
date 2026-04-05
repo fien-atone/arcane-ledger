@@ -32,57 +32,49 @@ export function Topbar() {
     .toUpperCase() ?? '?';
 
   return (
-    <header className="flex justify-between items-center w-full px-8 py-4 sticky top-0 z-50 bg-surface border-b border-outline-variant/10">
-      <Link
-        to="/campaigns"
-        className="text-2xl font-serif italic text-primary tracking-tight hover:text-primary-fixed transition-colors"
-      >
-        Arcane Ledger
-      </Link>
-
-      {/* Avatar + dropdown */}
-      <div className="relative" ref={dropdownRef}>
+    <div className="fixed top-0 right-0 z-50" ref={dropdownRef}>
+      <div className="bg-surface-container border-l border-b border-outline-variant/20 rounded-bl-lg pl-4 pr-3 py-2.5 shadow-lg flex items-center gap-3">
         <button
           onClick={() => setAvatarOpen((v) => !v)}
-          className="w-9 h-9 rounded-full bg-surface-container-high border border-primary/20 flex items-center justify-center text-primary font-semibold text-sm hover:border-primary/60 transition-colors"
+          className="w-9 h-9 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center text-primary font-semibold text-sm hover:border-primary/40 transition-colors"
         >
           {initials}
         </button>
+      </div>
 
-        {avatarOpen && (
-          <div className="absolute right-0 top-11 w-52 bg-surface-container-high border border-outline-variant/20 rounded-sm shadow-2xl py-1 z-50">
-            <div className="px-4 py-3 border-b border-outline-variant/10">
-              <p className="text-on-surface text-sm font-medium">{user?.name}</p>
-              <p className="text-on-surface-variant text-xs truncate">{user?.email}</p>
-            </div>
+      {avatarOpen && (
+        <div className="absolute right-0 top-full mt-1 w-52 bg-surface-container-high border border-outline-variant/20 rounded-sm shadow-2xl py-1 z-50">
+          <div className="px-4 py-3 border-b border-outline-variant/10">
+            <p className="text-on-surface text-sm font-medium">{user?.name}</p>
+            <p className="text-on-surface-variant text-xs truncate">{user?.email}</p>
+          </div>
+          <Link
+            to="/profile"
+            onClick={() => setAvatarOpen(false)}
+            className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base">person</span>
+            Profile
+          </Link>
+          {user?.systemRole === 'admin' && (
             <Link
-              to="/profile"
+              to="/admin/users"
               onClick={() => setAvatarOpen(false)}
               className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
             >
-              <span className="material-symbols-outlined text-base">person</span>
-              Profile
+              <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+              Admin
             </Link>
-            {user?.systemRole === 'admin' && (
-              <Link
-                to="/admin/users"
-                onClick={() => setAvatarOpen(false)}
-                className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-base">admin_panel_settings</span>
-                Admin
-              </Link>
-            )}
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-base">logout</span>
-              Sign out
-            </button>
-          </div>
-        )}
-      </div>
-    </header>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base">logout</span>
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

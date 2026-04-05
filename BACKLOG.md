@@ -39,6 +39,7 @@ _Nothing currently in progress._
 | F-10 | 🟢 | OAuth login (Google/Discord) | — |
 | F-11 | 🟡 | All search/filter must go through server (debounced GraphQL queries, no client-side filtering) | — |
 | F-12 | 🟡 | Subtle loading indicator on all server data fetches — small non-intrusive spinner/bar so user knows data is live | — |
+| F-15 | 🟡 | Timelines: visual timeline view for campaign events, session history, NPC encounters, quest progression | — |
 
 ---
 

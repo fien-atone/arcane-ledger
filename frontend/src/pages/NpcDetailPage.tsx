@@ -9,7 +9,7 @@ import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, InlineRichField, LocationIcon, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { ImageUpload, InlineRichField, LocationIcon, SectionBackground, SectionDisabled, VisibilityPanel } from '@/shared/ui';
 import { useCampaign } from '@/features/campaigns/api/queries';
 import { useSetNpcVisibility } from '@/features/npcs/api/queries';
 import { NPC_VISIBILITY_FIELDS, NPC_BASIC_PRESET } from '@/shared/lib/visibilityFields';
@@ -22,7 +22,7 @@ const NpcPortrait = memo(function NpcPortrait({ image, name }: { image?: string 
   const resolved = resolveImageUrl(image);
   const initials = name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return (
-    <div className="relative w-48 h-64 rounded-sm bg-surface-container-low flex items-center justify-center overflow-hidden">
+    <div className="relative w-36 sm:w-48 h-48 sm:h-64 rounded-sm bg-surface-container-low flex items-center justify-center overflow-hidden">
       {resolved ? (
         <>
           <img src={resolved} aria-hidden alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40 pointer-events-none" />
@@ -153,93 +153,164 @@ export default function NpcDetailPage() {
     .filter((r): r is { rel: typeof r.rel; other: NonNullable<typeof r.other> } => !!r.other);
 
   return (
-    <main className="flex-1 min-h-screen bg-surface">
-      <div className="px-10 pt-8">
-        <BackLink to={`/campaigns/${campaignId}/npcs`}>NPC Roster</BackLink>
+    <>
+    <SectionBackground variant="npc" />
+    <main className="flex-1 min-h-screen relative z-10">
+      <div className="flex justify-center pt-0 pb-8">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
-        <div className="flex flex-col lg:flex-row gap-16">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
+        {/* ── Header: portrait + identity (full width) ── */}
+        <section className="relative flex flex-col sm:flex-row gap-8 items-start mb-8 bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8">
+          <div className="relative group flex-shrink-0">
+            <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+            {isGm ? (
+              <ImageUpload
+                image={resolveImageUrl(npc.image, imgVersion)}
+                name={npc.name}
+                className="relative w-36 sm:w-48 h-48 sm:h-64"
+                onUpload={handleImageUpload}
+                onView={handleViewImage}
+              />
+            ) : (
+              <NpcPortrait image={npc.image} name={npc.name} />
+            )}
+          </div>
 
-          {/* ── Left column (65%) ──────────────────────────── */}
-          <div className="lg:w-[65%] space-y-12">
-
-            {/* Header: portrait + identity */}
-            <section className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="relative group flex-shrink-0">
-                <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                {isGm ? (
-                  <ImageUpload
-                    image={resolveImageUrl(npc.image, imgVersion)}
-                    name={npc.name}
-                    className="relative w-48 h-64"
-                    onUpload={handleImageUpload}
-                    onView={handleViewImage}
-                  />
+          <div className="flex-1 pt-4 space-y-8">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-sm ${st.pill}`}>
+                {st.label}
+              </span>
+              {npc.gender && (
+                <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                  {npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1)}
+                </span>
+              )}
+              {npc.age != null && (
+                <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                  Age {npc.age}
+                </span>
+              )}
+              {speciesEnabled && npc.species && (() => {
+                const matchedSpecies = allSpecies?.find(
+                  (s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase()
+                );
+                const displayName = matchedSpecies?.name ?? npc.species;
+                return matchedSpecies ? (
+                  <Link
+                    to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
+                    className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10 hover:border-primary/30 hover:text-primary transition-colors"
+                  >
+                    {displayName}
+                  </Link>
                 ) : (
-                  <NpcPortrait image={npc.image} name={npc.name} />
-                )}
-              </div>
-
-              <div className="flex-1 pt-4 space-y-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-sm ${st.pill}`}>
-                    {st.label}
+                  <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+                    {displayName}
                   </span>
-                  {npc.gender && (
-                    <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                      {npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1)}
-                    </span>
-                  )}
-                  {npc.age != null && (
-                    <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                      Age {npc.age}
-                    </span>
-                  )}
-                  {speciesEnabled && npc.species && (() => {
-                    const matchedSpecies = allSpecies?.find(
-                      (s) => s.id === npc.speciesId || s.name.toLowerCase() === npc.species?.toLowerCase()
-                    );
-                    const displayName = matchedSpecies?.name ?? npc.species;
-                    return matchedSpecies ? (
-                      <Link
-                        to={`/campaigns/${campaignId}/species/${matchedSpecies.id}`}
-                        className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10 hover:border-primary/30 hover:text-primary transition-colors"
-                      >
-                        {displayName}
-                      </Link>
-                    ) : (
-                      <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                        {displayName}
-                      </span>
-                    );
-                  })()}
-                </div>
-                <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
-                  {npc.name}
-                </h1>
-                {npc.aliases.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {npc.aliases.map((alias) => (
-                      <span key={alias} className="text-xs text-on-surface-variant bg-surface-container px-3 py-1 border border-outline-variant/20 italic">
-                        "{alias}"
-                      </span>
-                    ))}
+                );
+              })()}
+            </div>
+            {isGm && (
+              <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
+                {confirmDelete ? (
+                  <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
+                    <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                    <button onClick={() => deleteNpc.mutate({ campaignId: campaignId!, npcId: npc.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/npcs`) })}
+                      className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                    <button onClick={() => setConfirmDelete(false)}
+                      className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
                   </div>
+                ) : (
+                  <button onClick={() => setConfirmDelete(true)}
+                    className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
                 )}
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                  Edit
+                </button>
               </div>
-            </section>
+            )}
+            <h1 className="font-headline text-3xl sm:text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
+              {npc.name}
+            </h1>
+            {npc.aliases.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {npc.aliases.map((alias) => (
+                  <span key={alias} className="text-xs text-on-surface-variant bg-surface-container px-3 py-1 border border-outline-variant/20 italic">
+                    "{alias}"
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Two-column layout ── */}
+        <div className="flex flex-col md:flex-row gap-8 min-w-0">
+
+          {/* ── Left column (60-65%) — character description ── */}
+          <div className="flex-1 min-w-0 space-y-8">
+
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField label="Appearance" value={npc.appearance}
+                onSave={(html) => saveField('appearance', html)}
+                placeholder="Physical description…"
+                readOnly={!isGm} />
+            </div>
+
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField label="Background" value={npc.description}
+                onSave={(html) => saveField('description', html)}
+                placeholder="History, role, key facts…"
+                readOnly={!isGm} />
+            </div>
+
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField label="Personality" value={npc.personality}
+                onSave={(html) => saveField('personality', html)}
+                placeholder="Traits, mannerisms, quirks…"
+                readOnly={!isGm} />
+            </div>
+
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField label="Motivation & Ideals" value={npc.motivation}
+                onSave={(html) => saveField('motivation', html)}
+                placeholder="What drives them, what they believe in…"
+                readOnly={!isGm} />
+            </div>
+
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField label="Flaws" value={npc.flaws}
+                onSave={(html) => saveField('flaws', html)}
+                placeholder="Weaknesses, vices, fears…"
+                readOnly={!isGm} />
+            </div>
 
             {isGm && (
-              <InlineRichField label="GM Notes" value={npc.gmNotes}
-                onSave={(html) => saveField('gmNotes', html)}
-                isGmNotes />
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField label="GM Notes" value={npc.gmNotes}
+                  onSave={(html) => saveField('gmNotes', html)}
+                  isGmNotes />
+              </div>
             )}
 
-            <InlineRichField label="Background" value={npc.description}
-              onSave={(html) => saveField('description', html)}
-              placeholder="History, role, key facts…"
-              readOnly={!isGm} />
+          </div>
+
+          {/* ── Right column (35-40%) — relationships & connections ── */}
+          <div className="md:w-[40%] lg:w-[35%] min-w-0 space-y-8 self-start bg-surface-container border border-outline-variant/20 rounded-sm p-6">
 
             {/* Group Memberships */}
             {groupsEnabled && (() => {
@@ -263,9 +334,9 @@ export default function NpcDetailPage() {
               };
 
               return (
-                <section className="space-y-4">
+                <section className="space-y-8 min-w-0">
                   <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
                       Group Memberships
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
@@ -353,27 +424,24 @@ export default function NpcDetailPage() {
                   {npc.groupMemberships.length === 0 && !addGroupOpen ? (
                     <p className="text-xs text-on-surface-variant/40 italic">No group memberships.</p>
                   ) : npc.groupMemberships.length > 0 ? (
-                    <div className="flex flex-wrap gap-4">
+                    <div className="grid grid-cols-1 gap-2">
                       {[...npc.groupMemberships].sort((a, b) => groupNameById(a.groupId).localeCompare(groupNameById(b.groupId))).map((m) => (
-                        <div key={m.groupId} className="group/card flex items-center bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 transition-all">
+                        <div key={m.groupId} className="group/card flex items-stretch bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 rounded-sm overflow-hidden transition-all">
                           <Link
                             to={`/campaigns/${campaignId}/groups/${m.groupId}`}
-                            className="group flex items-center px-4 py-3"
+                            className="group flex items-center flex-1 min-w-0 px-3 py-2.5 gap-2.5"
                           >
-                            <span className="material-symbols-outlined text-primary mr-3">groups</span>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
+                            <span className="material-symbols-outlined text-primary flex-shrink-0 text-[18px]">groups</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors truncate">
                                 {m.subfaction ?? groupNameById(m.groupId)}
-                              </span>
+                              </p>
                               {m.relation && (
-                                <span className="text-[10px] text-on-surface-variant uppercase tracking-tighter">
+                                <p className="text-[9px] text-on-surface-variant/50 uppercase tracking-wider truncate">
                                   {m.relation}
-                                </span>
+                                </p>
                               )}
                             </div>
-                            <span className="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity ml-3">
-                              arrow_forward
-                            </span>
                           </Link>
                           {isGm && (confirmRemoveGroupId === m.groupId ? (
                             <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
@@ -423,201 +491,6 @@ export default function NpcDetailPage() {
               );
             })()}
 
-            {/* Direct Relations */}
-            {resolvedRelations.length > 0 && (
-              <section className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                    Relations
-                  </h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                </div>
-                <div className="space-y-2">
-                  {resolvedRelations.map(({ rel, other }) => {
-                    const rc = RELATION_CONFIG[rel.type];
-                    const initials = other.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-                    return (
-                      <Link
-                        key={`${rel.npcId}-${rel.type}`}
-                        to={`/campaigns/${campaignId}/npcs/${other.id}`}
-                        className="flex items-center gap-4 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-colors group"
-                      >
-                        <div className="w-10 h-10 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-                            {other.name}
-                          </p>
-                          {rel.note && (
-                            <p className="text-[10px] text-on-surface-variant/50 italic">{rel.note}</p>
-                          )}
-                        </div>
-                        <span className="flex items-center gap-1 px-2.5 py-1 bg-surface-container rounded-full text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/10 flex-shrink-0">
-                          <span className="material-symbols-outlined text-[12px]">{rc.icon}</span>
-                          {rc.label}
-                        </span>
-                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60">
-                          chevron_right
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* Social Relations */}
-            {isGm && <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />}
-
-            {/* Quests (given by this NPC) */}
-            {questsEnabled && (() => {
-              const npcQuests = (allQuests ?? []).filter((q) => q.giverId === npcId).sort((a, b) => a.title.localeCompare(b.title));
-              if (npcQuests.length === 0) return null;
-              const statusDot: Record<string, string> = {
-                active: 'bg-secondary', completed: 'bg-emerald-400', failed: 'bg-rose-400',
-                unavailable: 'bg-outline-variant', undiscovered: 'bg-on-surface-variant/20',
-              };
-              return (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                      Quests
-                    </h2>
-                    <div className="h-px flex-1 bg-outline-variant/20" />
-                  </div>
-                  <div className="space-y-2">
-                    {npcQuests.map((q) => (
-                      <div key={q.id} className="flex items-stretch bg-surface-container-low border border-outline-variant/10 group/card">
-                        <Link
-                          to={`/campaigns/${campaignId}/quests/${q.id}`}
-                          className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0"
-                        >
-                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDot[q.status] ?? 'bg-outline-variant'}`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{q.title}</p>
-                            <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
-                              {q.status}
-                            </p>
-                          </div>
-                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">
-                            arrow_forward
-                          </span>
-                        </Link>
-                        {isGm && (
-                          <button
-                            onClick={() => setQuestVisibility.mutate({
-                              campaignId: campaignId!,
-                              id: q.id,
-                              playerVisible: !q.playerVisible,
-                              playerVisibleFields: q.playerVisibleFields ?? [],
-                            })}
-                            title={q.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
-                            className={`px-2 border-l border-outline-variant/10 transition-colors ${
-                              q.playerVisible
-                                ? 'text-primary/60 hover:text-primary'
-                                : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[14px]">
-                              {q.playerVisible ? 'visibility' : 'visibility_off'}
-                            </span>
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })()}
-
-            {/* Session Appearances */}
-            {sessionsEnabled && (() => {
-              const sessionAppearances = (allSessions ?? [])
-                .filter((s) => s.npcIds?.includes(npcId ?? ''))
-                .sort((a, b) => b.number - a.number);
-              return (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                      Session Appearances
-                    </h2>
-                    <div className="h-px flex-1 bg-outline-variant/20" />
-                  </div>
-                  {sessionAppearances.length === 0 ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">No sessions tagged yet.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {sessionAppearances.map((session) => (
-                        <Link
-                          key={session.id}
-                          to={`/campaigns/${campaignId}/sessions/${session.id}`}
-                          className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
-                        >
-                          <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors text-[18px]">auto_stories</span>
-                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors flex-1 truncate">
-                            Session {session.number} — {session.title}
-                          </p>
-                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              );
-            })()}
-
-          </div>
-
-          {/* ── Right column (35%) ─────────────────────────── */}
-          <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
-
-            {isGm && (
-            <div className="flex justify-end gap-2">
-              {confirmDelete ? (
-                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[10px] text-on-surface-variant">Delete this NPC?</span>
-                  <button onClick={() => deleteNpc.mutate({ campaignId: campaignId!, npcId: npc.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/npcs`) })}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                  <button onClick={() => setConfirmDelete(false)}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmDelete(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
-                  <span className="material-symbols-outlined text-sm">delete</span>
-                </button>
-              )}
-              <button
-                onClick={() => setEditOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">edit</span>
-                Edit Record
-              </button>
-            </div>
-            )}
-
-            <InlineRichField label="Appearance" value={npc.appearance}
-              onSave={(html) => saveField('appearance', html)}
-              placeholder="Physical description…"
-              readOnly={!isGm} />
-
-            <InlineRichField label="Personality" value={npc.personality}
-              onSave={(html) => saveField('personality', html)}
-              placeholder="Traits, mannerisms, quirks…"
-              readOnly={!isGm} />
-
-            <InlineRichField label="Motivation & Ideals" value={npc.motivation}
-              onSave={(html) => saveField('motivation', html)}
-              placeholder="What drives them, what they believe in…"
-              readOnly={!isGm} />
-
-            <InlineRichField label="Flaws" value={npc.flaws}
-              onSave={(html) => saveField('flaws', html)}
-              placeholder="Weaknesses, vices, fears…"
-              readOnly={!isGm} />
-
             {/* Locations section */}
             {locationsEnabled && (() => {
               const presences = npc.locationPresences ?? [];
@@ -648,9 +521,9 @@ export default function NpcDetailPage() {
               };
 
               return (
-                <section className="space-y-4">
+                <section className="space-y-8 min-w-0">
                   <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
                       Locations
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
@@ -703,8 +576,8 @@ export default function NpcDetailPage() {
                         const presence = presences.find((p) => p.locationId === loc.id);
                         const isEditingNote = editingNoteForLocId === loc.id;
                         return (
-                          <div key={loc.id} className="bg-surface-container-low border border-outline-variant/10 group/card">
-                            <div className="flex items-stretch">
+                          <div key={loc.id} className="bg-surface-container-low border border-outline-variant/10 rounded-sm overflow-hidden group/card">
+                            <div className="flex items-stretch min-w-0">
                               <Link
                                 to={`/campaigns/${campaignId}/locations/${loc.id}`}
                                 className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0"
@@ -811,6 +684,150 @@ export default function NpcDetailPage() {
               );
             })()}
 
+            {/* Quests (given by this NPC) */}
+            {questsEnabled && (() => {
+              const npcQuests = (allQuests ?? []).filter((q) => q.giverId === npcId).sort((a, b) => a.title.localeCompare(b.title));
+              if (npcQuests.length === 0) return null;
+              const statusDot: Record<string, string> = {
+                active: 'bg-secondary', completed: 'bg-emerald-400', failed: 'bg-rose-400',
+                unavailable: 'bg-outline-variant', undiscovered: 'bg-on-surface-variant/20',
+              };
+              return (
+                <section className="space-y-8 min-w-0">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
+                      Quests
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                  </div>
+                  <div className="space-y-2">
+                    {npcQuests.map((q) => (
+                      <div key={q.id} className="flex items-stretch bg-surface-container-low border border-outline-variant/10 rounded-sm overflow-hidden group/card">
+                        <Link
+                          to={`/campaigns/${campaignId}/quests/${q.id}`}
+                          className="group flex items-center gap-3 p-3 hover:bg-surface-container transition-all flex-1 min-w-0"
+                        >
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDot[q.status] ?? 'bg-outline-variant'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{q.title}</p>
+                            <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
+                              {q.status}
+                            </p>
+                          </div>
+                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">
+                            arrow_forward
+                          </span>
+                        </Link>
+                        {isGm && (
+                          <button
+                            onClick={() => setQuestVisibility.mutate({
+                              campaignId: campaignId!,
+                              id: q.id,
+                              playerVisible: !q.playerVisible,
+                              playerVisibleFields: q.playerVisibleFields ?? [],
+                            })}
+                            title={q.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                            className={`px-2 border-l border-outline-variant/10 transition-colors ${
+                              q.playerVisible
+                                ? 'text-primary/60 hover:text-primary'
+                                : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              {q.playerVisible ? 'visibility' : 'visibility_off'}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
+
+            {/* Session Appearances */}
+            {sessionsEnabled && (() => {
+              const sessionAppearances = (allSessions ?? [])
+                .filter((s) => s.npcIds?.includes(npcId ?? ''))
+                .sort((a, b) => b.number - a.number);
+              return (
+                <section className="space-y-8 min-w-0">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
+                      Session Appearances
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                  </div>
+                  {sessionAppearances.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant/40 italic">No sessions tagged yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {sessionAppearances.map((session) => (
+                        <Link
+                          key={session.id}
+                          to={`/campaigns/${campaignId}/sessions/${session.id}`}
+                          className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 rounded-sm overflow-hidden transition-all"
+                        >
+                          <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors text-[18px]">auto_stories</span>
+                          <p className="text-sm text-on-surface group-hover:text-primary transition-colors flex-1 truncate">
+                            Session {session.number} — {session.title}
+                          </p>
+                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })()}
+
+            {/* Direct Relations */}
+            {resolvedRelations.length > 0 && (
+              <section className="space-y-8 min-w-0">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
+                    Relations
+                  </h2>
+                  <div className="h-px flex-1 bg-outline-variant/20" />
+                </div>
+                <div className="space-y-2">
+                  {resolvedRelations.map(({ rel, other }) => {
+                    const rc = RELATION_CONFIG[rel.type];
+                    const initials = other.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+                    return (
+                      <Link
+                        key={`${rel.npcId}-${rel.type}`}
+                        to={`/campaigns/${campaignId}/npcs/${other.id}`}
+                        className="flex items-center gap-4 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-colors group"
+                      >
+                        <div className="w-10 h-10 rounded-sm bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-on-surface-variant/60">{initials}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+                            {other.name}
+                          </p>
+                          {rel.note && (
+                            <p className="text-[10px] text-on-surface-variant/50 italic">{rel.note}</p>
+                          )}
+                        </div>
+                        <span className="flex items-center gap-1 px-2.5 py-1 bg-surface-container rounded-full text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/10">
+                          <span className="material-symbols-outlined text-[12px]">{rc.icon}</span>
+                          {rc.label}
+                        </span>
+                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60">
+                          chevron_right
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Social Relations */}
+            {isGm && <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />}
+
             {/* Player Visibility */}
             {isGm && npc && (
               <VisibilityPanel
@@ -844,31 +861,33 @@ export default function NpcDetailPage() {
         </div>
       </div>
 
-      <NpcEditDrawer
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        campaignId={campaignId ?? ''}
-        npc={npc}
-      />
-
-      {lightbox && npc.image && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out"
-          onClick={() => setLightbox(false)}
-        >
-          <img
-            src={resolveImageUrl(npc.image, imgVersion)}
-            alt={npc.name}
-            className="max-w-full max-h-full object-contain drop-shadow-2xl"
-          />
-          <button
-            onClick={() => setLightbox(false)}
-            className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors"
-          >
-            <span className="material-symbols-outlined text-3xl">close</span>
-          </button>
-        </div>
-      )}
     </main>
+
+    <NpcEditDrawer
+      open={editOpen}
+      onClose={() => setEditOpen(false)}
+      campaignId={campaignId ?? ''}
+      npc={npc}
+    />
+
+    {lightbox && npc.image && (
+      <div
+        className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out"
+        onClick={() => setLightbox(false)}
+      >
+        <img
+          src={resolveImageUrl(npc.image, imgVersion)}
+          alt={npc.name}
+          className="max-w-full max-h-full object-contain drop-shadow-2xl"
+        />
+        <button
+          onClick={() => setLightbox(false)}
+          className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors"
+        >
+          <span className="material-symbols-outlined text-3xl">close</span>
+        </button>
+      </div>
+    )}
+    </>
   );
 }
