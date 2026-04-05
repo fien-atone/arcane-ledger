@@ -7,7 +7,7 @@ import { useParty } from '@/features/characters/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocations } from '@/features/locations/api';
 import { useGroups } from '@/features/groups/api';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionBackground } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { ManageSectionsDrawer } from '@/features/campaigns/ui/ManageSectionsDrawer';
 import type { CampaignSummary } from '@/entities/campaign';
@@ -196,8 +196,10 @@ export default function CampaignDashboardPage() {
 
 
   return (
-    <div className="flex-1 min-h-screen bg-surface overflow-y-auto">
-      <div className="max-w-[1400px] mx-auto px-10 py-10 pb-20">
+    <>
+    <SectionBackground />
+    <div className="flex-1 min-h-screen overflow-y-auto relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 py-10 pb-20">
 
         {/* Campaign header */}
         <header className="mb-8">
@@ -545,11 +547,13 @@ export default function CampaignDashboardPage() {
         </div>
       </div>
 
-      <ManageSectionsDrawer
-        open={sectionsOpen}
-        onClose={() => setSectionsOpen(false)}
-        campaign={campaign as CampaignSummary}
-      />
     </div>
+
+    <ManageSectionsDrawer
+      open={sectionsOpen}
+      onClose={() => setSectionsOpen(false)}
+      campaign={campaign as CampaignSummary}
+    />
+    </>
   );
 }

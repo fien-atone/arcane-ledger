@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CampaignCreateDrawer, useCampaigns } from '@/features/campaigns';
 import { useSessions } from '@/features/sessions/api/queries';
 import { InvitationBanner } from '@/features/invitations/ui/InvitationBanner';
+import { SectionBackground } from '@/shared/ui';
 import type { CampaignSummary } from '@/entities/campaign';
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -265,7 +266,9 @@ export default function CampaignsPage() {
   const archived = (campaigns ?? []).filter((c) => !!c.archivedAt);
 
   return (
-    <main className="max-w-6xl mx-auto px-8 py-12 pb-24">
+    <>
+    <SectionBackground />
+    <main className="max-w-6xl mx-auto px-8 py-12 pb-24 relative z-10">
       {/* Header */}
       <div className="flex items-baseline justify-between mb-10">
         <h1 className="font-headline text-5xl font-bold tracking-tight text-on-surface">
@@ -350,7 +353,9 @@ export default function CampaignsPage() {
 
       </div>{/* end flex container */}
 
-      <CampaignCreateDrawer open={createOpen} onClose={() => setCreateOpen(false)} />
     </main>
+
+    <CampaignCreateDrawer open={createOpen} onClose={() => setCreateOpen(false)} />
+    </>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BackLink } from '@/shared/ui';
+import { SectionBackground } from '@/shared/ui';
 import { useAuthStore } from '@/features/auth';
 import { useUpdateProfile, useChangePassword } from '@/features/auth/api/queries';
 
@@ -82,12 +82,9 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-8 py-10">
-      {/* Back link */}
-      <div className="mb-6">
-        <BackLink to="/campaigns">Campaigns</BackLink>
-      </div>
-
+    <>
+    <SectionBackground />
+    <div className="max-w-2xl mx-auto px-8 py-10 relative z-10">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-10">
         <span
@@ -227,5 +224,6 @@ export default function ProfilePage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

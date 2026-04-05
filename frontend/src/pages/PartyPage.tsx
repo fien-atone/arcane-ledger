@@ -14,7 +14,7 @@ import { InvitePanel } from '@/features/invitations/ui/InvitePanel';
 import { useSpecies } from '@/features/species/api';
 import { useGroups } from '@/features/groups/api';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
-import { RichContent, EmptyState, SectionDisabled, Select } from '@/shared/ui';
+import { RichContent, EmptyState, SectionDisabled, SectionBackground, Select } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
 import { useAuthStore } from '@/features/auth';
 import type { PartySlot } from '@/entities/partySlot';
@@ -460,8 +460,21 @@ export default function PartyPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
-      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5">
+    <>
+    <SectionBackground />
+    <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-4 flex-shrink-0">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
+      </div>
+
+      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="font-headline text-4xl font-bold tracking-tight text-on-surface">Party</h1>
@@ -693,12 +706,14 @@ export default function PartyPage() {
         </div>
       )}
 
-      <CharacterEditDrawer
-        open={addCharOpen}
-        onClose={() => { setAddCharOpen(false); setCreateForUserId(null); }}
-        campaignId={campaignId ?? ''}
-        forUserId={createForUserId ?? undefined}
-      />
     </main>
+
+    <CharacterEditDrawer
+      open={addCharOpen}
+      onClose={() => { setAddCharOpen(false); setCreateForUserId(null); }}
+      campaignId={campaignId ?? ''}
+      forUserId={createForUserId ?? undefined}
+    />
+    </>
   );
 }

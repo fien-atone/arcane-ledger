@@ -6,7 +6,7 @@ import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPre
 import { useSessions } from '@/features/sessions/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
-import { InlineRichField, ImageUpload, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { InlineRichField, ImageUpload, SectionDisabled, SectionBackground, VisibilityPanel } from '@/shared/ui';
 import { useCampaign } from '@/features/campaigns/api/queries';
 import { useSetLocationVisibility } from '@/features/locations/api';
 import { LOCATION_VISIBILITY_FIELDS, LOCATION_BASIC_PRESET } from '@/shared/lib/visibilityFields';
@@ -906,13 +906,6 @@ export default function LocationDetailPage() {
   if (isError || !location) {
     return (
       <main className="p-12">
-        <Link
-          to={`/campaigns/${campaignId}/locations`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest mb-8"
-        >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Locations
-        </Link>
         <p className="text-tertiary text-sm">Location not found.</p>
       </main>
     );
@@ -978,19 +971,21 @@ export default function LocationDetailPage() {
   };
 
   return (
-    <main className="flex-1 min-h-screen bg-surface">
-      {/* Breadcrumb */}
-      <div className="px-10 pt-8">
+    <>
+    <SectionBackground />
+    <main className="flex-1 min-h-screen relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-8">
         <Link
-          to={`/campaigns/${campaignId}/locations`}
-          className="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-xs uppercase tracking-widest transition-colors"
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
-          <span className="material-symbols-outlined text-sm">chevron_left</span>
-          Locations
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
         </Link>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
         <div className="flex flex-col lg:flex-row gap-16">
 
           {/* ── Left column (65%) ──────────────────────────────── */}
@@ -1547,60 +1542,62 @@ export default function LocationDetailPage() {
         </div>
       </div>
 
-      <LocationEditDrawer
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        campaignId={campaignId ?? ''}
-        location={location}
-      />
-      <LocationEditDrawer
-        open={addChildLocOpen}
-        onClose={() => setAddChildLocOpen(false)}
-        campaignId={campaignId ?? ''}
-        initialParentId={location.id}
-      />
-
-      {mapOpen && location.image && (
-        <MapViewer
-          imageUrl={resolveImageUrl(location.image, imgVersion)!}
-          locationId={location.id}
-          locationName={location.name}
-          initialMarkers={location.mapMarkers ?? []}
-          childLocations={childLocations}
-          npcsHere={npcsHere}
-          campaignId={campaignId ?? ''}
-          typeMap={typeMap}
-          hideTypes={!locationTypesEnabled}
-          onClose={() => setMapOpen(false)}
-          onSave={(markers) => saveMutation.mutate({ ...location, mapMarkers: markers })}
-          onRequestAddLocation={(point) => {
-            setMapAddLocPoint(point);
-            setMapAddLocDrawerOpen(true);
-          }}
-          externalMarkerToAdd={mapExternalMarker}
-          onExternalMarkerAdded={() => setMapExternalMarker(null)}
-        />
-      )}
-
-      {/* Page-level drawer for "Add Location from map" flow */}
-      <LocationEditDrawer
-        open={mapAddLocDrawerOpen}
-        onClose={() => { setMapAddLocDrawerOpen(false); setMapAddLocPoint(null); }}
-        campaignId={campaignId ?? ''}
-        initialParentId={location.id}
-        elevated
-        onSaved={(saved) => {
-          if (!mapAddLocPoint) return;
-          setMapExternalMarker({
-            id: `marker-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            x: mapAddLocPoint.x,
-            y: mapAddLocPoint.y,
-            label: saved.name,
-            linkedLocationId: saved.id,
-          });
-          setMapAddLocPoint(null);
-        }}
-      />
     </main>
+
+    <LocationEditDrawer
+      open={editOpen}
+      onClose={() => setEditOpen(false)}
+      campaignId={campaignId ?? ''}
+      location={location}
+    />
+    <LocationEditDrawer
+      open={addChildLocOpen}
+      onClose={() => setAddChildLocOpen(false)}
+      campaignId={campaignId ?? ''}
+      initialParentId={location.id}
+    />
+
+    {mapOpen && location.image && (
+      <MapViewer
+        imageUrl={resolveImageUrl(location.image, imgVersion)!}
+        locationId={location.id}
+        locationName={location.name}
+        initialMarkers={location.mapMarkers ?? []}
+        childLocations={childLocations}
+        npcsHere={npcsHere}
+        campaignId={campaignId ?? ''}
+        typeMap={typeMap}
+        hideTypes={!locationTypesEnabled}
+        onClose={() => setMapOpen(false)}
+        onSave={(markers) => saveMutation.mutate({ ...location, mapMarkers: markers })}
+        onRequestAddLocation={(point) => {
+          setMapAddLocPoint(point);
+          setMapAddLocDrawerOpen(true);
+        }}
+        externalMarkerToAdd={mapExternalMarker}
+        onExternalMarkerAdded={() => setMapExternalMarker(null)}
+      />
+    )}
+
+    {/* Page-level drawer for "Add Location from map" flow */}
+    <LocationEditDrawer
+      open={mapAddLocDrawerOpen}
+      onClose={() => { setMapAddLocDrawerOpen(false); setMapAddLocPoint(null); }}
+      campaignId={campaignId ?? ''}
+      initialParentId={location.id}
+      elevated
+      onSaved={(saved) => {
+        if (!mapAddLocPoint) return;
+        setMapExternalMarker({
+          id: `marker-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          x: mapAddLocPoint.x,
+          y: mapAddLocPoint.y,
+          label: saved.name,
+          linkedLocationId: saved.id,
+        });
+        setMapAddLocPoint(null);
+      }}
+    />
+    </>
   );
 }

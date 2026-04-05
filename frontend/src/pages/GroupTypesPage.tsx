@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useGroupTypes, useDeleteGroupType, useSaveGroupType } from '@/features/groupTypes/api';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import { GroupTypeEditDrawer } from '@/features/groupTypes/ui';
-import { InlineRichField, EmptyState, SectionDisabled } from '@/shared/ui';
+import { InlineRichField, EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 export default function GroupTypesPage() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const { id: campaignId } = useParams<{ id: string }>();
+  const { data: campaign } = useCampaign(campaignId ?? '');
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
   const { data: groupTypes, isLoading } = useGroupTypes(campaignId, debouncedSearch);
   const deleteGroupType = useDeleteGroupType();
@@ -44,9 +45,22 @@ export default function GroupTypesPage() {
   }
 
   return (
-    <main className="flex-1 h-full bg-surface flex flex-col overflow-hidden">
+    <>
+    <SectionBackground />
+    <main className="flex-1 h-full flex flex-col overflow-hidden relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-4 flex-shrink-0">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
+      </div>
+
       {/* Sticky header */}
-      <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5 flex-shrink-0">
+      <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5 flex-shrink-0">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">
@@ -142,13 +156,15 @@ export default function GroupTypesPage() {
         </div>
       )}
 
-      <GroupTypeEditDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        campaignId={campaignId ?? ''}
-        groupType={editingType}
-      />
     </main>
+
+    <GroupTypeEditDrawer
+      open={drawerOpen}
+      onClose={() => setDrawerOpen(false)}
+      campaignId={campaignId ?? ''}
+      groupType={editingType}
+    />
+    </>
   );
 }
 

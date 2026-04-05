@@ -76,7 +76,7 @@ export default function NpcListPage() {
 
   return (
     <>
-    <SectionBackground variant="npc" />
+    <SectionBackground />
     <main className="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
       {/* Campaign name */}
       <div className="flex justify-center pt-0 pb-8">

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { BackLink } from '@/shared/ui';
+import { SectionBackground } from '@/shared/ui';
 import { useAdminUsers, useDeleteUser } from '@/features/admin/api/queries';
 import { AdminUserDrawer } from '@/features/admin/ui/AdminUserDrawer';
 import { useAuthStore } from '@/features/auth';
@@ -60,12 +60,9 @@ export default function AdminUsersPage() {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto px-8 py-10">
-      {/* Back link */}
-      <div className="mb-6">
-        <BackLink to="/campaigns">Campaigns</BackLink>
-      </div>
-
+    <>
+    <SectionBackground />
+    <div className="max-w-5xl mx-auto px-8 py-10 relative z-10">
       {/* Page header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
@@ -225,11 +222,13 @@ export default function AdminUsersPage() {
       )}
 
       {/* Drawer */}
-      <AdminUserDrawer
-        open={drawerOpen}
-        onClose={handleCloseDrawer}
-        user={editingUser}
-      />
     </div>
+
+    <AdminUserDrawer
+      open={drawerOpen}
+      onClose={handleCloseDrawer}
+      user={editingUser}
+    />
+    </>
   );
 }

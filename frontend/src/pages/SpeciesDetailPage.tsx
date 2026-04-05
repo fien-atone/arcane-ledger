@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSpeciesById, useSaveSpecies, useDeleteSpecies } from '@/features/species/api';
 import { useSpeciesTypes } from '@/features/speciesTypes/api';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { SpeciesEditDrawer } from '@/features/species/ui';
-import { BackLink, InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionBackground } from '@/shared/ui';
 import type { SpeciesSize } from '@/entities/species';
 
 const SIZE_LABEL: Record<SpeciesSize, string> = {
@@ -16,6 +16,7 @@ const SIZE_ORDER: SpeciesSize[] = ['tiny', 'small', 'medium', 'large', 'huge', '
 
 export default function SpeciesDetailPage() {
   const { id: campaignId, speciesId } = useParams<{ id: string; speciesId: string }>();
+  const { data: campaign } = useCampaign(campaignId ?? '');
   const { data: species, isLoading, isError } = useSpeciesById(campaignId, speciesId);
   const { data: speciesTypes } = useSpeciesTypes(campaignId);
   const typesEnabled = useSectionEnabled(campaignId ?? '', 'species_types');
@@ -46,13 +47,21 @@ export default function SpeciesDetailPage() {
   const sizeIdx = SIZE_ORDER.indexOf(species.size);
 
   return (
-    <main className="flex-1 min-h-screen bg-surface">
-      {/* Breadcrumb */}
-      <div className="px-10 pt-8">
-        <BackLink to={`/campaigns/${campaignId}/species`}>Species</BackLink>
+    <>
+    <SectionBackground />
+    <main className="flex-1 min-h-screen relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-8">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
       </div>
 
-      <div className="max-w-3xl px-10 py-8 pb-20">
+      <div className="max-w-3xl px-4 sm:px-6 md:px-10 py-8 pb-20">
 
         {/* Header */}
         <div className="flex items-start justify-between mb-10">
@@ -147,11 +156,13 @@ export default function SpeciesDetailPage() {
         )}
       </div>
 
-      <SpeciesEditDrawer campaignId={campaignId ?? ""}
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        species={species}
-      />
     </main>
+
+    <SpeciesEditDrawer campaignId={campaignId ?? ""}
+      open={editOpen}
+      onClose={() => setEditOpen(false)}
+      species={species}
+    />
+    </>
   );
 }

@@ -5,7 +5,7 @@ import { useParty } from '@/features/characters/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { useGroupTypes } from '@/features/groupTypes/api/queries';
 import { useRelationsForCampaign } from '@/features/relations/api/queries';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import type { NPC } from '@/entities/npc';
 import { useGraphSimulation } from '@/features/social-graph/lib/useGraphSimulation';
 import { useGraphZoom } from '@/features/social-graph/lib/useGraphZoom';
@@ -17,7 +17,7 @@ import { GraphControls } from '@/features/social-graph/ui/GraphControls';
 import { GraphFilters } from '@/features/social-graph/ui/GraphFilters';
 import { GraphLegend } from '@/features/social-graph/ui/GraphLegend';
 import { ChordView } from '@/features/social-graph/ui/ChordView';
-import { EmptyState, SectionDisabled } from '@/shared/ui';
+import { EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
 import type { NpcStatus } from '@/entities/npc';
 import type { GraphEdge as GraphEdgeType } from '@/features/social-graph/lib/graphTypes';
 
@@ -33,6 +33,7 @@ export default function SocialGraphPage() {
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
 
+  const { data: campaign } = useCampaign(campaignId ?? '');
   const { data: npcs, isLoading: npcsLoading } = useNpcs(campaignId ?? '');
   const { data: party } = useParty(campaignId ?? '');
   const { data: groups } = useGroups(campaignId ?? '');
@@ -284,9 +285,22 @@ export default function SocialGraphPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
+    <>
+    <SectionBackground />
+    <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-4 flex-shrink-0">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
+      </div>
+
       {/* Header */}
-      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5">
+      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">
@@ -483,5 +497,6 @@ export default function SocialGraphPage() {
         </div>
       )}
     </main>
+    </>
   );
 }

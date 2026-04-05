@@ -154,7 +154,7 @@ export default function NpcDetailPage() {
 
   return (
     <>
-    <SectionBackground variant="npc" />
+    <SectionBackground />
     <main className="flex-1 min-h-screen relative z-10">
       <div className="flex justify-center pt-0 pb-8">
         <Link

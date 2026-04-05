@@ -6,7 +6,7 @@ import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries
 import { useGroups } from '@/features/groups/api';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, BackLink, InlineRichField, SectionDisabled } from '@/shared/ui';
+import { ImageUpload, InlineRichField, SectionDisabled, SectionBackground } from '@/shared/ui';
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { useAuthStore } from '@/features/auth';
@@ -83,7 +83,6 @@ export default function CharacterDetailPage() {
   if (isError || !character) {
     return (
       <main className="p-12">
-        <BackLink to={`/campaigns/${campaignId}/party`}>Party</BackLink>
         <p className="text-tertiary text-sm">Character not found.</p>
       </main>
     );
@@ -103,12 +102,21 @@ export default function CharacterDetailPage() {
     .filter(Boolean).join(' · ');
 
   return (
-    <main className="flex-1 min-h-screen bg-surface">
-      <div className="px-10 pt-8">
-        <BackLink to={`/campaigns/${campaignId}/party`}>Party</BackLink>
+    <>
+    <SectionBackground />
+    <main className="flex-1 min-h-screen relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-8">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
         <div className="flex flex-col lg:flex-row gap-16">
 
           {/* ── Left column ─────────────────────────────────────── */}
@@ -372,31 +380,33 @@ export default function CharacterDetailPage() {
         </div>
       </div>
 
-      <CharacterEditDrawer
-        open={detailsOpen}
-        onClose={() => setDetailsOpen(false)}
-        campaignId={campaignId ?? ''}
-        character={character}
-      />
-
-      {lightbox && character.image && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out"
-          onClick={() => setLightbox(false)}
-        >
-          <img
-            src={resolveImageUrl(character.image, imgVersion)}
-            alt={character.name}
-            className="max-w-full max-h-full object-contain drop-shadow-2xl"
-          />
-          <button
-            onClick={() => setLightbox(false)}
-            className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors"
-          >
-            <span className="material-symbols-outlined text-3xl">close</span>
-          </button>
-        </div>
-      )}
     </main>
+
+    <CharacterEditDrawer
+      open={detailsOpen}
+      onClose={() => setDetailsOpen(false)}
+      campaignId={campaignId ?? ''}
+      character={character}
+    />
+
+    {lightbox && character.image && (
+      <div
+        className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out"
+        onClick={() => setLightbox(false)}
+      >
+        <img
+          src={resolveImageUrl(character.image, imgVersion)}
+          alt={character.name}
+          className="max-w-full max-h-full object-contain drop-shadow-2xl"
+        />
+        <button
+          onClick={() => setLightbox(false)}
+          className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors"
+        >
+          <span className="material-symbols-outlined text-3xl">close</span>
+        </button>
+      </div>
+    )}
+    </>
   );
 }

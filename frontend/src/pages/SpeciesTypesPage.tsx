@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useSpeciesTypes, useSaveSpeciesType, useDeleteSpeciesType } from '@/features/speciesTypes/api';
-import { useSectionEnabled } from '@/features/campaigns/api/queries';
+import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
-import { InlineRichField, IconPicker, EmptyState, SectionDisabled } from '@/shared/ui';
+import { InlineRichField, IconPicker, EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
 import type { SpeciesTypeEntry } from '@/entities/speciesType';
 
 
@@ -107,6 +107,7 @@ function SpeciesTypeDetail({ entry, campaignId, onEdit, onDelete }: { entry: Spe
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function SpeciesTypesPage() {
   const { id: campaignId } = useParams<{ id: string }>();
+  const { data: campaign } = useCampaign(campaignId ?? '');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species_types');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
@@ -125,8 +126,21 @@ export default function SpeciesTypesPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
-      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5">
+    <>
+    <SectionBackground />
+    <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-4 flex-shrink-0">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
+      </div>
+
+      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Species Types</h1>
@@ -190,7 +204,9 @@ export default function SpeciesTypesPage() {
         </div>
       )}
 
-      <SpeciesTypeDrawer key={editingType?.id ?? `new-${drawerKey}`} open={drawerOpen} onClose={() => setDrawerOpen(false)} campaignId={campaignId ?? ''} entry={editingType} />
     </main>
+
+    <SpeciesTypeDrawer key={editingType?.id ?? `new-${drawerKey}`} open={drawerOpen} onClose={() => setDrawerOpen(false)} campaignId={campaignId ?? ''} entry={editingType} />
+    </>
   );
 }

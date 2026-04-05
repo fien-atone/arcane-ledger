@@ -5,7 +5,7 @@ import { GroupEditDrawer } from '@/features/groups/ui';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
-import { RichContent, EmptyState, SectionDisabled } from '@/shared/ui';
+import { RichContent, EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
 import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import type { Group } from '@/entities/group';
 import type { GroupTypeEntry } from '@/entities/groupType';
@@ -107,8 +107,21 @@ export default function GroupListPage() {
   ] : [];
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-surface overflow-hidden">
-      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-10 pb-6 border-b border-outline-variant/5">
+    <>
+    <SectionBackground />
+    <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-4 flex-shrink-0">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
+      </div>
+
+      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Groups</h1>
@@ -260,12 +273,14 @@ export default function GroupListPage() {
         </div>
       )}
 
-      <GroupEditDrawer
-        open={addOpen || editOpen}
-        onClose={() => { setAddOpen(false); setEditOpen(false); }}
-        campaignId={campaignId ?? ''}
-        group={editingGroup}
-      />
     </main>
+
+    <GroupEditDrawer
+      open={addOpen || editOpen}
+      onClose={() => { setAddOpen(false); setEditOpen(false); }}
+      campaignId={campaignId ?? ''}
+      group={editingGroup}
+    />
+    </>
   );
 }

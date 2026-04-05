@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuest, useSaveQuest, useDeleteQuest, useSetQuestVisibility } from '@/features/quests/api/queries';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
-import { BackLink, InlineRichField, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { InlineRichField, SectionDisabled, SectionBackground, VisibilityPanel } from '@/shared/ui';
 import { QUEST_VISIBILITY_FIELDS, QUEST_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Quest, QuestStatus } from '@/entities/quest';
@@ -54,7 +54,6 @@ export default function QuestDetailPage() {
   if (isError || !quest) {
     return (
       <main className="p-12">
-        <BackLink to={`/campaigns/${campaignId}/quests`}>Quests</BackLink>
         <p className="text-tertiary text-sm">Quest not found.</p>
       </main>
     );
@@ -65,12 +64,21 @@ export default function QuestDetailPage() {
   const linkedSessions = [...(quest.sessions ?? [])].sort((a, b) => b.number - a.number);
 
   return (
-    <main className="flex-1 min-h-screen bg-surface">
-      <div className="px-10 pt-8">
-        <BackLink to={`/campaigns/${campaignId}/quests`}>All Quests</BackLink>
+    <>
+    <SectionBackground />
+    <main className="flex-1 min-h-screen relative z-10">
+      {/* Campaign name */}
+      <div className="flex justify-center pt-0 pb-8">
+        <Link
+          to={`/campaigns/${campaignId}`}
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
         <div className="flex flex-col lg:flex-row gap-16">
 
           {/* ── Left column (65%) ──────────────────────────────── */}
@@ -300,12 +308,14 @@ export default function QuestDetailPage() {
         </div>
       </div>
 
-      <QuestEditDrawer
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        campaignId={campaignId ?? ''}
-        quest={quest}
-      />
     </main>
+
+    <QuestEditDrawer
+      open={editOpen}
+      onClose={() => setEditOpen(false)}
+      campaignId={campaignId ?? ''}
+      quest={quest}
+    />
+    </>
   );
 }
