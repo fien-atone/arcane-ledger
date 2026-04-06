@@ -198,81 +198,118 @@ export default function GroupDetailPage() {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
-        <div className="flex flex-col lg:flex-row gap-16">
-
-          {/* ── Left column (65%) ──────────────────────────────── */}
-          <div className="lg:w-[65%] space-y-12">
-
-            {/* Header */}
-            <header className="space-y-4">
-              {groupTypesEnabled && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
-                    <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
-                    {tc.name}
-                  </span>
-                </div>
-              )}
-              <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
-                {group.name}
-              </h1>
-              {group.aliases.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {group.aliases.map((alias) => (
-                    <span key={alias} className="text-xs text-on-surface-variant bg-surface-container px-3 py-1 border border-outline-variant/20 italic">
-                      "{alias}"
-                    </span>
-                  ))}
-                </div>
-              )}
-            </header>
-
-            {/* About — edit in place */}
-            <InlineRichField
-              label="About"
-              value={group.description}
-              onSave={(html) => saveField('description', html)}
-              placeholder="Describe this group…"
-              readOnly={!isGm}
-            />
-
-            {/* Goals — edit in place */}
-            <InlineRichField
-              label="Goals"
-              value={group.goals}
-              onSave={(html) => saveField('goals', html)}
-              placeholder="What are their objectives…"
-              readOnly={!isGm}
-            />
-
-            {/* Symbols — edit in place */}
-            <InlineRichField
-              label="Symbols & Insignia"
-              value={group.symbols}
-              onSave={(html) => saveField('symbols', html)}
-              placeholder="Banners, colours, insignia…"
-              readOnly={!isGm}
-            />
-
-            {/* GM Notes — edit in place, GM only */}
-            {isGm && (
-              <InlineRichField
-                label="GM Notes"
-                value={group.gmNotes}
-                onSave={(html) => saveField('gmNotes', html)}
-                isGmNotes
-              />
+        {/* ── Header card (full width) ── */}
+        <section className="relative bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8 mb-8">
+          <div className="space-y-4">
+            {groupTypesEnabled && (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container-high rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
+                  {tc.name}
+                </span>
+              </div>
             )}
+            <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface leading-tight">
+              {group.name}
+            </h1>
+            {group.aliases.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {group.aliases.map((alias) => (
+                  <span key={alias} className="text-xs text-on-surface-variant bg-surface-container px-3 py-1 border border-outline-variant/20 italic">
+                    "{alias}"
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {isGm && (
+            <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                  <button onClick={() => deleteGroup.mutate({ campaignId: campaignId ?? '', groupId: group.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/groups`) })}
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)}
+                  className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
+              <button
+                onClick={() => setEditOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">edit</span>
+                Edit
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* ── Two-column layout ── */}
+        <div className="flex flex-col md:flex-row gap-8 min-w-0">
+
+          {/* ── Left column ── */}
+          <div className="flex-1 min-w-0 space-y-8">
+
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField
+                label="About"
+                value={group.description}
+                onSave={(html) => saveField('description', html)}
+                placeholder="Describe this group…"
+                readOnly={!isGm}
+              />
+            </div>
+
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField
+                label="Goals"
+                value={group.goals}
+                onSave={(html) => saveField('goals', html)}
+                placeholder="What are their objectives…"
+                readOnly={!isGm}
+              />
+            </div>
+
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField
+                label="Symbols & Insignia"
+                value={group.symbols}
+                onSave={(html) => saveField('symbols', html)}
+                placeholder="Banners, colours, insignia…"
+                readOnly={!isGm}
+              />
+            </div>
+
+            {isGm && (
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField
+                  label="GM Notes"
+                  value={group.gmNotes}
+                  onSave={(html) => saveField('gmNotes', html)}
+                  isGmNotes
+                />
+              </div>
+            )}
+          </div>
+
+          {/* ── Right column ── */}
+          <div className="md:w-[380px] md:flex-shrink-0 space-y-8">
 
             {/* Members */}
-            <section className="space-y-4">
-              <div className="flex items-center gap-4">
-                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Members</h2>
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">Members</h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 {(members.length + charMembers.length) > 0 && <span className="text-xs font-bold text-on-surface-variant/40">{members.length + charMembers.length}</span>}
                 {isGm && (
                   <button onClick={() => setAddMemberOpen(true)}
-                    className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
+                    className="flex items-center gap-1 px-3 py-1 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
                     <span className="material-symbols-outlined text-[13px]">person_add</span>
                     Add
                   </button>
@@ -281,7 +318,7 @@ export default function GroupDetailPage() {
               {members.length === 0 && charMembers.length === 0 ? (
                 <p className="text-sm text-on-surface-variant/40 italic">No members yet.</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-2">
                   {members.map((npc) => {
                     const membership = npc.groupMemberships.find((m) => m.groupId === groupId);
                     const initials = npc.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
@@ -372,61 +409,36 @@ export default function GroupDetailPage() {
                   })}
                 </div>
               )}
-            </section>
-          </div>
-
-          {/* ��─ Right column (35%) ────────────────────────��─────── */}
-          <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
-            {isGm && (
-              <div className="flex justify-end gap-2">
-                {confirmDelete ? (
-                  <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                    <span className="text-[10px] text-on-surface-variant">Delete this group?</span>
-                    <button onClick={() => deleteGroup.mutate({ campaignId: campaignId ?? '', groupId: group.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/groups`) })}
-                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                    <button onClick={() => setConfirmDelete(false)}
-                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setConfirmDelete(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
-                    <span className="material-symbols-outlined text-sm">delete</span>
-                  </button>
-                )}
-                <button onClick={() => setEditOpen(true)}
-                  className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors">
-                  <span className="material-symbols-outlined text-sm">edit</span>
-                  Edit Group
-                </button>
-              </div>
-            )}
+            </div>
 
             {/* Player Visibility */}
             {isGm && group && (
-              <VisibilityPanel
-                playerVisible={group.playerVisible ?? false}
-                playerVisibleFields={group.playerVisibleFields ?? []}
-                fields={GROUP_VISIBILITY_FIELDS}
-                basicPreset={GROUP_BASIC_PRESET}
-                onToggleVisible={(v) => setGroupVisibility.mutate({
-                  campaignId: campaignId!, id: group.id,
-                  playerVisible: v, playerVisibleFields: group.playerVisibleFields ?? [],
-                })}
-                onToggleField={(f, on) => {
-                  const fields = on
-                    ? [...(group.playerVisibleFields ?? []), f]
-                    : (group.playerVisibleFields ?? []).filter((x) => x !== f);
-                  setGroupVisibility.mutate({
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <VisibilityPanel
+                  playerVisible={group.playerVisible ?? false}
+                  playerVisibleFields={group.playerVisibleFields ?? []}
+                  fields={GROUP_VISIBILITY_FIELDS}
+                  basicPreset={GROUP_BASIC_PRESET}
+                  onToggleVisible={(v) => setGroupVisibility.mutate({
+                    campaignId: campaignId!, id: group.id,
+                    playerVisible: v, playerVisibleFields: group.playerVisibleFields ?? [],
+                  })}
+                  onToggleField={(f, on) => {
+                    const fields = on
+                      ? [...(group.playerVisibleFields ?? []), f]
+                      : (group.playerVisibleFields ?? []).filter((x) => x !== f);
+                    setGroupVisibility.mutate({
+                      campaignId: campaignId!, id: group.id,
+                      playerVisible: group.playerVisible ?? false, playerVisibleFields: fields,
+                    });
+                  }}
+                  onSetPreset={(fields) => setGroupVisibility.mutate({
                     campaignId: campaignId!, id: group.id,
                     playerVisible: group.playerVisible ?? false, playerVisibleFields: fields,
-                  });
-                }}
-                onSetPreset={(fields) => setGroupVisibility.mutate({
-                  campaignId: campaignId!, id: group.id,
-                  playerVisible: group.playerVisible ?? false, playerVisibleFields: fields,
-                })}
-                isPending={setGroupVisibility.isPending}
-              />
+                  })}
+                  isPending={setGroupVisibility.isPending}
+                />
+              </div>
             )}
           </div>
 

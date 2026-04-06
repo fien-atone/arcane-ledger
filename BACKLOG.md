@@ -40,6 +40,8 @@ _Nothing currently in progress._
 | F-11 | 🟡 | All search/filter must go through server (debounced GraphQL queries, no client-side filtering) | — |
 | F-12 | 🟡 | Subtle loading indicator on all server data fetches — small non-intrusive spinner/bar so user knows data is live | — |
 | F-15 | 🟡 | Timelines: visual timeline view for campaign events, session history, NPC encounters, quest progression | — |
+| F-16 | 🟡 | Visibility controls conditional on Party module — show player visibility toggles (VisibilityPanel, eye icons) only when the Party section is enabled for the campaign. No party = no players = no need for visibility management | — |
+| F-17 | 🟢 | Social GM groups — a group of GMs can see each other's campaigns, coordinate session schedules across multiple games, shared calendar view. For communities running multiple parallel campaigns | — |
 
 ---
 

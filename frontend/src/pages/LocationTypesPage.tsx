@@ -21,7 +21,7 @@ import {
   CATEGORY_DOT_CLS,
 } from '@/entities/locationType';
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// -- Constants ----------------------------------------------------------------
 
 const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] = [
   { value: 'world',        label: 'World-scale',        dot: CATEGORY_DOT_CLS.world },
@@ -42,7 +42,7 @@ const inputCls =
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
-// ── Icon suggestions ──────────────────────────────────────────────────────────
+// -- Icon suggestions ---------------------------------------------------------
 
 const ICON_SUGGESTIONS = [
   'place', 'public', 'terrain', 'forest', 'landscape', 'water', 'waves', 'stream', 'grass', 'map',
@@ -53,7 +53,7 @@ const ICON_SUGGESTIONS = [
   'local_fire_department', 'local_hospital', 'fence', 'spa', 'door_front',
 ];
 
-// ── Relation section ──────────────────────────────────────────────────────────
+// -- Relation section ---------------------------------------------------------
 
 interface RelationSectionProps {
   title: string;
@@ -80,7 +80,7 @@ function RelationSection({
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-3">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant whitespace-nowrap flex items-center gap-1.5">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant flex items-center gap-1.5">
           <span className="material-symbols-outlined text-[13px]">{icon}</span>
           {title}
         </h3>
@@ -122,7 +122,7 @@ function RelationSection({
           <input
             value={addSearch}
             onChange={(e) => setAddSearch(e.target.value)}
-            placeholder="Filter types…"
+            placeholder="Filter types..."
             className="w-full bg-surface-container-low border-0 border-b border-outline-variant/20 focus:border-primary py-1.5 px-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/30 transition-colors"
             autoFocus
           />
@@ -147,7 +147,7 @@ function RelationSection({
   );
 }
 
-// ── Detail panel ──────────────────────────────────────────────────────────────
+// -- Detail panel -------------------------------------------------------------
 
 interface DetailProps {
   entry: LocationTypeEntry;
@@ -221,7 +221,7 @@ function LocationTypeDetail({
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* Top bar */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-2 px-6 py-3.5 border-b border-outline-variant/10 bg-surface-container-lowest">
+      <div className="flex-shrink-0 flex items-center justify-end gap-2 px-6 py-3.5 border-b border-outline-variant/10">
           {!entry.builtin && (
             <button
               onClick={() => { deleteType.mutate(entry.id); onDeleted(); }}
@@ -244,7 +244,7 @@ function LocationTypeDetail({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
 
-        {/* ── Fields ────────────────────────────────────────────── */}
+        {/* Fields */}
         <section className="space-y-4">
 
           {/* Icon + Name combined row */}
@@ -274,7 +274,7 @@ function LocationTypeDetail({
                 <input
                   value={iconSearch}
                   onChange={(e) => setIconSearch(e.target.value)}
-                  placeholder="Search icons…"
+                  placeholder="Search icons..."
                   className="w-full bg-surface-container-low border-0 border-b border-outline-variant/20 focus:border-primary py-1.5 px-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/30 transition-colors"
                   autoFocus
                 />
@@ -311,7 +311,7 @@ function LocationTypeDetail({
           </div>
         </section>
 
-        {/* ── Can be child of ──────────────────────────────────── */}
+        {/* Can be child of */}
         <RelationSection
           title="Can be child of"
           icon="arrow_upward"
@@ -325,7 +325,7 @@ function LocationTypeDetail({
           setAddSearch={setAddChildOfSearch}
         />
 
-        {/* ── Can contain ──────────────────────────────────────── */}
+        {/* Can contain */}
         <RelationSection
           title="Can contain"
           icon="arrow_downward"
@@ -344,7 +344,7 @@ function LocationTypeDetail({
   );
 }
 
-// ── New type form ─────────────────────────────────────────────────────────────
+// -- New type form ------------------------------------------------------------
 
 interface NewTypeFormProps {
   saveType: ReturnType<typeof useSaveLocationType>;
@@ -375,7 +375,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* Top bar */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-2 px-6 py-3.5 border-b border-outline-variant/10 bg-surface-container-lowest">
+      <div className="flex-shrink-0 flex items-center justify-end gap-2 px-6 py-3.5 border-b border-outline-variant/10">
         <button onClick={onCancel} className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-outline-variant/40 transition-colors">
           Cancel
         </button>
@@ -426,7 +426,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
               <input
                 value={iconSearch}
                 onChange={(e) => setIconSearch(e.target.value)}
-                placeholder="Search icons…"
+                placeholder="Search icons..."
                 className="w-full bg-surface-container-low border-0 border-b border-outline-variant/20 focus:border-primary py-1.5 px-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/30 transition-colors"
                 autoFocus
               />
@@ -468,7 +468,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
   );
 }
 
-// ── Type row (left panel) ─────────────────────────────────────────────────────
+// -- Type row (left panel) ----------------------------------------------------
 
 function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: boolean; onSelect: () => void }) {
   return (
@@ -504,7 +504,7 @@ function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: bo
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ---------------------------------------------------------------------
 
 export default function LocationTypesPage() {
   const { id: campaignId } = useParams<{ id: string }>();
@@ -541,9 +541,9 @@ export default function LocationTypesPage() {
   return (
     <>
     <SectionBackground />
-    <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+    <main className="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
       {/* Campaign name */}
-      <div className="flex justify-center pt-0 pb-4 flex-shrink-0">
+      <div className="flex justify-center pt-0 pb-8">
         <Link
           to={`/campaigns/${campaignId}`}
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
@@ -553,112 +553,116 @@ export default function LocationTypesPage() {
         </Link>
       </div>
 
-      {/* Sticky header */}
-      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Location Types</h1>
-            <p className="text-on-surface-variant text-sm mt-1">
-              Define which location types exist and how they relate to each other.
-            </p>
-          </div>
-          <button
-            onClick={() => { setShowNew(true); setSelectedId(null); }}
-            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity flex-shrink-0"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            <span className="font-label text-xs uppercase tracking-widest">Add Type</span>
-          </button>
-        </div>
-      </header>
+      {/* Content -- single max-width container */}
+      <div className="px-4 sm:px-8 max-w-7xl mx-auto w-full space-y-8 pb-20">
 
-      {isLoading ? (
-        <div className="flex items-center gap-3 p-12 text-on-surface-variant">
-          <span className="material-symbols-outlined animate-spin">progress_activity</span>
-          Loading…
-        </div>
-      ) : (
-        <div className="flex flex-1 overflow-hidden min-h-0">
-
-          {/* Left panel — list */}
-          <div className="w-[320px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
-
-            {/* Search */}
-            <div className="px-3 py-2.5 border-b border-outline-variant/10 flex-shrink-0">
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
-                <input
-                  type="text"
-                  placeholder="Search types…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-surface-container border-0 border-b border-outline-variant/20 focus:ring-0 focus:border-primary text-on-surface text-sm placeholder:text-on-surface-variant/30 transition-colors"
-                />
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {filtered.length === 0 && (
-                <EmptyState icon="account_tree" title={search.trim() ? "No types match." : "No location types yet."} subtitle={search.trim() ? undefined : "Create your first location type to get started."} />
-              )}
-              {search.trim() ? (
-                // Flat list when searching
-                filtered.map((t) => <TypeRow key={t.id} t={t} isActive={!showNew && selected?.id === t.id} onSelect={() => { setSelectedId(t.id); setShowNew(false); }} />)
-              ) : (
-                // Grouped by category
-                CATEGORY_ORDER.map((cat) => {
-                  const group = filtered.filter((t) => t.category === cat);
-                  if (group.length === 0) return null;
-                  const meta = CATEGORIES.find((c) => c.value === cat)!;
-                  return (
-                    <div key={cat}>
-                      <div className="flex items-center gap-2 px-4 pt-4 pb-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${meta.dot}`} />
-                        <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/35">
-                          {meta.label}
-                        </span>
-                      </div>
-                      {group.map((t) => <TypeRow key={t.id} t={t} isActive={!showNew && selected?.id === t.id} onSelect={() => { setSelectedId(t.id); setShowNew(false); }} />)}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-            <div className="px-4 py-2 border-t border-outline-variant/10 flex-shrink-0">
-              <p className="text-[10px] text-on-surface-variant/40">
-                <span className="text-primary font-bold">{sorted.length}</span> types
+        {/* Header card */}
+        <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+            <div>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">Location Types</h1>
+              <p className="text-on-surface-variant text-sm mt-1">
+                Define which location types exist and how they relate to each other.
               </p>
             </div>
-          </div>
-
-          {/* Right panel — detail / new form */}
-          <div className="flex-1 overflow-hidden relative">
-            {showNew ? (
-              <NewTypeForm
-                saveType={saveType}
-                onCreated={(id) => { setSelectedId(id); setShowNew(false); }}
-                onCancel={() => setShowNew(false)}
-              />
-            ) : selected ? (
-              <LocationTypeDetail
-                key={selected.id}
-                entry={selected}
-                allTypes={types ?? []}
-                containRules={containRules ?? []}
-                saveType={saveType}
-                deleteType={deleteType}
-                saveContain={saveContain}
-                deleteContain={delContain}
-                onDeleted={() => setSelectedId(null)}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-on-surface-variant/30 text-sm italic">
-                Select a location type
-              </div>
-            )}
+            <button
+              onClick={() => { setShowNew(true); setSelectedId(null); }}
+              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity flex-shrink-0"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="font-label text-xs uppercase tracking-widest">Add Type</span>
+            </button>
           </div>
         </div>
-      )}
+
+        {isLoading ? (
+          <div className="flex items-center gap-3 p-12 text-on-surface-variant">
+            <span className="material-symbols-outlined animate-spin">progress_activity</span>
+            Loading...
+          </div>
+        ) : (
+          <div className="flex flex-col md:flex-row gap-8 min-h-[480px]">
+
+            {/* Left panel -- type list card */}
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm flex flex-col w-full md:w-[320px] md:flex-shrink-0 overflow-hidden">
+
+              {/* Search */}
+              <div className="px-3 py-2.5 border-b border-outline-variant/10 flex-shrink-0">
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
+                  <input
+                    type="text"
+                    placeholder="Search types..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-surface-container-high border border-outline-variant/20 rounded-sm focus:ring-0 focus:border-primary text-on-surface text-sm placeholder:text-on-surface-variant/30 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
+                {filtered.length === 0 && (
+                  <EmptyState icon="account_tree" title={search.trim() ? "No types match." : "No location types yet."} subtitle={search.trim() ? undefined : "Create your first location type to get started."} />
+                )}
+                {search.trim() ? (
+                  // Flat list when searching
+                  filtered.map((t) => <TypeRow key={t.id} t={t} isActive={!showNew && selected?.id === t.id} onSelect={() => { setSelectedId(t.id); setShowNew(false); }} />)
+                ) : (
+                  // Grouped by category
+                  CATEGORY_ORDER.map((cat) => {
+                    const group = filtered.filter((t) => t.category === cat);
+                    if (group.length === 0) return null;
+                    const meta = CATEGORIES.find((c) => c.value === cat)!;
+                    return (
+                      <div key={cat}>
+                        <div className="flex items-center gap-2 px-4 pt-4 pb-1.5">
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${meta.dot}`} />
+                          <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/35">
+                            {meta.label}
+                          </span>
+                        </div>
+                        {group.map((t) => <TypeRow key={t.id} t={t} isActive={!showNew && selected?.id === t.id} onSelect={() => { setSelectedId(t.id); setShowNew(false); }} />)}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              <div className="px-4 py-2 border-t border-outline-variant/10 flex-shrink-0">
+                <p className="text-[10px] text-on-surface-variant/40">
+                  <span className="text-primary font-bold">{sorted.length}</span> types
+                </p>
+              </div>
+            </div>
+
+            {/* Right panel -- detail / new form card */}
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm flex-1 overflow-hidden min-h-[400px]">
+              {showNew ? (
+                <NewTypeForm
+                  saveType={saveType}
+                  onCreated={(id) => { setSelectedId(id); setShowNew(false); }}
+                  onCancel={() => setShowNew(false)}
+                />
+              ) : selected ? (
+                <LocationTypeDetail
+                  key={selected.id}
+                  entry={selected}
+                  allTypes={types ?? []}
+                  containRules={containRules ?? []}
+                  saveType={saveType}
+                  deleteType={deleteType}
+                  saveContain={saveContain}
+                  deleteContain={delContain}
+                  onDeleted={() => setSelectedId(null)}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-on-surface-variant/30 text-sm italic">
+                  Select a location type
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </main>
     </>
   );

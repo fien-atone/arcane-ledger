@@ -90,7 +90,7 @@ export default function NpcListPage() {
       </div>
 
       {/* Content — single max-width container */}
-      <div className="px-4 sm:px-8 max-w-5xl mx-auto w-full">
+      <div className="px-4 sm:px-8 max-w-5xl mx-auto w-full pb-20">
         {/* Header card */}
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex justify-between items-start mb-8">

@@ -986,109 +986,145 @@ export default function LocationDetailPage() {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
-        <div className="flex flex-col lg:flex-row gap-16">
 
-          {/* ── Left column (65%) ──────────────────────────────── */}
-          <div className="lg:w-[65%] space-y-12">
-
-            {/* Header */}
-            <header className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                {locationTypesEnabled && (() => {
-                  const te = typeMap.get(location.type);
-                  return (
-                    <span className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-label tracking-widest uppercase rounded-sm border ${
-                      te ? CATEGORY_BADGE_CLS[te.category] : 'bg-surface-container text-on-surface-variant border-outline-variant/10'
-                    }`}>
-                      <span className="material-symbols-outlined text-[14px]">
-                        {te?.icon ?? 'location_on'}
-                      </span>
-                      {te?.name ?? location.type}
+        {/* ── Header card (full width) ── */}
+        <section className="relative bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8 mb-8">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              {locationTypesEnabled && (() => {
+                const te = typeMap.get(location.type);
+                return (
+                  <span className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-label tracking-widest uppercase rounded-sm border ${
+                    te ? CATEGORY_BADGE_CLS[te.category] : 'bg-surface-container text-on-surface-variant border-outline-variant/10'
+                  }`}>
+                    <span className="material-symbols-outlined text-[14px]">
+                      {te?.icon ?? 'location_on'}
                     </span>
-                  );
-                })()}
-                {location.settlementPopulation != null && (
-                  <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/20">
-                    <span className="material-symbols-outlined text-[13px]">people</span>
-                    {location.settlementPopulation.toLocaleString()}
+                    {te?.name ?? location.type}
                   </span>
-                )}
-                {locationTypesEnabled && location.biome && (
-                  <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/20">
-                    <span className="material-symbols-outlined text-[13px]">terrain</span>
-                    {location.biome.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                  </span>
-                )}
-              </div>
-              <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
-                {location.name}
-              </h1>
-            </header>
+                );
+              })()}
+              {location.settlementPopulation != null && (
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-[13px]">people</span>
+                  {location.settlementPopulation.toLocaleString()}
+                </span>
+              )}
+              {locationTypesEnabled && location.biome && (
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-[13px]">terrain</span>
+                  {location.biome.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                </span>
+              )}
+            </div>
+            <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface leading-tight">
+              {location.name}
+            </h1>
+          </div>
+          {isGm && (
+            <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                  <button onClick={() => deleteLocation.mutate(location.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/locations`) })}
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)}
+                  className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
+              <button
+                onClick={() => setEditOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">edit</span>
+                Edit
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* ── Two-column layout ── */}
+        <div className="flex flex-col md:flex-row gap-8 min-w-0">
+
+          {/* ── Left column ──────────────────────────────── */}
+          <div className="flex-1 min-w-0 space-y-8">
 
             {/* Description */}
-            <InlineRichField
-              label="Description"
-              value={location.description}
-              onSave={(html) => saveMutation.mutate({ ...location, description: html })}
-              placeholder="Describe this location…"
-              readOnly={!isGm}
-            />
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField
+                label="Description"
+                value={location.description}
+                onSave={(html) => saveMutation.mutate({ ...location, description: html })}
+                placeholder="Describe this location…"
+                readOnly={!isGm}
+              />
+            </div>
 
             {/* GM Notes */}
             {isGm && (
-              <InlineRichField
-                label="GM Notes"
-                value={location.gmNotes}
-                onSave={(html) => saveMutation.mutate({ ...location, gmNotes: html || undefined })}
-                isGmNotes
-              />
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField
+                  label="GM Notes"
+                  value={location.gmNotes}
+                  onSave={(html) => saveMutation.mutate({ ...location, gmNotes: html || undefined })}
+                  isGmNotes
+                />
+              </div>
             )}
 
             {/* Adjacent / Reachable */}
             {adjacentLocations && adjacentLocations.length > 0 && (
-              <section className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                    Adjacent / Reachable
-                  </h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {adjacentLocations.map((adj) => (
-                    <Link
-                      key={adj.id}
-                      to={`/campaigns/${campaignId}/locations/${adj.id}`}
-                      className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
-                    >
-                      <span className={`material-symbols-outlined text-[18px] ${
-                        (() => { const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined; return te ? '' : 'text-on-surface-variant/40'; })()
-                      }`} style={(() => { const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined; return te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined; })()}>
-                        {(locationTypesEnabled ? typeMap.get(adj.type)?.icon : undefined) ?? 'location_on'}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-headline text-on-surface group-hover:text-secondary transition-colors truncate">
-                          {adj.name}
-                        </p>
-                        {locationTypesEnabled && (
-                          <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
-                            {typeMap.get(adj.type)?.name ?? adj.type}
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <section className="space-y-4">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
+                      Adjacent / Reachable
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {adjacentLocations.map((adj) => (
+                      <Link
+                        key={adj.id}
+                        to={`/campaigns/${campaignId}/locations/${adj.id}`}
+                        className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all min-w-0"
+                      >
+                        <span className={`material-symbols-outlined text-[18px] ${
+                          (() => { const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined; return te ? '' : 'text-on-surface-variant/40'; })()
+                        }`} style={(() => { const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined; return te ? { color: CATEGORY_HEX_COLOR[te.category] } : undefined; })()}>
+                          {(locationTypesEnabled ? typeMap.get(adj.type)?.icon : undefined) ?? 'location_on'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-headline text-on-surface group-hover:text-secondary transition-colors truncate">
+                            {adj.name}
                           </p>
-                        )}
-                      </div>
-                      <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-secondary/60 opacity-0 group-hover:opacity-100 transition-opacity">
-                        arrow_forward
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
+                          {locationTypesEnabled && (
+                            <p className="text-[10px] uppercase tracking-wider text-on-surface-variant/40">
+                              {typeMap.get(adj.type)?.name ?? adj.type}
+                            </p>
+                          )}
+                        </div>
+                        <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-secondary/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                          arrow_forward
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              </div>
             )}
 
             {/* NPCs Here */}
             {npcsEnabled && (
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
             <section className="space-y-4">
-              <div className="flex items-center gap-4">
-                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+              <div className="flex items-center gap-4 min-w-0">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
                   NPCs Here
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
@@ -1280,13 +1316,15 @@ export default function LocationDetailPage() {
                 </div>
               ) : null}
             </section>
+            </div>
             )}
 
             {/* Session Appearances */}
             {sessionsEnabled && (
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
             <section className="space-y-4">
-              <div className="flex items-center gap-4">
-                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+              <div className="flex items-center gap-4 min-w-0">
+                <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
                   Session Appearances
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
@@ -1301,7 +1339,7 @@ export default function LocationDetailPage() {
                     <Link
                       key={session.id}
                       to={`/campaigns/${campaignId}/sessions/${session.id}`}
-                      className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all"
+                      className="group flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container border border-outline-variant/10 transition-all min-w-0"
                     >
                       <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors text-[18px]">
                         auto_stories
@@ -1317,40 +1355,15 @@ export default function LocationDetailPage() {
                 </div>
               )}
             </section>
+            </div>
             )}
           </div>
 
-          {/* ── Right column (35%) ──────────────────────────────── */}
-          <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
-
-            {/* Actions (GM only) */}
-            {isGm && (
-              <div className="flex justify-end gap-2">
-                {confirmDelete ? (
-                  <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                    <span className="text-[10px] text-on-surface-variant">Delete this location?</span>
-                    <button onClick={() => deleteLocation.mutate(location.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/locations`) })}
-                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                    <button onClick={() => setConfirmDelete(false)}
-                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setConfirmDelete(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
-                    <span className="material-symbols-outlined text-sm">delete</span>
-                  </button>
-                )}
-                <button
-                  onClick={() => setEditOpen(true)}
-                  className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors"
-                >
-                  <span className="material-symbols-outlined text-sm">edit</span>
-                  Edit Location
-                </button>
-              </div>
-            )}
+          {/* ── Right column ──────────────────────────────── */}
+          <div className="md:w-[40%] lg:w-[35%] min-w-0 space-y-8 self-start">
 
             {/* Image / Map */}
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
             <LocationPlaceholder
               name={location.name}
               imageUrl={resolveImageUrl(location.image, imgVersion)}
@@ -1360,10 +1373,11 @@ export default function LocationDetailPage() {
               onUpload={isGm ? handleImageUpload : undefined}
               onOpenMap={() => setMapOpen(true)}
             />
+            </div>
 
             {/* Parent location */}
             {parentLocation && (
-              <div>
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-3">
                   Part of
                 </h4>
@@ -1402,7 +1416,7 @@ export default function LocationDetailPage() {
 
             {/* Mini-map: this location's marker on the parent's map */}
             {parentLocation && parentLocation.image && parentMarker && (
-              <div>
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-2 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[13px] text-primary">my_location</span>
                   On the map of {parentLocation.name}
@@ -1432,9 +1446,9 @@ export default function LocationDetailPage() {
             )}
 
             {/* Notable Places — child locations */}
-            <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant whitespace-nowrap">
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <div className="flex items-center gap-3 mb-3 min-w-0">
+                  <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
                     Notable Places
                   </h4>
                   <div className="h-px flex-1 bg-outline-variant/10" />
@@ -1511,31 +1525,33 @@ export default function LocationDetailPage() {
 
             {/* Player Visibility */}
             {isGm && location && (
-              <VisibilityPanel
-                playerVisible={location.playerVisible ?? false}
-                playerVisibleFields={location.playerVisibleFields ?? []}
-                fields={LOCATION_VISIBILITY_FIELDS}
-                basicPreset={LOCATION_BASIC_PRESET}
-                autoVisibleLabels={['Type']}
-                onToggleVisible={(v) => setLocationVisibility.mutate({
-                  campaignId: campaignId!, id: location.id,
-                  playerVisible: v, playerVisibleFields: location.playerVisibleFields ?? [],
-                })}
-                onToggleField={(f, on) => {
-                  const fields = on
-                    ? [...(location.playerVisibleFields ?? []), f]
-                    : (location.playerVisibleFields ?? []).filter((x) => x !== f);
-                  setLocationVisibility.mutate({
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <VisibilityPanel
+                  playerVisible={location.playerVisible ?? false}
+                  playerVisibleFields={location.playerVisibleFields ?? []}
+                  fields={LOCATION_VISIBILITY_FIELDS}
+                  basicPreset={LOCATION_BASIC_PRESET}
+                  autoVisibleLabels={['Type']}
+                  onToggleVisible={(v) => setLocationVisibility.mutate({
+                    campaignId: campaignId!, id: location.id,
+                    playerVisible: v, playerVisibleFields: location.playerVisibleFields ?? [],
+                  })}
+                  onToggleField={(f, on) => {
+                    const fields = on
+                      ? [...(location.playerVisibleFields ?? []), f]
+                      : (location.playerVisibleFields ?? []).filter((x) => x !== f);
+                    setLocationVisibility.mutate({
+                      campaignId: campaignId!, id: location.id,
+                      playerVisible: location.playerVisible ?? false, playerVisibleFields: fields,
+                    });
+                  }}
+                  onSetPreset={(fields) => setLocationVisibility.mutate({
                     campaignId: campaignId!, id: location.id,
                     playerVisible: location.playerVisible ?? false, playerVisibleFields: fields,
-                  });
-                }}
-                onSetPreset={(fields) => setLocationVisibility.mutate({
-                  campaignId: campaignId!, id: location.id,
-                  playerVisible: location.playerVisible ?? false, playerVisibleFields: fields,
-                })}
-                isPending={setLocationVisibility.isPending}
-              />
+                  })}
+                  isPending={setLocationVisibility.isPending}
+                />
+              </div>
             )}
 
           </div>

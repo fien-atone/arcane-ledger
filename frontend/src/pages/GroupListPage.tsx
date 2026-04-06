@@ -1,71 +1,15 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useGroups, useSetGroupVisibility } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
-import { useNpcs } from '@/features/npcs/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
-import { RichContent, EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
-import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
-import type { Group } from '@/entities/group';
+import { EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 function resolveType(typeId: string, groupTypes: GroupTypeEntry[] | undefined): { name: string; icon: string } {
   const found = groupTypes?.find((t) => t.id === typeId);
   return found ? { name: found.name, icon: found.icon } : { name: typeId, icon: 'category' };
-}
-
-function GroupPreview({ group, memberCount, groupTypes, typesEnabled }: {
-  group: Group; memberCount: number; groupTypes: GroupTypeEntry[] | undefined; typesEnabled: boolean;
-}) {
-  const tc = resolveType(group.type, groupTypes);
-  return (
-    <div className="flex flex-col h-full overflow-y-auto">
-      <div className="px-8 py-6 flex flex-col gap-5">
-        <div>
-          {typesEnabled && (
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/20 rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                <span className="material-symbols-outlined text-[13px]">{tc.icon}</span>
-                {tc.name}
-              </span>
-            </div>
-          )}
-          <h2 className="font-headline text-3xl font-bold text-on-surface tracking-tight">{group.name}</h2>
-          {group.aliases.length > 0 && (
-            <p className="text-xs text-on-surface-variant/40 italic mt-0.5">{group.aliases.join(', ')}</p>
-          )}
-        </div>
-
-        {group.description && (
-          <div>
-            <div className="flex items-center gap-4 mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">About</h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <RichContent value={group.description} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
-          </div>
-        )}
-
-        {group.goals && (
-          <div>
-            <div className="flex items-center gap-4 mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">Goals</h3>
-              <div className="h-px flex-1 bg-outline-variant/20" />
-            </div>
-            <RichContent value={group.goals} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:italic" />
-          </div>
-        )}
-
-        <div className="flex items-center gap-4 text-xs text-on-surface-variant/60">
-          <span className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[14px]">group</span>
-            <span className="font-bold text-on-surface">{memberCount}</span> members
-          </span>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function GroupListPage() {
@@ -74,44 +18,38 @@ export default function GroupListPage() {
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
-  const { data: allNpcs } = useNpcs(campaignId ?? '');
   const { data: groupTypes } = useGroupTypes(campaignId);
 
   const setGroupVisibility = useSetGroupVisibility();
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const debouncedSearch = useDebouncedValue(search);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') ?? '';
+  const typeFilter = searchParams.get('type') ?? 'all';
 
   const { data: groups, isLoading, isError } = useGroups(campaignId ?? '', {
-    search: debouncedSearch,
+    search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
   });
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
-  const [editingGroup, setEditingGroup] = useState<Group | undefined>(undefined);
-  const [editOpen, setEditOpen] = useState(false);
-
-  const selected = groups?.find((g) => g.id === selectedId) ?? groups?.[0] ?? null;
 
   if (!groupsEnabled) {
     return <SectionDisabled campaignId={campaignId ?? ''} />;
   }
-
-  const getMemberCount = (groupId: string) =>
-    (allNpcs?.filter((n) => n.groupMemberships.some((m) => m.groupId === groupId)).length ?? 0);
 
   const typeFilterItems: Array<{ value: string; label: string }> = groupTypesEnabled ? [
     { value: 'all', label: 'All' },
     ...(groupTypes ?? []).map((t) => ({ value: t.id, label: t.name })),
   ] : [];
 
+  const filtered = useMemo(() => groups ?? [], [groups]);
+
   return (
     <>
     <SectionBackground />
-    <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+    <main className="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
       {/* Campaign name */}
-      <div className="flex justify-center pt-0 pb-4 flex-shrink-0">
+      <div className="flex justify-center pt-0 pb-8">
         <Link
           to={`/campaigns/${campaignId}`}
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
@@ -121,50 +59,45 @@ export default function GroupListPage() {
         </Link>
       </div>
 
-      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Groups</h1>
-            <p className="text-on-surface-variant text-sm mt-1">Factions, guilds, families, and other social structures.</p>
+      {/* Content -- single max-width container */}
+      <div className="px-4 sm:px-8 max-w-5xl mx-auto w-full pb-20">
+        {/* Header card */}
+        <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">Groups</h1>
+              <p className="text-on-surface-variant text-sm mt-1">Factions, guilds, families, and other social structures.</p>
+            </div>
+            {isGm && (
+              <button
+                onClick={() => setAddOpen(true)}
+                className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+              >
+                <span className="material-symbols-outlined text-[20px]">add</span>
+                <span className="font-label text-xs uppercase tracking-widest">Add Group</span>
+              </button>
+            )}
           </div>
-          {isGm && (
-            <button
-              onClick={() => { setEditingGroup(undefined); setAddOpen(true); }}
-              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              <span className="font-label text-xs uppercase tracking-widest">Add Group</span>
-            </button>
-          )}
-        </div>
-      </header>
 
-      {isLoading && !groups && (
-        <div className="flex items-center gap-3 p-12 text-on-surface-variant">
-          <span className="material-symbols-outlined animate-spin">progress_activity</span>
-          Loading…
-        </div>
-      )}
-      {isError && <p className="text-tertiary text-sm p-12">Failed to load groups.</p>}
-
-      {!isError && (groups || !isLoading) && (
-        <div className="flex flex-1 overflow-hidden min-h-0">
-
-          {/* Left panel */}
-          <div className="w-[580px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
-
-            <div className="px-4 pt-4 pb-3 border-b border-outline-variant/10 flex-shrink-0 space-y-3">
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
-                <input
-                  type="text"
-                  placeholder="Search groups…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 bg-surface-container border-0 border-b border-outline-variant/20 focus:ring-0 focus:border-primary text-on-surface text-xs placeholder:text-on-surface-variant/30 transition-colors"
-                />
-              </div>
-
+          {/* Search + filters */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchParams(prev => {
+                    if (val) prev.set('q', val); else prev.delete('q');
+                    return prev;
+                  }, { replace: true });
+                }}
+                className="w-full pl-9 pr-3 py-1.5 bg-surface-container-high border border-outline-variant/20 rounded-sm focus:ring-0 focus:border-primary text-on-surface text-xs placeholder:text-on-surface-variant/30 transition-colors"
+              />
+            </div>
+            {typeFilterItems.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {typeFilterItems.map(({ value, label }) => {
                   const count = value === 'all'
@@ -173,9 +106,14 @@ export default function GroupListPage() {
                   return (
                     <button
                       key={value}
-                      onClick={() => setTypeFilter(value)}
+                      onClick={() => {
+                        setSearchParams(prev => {
+                          if (value === 'all') prev.delete('type'); else prev.set('type', value);
+                          return prev;
+                        }, { replace: true });
+                      }}
                       className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
-                        typeFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                        typeFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
                       }`}
                     >
                       {label} <span className={typeFilter === value ? 'text-on-primary/70' : 'text-on-surface-variant/40'}>{count}</span>
@@ -183,103 +121,90 @@ export default function GroupListPage() {
                   );
                 })}
               </div>
-            </div>
+            )}
+            <span className="ml-auto text-[10px] text-on-surface-variant/40">
+              <span className="text-on-surface font-bold">{filtered.length}</span> of <span className="text-primary font-bold">{groups?.length ?? 0}</span>
+            </span>
+          </div>
+        </div>
 
-            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {(!groups || groups.length === 0) ? (
-                <EmptyState icon="groups" title="No groups found." />
-              ) : groups.map((g) => {
+        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading…</div>}
+        {isError && <p className="text-tertiary text-sm p-12">Failed to load groups.</p>}
+
+        {!isLoading && !isError && (
+          filtered.length === 0 ? (
+            <EmptyState icon="groups" title="No groups found." subtitle="Create your first group to get started." />
+          ) : (
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm divide-y divide-outline-variant/10">
+              {/* Column headers */}
+              <div className="flex items-center gap-3 px-6 py-2 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
+                <span className="w-9 flex-shrink-0" />
+                <span className="flex-1 min-w-0">Name</span>
+                {groupTypesEnabled && <span className="w-28 flex-shrink-0 hidden lg:block">Type</span>}
+                {isGm && <span className="w-8 flex-shrink-0" />}
+              </div>
+              {filtered.map((g) => {
                 const tc = resolveType(g.type, groupTypes);
-                const isSelected = selected?.id === g.id;
                 return (
-                  <button
+                  <Link
                     key={g.id}
-                    type="button"
-                    onClick={() => setSelectedId(g.id)}
-                    className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
-                      isSelected
-                        ? 'bg-primary/8 border-l-2 border-l-primary'
-                        : 'border-l-2 border-l-transparent hover:bg-surface-container-high hover:border-l-primary/30'
-                    }`}
+                    to={`/campaigns/${campaignId}/groups/${g.id}`}
+                    className="group flex items-center px-6 py-2.5 hover:bg-surface-container-high transition-colors"
                   >
-                    <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border ${isSelected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
-                      <span className={`material-symbols-outlined text-[18px] ${isSelected ? 'text-primary' : 'text-on-surface-variant/50'}`}>
-                        {tc.icon ?? 'category'}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>
-                        {g.name}
-                      </p>
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-9 h-9 rounded-sm border border-outline-variant/20 flex-shrink-0 overflow-hidden bg-surface-container-highest flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[16px] text-on-surface-variant/50">{tc.icon}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">{g.name}</p>
+                        {groupTypesEnabled && (
+                          <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5 truncate lg:hidden">
+                            {tc.name}
+                          </p>
+                        )}
+                      </div>
                       {groupTypesEnabled && (
-                        <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>
+                        <span className="w-28 flex-shrink-0 text-xs text-on-surface-variant/60 truncate hidden lg:block">
                           {tc.name}
-                        </p>
+                        </span>
+                      )}
+                      {isGm && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setGroupVisibility.mutate({
+                              campaignId: campaignId!,
+                              id: g.id,
+                              playerVisible: !g.playerVisible,
+                              playerVisibleFields: g.playerVisibleFields ?? [],
+                            });
+                          }}
+                          title={g.playerVisible ? 'Visible to players' : 'Hidden from players'}
+                          className={`w-8 flex-shrink-0 flex items-center justify-center transition-colors ${
+                            g.playerVisible ? 'text-primary/60 hover:text-primary' : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {g.playerVisible ? 'visibility' : 'visibility_off'}
+                          </span>
+                        </button>
                       )}
                     </div>
-                    {isGm && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setGroupVisibility.mutate({
-                            campaignId: campaignId!,
-                            id: g.id,
-                            playerVisible: !g.playerVisible,
-                            playerVisibleFields: g.playerVisibleFields ?? [],
-                          });
-                        }}
-                        title={g.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
-                        className={`flex-shrink-0 p-1 transition-colors ${
-                          g.playerVisible
-                            ? 'text-primary/60 hover:text-primary'
-                            : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {g.playerVisible ? 'visibility' : 'visibility_off'}
-                        </span>
-                      </button>
-                    )}
-                  </button>
+                  </Link>
                 );
               })}
             </div>
-          </div>
-
-          {/* Right panel */}
-          <div className="flex-1 overflow-hidden relative">
-            {selected ? (
-              <>
-                <GroupPreview
-                  group={selected}
-                  memberCount={getMemberCount(selected.id)}
-                  groupTypes={groupTypes}
-                  typesEnabled={groupTypesEnabled}
-                />
-                <Link
-                  to={`/campaigns/${campaignId}/groups/${selected.id}`}
-                  className="absolute top-3 right-4 z-20 inline-flex items-center gap-1.5 px-3 py-2 bg-surface/80 backdrop-blur-sm border border-outline-variant/20 text-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[14px]">open_in_full</span>
-                  Open full page
-                </Link>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full text-on-surface-variant/30 text-sm italic">
-                Select a group
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+          )
+        )}
+      </div>{/* end max-w-5xl container */}
 
     </main>
 
     <GroupEditDrawer
-      open={addOpen || editOpen}
-      onClose={() => { setAddOpen(false); setEditOpen(false); }}
+      open={addOpen}
+      onClose={() => setAddOpen(false)}
       campaignId={campaignId ?? ''}
-      group={editingGroup}
     />
     </>
   );

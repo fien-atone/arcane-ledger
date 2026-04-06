@@ -44,14 +44,14 @@ function SessionCalendar({ sessions, campaignId }: { sessions: { id: string; num
   const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
 
   return (
-    <section>
+    <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
       <div className="flex items-center gap-4 mb-4">
         <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
           Calendar
         </h2>
         <div className="h-px flex-1 bg-outline-variant/20" />
       </div>
-      <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-4 space-y-3">
+      <div className="space-y-3">
         {/* Month nav */}
         <div className="flex items-center justify-between">
           <button type="button" onClick={prevMonth} className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors">
@@ -199,21 +199,30 @@ export default function CampaignDashboardPage() {
     <>
     <SectionBackground />
     <div className="flex-1 min-h-screen overflow-y-auto relative z-10">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 py-10 pb-20">
+      <div className="flex justify-center pt-0 pb-8">
+        <Link
+          to="/campaigns"
+          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          {campaign?.title ?? 'Campaign'}
+        </Link>
+      </div>
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
 
         {/* Campaign header */}
-        <header className="mb-8">
+        <header className="relative bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           {isGm && (
-          <div className="flex items-center justify-end gap-2 mb-2">
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
             <button
               onClick={() => setSectionsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant/40 text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-primary/30 hover:text-primary transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-primary/30 hover:text-primary transition-colors"
             >
               <span className="material-symbols-outlined text-[14px]">settings</span>
               Sections
             </button>
             {confirmArchive ? (
-              <div className="flex items-center gap-2 px-3 py-2 border border-outline-variant/20 bg-surface-container rounded-sm">
+              <div className="flex items-center gap-2 px-3 py-2 border border-outline-variant/20 bg-surface-container-high rounded-sm">
                 <span className="text-[10px] text-on-surface-variant">
                   {campaign.archivedAt ? 'Restore this campaign?' : 'Archive this campaign?'}
                 </span>
@@ -239,7 +248,7 @@ export default function CampaignDashboardPage() {
             ) : (
               <button
                 onClick={() => setConfirmArchive(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant/40 text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-outline-variant/40 hover:text-on-surface-variant transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-outline-variant/40 hover:text-on-surface transition-colors"
               >
                 <span className="material-symbols-outlined text-[14px]">
                   {campaign.archivedAt ? 'unarchive' : 'archive'}
@@ -277,7 +286,7 @@ export default function CampaignDashboardPage() {
               </button>
               <button
                 onClick={() => setEditingTitle(false)}
-                className="p-2 text-on-surface-variant/40 hover:text-on-surface transition-colors"
+                className="p-2 text-on-surface-variant hover:text-on-surface transition-colors"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
@@ -301,29 +310,29 @@ export default function CampaignDashboardPage() {
               label=""
               value={campaign.description}
               onSave={saveDescription}
-              placeholder="Campaign description…"
+              placeholder="Campaign description..."
             />
           </div>
-        </header>
 
-        {/* Quick Nav */}
-        {quickNavItems.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8 pb-8 border-b border-outline-variant/10">
-            {quickNavItems.map(({ label, count, sub, icon, to }) => (
-              <Link
-                key={to}
-                to={`/campaigns/${campaignId}/${to}`}
-                className="group flex items-center gap-3 p-4 bg-primary/5 border border-primary/10 hover:border-primary/30 hover:bg-primary/8 rounded-sm transition-colors"
-              >
-                <span className="material-symbols-outlined text-primary/30 group-hover:text-primary/60 transition-colors text-xl">{icon}</span>
-                <div>
-                  {count && <p className="text-xl font-bold text-primary leading-none">{count}</p>}
-                  <p className={`text-[9px] font-label uppercase tracking-widest text-primary/50 ${!count ? 'text-[10px]' : ''}`}>{label}{sub && <span className="text-primary/30 ml-1">{sub}</span>}</p>
-                </div>
-              </Link>
-            ))}
+          {/* Quick Nav */}
+          {quickNavItems.length > 0 && (
+            <div className="border-t border-outline-variant/10 pt-5 mt-5">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2 justify-items-center">
+                {quickNavItems.map(({ label, count, icon, to }) => (
+                  <Link
+                    key={to}
+                    to={`/campaigns/${campaignId}/${to}`}
+                    className="group flex flex-col items-center gap-1.5 w-full py-3 px-2 bg-surface-container-high border border-outline-variant/15 hover:border-primary/30 hover:bg-surface-container-highest rounded-sm transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-primary/60 group-hover:text-primary transition-colors text-[20px]">{icon}</span>
+                    <span className="text-[8px] font-label uppercase tracking-widest text-on-surface-variant group-hover:text-primary transition-colors text-center leading-tight">{label}</span>
+                    {count && <span className="text-xs font-bold text-primary">{count}</span>}
+                  </Link>
+              ))}
+            </div>
           </div>
-        )}
+          )}
+        </header>
 
         <div className="grid grid-cols-12 gap-8">
 
@@ -334,16 +343,24 @@ export default function CampaignDashboardPage() {
             {sectionOn('sessions') && (() => {
               if (!nextSession) {
                 return (
-                  <Link
-                    to={`/campaigns/${campaignId}/sessions`}
-                    className="group flex items-center gap-4 p-5 bg-surface-container-low border border-dashed border-outline-variant/20 hover:border-primary/30 rounded-sm transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-on-surface-variant/30 group-hover:text-primary transition-colors text-xl">add</span>
-                    <div className="flex-1">
-                      <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 group-hover:text-primary transition-colors">No upcoming session</p>
-                      <p className="text-sm text-on-surface-variant/40 group-hover:text-on-surface transition-colors">Schedule the next session →</p>
+                  <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                    <div className="flex items-center gap-4 mb-5">
+                      <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                        Next Session
+                      </h2>
+                      <div className="h-px flex-1 bg-outline-variant/20" />
                     </div>
-                  </Link>
+                    <Link
+                      to={`/campaigns/${campaignId}/sessions`}
+                      className="group flex items-center gap-4 p-5 bg-surface-container-high border border-dashed border-outline-variant/20 hover:border-primary/30 rounded-sm transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-on-surface-variant/50 group-hover:text-primary transition-colors text-xl">add</span>
+                      <div className="flex-1">
+                        <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant group-hover:text-primary transition-colors">No upcoming session</p>
+                        <p className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Schedule the next session</p>
+                      </div>
+                    </Link>
+                  </div>
                 );
               }
 
@@ -378,33 +395,41 @@ export default function CampaignDashboardPage() {
                 if (sessionDate) whenDetail = formatDate(nextSession.datetime);
               }
 
-              const bgCls = isToday ? 'bg-primary/8 border-primary/30 hover:bg-primary/12' : 'bg-secondary/5 border-secondary/20 hover:bg-secondary/10';
+              const accentCls = isToday ? 'border-l-primary' : 'border-l-secondary';
               const textCls = isToday ? 'text-primary' : 'text-secondary';
 
               return (
-                <Link
-                  to={`/campaigns/${campaignId}/sessions/${nextSession.id}`}
-                  className={`group flex items-center gap-4 p-5 border rounded-sm transition-colors ${bgCls}`}
-                >
-                  <span className={`material-symbols-outlined text-xl ${textCls}`}>
-                    {isToday ? 'notifications_active' : 'event'}
-                  </span>
-                  <div className="flex-1">
-                    <p className={`text-[10px] font-label uppercase tracking-widest font-bold ${textCls}`}>
-                      {whenLabel}
-                    </p>
-                    <p className={`text-sm text-on-surface group-hover:${textCls} transition-colors`}>
-                      #{String(nextSession.number).padStart(2, '0')} — {nextSession.title}
-                      {whenDetail && <span className="text-on-surface-variant/50 ml-2">{whenDetail}</span>}
-                    </p>
+                <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                  <div className="flex items-center gap-4 mb-5">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                      Next Session
+                    </h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
                   </div>
-                  <span className={`material-symbols-outlined ${textCls}/40 group-hover:${textCls} transition-colors`}>arrow_forward</span>
-                </Link>
+                  <Link
+                    to={`/campaigns/${campaignId}/sessions/${nextSession.id}`}
+                    className={`group flex items-center gap-4 p-5 bg-surface-container-high border border-outline-variant/15 border-l-2 ${accentCls} hover:border-outline-variant/30 rounded-sm transition-colors`}
+                  >
+                    <span className={`material-symbols-outlined text-xl ${textCls}`}>
+                      {isToday ? 'notifications_active' : 'event'}
+                    </span>
+                    <div className="flex-1">
+                      <p className={`text-[10px] font-label uppercase tracking-widest font-bold ${textCls}`}>
+                        {whenLabel}
+                      </p>
+                      <p className="text-sm text-on-surface group-hover:text-primary transition-colors">
+                        #{String(nextSession.number).padStart(2, '0')} — {nextSession.title}
+                        {whenDetail && <span className="text-on-surface-variant/50 ml-2">{whenDetail}</span>}
+                      </p>
+                    </div>
+                    <span className={`material-symbols-outlined ${textCls} opacity-40 group-hover:opacity-100 transition-all`}>arrow_forward</span>
+                  </Link>
+                </div>
               );
             })()}
 
             {/* Recent Sessions */}
-            {sectionOn('sessions') && <section>
+            {sectionOn('sessions') && <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <div className="flex items-center gap-4 mb-5">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
                   Recent Sessions
@@ -412,9 +437,9 @@ export default function CampaignDashboardPage() {
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 <Link
                   to={`/campaigns/${campaignId}/sessions`}
-                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors"
+                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  All sessions →
+                  All sessions
                 </Link>
               </div>
               {lastSessions.length > 0 ? (
@@ -423,7 +448,7 @@ export default function CampaignDashboardPage() {
                     <Link
                       key={session.id}
                       to={`/campaigns/${campaignId}/sessions/${session.id}`}
-                      className="group flex items-center gap-4 p-4 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
+                      className="group flex items-center gap-4 p-4 bg-surface-container-high border border-outline-variant/15 hover:border-primary/20 rounded-sm transition-colors"
                     >
                       <div className="w-10 h-10 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0 border border-outline-variant/15">
                         <span className="font-headline text-sm font-bold italic text-on-surface-variant/50">
@@ -451,7 +476,7 @@ export default function CampaignDashboardPage() {
             </section>}
 
             {/* Active Quests */}
-            {sectionOn('quests') && <section>
+            {sectionOn('quests') && <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <div className="flex items-center gap-4 mb-5">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
                   Active Quests
@@ -459,9 +484,9 @@ export default function CampaignDashboardPage() {
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 <Link
                   to={`/campaigns/${campaignId}/quests`}
-                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors"
+                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  All quests →
+                  All quests
                 </Link>
               </div>
               {activeQuests && activeQuests.length > 0 ? (
@@ -470,13 +495,13 @@ export default function CampaignDashboardPage() {
                     <Link
                       key={quest.id}
                       to={`/campaigns/${campaignId}/quests/${quest.id}`}
-                      className="group flex items-center gap-3 p-4 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
+                      className="group flex items-center gap-3 p-4 bg-surface-container-high border border-outline-variant/15 hover:border-primary/20 rounded-sm transition-colors"
                     >
                       <span className="material-symbols-outlined text-secondary/60 text-[18px]">auto_awesome</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{quest.title}</p>
                         {quest.description && (
-                          <p className="text-[11px] text-on-surface-variant/50 truncate">{quest.description.slice(0, 80)}{quest.description.length > 80 ? '…' : ''}</p>
+                          <p className="text-[11px] text-on-surface-variant/50 truncate">{quest.description.slice(0, 80)}{quest.description.length > 80 ? '...' : ''}</p>
                         )}
                       </div>
                       <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
@@ -497,7 +522,7 @@ export default function CampaignDashboardPage() {
             {sectionOn('sessions') && <SessionCalendar sessions={sessions ?? []} campaignId={campaignId} />}
 
             {/* The Party */}
-            {sectionOn('party') && <section>
+            {sectionOn('party') && <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <div className="flex items-center gap-4 mb-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
                   The Party
@@ -505,9 +530,9 @@ export default function CampaignDashboardPage() {
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 <Link
                   to={`/campaigns/${campaignId}/party`}
-                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors"
+                  className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  Manage →
+                  Manage
                 </Link>
               </div>
               {party && party.length > 0 ? (
@@ -518,7 +543,7 @@ export default function CampaignDashboardPage() {
                       <Link
                         key={character.id}
                         to={`/campaigns/${campaignId}/characters/${character.id}`}
-                        className="group flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
+                        className="group flex items-center gap-3 p-3 bg-surface-container-high border border-outline-variant/15 hover:border-primary/20 rounded-sm transition-colors"
                       >
                         <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
                           {character.image ? (
