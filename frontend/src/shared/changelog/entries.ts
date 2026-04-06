@@ -11,6 +11,72 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.3.1',
+    date: '2026-04-06',
+    title: {
+      en: 'Localization, responsive design, and landing update',
+      ru: 'Локализация, адаптивный дизайн и обновление лендинга',
+    },
+    items: [
+      {
+        icon: 'translate',
+        text: {
+          en: 'Full English and Russian localization — every label, button, status, and message is translated. Switch language in your profile.',
+          ru: 'Полная локализация на английский и русский — каждая надпись, кнопка, статус и сообщение переведены. Переключение языка в профиле.',
+        },
+        tag: 'new',
+      },
+      {
+        icon: 'language',
+        text: {
+          en: 'Language toggle on the landing page — switch between English and Russian right from the homepage. URL updates for SEO (/en, /ru).',
+          ru: 'Переключатель языка на лендинге — выбирай English или Русский прямо на главной. URL обновляется для SEO (/en, /ru).',
+        },
+        tag: 'new',
+      },
+      {
+        icon: 'dashboard_customize',
+        text: {
+          en: 'Responsive card-panel design — all pages now use a consistent card-based layout. Campaigns, Profile, and Admin pages redesigned.',
+          ru: 'Адаптивный дизайн с карточками — все страницы приведены к единому стилю. Кампании, Профиль и Админка переработаны.',
+        },
+        tag: 'improved',
+      },
+      {
+        icon: 'shield',
+        text: {
+          en: 'Campaign list shows your role — GM or Player icon next to each campaign. GM campaigns listed first, then alphabetically.',
+          ru: 'Список кампаний показывает роль — иконка Мастера или Игрока рядом с каждой кампанией. Кампании Мастера идут первыми, затем по алфавиту.',
+        },
+        tag: 'improved',
+      },
+      {
+        icon: 'calendar_month',
+        text: {
+          en: 'Calendar weekdays now localized — Пн/Вт/Ср in Russian, Mo/Tu/We in English. Dates formatted by locale everywhere.',
+          ru: 'Дни недели в календаре теперь на русском — Пн/Вт/Ср. Даты форматируются по локали на всех страницах.',
+        },
+        tag: 'improved',
+      },
+      {
+        icon: 'new_releases',
+        text: {
+          en: 'What\'s New entries are now bilingual — changelog content displays in your chosen language.',
+          ru: 'Записи «Что нового» теперь на двух языках — содержимое отображается на выбранном языке.',
+        },
+        tag: 'improved',
+      },
+      {
+        icon: 'rocket_launch',
+        text: {
+          en: 'Updated landing page — new features showcased (Multiplayer, Visibility), refreshed roadmap with AI features, OAuth, and GM Communities.',
+          ru: 'Обновлённый лендинг — новые фичи (Мультиплеер, Видимость), обновлённый роадмап с AI-функциями, OAuth и GM-сообществами.',
+        },
+        tag: 'improved',
+      },
+    ],
+  },
+  {
     version: '0.3.0',
     date: '2026-04-05',
     title: {
