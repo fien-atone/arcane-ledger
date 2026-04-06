@@ -1,3 +1,21 @@
+/**
+ * Mutation Authentication & Authorization Tests
+ *
+ * Audits every mutation for proper auth enforcement. Split into two sections:
+ *
+ * 1. "Mutations that enforce authentication" -- verifies that unauthenticated requests
+ *    are rejected and that authorized roles (GM, Player) are accepted.
+ *
+ * 2. "Mutations WITHOUT auth enforcement (security gaps)" -- documents mutations that
+ *    currently accept unauthenticated requests. These are known security gaps that
+ *    should be fixed. When auth is added to a mutation, its test should be moved
+ *    from section 2 to section 1.
+ *
+ * Uses nonexistent entity IDs for destructive mutations to avoid modifying seed data.
+ *
+ * Prerequisites: seeded campaign, GM user, and player user in database.
+ */
+
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { Agent } from 'supertest';
 import {
@@ -38,6 +56,7 @@ afterAll(async () => {
 
 describe('Mutations that enforce authentication', () => {
   describe('updateCampaign', () => {
+    // updateCampaign requires authentication and GM role.
     const mutation = `
       mutation UpdateCampaign($id: ID!, $title: String) {
         updateCampaign(id: $id, title: $title) { id title }
@@ -46,11 +65,13 @@ describe('Mutations that enforce authentication', () => {
     const variables = { id: CAMPAIGN_ID, title: 'Farchester' };
 
     it('rejects unauthenticated requests', async () => {
+      // No token provided -- should return an auth error.
       const res = await graphql(request, mutation, variables);
       expect(hasAuthError(res)).toBe(true);
     });
 
     it('allows GM', async () => {
+      // GM token provided -- should succeed without auth error.
       const res = await graphql(request, mutation, variables, gmToken);
       expect(hasAuthError(res)).toBe(false);
       expect(res.data?.updateCampaign).toBeDefined();
@@ -58,6 +79,7 @@ describe('Mutations that enforce authentication', () => {
   });
 
   describe('saveCharacter (create)', () => {
+    // saveCharacter requires authentication. Both GM and Player can create characters.
     const mutation = `
       mutation SaveCharacter($campaignId: ID!, $name: String!) {
         saveCharacter(campaignId: $campaignId, name: $name) { id name }
@@ -66,17 +88,20 @@ describe('Mutations that enforce authentication', () => {
     const variables = { campaignId: CAMPAIGN_ID, name: '__test_character_auth__' };
 
     it('rejects unauthenticated requests', async () => {
+      // No token -- should be rejected.
       const res = await graphql(request, mutation, variables);
       expect(hasAuthError(res)).toBe(true);
     });
 
     it('allows GM', async () => {
+      // GM can create characters (typically for NPC-like party members).
       const res = await graphql(request, mutation, variables, gmToken);
       expect(hasAuthError(res)).toBe(false);
       expect(res.data?.saveCharacter).toBeDefined();
     });
 
     it('allows Player (creates own character)', async () => {
+      // Players can also create their own characters.
       const res = await graphql(request, mutation, { ...variables, name: '__test_character_player__' }, playerToken);
       expect(hasAuthError(res)).toBe(false);
       expect(res.data?.saveCharacter).toBeDefined();
@@ -84,6 +109,7 @@ describe('Mutations that enforce authentication', () => {
   });
 
   describe('saveCharacter (update)', () => {
+    // saveCharacter with an existing ID requires authentication.
     const mutation = `
       mutation SaveCharacter($campaignId: ID!, $id: ID, $name: String!) {
         saveCharacter(campaignId: $campaignId, id: $id, name: $name) { id name }
@@ -103,6 +129,8 @@ describe('Mutations that enforce authentication', () => {
   });
 
   describe('saveSessionNote (both roles)', () => {
+    // saveSessionNote requires authentication but allows both GM and Player,
+    // since each user gets their own private note per session.
     const mutation = `
       mutation SaveSessionNote($sessionId: ID!, $content: String!) {
         saveSessionNote(sessionId: $sessionId, content: $content) { id content }
@@ -150,8 +178,11 @@ interface NoAuthMutationTest {
 }
 
 /**
- * Document that a mutation currently DOES NOT require authentication.
- * When auth is added, change `hasAuthError` expectation to `true`.
+ * Generate a test suite documenting that a mutation currently DOES NOT require authentication.
+ * Creates two tests: one proving unauthenticated requests succeed (the security gap),
+ * and one confirming the mutation also works with a GM token.
+ * When auth enforcement is added to the mutation, the first test's expectation
+ * should be flipped to `expect(hasAuthError(res)).toBe(true)`.
  */
 function testNoAuthGap(opts: NoAuthMutationTest) {
   describe(`[NO AUTH] ${opts.name}`, () => {

@@ -1,3 +1,17 @@
+/**
+ * CORS Configuration Tests
+ *
+ * Documents the current CORS behavior of the backend. The server currently uses
+ * open CORS (cors() with no options), allowing all origins. These tests serve as
+ * a baseline: when CORS is tightened for production, update expectations to verify
+ * that only allowed origins receive CORS headers and that malicious origins are blocked.
+ *
+ * Tests cover: OPTIONS preflight from arbitrary origins, preflight from localhost,
+ * and CORS headers on actual POST requests.
+ *
+ * Prerequisites: none (no authentication needed).
+ */
+
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { Agent } from 'supertest';
 import { getTestApp } from '../helpers.js';
@@ -21,6 +35,9 @@ describe('CORS', () => {
   // When CORS is tightened, update expectations accordingly.
 
   it('responds to OPTIONS preflight from any origin (currently open CORS)', async () => {
+    // Send a CORS preflight from a potentially malicious origin.
+    // Verify: server responds with 204 and Access-Control-Allow-Origin: *
+    // (This is a security gap -- production should whitelist origins.)
     const res = await request
       .options('/graphql')
       .set('Origin', 'https://evil.example.com')
@@ -33,6 +50,8 @@ describe('CORS', () => {
   });
 
   it('responds to OPTIONS preflight from localhost (currently open CORS)', async () => {
+    // Send a CORS preflight from the local development frontend origin.
+    // Verify: same open CORS behavior as any other origin.
     const res = await request
       .options('/graphql')
       .set('Origin', 'http://localhost:5173')
@@ -44,6 +63,8 @@ describe('CORS', () => {
   });
 
   it('includes CORS headers on actual POST requests', async () => {
+    // Verify that CORS headers are also present on real GraphQL POST requests,
+    // not just on OPTIONS preflight. Uses a minimal introspection query.
     const res = await request
       .post('/graphql')
       .set('Origin', 'http://localhost:5173')
