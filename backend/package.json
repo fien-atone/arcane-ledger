@@ -12,7 +12,9 @@
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "generate": "prisma generate",
-    "test": "vitest run",
+    "test": "DATABASE_URL=postgresql://arcane:arcane_dev_pass@localhost:5432/arcane_ledger_test vitest run",
+    "test:watch": "DATABASE_URL=postgresql://arcane:arcane_dev_pass@localhost:5432/arcane_ledger_test vitest",
+    "test:setup-db": "docker exec -i $(docker ps -qf name=postgres) psql -U arcane -d postgres -c \"CREATE DATABASE arcane_ledger_test\" 2>/dev/null; DATABASE_URL=postgresql://arcane:arcane_dev_pass@localhost:5432/arcane_ledger_test npx prisma db push && DATABASE_URL=postgresql://arcane:arcane_dev_pass@localhost:5432/arcane_ledger_test npx tsx src/seed.ts",
     "test:watch": "vitest"
   },
   "dependencies": {
