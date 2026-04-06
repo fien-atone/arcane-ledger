@@ -1,5 +1,6 @@
 import type { Context } from '../context.js';
-import { getCampaignRole } from './utils.js';
+import { getCampaignRole, requireGM, requireCampaignMember } from './utils.js';
+import { GraphQLError } from 'graphql';
 import { publishCampaignEvent } from '../publish.js';
 
 export const sessionResolvers = {
@@ -29,8 +30,10 @@ export const sessionResolvers = {
     saveSession: async (
       _: unknown,
       { campaignId, id, input }: { campaignId: string; id?: string; input: { number: number; title: string; datetime?: string; brief?: string; summary?: string; npcIds?: string[]; locationIds?: string[]; questIds?: string[] } },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       const data = {
         number: input.number,
         title: input.title,
@@ -81,7 +84,9 @@ export const sessionResolvers = {
       return session;
     },
 
-    deleteSession: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteSession: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       await prisma.session.delete({ where: { id } });
       publishCampaignEvent(campaignId, 'SESSION', id, 'DELETED');
       return true;
@@ -92,9 +97,11 @@ export const sessionResolvers = {
       { sessionId, content }: { sessionId: string; content: string },
       ctx: Context,
     ) => {
-      if (!ctx.user) throw new Error('Not authenticated');
-      // Verify session exists and get campaignId for subscription event
+      if (!ctx.user) throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      // Verify session exists and get campaignId for membership check
       const session = await ctx.prisma.session.findUniqueOrThrow({ where: { id: sessionId } });
+      // Any campaign member (GM or player) can write their own session notes
+      await requireCampaignMember(ctx, session.campaignId);
       const note = await ctx.prisma.sessionNote.upsert({
         where: { sessionId_userId: { sessionId, userId: ctx.user.id } },
         create: { sessionId, userId: ctx.user.id, content },

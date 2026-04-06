@@ -1,19 +1,10 @@
 import type { Context } from '../context.js';
 import { GraphQLError } from 'graphql';
+import { requireGM as requireGMShared } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
 import { pubsub } from '../pubsub.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-async function requireGM(prisma: Context['prisma'], campaignId: string, userId: string) {
-  const member = await prisma.campaignMember.findUnique({
-    where: { campaignId_userId: { campaignId, userId } },
-  });
-  if (!member || member.role !== 'GM') {
-    throw new GraphQLError('Only the GM can perform this action', { extensions: { code: 'FORBIDDEN' } });
-  }
-  return member;
-}
 
 function requireAuth(user: Context['user']): asserts user is NonNullable<Context['user']> {
   if (!user) throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -105,10 +96,11 @@ export const partyResolvers = {
     searchUsers: async (
       _: unknown,
       { campaignId, query }: { campaignId: string; query: string },
-      { prisma, user }: Context,
+      ctx: Context,
     ) => {
+      const { prisma, user } = ctx;
       requireAuth(user);
-      await requireGM(prisma, campaignId, user.id);
+      await requireGMShared(ctx, campaignId);
 
       if (query.length < 2) return [];
 
@@ -144,10 +136,11 @@ export const partyResolvers = {
     invitePlayer: async (
       _: unknown,
       { campaignId, userId }: { campaignId: string; userId: string },
-      { prisma, user }: Context,
+      ctx: Context,
     ) => {
+      const { prisma, user } = ctx;
       requireAuth(user);
-      await requireGM(prisma, campaignId, user.id);
+      await requireGMShared(ctx, campaignId);
 
       // Check user is not already a member
       const existingMember = await prisma.campaignMember.findUnique({
@@ -171,13 +164,14 @@ export const partyResolvers = {
       return invitation;
     },
 
-    cancelInvitation: async (_: unknown, { id }: { id: string }, { prisma, user }: Context) => {
+    cancelInvitation: async (_: unknown, { id }: { id: string }, ctx: Context) => {
+      const { prisma, user } = ctx;
       requireAuth(user);
 
       const invitation = await prisma.campaignInvitation.findUnique({ where: { id } });
       if (!invitation) throw new GraphQLError('Invitation not found', { extensions: { code: 'NOT_FOUND' } });
 
-      await requireGM(prisma, invitation.campaignId, user.id);
+      await requireGMShared(ctx, invitation.campaignId);
 
       await prisma.campaignInvitation.delete({ where: { id } });
 
@@ -253,14 +247,15 @@ export const partyResolvers = {
     assignCharacterToPlayer: async (
       _: unknown,
       { characterId, userId }: { characterId: string; userId?: string | null },
-      { prisma, user }: Context,
+      ctx: Context,
     ) => {
+      const { prisma, user } = ctx;
       requireAuth(user);
 
       const character = await prisma.playerCharacter.findUnique({ where: { id: characterId } });
       if (!character) throw new GraphQLError('Character not found', { extensions: { code: 'NOT_FOUND' } });
 
-      await requireGM(prisma, character.campaignId, user.id);
+      await requireGMShared(ctx, character.campaignId);
 
       // If userId provided, verify user is a member of the campaign
       if (userId) {
@@ -285,10 +280,11 @@ export const partyResolvers = {
     removeCampaignMember: async (
       _: unknown,
       { campaignId, userId }: { campaignId: string; userId: string },
-      { prisma, user }: Context,
+      ctx: Context,
     ) => {
+      const { prisma, user } = ctx;
       requireAuth(user);
-      await requireGM(prisma, campaignId, user.id);
+      await requireGMShared(ctx, campaignId);
 
       // Cannot remove self (GM)
       if (userId === user.id) {

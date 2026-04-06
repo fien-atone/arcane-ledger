@@ -1,5 +1,6 @@
 import type { Context } from '../context.js';
-import { toEnum, getCampaignRole } from './utils.js';
+import { GraphQLError } from 'graphql';
+import { toEnum, getCampaignRole, requireGM } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
 import { redactEntity, QUEST_FIELDS } from './redact.js';
 
@@ -35,8 +36,10 @@ export const questResolvers = {
     saveQuest: async (
       _: unknown,
       { campaignId, id, input }: { campaignId: string; id?: string; input: { title: string; description?: string; giverId?: string; reward?: string; status?: string; notes?: string } },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       const data = {
         title: input.title,
         description: input.description ?? '',
@@ -56,7 +59,9 @@ export const questResolvers = {
       return result;
     },
 
-    deleteQuest: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteQuest: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       await prisma.quest.delete({ where: { id } });
       publishCampaignEvent(campaignId, 'QUEST', id, 'DELETED');
       return true;
@@ -68,7 +73,7 @@ export const questResolvers = {
       ctx: Context,
     ) => {
       const role = await getCampaignRole(ctx, campaignId);
-      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      if (role !== 'GM') throw new GraphQLError('Only the GM can change visibility', { extensions: { code: 'FORBIDDEN' } });
       const result = await ctx.prisma.quest.update({
         where: { id },
         data: {

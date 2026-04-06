@@ -31,3 +31,21 @@ export async function getCampaignRole(
   ctx._roleCache.set(cacheKey, role);
   return role;
 }
+
+/** Throw FORBIDDEN if the current user is not a GM for the given campaign. */
+export async function requireGM(ctx: Context, campaignId: string): Promise<void> {
+  if (!ctx.user) throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+  const role = await getCampaignRole(ctx, campaignId);
+  if (role !== 'GM') {
+    throw new GraphQLError('Only the GM can modify campaign data', { extensions: { code: 'FORBIDDEN' } });
+  }
+}
+
+/** Throw UNAUTHENTICATED if the current user is not a member of the given campaign. */
+export async function requireCampaignMember(ctx: Context, campaignId: string): Promise<void> {
+  if (!ctx.user) throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+  const role = await getCampaignRole(ctx, campaignId);
+  if (!role) {
+    throw new GraphQLError('You are not a member of this campaign', { extensions: { code: 'FORBIDDEN' } });
+  }
+}

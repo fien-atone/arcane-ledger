@@ -1,6 +1,7 @@
 import type { Context } from '../context.js';
+import { GraphQLError } from 'graphql';
 import { publishCampaignEvent } from '../publish.js';
-import { getCampaignRole } from './utils.js';
+import { getCampaignRole, requireGM } from './utils.js';
 import { redactEntity, GROUP_FIELDS } from './redact.js';
 
 export const groupResolvers = {
@@ -40,8 +41,10 @@ export const groupResolvers = {
     saveGroup: async (
       _: unknown,
       { campaignId, id, input }: { campaignId: string; id?: string; input: { name: string; type: string; aliases?: string[]; description?: string; goals?: string; symbols?: string; gmNotes?: string; partyRelation?: string } },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       const data = {
         name: input.name,
         type: input.type && input.type.trim() ? input.type : null,
@@ -63,7 +66,9 @@ export const groupResolvers = {
       return result;
     },
 
-    deleteGroup: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteGroup: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       await prisma.group.delete({ where: { id } });
       publishCampaignEvent(campaignId, 'GROUP', id, 'DELETED');
       return true;
@@ -75,7 +80,7 @@ export const groupResolvers = {
       ctx: Context,
     ) => {
       const role = await getCampaignRole(ctx, campaignId);
-      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      if (role !== 'GM') throw new GraphQLError('Only the GM can change visibility', { extensions: { code: 'FORBIDDEN' } });
       const result = await ctx.prisma.group.update({
         where: { id },
         data: {
