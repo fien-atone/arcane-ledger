@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
-import { RichContent, EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
-import { resolveImageUrl } from '@/shared/api/imageUrl';
-import type { Quest, QuestStatus } from '@/entities/quest';
+import { EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
+import { useState } from 'react';
+import type { QuestStatus } from '@/entities/quest';
 
 const STATUS_CONFIG: Record<QuestStatus, { label: string; dot: string; pill: string; icon: string; iconColor: string }> = {
   active:       { label: 'Active',       dot: 'bg-secondary',              pill: 'bg-secondary/10 text-secondary border border-secondary/20',                                  icon: 'bolt',           iconColor: 'text-secondary' },
@@ -24,114 +24,6 @@ const STATUS_FILTERS: Array<{ value: QuestStatus | 'all'; label: string }> = [
   { value: 'failed', label: 'Failed' },
 ];
 
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <div className="flex items-center gap-4 mb-3">
-      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary whitespace-nowrap">{title}</h3>
-      <div className="h-px flex-1 bg-outline-variant/20" />
-    </div>
-  );
-}
-
-function QuestPreview({ quest, campaignId }: { quest: Quest; campaignId: string }) {
-  const st = STATUS_CONFIG[quest.status];
-  const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
-  const sessionsEnabled = useSectionEnabled(campaignId, 'sessions');
-  const { data: campaign } = useCampaign(campaignId);
-  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
-  const giver = quest.giver;
-  const linkedSessions = [...(quest.sessions ?? [])].sort((a, b) => b.number - a.number);
-
-  return (
-    <div className="flex flex-col overflow-y-auto h-full px-10 py-8">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${st.pill}`}>
-            <span className="material-symbols-outlined text-[13px]">{st.icon}</span>
-            {st.label}
-          </span>
-        </div>
-        <h2 className={`font-headline text-3xl font-bold text-on-surface tracking-tight ${quest.status === 'unavailable' ? 'line-through decoration-on-surface-variant/30' : ''}`}>
-          {quest.title}
-        </h2>
-      </div>
-
-      {/* Quest Giver */}
-      {npcsEnabled && giver && (
-        <div className="mb-6">
-          <SectionHeader title="Quest Giver" />
-          <Link
-            to={`/campaigns/${campaignId}/npcs/${giver.id}`}
-            className="group flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors"
-          >
-            <div className="w-9 h-9 rounded-sm bg-surface-container flex items-center justify-center flex-shrink-0">
-              {giver.image ? (
-                <img src={resolveImageUrl(giver.image)} alt={giver.name} className="w-full h-full object-cover rounded-sm" />
-              ) : (
-                <span className="text-xs font-bold text-on-surface-variant/60">
-                  {giver.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
-                </span>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-on-surface group-hover:text-primary transition-colors truncate">{giver.name}</p>
-              {giver.species && (
-                <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-wider">{giver.species}</p>
-              )}
-            </div>
-            <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
-          </Link>
-        </div>
-      )}
-
-      {quest.description && (
-        <div className="mb-6">
-          <SectionHeader title="Description" />
-          <RichContent value={quest.description} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
-        </div>
-      )}
-
-      {quest.reward && (
-        <div className="mb-6">
-          <SectionHeader title="Reward" />
-          <RichContent value={quest.reward} className="prose-p:text-sm prose-p:text-on-surface-variant" />
-        </div>
-      )}
-
-      {/* Sessions */}
-      {sessionsEnabled && linkedSessions.length > 0 && (
-        <div className="mb-6">
-          <SectionHeader title={`Sessions (${linkedSessions.length})`} />
-          <div className="flex flex-wrap gap-2">
-            {linkedSessions.map((s) => (
-              <Link
-                key={s.id}
-                to={`/campaigns/${campaignId}/sessions/${s.id}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-sm text-xs text-on-surface hover:text-primary hover:border-primary/30 transition-colors"
-              >
-                <span className="font-headline text-[10px] font-bold italic text-on-surface-variant/50">#{String(s.number).padStart(2, '0')}</span>
-                {s.title}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* GM Notes */}
-      {isGm && quest.notes && (
-        <div className="mb-6 relative pl-4">
-          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/40" />
-          <div className="flex items-center gap-3 mb-2">
-            <span className="material-symbols-outlined text-[13px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">GM Notes</h3>
-          </div>
-          <RichContent value={quest.notes} className="prose-p:text-sm prose-p:text-on-surface-variant prose-p:leading-relaxed" />
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function QuestListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
@@ -139,29 +31,32 @@ export default function QuestListPage() {
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: quests, isLoading, isError } = useQuests(campaignId ?? '');
   const setQuestVisibility = useSetQuestVisibility();
-  const [statusFilter, setStatusFilter] = useState<QuestStatus | 'all'>('all');
-  const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') ?? '';
+  const statusFilter = (searchParams.get('status') ?? 'all') as QuestStatus | 'all';
+
   const [addOpen, setAddOpen] = useState(false);
-
-  const filtered = quests?.filter((q) => {
-    const matchesStatus = statusFilter === 'all' || q.status === statusFilter;
-    const matchesSearch = !search || q.title.toLowerCase().includes(search.toLowerCase()) || q.description.toLowerCase().includes(search.toLowerCase());
-    return matchesStatus && matchesSearch;
-  }) ?? [];
-
-  const selected = quests?.find((q) => q.id === selectedId) ?? filtered[0] ?? null;
 
   if (!questsEnabled) {
     return <SectionDisabled campaignId={campaignId ?? ''} />;
   }
 
+  const filtered = useMemo(() => {
+    if (!quests) return [];
+    return quests.filter((q) => {
+      const matchesStatus = statusFilter === 'all' || q.status === statusFilter;
+      const matchesSearch = !search || q.title.toLowerCase().includes(search.toLowerCase()) || q.description.toLowerCase().includes(search.toLowerCase());
+      return matchesStatus && matchesSearch;
+    });
+  }, [quests, search, statusFilter]);
+
   return (
     <>
     <SectionBackground />
-    <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+    <main className="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
       {/* Campaign name */}
-      <div className="flex justify-center pt-0 pb-4 flex-shrink-0">
+      <div className="flex justify-center pt-0 pb-8">
         <Link
           to={`/campaigns/${campaignId}`}
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
@@ -171,130 +66,138 @@ export default function QuestListPage() {
         </Link>
       </div>
 
-      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">Quests</h1>
-            <p className="text-on-surface-variant text-sm mt-1">Active threads and chronicle of completed tasks.</p>
-          </div>
-          {isGm && (
-            <button
-              onClick={() => setAddOpen(true)}
-              className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              <span className="font-label text-xs uppercase tracking-widest">New Quest</span>
-            </button>
-          )}
-        </div>
-      </header>
-
-      {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading…</div>}
-      {isError && <p className="text-tertiary text-sm p-12">Failed to load quests.</p>}
-
-      {!isLoading && !isError && (
-        <div className="flex flex-1 overflow-hidden min-h-0">
-
-          {/* Left panel */}
-          <div className="w-[580px] flex-shrink-0 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
-            <div className="px-4 pt-4 pb-3 flex-shrink-0 space-y-3">
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
-                <input
-                  type="text"
-                  placeholder="Search quests…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-surface-container border-0 border-b border-outline-variant/20 focus:ring-0 focus:border-primary text-on-surface text-sm placeholder:text-on-surface-variant/30 transition-colors"
-                />
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {STATUS_FILTERS.map(({ value, label }) => {
-                  const count = value === 'all' ? (quests?.length ?? 0) : (quests?.filter((q) => q.status === value).length ?? 0);
-                  return (
-                    <button
-                      key={value}
-                      onClick={() => setStatusFilter(value)}
-                      className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
-                        statusFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                      }`}
-                    >
-                      {label} <span className={statusFilter === value ? 'text-on-primary/70' : 'text-on-surface-variant/40'}>{count}</span>
-                    </button>
-                  );
-                })}
-              </div>
+      {/* Content — single max-width container */}
+      <div className="px-4 sm:px-8 max-w-5xl mx-auto w-full pb-20">
+        {/* Header card */}
+        <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight">Quests</h1>
+              <p className="text-on-surface-variant text-sm mt-1">Active threads and chronicle of completed tasks.</p>
             </div>
+            {isGm && (
+              <button
+                onClick={() => setAddOpen(true)}
+                className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
+              >
+                <span className="material-symbols-outlined text-[20px]">add</span>
+                <span className="font-label text-xs uppercase tracking-widest">New Quest</span>
+              </button>
+            )}
+          </div>
 
-            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
-              {filtered.length === 0 && <EmptyState icon="map" title="No quests found." subtitle="Create a quest to track objectives." />}
-              {filtered.map((quest) => {
-                const st = STATUS_CONFIG[quest.status];
-                const isSelected = selected?.id === quest.id;
+          {/* Search + filters */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchParams(prev => {
+                    if (val) prev.set('q', val); else prev.delete('q');
+                    return prev;
+                  }, { replace: true });
+                }}
+                className="w-full pl-9 pr-3 py-1.5 bg-surface-container-high border border-outline-variant/20 rounded-sm focus:ring-0 focus:border-primary text-on-surface text-xs placeholder:text-on-surface-variant/30 transition-colors"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {STATUS_FILTERS.map(({ label, value }) => {
+                const count = value === 'all' ? (quests?.length ?? 0) : (quests?.filter((q) => q.status === value).length ?? 0);
                 return (
                   <button
-                    key={quest.id}
-                    type="button"
-                    onClick={() => setSelectedId(quest.id)}
-                    className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-outline-variant/5 transition-all duration-150 ${
-                      isSelected ? 'bg-primary/8 border-l-2 border-l-primary' : 'border-l-2 border-l-transparent hover:bg-surface-container-low hover:border-l-primary/30'
+                    key={value}
+                    onClick={() => {
+                      setSearchParams(prev => {
+                        if (value === 'all') prev.delete('status'); else prev.set('status', value);
+                        return prev;
+                      }, { replace: true });
+                    }}
+                    className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
+                      statusFilter === value ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center border ${isSelected ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'}`}>
-                      <span className={`material-symbols-outlined text-[16px] ${st.iconColor}`}>{st.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm truncate transition-colors ${isSelected ? 'text-primary font-semibold' : quest.status === 'unavailable' ? 'text-on-surface/50 line-through' : 'text-on-surface font-medium'}`}>{quest.title}</p>
-                      <p className={`text-[9px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-primary/50' : 'text-on-surface-variant/40'}`}>{st.label}</p>
-                    </div>
-                    {isGm && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setQuestVisibility.mutate({
-                            campaignId: campaignId!,
-                            id: quest.id,
-                            playerVisible: !quest.playerVisible,
-                            playerVisibleFields: quest.playerVisibleFields ?? [],
-                          });
-                        }}
-                        title={quest.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
-                        className={`flex-shrink-0 p-1 transition-colors ${
-                          quest.playerVisible
-                            ? 'text-primary/60 hover:text-primary'
-                            : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {quest.playerVisible ? 'visibility' : 'visibility_off'}
-                        </span>
-                      </button>
-                    )}
+                    {label} <span className={statusFilter === value ? 'text-on-primary/70' : 'text-on-surface-variant/40'}>{count}</span>
                   </button>
                 );
               })}
             </div>
-          </div>
-
-          {/* Right panel */}
-          <div className="flex-1 overflow-hidden relative">
-            {selected ? (
-              <>
-                <QuestPreview quest={selected} campaignId={campaignId ?? ''} />
-                <Link
-                  to={`/campaigns/${campaignId}/quests/${selected.id}`}
-                  className="absolute top-3 right-4 z-20 inline-flex items-center gap-1.5 px-3 py-2 bg-surface/80 backdrop-blur-sm border border-outline-variant/20 text-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[14px]">open_in_full</span>
-                  Open full page
-                </Link>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full text-on-surface-variant/30 text-sm italic">Select a quest</div>
-            )}
+            <span className="ml-auto text-[10px] text-on-surface-variant/40">
+              <span className="text-on-surface font-bold">{filtered.length}</span> of <span className="text-primary font-bold">{quests?.length ?? 0}</span>
+            </span>
           </div>
         </div>
-      )}
+
+        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading…</div>}
+        {isError && <p className="text-tertiary text-sm p-12">Failed to load quests.</p>}
+
+        {!isLoading && !isError && (
+          filtered.length === 0 ? (
+            <EmptyState icon="map" title="No quests found." subtitle="Create a quest to track objectives." />
+          ) : (
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm divide-y divide-outline-variant/10">
+              {/* Column headers */}
+              <div className="flex items-center gap-3 px-6 py-2 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
+                <span className="w-10 flex-shrink-0" />
+                <span className="flex-1 min-w-0">Title</span>
+                <span className="w-24 flex-shrink-0">Status</span>
+                {isGm && <span className="w-8 flex-shrink-0" />}
+              </div>
+              {filtered.map((quest) => {
+                const st = STATUS_CONFIG[quest.status];
+                return (
+                  <Link
+                    key={quest.id}
+                    to={`/campaigns/${campaignId}/quests/${quest.id}`}
+                    className="group flex items-center px-6 py-2.5 hover:bg-surface-container-high transition-colors"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-10 h-10 rounded-sm flex-shrink-0 flex items-center justify-center bg-surface-container-highest border border-outline-variant/20">
+                        <span className={`material-symbols-outlined text-[16px] ${st.iconColor}`}>{st.icon}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate ${quest.status === 'unavailable' ? 'line-through decoration-on-surface-variant/30' : ''}`}>{quest.title}</p>
+                        <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5 truncate sm:hidden">
+                          {st.label}
+                        </p>
+                      </div>
+                      <span className={`w-24 flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[8px] font-bold uppercase tracking-wider ${st.pill}`}>
+                        <span className={`w-1 h-1 rounded-full ${st.dot}`} />
+                        {st.label}
+                      </span>
+                      {isGm && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setQuestVisibility.mutate({
+                              campaignId: campaignId!,
+                              id: quest.id,
+                              playerVisible: !quest.playerVisible,
+                              playerVisibleFields: quest.playerVisibleFields ?? [],
+                            });
+                          }}
+                          title={quest.playerVisible ? 'Visible to players' : 'Hidden from players'}
+                          className={`w-8 flex-shrink-0 flex items-center justify-center transition-colors ${
+                            quest.playerVisible ? 'text-primary/60 hover:text-primary' : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {quest.playerVisible ? 'visibility' : 'visibility_off'}
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )
+        )}
+      </div>{/* end max-w-5xl container */}
 
     </main>
 

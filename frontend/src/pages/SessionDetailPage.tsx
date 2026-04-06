@@ -30,7 +30,7 @@ const QUEST_STATUS_PILL: Record<QuestStatus, { cls: string; icon: string; iconCo
 
 function toGoogleCalUrl(title: string, datetime: string, description?: string): string {
   const start = new Date(datetime);
-  const end = new Date(start.getTime() + 3 * 60 * 60 * 1000); // 3 hours default
+  const end = new Date(start.getTime() + 3 * 60 * 60 * 1000);
   const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const params = new URLSearchParams({
     action: 'TEMPLATE',
@@ -148,134 +148,149 @@ export default function SessionDetailPage() {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
-        <div className="flex flex-col lg:flex-row gap-16">
+        {/* Header card (full width) */}
+        <section className="relative bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8 mb-8">
+          <div className="flex items-center gap-4 mb-3">
+            <span className="text-[10px] font-label uppercase tracking-widest text-primary font-bold">
+              Session #{String(session.number).padStart(2, '0')}
+            </span>
+            <div className="h-px w-12 bg-outline-variant/30" />
+            {session.datetime && (
+              <span className="text-sm text-on-surface-variant/60">
+                {formatDateTime(session.datetime)}
+              </span>
+            )}
+          </div>
+          <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight leading-tight">
+            {session.title}
+          </h1>
 
-          {/* ── Left column (65%) ────────────────────────── */}
-          <div className="lg:w-[65%] space-y-12">
-
-            {/* Session header */}
-            <header className="space-y-3">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] font-label uppercase tracking-widest text-primary font-bold">
-                  Session #{String(session.number).padStart(2, '0')}
-                </span>
-                <div className="h-px w-12 bg-outline-variant/30" />
-                {session.datetime && (
-                  <span className="text-sm text-on-surface-variant/60">
-                    {formatDateTime(session.datetime)}
-                  </span>
+          {/* Edit/Delete/Calendar — absolute top-right */}
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
+            {/* Add to Calendar */}
+            {session.datetime && (
+              <div className="relative">
+                <button
+                  onClick={() => setCalMenuOpen((v) => !v)}
+                  className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant text-xs font-label uppercase tracking-widest rounded-sm hover:text-primary hover:border-primary/30 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">calendar_add_on</span>
+                  Calendar
+                </button>
+                {calMenuOpen && (
+                  <div className="absolute z-50 top-full mt-1 right-0 w-48 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl py-1">
+                    <a
+                      href={toGoogleCalUrl(`${campaign?.title ? campaign.title + ' — ' : ''}Session #${session.number}`, session.datetime, session.brief)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setCalMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-high transition-colors text-xs text-on-surface"
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">event</span>
+                      Google Calendar
+                    </a>
+                    <button
+                      onClick={() => { downloadIcs(`${campaign?.title ? campaign.title + ' — ' : ''}Session #${session.number}`, session.datetime, session.brief); setCalMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-high transition-colors text-xs text-on-surface text-left"
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">download</span>
+                      Apple / Outlook (.ics)
+                    </button>
+                  </div>
                 )}
-                <div className="ml-auto flex items-center gap-2">
-                  {/* Add to Calendar */}
-                  {session.datetime && (
-                    <div className="relative">
-                      <button
-                        onClick={() => setCalMenuOpen((v) => !v)}
-                        className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant text-xs font-label uppercase tracking-widest rounded-sm hover:text-primary hover:border-primary/30 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-sm">calendar_add_on</span>
-                        Calendar
-                      </button>
-                      {calMenuOpen && (
-                        <div className="absolute z-50 top-full mt-1 right-0 w-48 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl py-1">
-                          <a
-                            href={toGoogleCalUrl(`${campaign?.title ? campaign.title + ' — ' : ''}Session #${session.number}`, session.datetime, session.brief)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => setCalMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-high transition-colors text-xs text-on-surface"
-                          >
-                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">event</span>
-                            Google Calendar
-                          </a>
-                          <button
-                            onClick={() => { downloadIcs(`${campaign?.title ? campaign.title + ' — ' : ''}Session #${session.number}`, session.datetime, session.brief); setCalMenuOpen(false); }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-high transition-colors text-xs text-on-surface text-left"
-                          >
-                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">download</span>
-                            Apple / Outlook (.ics)
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {isGm && (
-                    <>
-                      {confirmDelete ? (
-                        <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                          <span className="text-[10px] text-on-surface-variant">Delete this session?</span>
-                          <button
-                            onClick={() => deleteSession.mutate(session.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/sessions`) })}
-                            className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
-                          >
-                            Yes
-                          </button>
-                          <button
-                            onClick={() => setConfirmDelete(false)}
-                            className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-                          >
-                            No
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmDelete(true)}
-                          className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-sm">delete</span>
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setEditOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-sm">edit</span>
-                        Edit
-                      </button>
-                    </>
-                  )}
-                </div>
               </div>
-              <h1 className="font-headline text-5xl font-bold text-on-surface tracking-tight leading-tight">
-                {session.title}
-              </h1>
-            </header>
+            )}
+            {isGm && (
+              <>
+                {confirmDelete ? (
+                  <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
+                    <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                    <button
+                      onClick={() => deleteSession.mutate(session.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/sessions`) })}
+                      className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                  Edit
+                </button>
+              </>
+            )}
+          </div>
+        </section>
 
-            {/* Brief — editable for GM, read-only for players */}
-            {isGm ? (
-              <InlineRichField
-                label="Brief"
-                value={session.brief}
-                onSave={(html) => saveField('brief', html)}
-                placeholder="Public session brief — what the players know…"
-              />
-            ) : session.brief ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Brief</h2>
-                  <div className="h-px flex-1 bg-outline-variant/20" />
+        {/* Two-column layout */}
+        <div className="flex flex-col md:flex-row gap-8 min-w-0">
+
+          {/* Left column — Brief, Session Notes, Prev/Next */}
+          <div className="flex-1 min-w-0 space-y-8">
+
+            {/* Brief */}
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              {isGm ? (
+                <InlineRichField
+                  label="Brief"
+                  value={session.brief}
+                  onSave={(html) => saveField('brief', html)}
+                  placeholder="Public session brief — what the players know…"
+                />
+              ) : session.brief ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">Brief</h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                  </div>
+                  <RichContent value={session.brief} className="prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1" />
                 </div>
-                <RichContent value={session.brief} className="prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1" />
-              </div>
-            ) : null}
-
-            {/* Notes — GM sees as "GM Notes" with isGmNotes styling, players see as "My Notes" */}
-            <section className={isGm ? '' : 'bg-surface-container-low/50 p-6 border border-secondary/15 rounded-sm relative overflow-hidden'}>
-              {!isGm && (
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined text-secondary text-sm">edit_note</span>
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-secondary">My Notes</h3>
-                  <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 border border-outline-variant/15 px-1.5 py-0.5 rounded-full">Private</span>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">Brief</h2>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                  </div>
+                  <p className="text-xs text-on-surface-variant/40 italic">No brief yet.</p>
                 </div>
               )}
-              <InlineRichField
-                label={isGm ? 'GM Notes' : ''}
-                value={session.myNote?.content}
-                onSave={(html) => sessionNote.mutate(session.id, html)}
-                placeholder={isGm ? 'Your private GM notes for this session…' : 'Add your personal notes for this session…'}
-                isGmNotes={isGm}
-              />
-            </section>
+            </div>
+
+            {/* Session Notes */}
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <section className={isGm ? '' : 'bg-surface-container-low/50 p-4 border border-secondary/15 rounded-sm relative overflow-hidden'}>
+                {!isGm && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="material-symbols-outlined text-secondary text-sm">edit_note</span>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-secondary">My Notes</h3>
+                    <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 border border-outline-variant/15 px-1.5 py-0.5 rounded-full">Private</span>
+                  </div>
+                )}
+                <InlineRichField
+                  label={isGm ? 'GM Notes' : ''}
+                  value={session.myNote?.content}
+                  onSave={(html) => sessionNote.mutate(session.id, html)}
+                  placeholder={isGm ? 'Your private GM notes for this session…' : 'Add your personal notes for this session…'}
+                  isGmNotes={isGm}
+                />
+              </section>
+            </div>
 
             {/* Prev / next navigation */}
             <div className="flex items-center justify-between pt-8 border-t border-outline-variant/10">
@@ -312,8 +327,8 @@ export default function SessionDetailPage() {
             </div>
           </div>
 
-          {/* ── Right column (35%) ─────────────────────────── */}
-          <div className="lg:w-[35%] space-y-10 lg:sticky lg:top-8 self-start">
+          {/* Right column — NPCs, Locations, Quests */}
+          <div className="md:w-[35%] space-y-8">
 
             {/* NPCs in this session */}
             {(() => {
@@ -335,9 +350,9 @@ export default function SessionDetailPage() {
               };
 
               return (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
                       NPCs
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
@@ -353,7 +368,7 @@ export default function SessionDetailPage() {
                   </div>
 
                   {isGm && npcSearchOpen && (
-                    <div className="border border-outline-variant/20 bg-surface-container-low">
+                    <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
                         <input
@@ -403,7 +418,7 @@ export default function SessionDetailPage() {
                               </Link>
                               {isGm && (confirmRemoveNpcId === npc.id ? (
                                 <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                                  <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                                  <span className="text-[10px] text-on-surface-variant">Remove?</span>
                                   <button onClick={() => removeNpc(npc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
                                   <button onClick={() => setConfirmRemoveNpcId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
                                 </div>
@@ -419,7 +434,7 @@ export default function SessionDetailPage() {
                       })}
                     </div>
                   ) : null}
-                </section>
+                </div>
               );
             })()}
 
@@ -443,9 +458,9 @@ export default function SessionDetailPage() {
               };
 
               return (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
                       Locations
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
@@ -461,7 +476,7 @@ export default function SessionDetailPage() {
                   </div>
 
                   {isGm && locSearchOpen && (
-                    <div className="border border-outline-variant/20 bg-surface-container-low">
+                    <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
                         <input autoFocus type="text" placeholder="Search locations…"
@@ -498,7 +513,7 @@ export default function SessionDetailPage() {
                             </Link>
                             {isGm && (confirmRemoveLocId === loc.id ? (
                               <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                                <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                                <span className="text-[10px] text-on-surface-variant">Remove?</span>
                                 <button onClick={() => removeLoc(loc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
                                 <button onClick={() => setConfirmRemoveLocId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
                               </div>
@@ -513,7 +528,7 @@ export default function SessionDetailPage() {
                       ))}
                     </div>
                   ) : null}
-                </section>
+                </div>
               );
             })()}
 
@@ -537,9 +552,9 @@ export default function SessionDetailPage() {
               };
 
               return (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
                       Quests
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
@@ -555,7 +570,7 @@ export default function SessionDetailPage() {
                   </div>
 
                   {isGm && questSearchOpen && (
-                    <div className="border border-outline-variant/20 bg-surface-container-low">
+                    <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
                         <input autoFocus type="text" placeholder="Search quests…"
@@ -594,7 +609,7 @@ export default function SessionDetailPage() {
                             </Link>
                             {isGm && (confirmRemoveQuestId === quest.id ? (
                               <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                                <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                                <span className="text-[10px] text-on-surface-variant">Remove?</span>
                                 <button onClick={() => removeQuest(quest.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
                                 <button onClick={() => setConfirmRemoveQuestId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
                               </div>
@@ -609,10 +624,9 @@ export default function SessionDetailPage() {
                       ))}
                     </div>
                   ) : null}
-                </section>
+                </div>
               );
             })()}
-
 
           </div>
 

@@ -35,7 +35,7 @@ export default function SpeciesDetailPage() {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
-        Loading…
+        Loading...
       </main>
     );
   }
@@ -45,6 +45,7 @@ export default function SpeciesDetailPage() {
   }
 
   const sizeIdx = SIZE_ORDER.indexOf(species.size);
+  const typeName = typesEnabled ? (speciesTypes?.find((t) => t.id === species.type)?.name ?? species.type) : '';
 
   return (
     <>
@@ -61,52 +62,57 @@ export default function SpeciesDetailPage() {
         </Link>
       </div>
 
-      <div className="max-w-3xl px-4 sm:px-6 md:px-10 py-8 pb-20">
-
-        {/* Header */}
-        <div className="flex items-start justify-between mb-10">
-          <div>
-            <h1 className="font-headline text-5xl font-bold text-on-surface tracking-tight">
-              {species.name}
-            </h1>
-            {species.pluralName && species.pluralName !== species.name + 's' && (
-              <p className="text-on-surface-variant/50 text-xs italic mt-1">pl. {species.pluralName}</p>
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
+        {/* Header card */}
+        <section className="relative bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8 mb-8">
+          {/* Edit / Delete — absolute top-right */}
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
+            {confirmDelete ? (
+              <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
+                <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                <button onClick={() => deleteSpecies.mutate(species.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/species`) })}
+                  className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                <button onClick={() => setConfirmDelete(false)}
+                  className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmDelete(true)}
+                className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                <span className="material-symbols-outlined text-sm">delete</span>
+              </button>
             )}
+            <button
+              onClick={() => setEditOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">edit</span>
+              Edit
+            </button>
           </div>
-          <div className="flex flex-col items-end gap-3">
-            {typesEnabled && (
-              <span className="px-3 py-1 bg-surface-container border border-outline-variant/20 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant rounded-sm">
-                {speciesTypes?.find((t) => t.id === species.type)?.name ?? species.type}
+
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            {typesEnabled && typeName && (
+              <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-bold uppercase tracking-widest rounded-sm border border-outline-variant/10">
+                {typeName}
               </span>
             )}
-            <div className="flex gap-2">
-              {confirmDelete ? (
-                <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[10px] text-on-surface-variant">Delete?</span>
-                  <button onClick={() => deleteSpecies.mutate(species.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/species`) })}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase text-error">Yes</button>
-                  <button onClick={() => setConfirmDelete(false)}
-                    className="px-2 py-0.5 text-[10px] font-label uppercase text-on-surface-variant">No</button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmDelete(true)}
-                  className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
-                  <span className="material-symbols-outlined text-sm">delete</span>
-                </button>
-              )}
-              <button
-                onClick={() => setEditOpen(true)}
-                className="flex items-center gap-2 px-5 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[16px]">edit</span>
-                Edit Species
-              </button>
-            </div>
+            <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
+              {SIZE_LABEL[species.size]}
+            </span>
           </div>
-        </div>
 
-        {/* Size bar */}
-        <div className="mb-10">
+          {/* Title */}
+          <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface leading-tight">
+            {species.name}
+          </h1>
+          {species.pluralName && species.pluralName !== species.name + 's' && (
+            <p className="text-on-surface-variant/50 text-xs italic mt-1">pl. {species.pluralName}</p>
+          )}
+        </section>
+
+        {/* Size bar card */}
+        <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <p className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold mb-2">Size</p>
           <div className="flex items-center gap-1">
             {SIZE_ORDER.map((sz, i) => (
@@ -125,34 +131,34 @@ export default function SpeciesDetailPage() {
           </div>
         </div>
 
-        {/* Description — edit in place */}
-        <div className="mb-10">
+        {/* Description card */}
+        <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <InlineRichField
             label="Overview"
             value={species.description}
             onSave={saveDescription}
-            placeholder="Describe this species…"
+            placeholder="Describe this species..."
           />
         </div>
 
-        {/* Traits */}
+        {/* Traits card */}
         {species.traits && species.traits.length > 0 && (
-          <section>
+          <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
             <div className="flex items-center gap-4 mb-4">
-              <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">Racial Traits</h2>
+              <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">Racial Traits</h2>
               <div className="h-px flex-1 bg-outline-variant/20" />
             </div>
             <div className="flex flex-wrap gap-2">
               {species.traits.map((trait) => (
                 <span
                   key={trait}
-                  className="px-3 py-1.5 bg-surface-container border border-outline-variant/20 text-xs text-on-surface-variant rounded-sm font-label"
+                  className="px-3 py-1.5 bg-surface-container-high border border-outline-variant/20 text-xs text-on-surface-variant rounded-sm font-label"
                 >
                   {trait}
                 </span>
               ))}
             </div>
-          </section>
+          </div>
         )}
       </div>
 
