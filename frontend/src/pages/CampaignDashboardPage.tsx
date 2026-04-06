@@ -11,13 +11,14 @@ import { useGroups } from '@/features/groups/api';
 import { InlineRichField, SectionBackground } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { ManageSectionsDrawer } from '@/features/campaigns/ui/ManageSectionsDrawer';
+import { getWeekdays } from '@/shared/lib/weekdays';
 import type { CampaignSummary } from '@/entities/campaign';
 import type { CampaignSection } from '@/entities/campaign';
 
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-
 function SessionCalendar({ sessions, campaignId }: { sessions: { id: string; number: number; title: string; datetime: string }[]; campaignId: string }) {
   const { t, i18n } = useTranslation('campaigns');
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
+  const WEEKDAYS = useMemo(() => getWeekdays(locale), [locale]);
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -34,7 +35,6 @@ function SessionCalendar({ sessions, campaignId }: { sessions: { id: string; num
     return map;
   }, [sessions]);
 
-  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const startDay = (() => { const d = new Date(viewYear, viewMonth, 1).getDay(); return d === 0 ? 6 : d - 1; })();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;

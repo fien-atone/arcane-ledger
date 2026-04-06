@@ -5,9 +5,8 @@ import { CampaignCreateDrawer, useCampaigns } from '@/features/campaigns';
 import { useSessions } from '@/features/sessions/api/queries';
 import { InvitationBanner } from '@/features/invitations/ui/InvitationBanner';
 import { SectionBackground } from '@/shared/ui';
+import { getWeekdays } from '@/shared/lib/weekdays';
 import type { CampaignSummary } from '@/entities/campaign';
-
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 function CampaignRow({ campaign }: { campaign: CampaignSummary }) {
   const { t, i18n } = useTranslation('campaigns');
@@ -113,6 +112,8 @@ const CAMPAIGN_COLORS = ['#f2ca50', '#14b8a6', '#a78bfa', '#f87171', '#60a5fa', 
 
 function GlobalCalendar({ campaigns }: { campaigns: CampaignSummary[] }) {
   const { i18n } = useTranslation('campaigns');
+  const calLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
+  const WEEKDAYS = useMemo(() => getWeekdays(calLocale), [calLocale]);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const activeCampaigns = campaigns.filter((c) => !c.archivedAt);
   // Only include campaigns with sessions enabled (empty array = all enabled)

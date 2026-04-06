@@ -39,6 +39,7 @@ export function ChangelogDrawer({ open, onClose }: Props) {
 
   if (!open) return null;
 
+  const lang = (i18n.language.startsWith('ru') ? 'ru' : 'en') as 'en' | 'ru';
   const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
 
   return (
@@ -76,7 +77,7 @@ export function ChangelogDrawer({ open, onClose }: Props) {
               </div>
 
               <p className="text-sm font-headline text-on-surface-variant mb-4 italic">
-                {entry.title}
+                {entry.title[lang]}
               </p>
 
               <div className="space-y-3">
@@ -89,7 +90,7 @@ export function ChangelogDrawer({ open, onClose }: Props) {
                       {item.icon}
                     </span>
                     <p className="text-sm text-on-surface-variant leading-relaxed flex-1">
-                      {item.text}
+                      {item.text[lang]}
                     </p>
                     {item.tag && (
                       <span className={`flex-shrink-0 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest rounded-full ${TAG_STYLES[item.tag]}`}>

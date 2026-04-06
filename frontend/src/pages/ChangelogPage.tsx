@@ -11,6 +11,7 @@ const TAG_STYLES = {
 
 export default function ChangelogPage() {
   const { t, i18n } = useTranslation();
+  const lang = (i18n.language.startsWith('ru') ? 'ru' : 'en') as 'en' | 'ru';
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
 
   const TAG_LABEL = {
@@ -67,7 +68,7 @@ export default function ChangelogPage() {
                   </span>
                 </div>
 
-                <p className="text-sm font-headline italic text-on-surface-variant mb-5">{entry.title}</p>
+                <p className="text-sm font-headline italic text-on-surface-variant mb-5">{entry.title[lang]}</p>
 
                 <div className="space-y-2.5">
                   {entry.items.map((item, j) => (
@@ -75,7 +76,7 @@ export default function ChangelogPage() {
                       <span className="material-symbols-outlined text-primary/50 flex-shrink-0 mt-0.5" style={{ fontSize: '17px' }}>
                         {item.icon}
                       </span>
-                      <p className="text-sm text-on-surface-variant leading-relaxed flex-1">{item.text}</p>
+                      <p className="text-sm text-on-surface-variant leading-relaxed flex-1">{item.text[lang]}</p>
                       {item.tag && (
                         <span className={`flex-shrink-0 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest rounded-full ${TAG_STYLES[item.tag]}`}>
                           {TAG_LABEL[item.tag]}

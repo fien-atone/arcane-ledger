@@ -1,4 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { getWeekdays } from '@/shared/lib/weekdays';
 
 interface Props {
   value: string; // YYYY-MM-DD or ''
@@ -6,8 +8,6 @@ interface Props {
   placeholder?: string;
   className?: string;
 }
-
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 function daysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -32,6 +32,9 @@ function toIsoDate(year: number, month: number, day: number): string {
 }
 
 export function DatePicker({ value, onChange, placeholder = 'Pick a date…', className = '' }: Props) {
+  const { i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
+  const WEEKDAYS = useMemo(() => getWeekdays(locale), [locale]);
   const [open, setOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);

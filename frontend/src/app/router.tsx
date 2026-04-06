@@ -3,6 +3,8 @@ import { lazy, Suspense } from 'react';
 import { ProtectedRoute, AdminRoute } from '@/features/auth';
 import { AppLayout } from './AppLayout';
 import { CampaignShell } from '@/widgets/CampaignShell';
+import { LangRoute } from './LangRoute';
+import { LangRedirect } from './LangRedirect';
 
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const ChangelogPage = lazy(() => import('@/pages/ChangelogPage'));
@@ -44,10 +46,21 @@ const withSuspense = (Component: React.ComponentType) => (
 
 export const router = createBrowserRouter(
   [
-    // Public
-    { path: '/', element: withSuspense(LandingPage) },
-    { path: '/changelog', element: withSuspense(ChangelogPage) },
-    { path: '/login', element: withSuspense(LoginPage) },
+    // Public — lang-prefixed
+    {
+      path: '/:lang',
+      element: <LangRoute />,
+      children: [
+        { index: true, element: withSuspense(LandingPage) },
+        { path: 'changelog', element: withSuspense(ChangelogPage) },
+        { path: 'login', element: withSuspense(LoginPage) },
+      ],
+    },
+
+    // Redirects: bare public paths → lang-prefixed equivalents
+    { path: '/', element: <LangRedirect /> },
+    { path: '/changelog', element: <LangRedirect /> },
+    { path: '/login', element: <LangRedirect /> },
 
     // Protected
     {

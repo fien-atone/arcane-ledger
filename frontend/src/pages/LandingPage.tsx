@@ -70,7 +70,12 @@ function RoadmapCard({ icon, title, desc }: { icon: string; title: string; desc:
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  const { t } = useTranslation('landing');
+  const { t, i18n } = useTranslation('landing');
+
+  const currentLang = i18n.language.startsWith('ru') ? 'ru' : 'en';
+  const toggleLang = () => {
+    i18n.changeLanguage(currentLang === 'ru' ? 'en' : 'ru');
+  };
 
   return (
     <div className="bg-background text-on-background min-h-screen">
@@ -83,12 +88,20 @@ export default function LandingPage() {
           <a href="#roadmap" className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">{t('nav.roadmap')}</a>
           <Link to="/changelog" className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">{t('nav.changelog')}</Link>
         </div>
-        <Link
-          to="/login"
-          className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2 rounded-sm text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
-        >
-          {t('nav.open_app')}
-        </Link>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleLang}
+            className="text-on-surface-variant/60 hover:text-primary text-xs uppercase tracking-widest transition-colors"
+          >
+            {currentLang === 'ru' ? 'EN' : 'RU'}
+          </button>
+          <Link
+            to="/login"
+            className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2 rounded-sm text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
+          >
+            {t('nav.open_app')}
+          </Link>
+        </div>
       </nav>
 
       <main className="max-w-6xl mx-auto px-8">
