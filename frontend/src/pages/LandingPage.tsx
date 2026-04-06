@@ -17,15 +17,19 @@ const FEATURE_KEYS = [
   { key: 'quests', icon: 'assignment', wide: false, accent: 'secondary' },
   { key: 'dice_roller', icon: 'd20', wide: false, accent: 'primary' },
   { key: 'gm_notes', icon: 'lock', wide: false, accent: 'tertiary' },
+  { key: 'multiplayer', icon: 'group_add', wide: true, accent: 'secondary' },
+  { key: 'visibility', icon: 'visibility', wide: false, accent: 'tertiary' },
 ] as const;
 
 const ROADMAP_KEYS = [
   { key: 'items_artifacts', icon: 'inventory_2' },
   { key: 'campaign_timeline', icon: 'timeline' },
   { key: 'export_pdf', icon: 'picture_as_pdf' },
-  { key: 'player_view', icon: 'person_play' },
   { key: 'gm_screen', icon: 'menu_book' },
-  { key: 'cloud_sync', icon: 'cloud_sync' },
+  { key: 'ai_npc_gen', icon: 'auto_awesome' },
+  { key: 'ai_session_parser', icon: 'notes' },
+  { key: 'oauth_login', icon: 'passkey' },
+  { key: 'social_gm_groups', icon: 'diversity_3' },
 ] as const;
 
 // ── Components ────────────────────────────────────────────────────────────────

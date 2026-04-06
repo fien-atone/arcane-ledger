@@ -10,10 +10,10 @@
     "badge": "Demo",
     "headline_1": "Your campaign.",
     "headline_2": "Remembered.",
-    "description": "Arcane Ledger is a GM-first campaign companion for TTRPG. Track your world \u2014 locations, NPCs, factions, sessions, and characters \u2014 in one focused tool.",
+    "description": "Arcane Ledger is a GM-first campaign companion for tabletop RPGs. Build your world — locations, NPCs, factions, quests — and share exactly what your players need to see. Everything else stays behind the screen.",
     "cta_primary": "Begin Your Chronicle",
     "cta_secondary": "Explore features",
-    "disclaimer": "All data stored locally in your browser \u00b7 No account required"
+    "disclaimer": "Free to use · Multiplayer ready · EN / RU"
   },
 
   "stats": {
@@ -22,8 +22,8 @@
     "dice_roller": "Dice roller",
     "in_active_dev": "In active dev",
     "entity_types_value": "10+",
-    "locations_maps_value": "\u221e",
-    "in_active_dev_value": "Beta"
+    "locations_maps_value": "∞",
+    "in_active_dev_value": "0.3"
   },
 
   "features": {
@@ -34,53 +34,61 @@
     "npcs": "NPCs",
     "npcs_desc": "Rich character sheets with portrait, appearance, backstory, personality, GM notes, and social relations.",
     "party_characters": "Party & Characters",
-    "party_characters_desc": "Player character profiles with inline WYSIWYG editing \u2014 backstory, motivation, bonds, flaws.",
+    "party_characters_desc": "Player character profiles with inline WYSIWYG editing — backstory, motivation, bonds, flaws.",
     "factions_groups": "Factions & Groups",
     "factions_groups_desc": "Track guilds, cults, families, councils. Manage membership, goals, and relationship to the party.",
     "session_journal": "Session Journal",
-    "session_journal_desc": "Log every session with short recap and full notes. Auto-formatted timeline of your campaign.",
+    "session_journal_desc": "Log every session with a short recap and full notes. Each player keeps their own personal notes too. An auto-formatted timeline of your campaign.",
     "social_relations": "Social Relations",
-    "social_relations_desc": "Directional relationship graph between any entities \u2014 characters, NPCs, groups. Friendliness scale with notes.",
+    "social_relations_desc": "Directional relationship graph between any entities — characters, NPCs, groups. Interactive force graph and chord diagram. Friendliness scale with notes.",
     "species_races": "Species & Races",
     "species_races_desc": "Homebrew species catalogue with traits, size, and lore. Linked to characters and NPCs automatically.",
     "quests": "Quests",
     "quests_desc": "Active and completed quest tracking with objectives, status, and related sessions.",
     "dice_roller": "Dice Roller",
-    "dice_roller_desc": "d4 through d100 \u2014 roll any combination, see full history. Always available from the sidebar.",
+    "dice_roller_desc": "d4 through d100 — roll any combination, see full history. Always available from the sidebar.",
     "gm_notes": "GM Notes",
-    "gm_notes_desc": "Private notes on every entity \u2014 locations, NPCs, characters, groups. Separate from player-facing content."
+    "gm_notes_desc": "Private notes on every entity — locations, NPCs, characters, groups. Completely hidden from players via the visibility system. Your secrets stay secret.",
+    "multiplayer": "Multiplayer",
+    "multiplayer_desc": "Invite players to your campaign. Control exactly what they see — from whole entities down to individual fields. Real-time updates via WebSocket.",
+    "visibility": "Visibility System",
+    "visibility_desc": "Fine-grained player visibility. Toggle fields, connections, and entire entities. Presets for quick setup — All, Basic, or None."
   },
 
   "roadmap": {
     "overline": "Coming next",
     "title": "On the horizon",
-    "description": "These features are planned or in progress. The app is actively developed.",
+    "description": "These features are planned or in progress. The app is actively developed — and these are next up.",
     "items_artifacts": "Items & Artifacts",
-    "items_artifacts_desc": "Magical items, homebrew equipment, cursed relics \u2014 with properties and history.",
+    "items_artifacts_desc": "Magical items, homebrew equipment, cursed relics — with properties and history.",
     "campaign_timeline": "Campaign Timeline",
     "campaign_timeline_desc": "Visual chronological map of sessions, events, and quest milestones.",
     "export_pdf": "Export to PDF",
     "export_pdf_desc": "Print-ready character sheets, session summaries, and location compendium.",
-    "player_view": "Player View",
-    "player_view_desc": "Separate access level \u2014 players see their own sheet and shared world lore.",
     "gm_screen": "GM Screen",
     "gm_screen_desc": "Dedicated GM screen with encounter tools, reference tables, and session prep.",
-    "cloud_sync": "Cloud Sync",
-    "cloud_sync_desc": "Real-time sync across devices and players."
+    "ai_npc_gen": "AI NPC Generator",
+    "ai_npc_gen_desc": "Describe the vibe, get a full NPC — name, appearance, backstory, personality. Powered by AI, flavored by your campaign's context.",
+    "ai_session_parser": "AI Session Notes",
+    "ai_session_parser_desc": "Paste your messy session notes, get structured entries — NPCs mentioned, locations visited, quests advanced. Automatically.",
+    "oauth_login": "OAuth Login",
+    "oauth_login_desc": "Sign in with Google or Discord. One click, no passwords.",
+    "social_gm_groups": "GM Communities",
+    "social_gm_groups_desc": "A shared space for GM groups running parallel campaigns. Coordinate schedules, share notes, see each other's worlds."
   },
 
   "contact": {
     "overline": "Get in touch",
     "title": "Say hello",
-    "description": "Questions, feedback, collaboration \u2014 reach out on any of these.",
-    "telegram": "Telegram \u00b7 @inoise",
-    "twitter": "Twitter \u00b7 @inoise",
+    "description": "Questions, feedback, collaboration — reach out on any of these.",
+    "telegram": "Telegram · @inoise",
+    "twitter": "Twitter · @inoise",
     "email": "ivnshumov@gmail.com"
   },
 
   "cta": {
     "title": "Ready to start?",
-    "description": "Use the test credentials to explore \u2014 or sign in and start building your world.",
+    "description": "Use the test credentials to explore — or sign in and start building your world.",
     "button": "Open Arcane Ledger"
   }
 }

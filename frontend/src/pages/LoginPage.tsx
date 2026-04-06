@@ -135,11 +135,6 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
-
-          <p className="mt-8 pt-8 border-t border-outline-variant/10 text-on-surface-variant/40 text-[11px] leading-relaxed text-center flex items-start gap-1.5 justify-center">
-            <span className="material-symbols-outlined text-[13px] mt-px flex-shrink-0">info</span>
-            {t('session_info')}
-          </p>
         </div>
       </main>
 

@@ -27,9 +27,6 @@ _Nothing currently in progress._
 |---|---|---|---|
 | F-1 | 🔴 | End-to-end testing: verify all pages work with GraphQL backend (not just build) | — |
 | F-2 | 🟡 | Seed script: migrate mock data (NPCs, locations, sessions, quests, groups) into Postgres | — |
-| F-3 | 🟡 | GraphQL subscriptions: real-time updates when data changes | — |
-| F-4 | 🟡 | Role-based field visibility: hide GM Notes from players | — |
-| F-5 | 🟡 | Campaign invitations: invite users to campaign as player | — |
 | F-6 | 🟢 | AI: NPC generation — имя, внешность, предыстория на основе контекста кампании | — |
 | F-7 | 🟢 | AI: парсинг заметок сессии в сущности — NPC, локации, квесты из свободного текста | — |
 | F-13 | 🟢 | AI: генерация локаций и городов на основе типа, климата и региона | — |
@@ -83,6 +80,11 @@ _Nothing currently in progress._
 | ✅ | Image upload: cache-busting after replace, removed image upload from LocationEditDrawer | — |
 | ✅ | EmptyState component used consistently on all list pages (NPC, Session, Quest, LocationTypes) | — |
 | ✅ | Shared ImageUpload component used for location map (consistent View/Replace hover UI) | — |
+| ✅ | GraphQL subscriptions: real-time updates when data changes | 0.3.0 |
+| ✅ | Role-based field visibility: hide GM Notes from players | 0.3.0 |
+| ✅ | Campaign invitations: invite users to campaign as player | 0.3.0 |
+| ✅ | i18n: English and Russian language support | 0.3.0 |
+| ✅ | Responsive UI card panels across all pages | 0.3.0 |
 | ✅ | Quests CRUD, social relations editing, BG3-style bars | 0.2.3 |
 | ✅ | Dashboard overhaul, campaign list, session badges | 0.2.2 |
 | ✅ | Sessions, LocationIcon, unified UI patterns | 0.2.1 |
