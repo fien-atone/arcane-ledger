@@ -25,9 +25,9 @@ export default function ChangelogPage() {
 
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/10 flex justify-between items-center px-10 py-5">
-        <Link to="/" className="text-2xl font-serif italic text-primary tracking-tight">Arcane Ledger</Link>
+        <Link to={`/${lang}`} className="text-2xl font-serif italic text-primary tracking-tight">Arcane Ledger</Link>
         <Link
-          to="/login"
+          to={`/${lang}/login`}
           className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2 rounded-sm text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
         >
           {t('open_app')}
@@ -38,7 +38,7 @@ export default function ChangelogPage() {
 
         {/* Header */}
         <div className="mb-16">
-          <BackLink to="/">{t('back')}</BackLink>
+          <BackLink to={`/${lang}`}>{t('back')}</BackLink>
           <span className="text-[10px] font-label uppercase tracking-widest text-primary block mb-3">{t('changelog_release_history')}</span>
           <h1 className="font-headline text-5xl font-bold text-on-surface">{t('changelog')}</h1>
           <p className="text-on-surface-variant mt-3">{t('changelog_subtitle')}</p>

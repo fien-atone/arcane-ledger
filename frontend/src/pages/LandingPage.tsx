@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Footer, D20Icon } from '@/shared/ui';
 import { CHANGELOG } from '@/shared/changelog/entries';
@@ -71,10 +71,13 @@ function RoadmapCard({ icon, title, desc }: { icon: string; title: string; desc:
 
 export default function LandingPage() {
   const { t, i18n } = useTranslation('landing');
+  const navigate = useNavigate();
 
   const currentLang = i18n.language.startsWith('ru') ? 'ru' : 'en';
   const toggleLang = () => {
-    i18n.changeLanguage(currentLang === 'ru' ? 'en' : 'ru');
+    const newLang = currentLang === 'ru' ? 'en' : 'ru';
+    i18n.changeLanguage(newLang);
+    navigate(`/${newLang}`, { replace: true });
   };
 
   return (
@@ -86,17 +89,18 @@ export default function LandingPage() {
         <div className="hidden md:flex items-center gap-8">
           <a href="#features" className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">{t('nav.features')}</a>
           <a href="#roadmap" className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">{t('nav.roadmap')}</a>
-          <Link to="/changelog" className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">{t('nav.changelog')}</Link>
+          <Link to={`/${currentLang}/changelog`} className="text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">{t('nav.changelog')}</Link>
         </div>
         <div className="flex items-center gap-4">
           <button
             onClick={toggleLang}
-            className="text-on-surface-variant/60 hover:text-primary text-xs uppercase tracking-widest transition-colors"
+            className="flex items-center gap-1.5 text-on-surface-variant/60 hover:text-on-surface text-xs uppercase tracking-widest transition-colors"
           >
+            <span className="text-base leading-none">{currentLang === 'ru' ? '🇺🇸' : '🇷🇺'}</span>
             {currentLang === 'ru' ? 'EN' : 'RU'}
           </button>
           <Link
-            to="/login"
+            to={`/${currentLang}/login`}
             className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2 rounded-sm text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
           >
             {t('nav.open_app')}
@@ -124,7 +128,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <Link
-              to="/login"
+              to={`/${currentLang}/login`}
               className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-10 py-4 rounded-sm font-bold text-sm uppercase tracking-wider shadow-[0_0_40px_-8px_rgba(242,202,80,0.4)] hover:opacity-90 transition-opacity"
             >
               {t('hero.cta_primary')}
@@ -244,7 +248,7 @@ export default function LandingPage() {
           <h2 className="font-headline text-4xl md:text-5xl font-bold text-on-surface mb-4">{t('cta.title')}</h2>
           <p className="text-on-surface-variant mb-10 max-w-md">{t('cta.description')}</p>
           <Link
-            to="/login"
+            to={`/${currentLang}/login`}
             className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-12 py-4 rounded-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-[0_0_40px_-8px_rgba(242,202,80,0.3)]"
           >
             {t('cta.button')}
