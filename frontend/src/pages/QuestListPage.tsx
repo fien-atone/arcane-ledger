@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
@@ -7,24 +8,18 @@ import { EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
 import { useState } from 'react';
 import type { QuestStatus } from '@/entities/quest';
 
-const STATUS_CONFIG: Record<QuestStatus, { label: string; dot: string; pill: string; icon: string; iconColor: string }> = {
-  active:       { label: 'Active',       dot: 'bg-secondary',              pill: 'bg-secondary/10 text-secondary border border-secondary/20',                                  icon: 'bolt',           iconColor: 'text-secondary' },
-  completed:    { label: 'Completed',    dot: 'bg-emerald-400',             pill: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',                           icon: 'check_circle',   iconColor: 'text-emerald-400' },
-  failed:       { label: 'Failed',       dot: 'bg-rose-400',               pill: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',                                       icon: 'cancel',         iconColor: 'text-rose-400' },
-  unavailable:  { label: 'Unavailable',  dot: 'bg-outline-variant',        pill: 'bg-surface-container-highest text-on-surface-variant/50 border border-outline-variant/20',     icon: 'block',          iconColor: 'text-on-surface-variant/40' },
-  undiscovered: { label: 'Undiscovered', dot: 'bg-on-surface-variant/20',  pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10',                  icon: 'visibility_off', iconColor: 'text-on-surface-variant/30' },
+const STATUS_STYLE: Record<QuestStatus, { dot: string; pill: string; icon: string; iconColor: string }> = {
+  active:       { dot: 'bg-secondary',              pill: 'bg-secondary/10 text-secondary border border-secondary/20',                                  icon: 'bolt',           iconColor: 'text-secondary' },
+  completed:    { dot: 'bg-emerald-400',             pill: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',                           icon: 'check_circle',   iconColor: 'text-emerald-400' },
+  failed:       { dot: 'bg-rose-400',               pill: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',                                       icon: 'cancel',         iconColor: 'text-rose-400' },
+  unavailable:  { dot: 'bg-outline-variant',        pill: 'bg-surface-container-highest text-on-surface-variant/50 border border-outline-variant/20',     icon: 'block',          iconColor: 'text-on-surface-variant/40' },
+  undiscovered: { dot: 'bg-on-surface-variant/20',  pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10',                  icon: 'visibility_off', iconColor: 'text-on-surface-variant/30' },
 };
 
-const STATUS_FILTERS: Array<{ value: QuestStatus | 'all'; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'undiscovered', label: 'Undiscovered' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'unavailable', label: 'Unavailable' },
-  { value: 'failed', label: 'Failed' },
-];
+const STATUS_FILTER_KEYS: Array<QuestStatus | 'all'> = ['all', 'active', 'undiscovered', 'completed', 'unavailable', 'failed'];
 
 export default function QuestListPage() {
+  const { t } = useTranslation('quests');
   const { id: campaignId } = useParams<{ id: string }>();
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const { data: campaign } = useCampaign(campaignId ?? '');
@@ -62,7 +57,7 @@ export default function QuestListPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -72,8 +67,8 @@ export default function QuestListPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight">Quests</h1>
-              <p className="text-on-surface-variant text-sm mt-1">Active threads and chronicle of completed tasks.</p>
+              <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight">{t('title')}</h1>
+              <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
             </div>
             {isGm && (
               <button
@@ -81,7 +76,7 @@ export default function QuestListPage() {
                 className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
               >
                 <span className="material-symbols-outlined text-[20px]">add</span>
-                <span className="font-label text-xs uppercase tracking-widest">New Quest</span>
+                <span className="font-label text-xs uppercase tracking-widest">{t('new_quest')}</span>
               </button>
             )}
           </div>
@@ -92,7 +87,7 @@ export default function QuestListPage() {
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t('search_placeholder')}
                 value={search}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -105,7 +100,8 @@ export default function QuestListPage() {
               />
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {STATUS_FILTERS.map(({ label, value }) => {
+              {STATUS_FILTER_KEYS.map((value) => {
+                const label = value === 'all' ? t('filter_all') : t(`status_${value}`);
                 const count = value === 'all' ? (quests?.length ?? 0) : (quests?.filter((q) => q.status === value).length ?? 0);
                 return (
                   <button
@@ -131,23 +127,23 @@ export default function QuestListPage() {
           </div>
         </div>
 
-        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading…</div>}
-        {isError && <p className="text-tertiary text-sm p-12">Failed to load quests.</p>}
+        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>{t('loading')}</div>}
+        {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
 
         {!isLoading && !isError && (
           filtered.length === 0 ? (
-            <EmptyState icon="map" title="No quests found." subtitle="Create a quest to track objectives." />
+            <EmptyState icon="map" title={t('empty_title')} subtitle={t('empty_subtitle')} />
           ) : (
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm divide-y divide-outline-variant/10">
               {/* Column headers */}
               <div className="flex items-center gap-3 px-6 py-2 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
                 <span className="w-10 flex-shrink-0" />
-                <span className="flex-1 min-w-0">Title</span>
-                <span className="w-24 flex-shrink-0">Status</span>
+                <span className="flex-1 min-w-0">{t('column_title')}</span>
+                <span className="w-24 flex-shrink-0">{t('column_status')}</span>
                 {isGm && <span className="w-8 flex-shrink-0" />}
               </div>
               {filtered.map((quest) => {
-                const st = STATUS_CONFIG[quest.status];
+                const st = { ...STATUS_STYLE[quest.status], label: t(`status_${quest.status}`) };
                 return (
                   <Link
                     key={quest.id}
@@ -180,7 +176,7 @@ export default function QuestListPage() {
                               playerVisibleFields: quest.playerVisibleFields ?? [],
                             });
                           }}
-                          title={quest.playerVisible ? 'Visible to players' : 'Hidden from players'}
+                          title={quest.playerVisible ? t('visible_to_players') : t('hidden_from_players')}
                           className={`w-8 flex-shrink-0 flex items-center justify-center transition-colors ${
                             quest.playerVisible ? 'text-primary/60 hover:text-primary' : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
                           }`}

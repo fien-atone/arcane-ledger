@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCampaign, useSaveCampaign, getEnabledSections } from '@/features/campaigns/api/queries';
 import { useSessions } from '@/features/sessions/api/queries';
 import { useQuests } from '@/features/quests/api';
@@ -13,17 +14,15 @@ import { ManageSectionsDrawer } from '@/features/campaigns/ui/ManageSectionsDraw
 import type { CampaignSummary } from '@/entities/campaign';
 import type { CampaignSection } from '@/entities/campaign';
 
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 function SessionCalendar({ sessions, campaignId }: { sessions: { id: string; number: number; title: string; datetime: string }[]; campaignId: string }) {
+  const { t, i18n } = useTranslation('campaigns');
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
 
-  // Map date string → session
+  // Map date string -> session
   const sessionsByDate = useMemo(() => {
     const map = new Map<string, typeof sessions[number]>();
     for (const s of sessions) {
@@ -35,10 +34,11 @@ function SessionCalendar({ sessions, campaignId }: { sessions: { id: string; num
     return map;
   }, [sessions]);
 
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const startDay = (() => { const d = new Date(viewYear, viewMonth, 1).getDay(); return d === 0 ? 6 : d - 1; })();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 
   const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
   const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
@@ -47,7 +47,7 @@ function SessionCalendar({ sessions, campaignId }: { sessions: { id: string; num
     <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
       <div className="flex items-center gap-4 mb-4">
         <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-          Calendar
+          {t('dashboard.calendar')}
         </h2>
         <div className="h-px flex-1 bg-outline-variant/20" />
       </div>
@@ -120,8 +120,12 @@ function SessionCalendar({ sessions, campaignId }: { sessions: { id: string; num
 }
 
 export default function CampaignDashboardPage() {
+  const { t, i18n } = useTranslation('campaigns');
   const { id } = useParams<{ id: string }>();
   const campaignId = id ?? '';
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const { data: campaign, isLoading: campaignLoading } = useCampaign(campaignId);
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
@@ -147,13 +151,13 @@ export default function CampaignDashboardPage() {
     return (
       <div className="flex h-screen items-center justify-center text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin mr-3">progress_activity</span>
-        Loading campaign…
+        {t('dashboard.loading')}
       </div>
     );
   }
 
   if (!campaign) {
-    return <div className="p-12 text-on-surface-variant">Campaign not found.</div>;
+    return <div className="p-12 text-on-surface-variant">{t('dashboard.not_found')}</div>;
   }
 
   const now = new Date();
@@ -185,13 +189,13 @@ export default function CampaignDashboardPage() {
 
   // Quick nav items filtered by enabled sections
   const quickNavItems = [
-    { label: 'Sessions', section: 'sessions' as CampaignSection, count: String(sessionCount), icon: 'auto_stories', to: 'sessions' },
-    { label: 'NPCs', section: 'npcs' as CampaignSection, count: String(npcCount), icon: 'person', to: 'npcs' },
-    { label: 'Locations', section: 'locations' as CampaignSection, count: String(locationCount), icon: 'location_on', to: 'locations' },
-    { label: 'Groups', section: 'groups' as CampaignSection, count: String(groupCount), icon: 'groups', to: 'groups' },
-    { label: 'Quests', section: 'quests' as CampaignSection, count: `${questActiveCount}/${questTotal}`, sub: 'active', icon: 'auto_awesome', to: 'quests' },
-    { label: 'Social Graph', section: 'social_graph' as CampaignSection, icon: 'hub', to: 'npcs/relationships' },
-    ...(isGm ? [{ label: 'Species', section: 'species' as CampaignSection, icon: 'blur_on', to: 'species' }] : []),
+    { label: t('common:nav_items.sessions'), section: 'sessions' as CampaignSection, count: String(sessionCount), icon: 'auto_stories', to: 'sessions' },
+    { label: t('common:nav_items.npcs'), section: 'npcs' as CampaignSection, count: String(npcCount), icon: 'person', to: 'npcs' },
+    { label: t('common:nav_items.locations'), section: 'locations' as CampaignSection, count: String(locationCount), icon: 'location_on', to: 'locations' },
+    { label: t('common:nav_items.groups'), section: 'groups' as CampaignSection, count: String(groupCount), icon: 'groups', to: 'groups' },
+    { label: t('common:nav_items.quests'), section: 'quests' as CampaignSection, count: `${questActiveCount}/${questTotal}`, sub: 'active', icon: 'auto_awesome', to: 'quests' },
+    { label: t('common:nav_items.social_graph'), section: 'social_graph' as CampaignSection, icon: 'hub', to: 'npcs/relationships' },
+    ...(isGm ? [{ label: t('common:nav_items.species'), section: 'species' as CampaignSection, icon: 'blur_on', to: 'species' }] : []),
   ].filter((item) => enabledSet.has(item.section));
 
 
@@ -205,7 +209,7 @@ export default function CampaignDashboardPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
@@ -219,12 +223,12 @@ export default function CampaignDashboardPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-primary/30 hover:text-primary transition-colors"
             >
               <span className="material-symbols-outlined text-[14px]">settings</span>
-              Sections
+              {t('common:sections')}
             </button>
             {confirmArchive ? (
               <div className="flex items-center gap-2 px-3 py-2 border border-outline-variant/20 bg-surface-container-high rounded-sm">
                 <span className="text-[10px] text-on-surface-variant">
-                  {campaign.archivedAt ? 'Restore this campaign?' : 'Archive this campaign?'}
+                  {campaign.archivedAt ? t('dashboard.restore_confirm') : t('dashboard.archive_confirm')}
                 </span>
                 <button
                   onClick={() => {
@@ -236,13 +240,13 @@ export default function CampaignDashboardPage() {
                   }}
                   className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-primary hover:text-on-surface transition-colors"
                 >
-                  Yes
+                  {t('common:yes')}
                 </button>
                 <button
                   onClick={() => setConfirmArchive(false)}
                   className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
                 >
-                  No
+                  {t('common:no')}
                 </button>
               </div>
             ) : (
@@ -253,7 +257,7 @@ export default function CampaignDashboardPage() {
                 <span className="material-symbols-outlined text-[14px]">
                   {campaign.archivedAt ? 'unarchive' : 'archive'}
                 </span>
-                {campaign.archivedAt ? 'Restore' : 'Archive'}
+                {campaign.archivedAt ? t('common:restore') : t('common:archive')}
               </button>
             )}
           </div>
@@ -295,7 +299,7 @@ export default function CampaignDashboardPage() {
             <h1
               className="font-headline text-5xl lg:text-6xl font-bold text-on-surface mb-2 cursor-pointer hover:text-primary/80 transition-colors group"
               onClick={() => { setTitleDraft(campaign.title); setEditingTitle(true); }}
-              title="Click to edit"
+              title={t('dashboard.click_to_edit')}
             >
               {campaign.title}
               <span className="material-symbols-outlined text-lg text-on-surface-variant/0 group-hover:text-primary/40 transition-colors ml-3 align-middle">edit</span>
@@ -310,7 +314,7 @@ export default function CampaignDashboardPage() {
               label=""
               value={campaign.description}
               onSave={saveDescription}
-              placeholder="Campaign description..."
+              placeholder={t('dashboard.description_placeholder')}
             />
           </div>
 
@@ -336,7 +340,7 @@ export default function CampaignDashboardPage() {
 
         <div className="grid grid-cols-12 gap-8">
 
-          {/* ── Left column (8/12) ─────────────────────────── */}
+          {/* -- Left column (8/12) -- */}
           <div className="col-span-12 lg:col-span-8 space-y-8">
 
             {/* Next Session */}
@@ -346,7 +350,7 @@ export default function CampaignDashboardPage() {
                   <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                     <div className="flex items-center gap-4 mb-5">
                       <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                        Next Session
+                        {t('dashboard.next_session')}
                       </h2>
                       <div className="h-px flex-1 bg-outline-variant/20" />
                     </div>
@@ -356,8 +360,8 @@ export default function CampaignDashboardPage() {
                     >
                       <span className="material-symbols-outlined text-on-surface-variant/50 group-hover:text-primary transition-colors text-xl">add</span>
                       <div className="flex-1">
-                        <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant group-hover:text-primary transition-colors">No upcoming session</p>
-                        <p className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Schedule the next session</p>
+                        <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant group-hover:text-primary transition-colors">{t('dashboard.no_upcoming_session')}</p>
+                        <p className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">{t('dashboard.schedule_next_session')}</p>
                       </div>
                     </Link>
                   </div>
@@ -377,21 +381,21 @@ export default function CampaignDashboardPage() {
               let whenLabel = '';
               let whenDetail = '';
               if (isToday) {
-                whenLabel = 'Session Today!';
+                whenLabel = t('dashboard.session_today');
                 const h = sessionDate!.getHours();
                 const m = sessionDate!.getMinutes();
                 if (h !== 0 || m !== 0) {
-                  whenDetail = `Starts at ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                  whenDetail = `${t('dashboard.starts_at')} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
                 }
               } else if (isTomorrow) {
-                whenLabel = 'Session Tomorrow';
+                whenLabel = t('dashboard.session_tomorrow');
                 const h = sessionDate!.getHours();
                 const m = sessionDate!.getMinutes();
                 if (h !== 0 || m !== 0) {
-                  whenDetail = `Starts at ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                  whenDetail = `${t('dashboard.starts_at')} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
                 }
               } else {
-                whenLabel = 'Next Session';
+                whenLabel = t('dashboard.next_session');
                 if (sessionDate) whenDetail = formatDate(nextSession.datetime);
               }
 
@@ -402,7 +406,7 @@ export default function CampaignDashboardPage() {
                 <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                   <div className="flex items-center gap-4 mb-5">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                      Next Session
+                      {t('dashboard.next_session')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                   </div>
@@ -432,14 +436,14 @@ export default function CampaignDashboardPage() {
             {sectionOn('sessions') && <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <div className="flex items-center gap-4 mb-5">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                  Recent Sessions
+                  {t('dashboard.recent_sessions')}
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 <Link
                   to={`/campaigns/${campaignId}/sessions`}
                   className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  All sessions
+                  {t('dashboard.all_sessions')}
                 </Link>
               </div>
               {lastSessions.length > 0 ? (
@@ -471,7 +475,7 @@ export default function CampaignDashboardPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-on-surface-variant/40 italic">No sessions recorded yet.</p>
+                <p className="text-xs text-on-surface-variant/40 italic">{t('dashboard.no_sessions_recorded')}</p>
               )}
             </section>}
 
@@ -479,14 +483,14 @@ export default function CampaignDashboardPage() {
             {sectionOn('quests') && <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <div className="flex items-center gap-4 mb-5">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                  Active Quests
+                  {t('dashboard.active_quests')}
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 <Link
                   to={`/campaigns/${campaignId}/quests`}
                   className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  All quests
+                  {t('dashboard.all_quests')}
                 </Link>
               </div>
               {activeQuests && activeQuests.length > 0 ? (
@@ -509,13 +513,13 @@ export default function CampaignDashboardPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-on-surface-variant/40 italic">No active quests.</p>
+                <p className="text-xs text-on-surface-variant/40 italic">{t('dashboard.no_active_quests')}</p>
               )}
             </section>}
 
           </div>
 
-          {/* ── Right column (4/12) ────────────────────────── */}
+          {/* -- Right column (4/12) -- */}
           <div className="col-span-12 lg:col-span-4 space-y-8">
 
             {/* Session Calendar */}
@@ -525,14 +529,14 @@ export default function CampaignDashboardPage() {
             {sectionOn('party') && <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <div className="flex items-center gap-4 mb-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                  The Party
+                  {t('dashboard.the_party')}
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 <Link
                   to={`/campaigns/${campaignId}/party`}
                   className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  Manage
+                  {t('dashboard.manage')}
                 </Link>
               </div>
               {party && party.length > 0 ? (
@@ -563,7 +567,7 @@ export default function CampaignDashboardPage() {
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-on-surface-variant/40 italic">No characters yet.</p>
+                <p className="text-xs text-on-surface-variant/40 italic">{t('dashboard.no_characters')}</p>
               )}
             </section>}
 

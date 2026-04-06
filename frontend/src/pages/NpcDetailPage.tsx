@@ -1,5 +1,6 @@
 import { useState, useCallback, memo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useNpc, useNpcs, useSaveNpc, useDeleteNpc, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useAddNPCLocationPresence, useRemoveNPCLocationPresence, useSetNPCGroupMembershipVisibility, useSetNPCLocationPresenceVisibility } from '@/features/npcs/api/queries';
 import { useGroups } from '@/features/groups/api';
 import { useLocations } from '@/features/locations/api';
@@ -37,26 +38,15 @@ const NpcPortrait = memo(function NpcPortrait({ image, name }: { image?: string 
   );
 });
 
-const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
-  sibling:      { label: 'Sibling',      icon: 'people' },
-  parent:       { label: 'Parent',       icon: 'person' },
-  child:        { label: 'Child',        icon: 'child_care' },
-  spouse:       { label: 'Spouse',       icon: 'favorite' },
-  mentor:       { label: 'Mentor',       icon: 'school' },
-  pupil:        { label: 'Pupil',        icon: 'auto_stories' },
-  ally:         { label: 'Ally',         icon: 'handshake' },
-  rival:        { label: 'Rival',        icon: 'sports_kabaddi' },
-  acquaintance: { label: 'Known',        icon: 'link' },
-};
-
-const STATUS_STYLES: Record<NpcStatus, { pill: string; label: string }> = {
-  alive:   { pill: 'bg-primary/10 text-primary border border-primary/20',                                          label: 'Alive'   },
-  dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20',     label: 'Dead'    },
-  missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20',        label: 'Missing' },
-  unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10',                  label: 'Unknown' },
+const STATUS_STYLES: Record<NpcStatus, { pill: string }> = {
+  alive:   { pill: 'bg-primary/10 text-primary border border-primary/20' },
+  dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20' },
+  missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20' },
+  unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10' },
 };
 
 export default function NpcDetailPage() {
+  const { t } = useTranslation('npcs');
   const { id: campaignId, npcId } = useParams<{ id: string; npcId: string }>();
   const { data: npc, isLoading, isError, refetch } = useNpc(campaignId ?? '', npcId ?? '');
   const { data: groups } = useGroups(campaignId ?? '');
@@ -100,6 +90,18 @@ export default function NpcDetailPage() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [confirmRemoveGroupId, setConfirmRemoveGroupId] = useState<string | null>(null);
 
+  const RELATION_CONFIG: Record<NpcRelationType, { label: string; icon: string }> = {
+    sibling:      { label: t('relation_sibling'),      icon: 'people' },
+    parent:       { label: t('relation_parent'),       icon: 'person' },
+    child:        { label: t('relation_child'),        icon: 'child_care' },
+    spouse:       { label: t('relation_spouse'),       icon: 'favorite' },
+    mentor:       { label: t('relation_mentor'),       icon: 'school' },
+    pupil:        { label: t('relation_pupil'),        icon: 'auto_stories' },
+    ally:         { label: t('relation_ally'),         icon: 'handshake' },
+    rival:        { label: t('relation_rival'),        icon: 'sports_kabaddi' },
+    acquaintance: { label: t('relation_acquaintance'), icon: 'link' },
+  };
+
   const saveField = useCallback((field: keyof NPC, html: string) => {
     if (!npc) return;
     if (html.trim() === (String(npc[field] ?? '')).trim()) return;
@@ -134,7 +136,7 @@ export default function NpcDetailPage() {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
-        Loading…
+        {t('loading')}
       </main>
     );
   }
@@ -142,7 +144,7 @@ export default function NpcDetailPage() {
   if (isError || !npc) {
     return (
       <main className="p-12">
-        <p className="text-tertiary text-sm">Character not found.</p>
+        <p className="text-tertiary text-sm">{t('not_found')}</p>
       </main>
     );
   }
@@ -162,12 +164,12 @@ export default function NpcDetailPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
-        {/* ── Header: portrait + identity (full width) ── */}
+        {/* -- Header: portrait + identity (full width) -- */}
         <section className="relative flex flex-col sm:flex-row gap-8 items-start mb-8 bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8">
           <div className="relative group flex-shrink-0">
             <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
@@ -187,16 +189,16 @@ export default function NpcDetailPage() {
           <div className="flex-1 pt-4 space-y-8">
             <div className="flex flex-wrap items-center gap-3">
               <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-sm ${st.pill}`}>
-                {st.label}
+                {t(`status_${npc.status}`)}
               </span>
               {npc.gender && (
                 <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                  {npc.gender === 'nonbinary' ? 'Non-binary' : npc.gender.charAt(0).toUpperCase() + npc.gender.slice(1)}
+                  {t(`gender_${npc.gender}`)}
                 </span>
               )}
               {npc.age != null && (
                 <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-                  Age {npc.age}
+                  {t('age_prefix')} {npc.age}
                 </span>
               )}
               {speciesEnabled && npc.species && (() => {
@@ -222,11 +224,11 @@ export default function NpcDetailPage() {
               <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
                 {confirmDelete ? (
                   <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                    <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                    <span className="text-[9px] text-on-surface-variant">{t('confirm_delete')}</span>
                     <button onClick={() => deleteNpc.mutate({ campaignId: campaignId!, npcId: npc.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/npcs`) })}
-                      className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                      className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
                     <button onClick={() => setConfirmDelete(false)}
-                      className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                      className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
                   </div>
                 ) : (
                   <button onClick={() => setConfirmDelete(true)}
@@ -239,7 +241,7 @@ export default function NpcDetailPage() {
                   className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
                 >
                   <span className="material-symbols-outlined text-sm">edit</span>
-                  Edit
+                  {t('edit')}
                 </button>
               </div>
             )}
@@ -258,50 +260,50 @@ export default function NpcDetailPage() {
           </div>
         </section>
 
-        {/* ── Two-column layout ── */}
+        {/* -- Two-column layout -- */}
         <div className="flex flex-col md:flex-row gap-8 min-w-0">
 
-          {/* ── Left column (60-65%) — character description ── */}
+          {/* -- Left column (60-65%) -- */}
           <div className="flex-1 min-w-0 space-y-8">
 
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-              <InlineRichField label="Appearance" value={npc.appearance}
+              <InlineRichField label={t('section_appearance')} value={npc.appearance}
                 onSave={(html) => saveField('appearance', html)}
-                placeholder="Physical description…"
+                placeholder={t('placeholder_appearance')}
                 readOnly={!isGm} />
             </div>
 
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-              <InlineRichField label="Background" value={npc.description}
+              <InlineRichField label={t('section_background')} value={npc.description}
                 onSave={(html) => saveField('description', html)}
-                placeholder="History, role, key facts…"
+                placeholder={t('placeholder_background')}
                 readOnly={!isGm} />
             </div>
 
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-              <InlineRichField label="Personality" value={npc.personality}
+              <InlineRichField label={t('section_personality')} value={npc.personality}
                 onSave={(html) => saveField('personality', html)}
-                placeholder="Traits, mannerisms, quirks…"
+                placeholder={t('placeholder_personality')}
                 readOnly={!isGm} />
             </div>
 
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-              <InlineRichField label="Motivation & Ideals" value={npc.motivation}
+              <InlineRichField label={t('section_motivation')} value={npc.motivation}
                 onSave={(html) => saveField('motivation', html)}
-                placeholder="What drives them, what they believe in…"
+                placeholder={t('placeholder_motivation')}
                 readOnly={!isGm} />
             </div>
 
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-              <InlineRichField label="Flaws" value={npc.flaws}
+              <InlineRichField label={t('section_flaws')} value={npc.flaws}
                 onSave={(html) => saveField('flaws', html)}
-                placeholder="Weaknesses, vices, fears…"
+                placeholder={t('placeholder_flaws')}
                 readOnly={!isGm} />
             </div>
 
             {isGm && (
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label="GM Notes" value={npc.gmNotes}
+                <InlineRichField label={t('section_gm_notes')} value={npc.gmNotes}
                   onSave={(html) => saveField('gmNotes', html)}
                   isGmNotes />
               </div>
@@ -309,7 +311,7 @@ export default function NpcDetailPage() {
 
           </div>
 
-          {/* ── Right column (35-40%) — relationships & connections ── */}
+          {/* -- Right column (35-40%) -- */}
           <div className="md:w-[40%] lg:w-[35%] min-w-0 space-y-8 self-start bg-surface-container border border-outline-variant/20 rounded-sm p-6">
 
             {/* Group Memberships */}
@@ -337,7 +339,7 @@ export default function NpcDetailPage() {
                 <section className="space-y-8 min-w-0">
                   <div className="flex items-center gap-4">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      Group Memberships
+                      {t('section_group_memberships')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                     {isGm && (
@@ -346,7 +348,7 @@ export default function NpcDetailPage() {
                       className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                     >
                       <span className="material-symbols-outlined text-[13px]">group_add</span>
-                      Add
+                      {t('add')}
                     </button>
                     )}
                   </div>
@@ -360,14 +362,14 @@ export default function NpcDetailPage() {
                           type="text"
                           value={addGroupSearch}
                           onChange={(e) => setAddGroupSearch(e.target.value)}
-                          placeholder="Search groups…"
+                          placeholder={t('search_groups')}
                           className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
                         />
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {availableGroups.length === 0 ? (
                           <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">
-                            {(groups ?? []).length === 0 ? 'No groups in this campaign.' : 'No groups found.'}
+                            {(groups ?? []).length === 0 ? t('no_groups_in_campaign') : t('no_groups_found')}
                           </p>
                         ) : availableGroups.map((g) => (
                           <button
@@ -389,14 +391,14 @@ export default function NpcDetailPage() {
                         <div className="px-4 py-3 border-t border-outline-variant/20 space-y-3">
                           <div>
                             <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1">
-                              Role <span className="normal-case tracking-normal text-on-surface-variant/40">(optional)</span>
+                              {t('role_label')} <span className="normal-case tracking-normal text-on-surface-variant/40">{t('role_optional')}</span>
                             </label>
                             <input
                               type="text"
                               value={addGroupRole}
                               onChange={(e) => setAddGroupRole(e.target.value)}
                               onKeyDown={(e) => { if (e.key === 'Enter') handleAddGroup(); }}
-                              placeholder="e.g. Leader, Spy…"
+                              placeholder={t('role_placeholder')}
                               className="w-full bg-surface-container border border-outline-variant/20 focus:border-primary rounded-sm py-1.5 px-2 text-xs text-on-surface focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
                             />
                           </div>
@@ -405,7 +407,7 @@ export default function NpcDetailPage() {
                               onClick={() => { setAddGroupOpen(false); setSelectedGroupId(null); }}
                               className="px-3 py-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
                             >
-                              Cancel
+                              {t('cancel')}
                             </button>
                             <button
                               onClick={handleAddGroup}
@@ -413,7 +415,7 @@ export default function NpcDetailPage() {
                               className="flex items-center gap-1 px-4 py-1.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-[10px] font-label uppercase tracking-widest rounded-sm disabled:opacity-40 transition-opacity"
                             >
                               <span className="material-symbols-outlined text-[13px]">group_add</span>
-                              Add
+                              {t('add')}
                             </button>
                           </div>
                         </div>
@@ -422,7 +424,7 @@ export default function NpcDetailPage() {
                   )}
 
                   {npc.groupMemberships.length === 0 && !addGroupOpen ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">No group memberships.</p>
+                    <p className="text-xs text-on-surface-variant/40 italic">{t('no_group_memberships')}</p>
                   ) : npc.groupMemberships.length > 0 ? (
                     <div className="grid grid-cols-1 gap-2">
                       {[...npc.groupMemberships].sort((a, b) => groupNameById(a.groupId).localeCompare(groupNameById(b.groupId))).map((m) => (
@@ -445,24 +447,24 @@ export default function NpcDetailPage() {
                           </Link>
                           {isGm && (confirmRemoveGroupId === m.groupId ? (
                             <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
-                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">{t('confirm_remove')}</span>
                               <button
                                 onClick={() => handleRemoveGroup(m.groupId)}
                                 className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
                               >
-                                Yes
+                                {t('confirm_yes')}
                               </button>
                               <button
                                 onClick={() => setConfirmRemoveGroupId(null)}
                                 className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
                               >
-                                No
+                                {t('confirm_no')}
                               </button>
                             </div>
                           ) : (
                             <button
                               onClick={() => setConfirmRemoveGroupId(m.groupId)}
-                              title="Remove from group"
+                              title={t('remove_from_group')}
                               className="px-2 py-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                             >
                               <span className="material-symbols-outlined text-[14px]">close</span>
@@ -471,7 +473,7 @@ export default function NpcDetailPage() {
                           {isGm && (
                             <button
                               onClick={() => setGroupMembershipVisibility.mutate({ npcId: npc.id, groupId: m.groupId, playerVisible: !(m.playerVisible ?? true) })}
-                              title={m.playerVisible === false ? 'Hidden from players — click to show' : 'Visible to players — click to hide'}
+                              title={m.playerVisible === false ? t('hidden_click_to_show') : t('visible_click_to_hide')}
                               className={`px-2 py-3 border-l border-outline-variant/10 transition-colors ${
                                 m.playerVisible === false
                                   ? 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
@@ -524,7 +526,7 @@ export default function NpcDetailPage() {
                 <section className="space-y-8 min-w-0">
                   <div className="flex items-center gap-4">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      Locations
+                      {t('section_locations')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                     {isGm && (
@@ -533,7 +535,7 @@ export default function NpcDetailPage() {
                       className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                     >
                       <span className="material-symbols-outlined text-[13px]">add_location</span>
-                      Add
+                      {t('add')}
                     </button>
                     )}
                   </div>
@@ -547,13 +549,13 @@ export default function NpcDetailPage() {
                           type="text"
                           value={addLocSearch}
                           onChange={(e) => setAddLocSearch(e.target.value)}
-                          placeholder="Search locations…"
+                          placeholder={t('search_locations')}
                           className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
                         />
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {availableToAdd.length === 0 ? (
-                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">No locations found.</p>
+                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">{t('no_locations_found')}</p>
                         ) : availableToAdd.map((l) => (
                           <button
                             key={l.id}
@@ -569,7 +571,7 @@ export default function NpcDetailPage() {
                   )}
 
                   {linkedLocations.length === 0 && !addLocOpen ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">No locations linked.</p>
+                    <p className="text-xs text-on-surface-variant/40 italic">{t('no_locations_linked')}</p>
                   ) : linkedLocations.length > 0 ? (
                     <div className="space-y-2">
                       {linkedLocations.map((loc) => {
@@ -594,24 +596,24 @@ export default function NpcDetailPage() {
                               </Link>
                               {isGm && (confirmRemoveLocId === loc.id ? (
                                 <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                                  <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                                  <span className="text-[10px] text-on-surface-variant whitespace-nowrap">{t('confirm_remove')}</span>
                                   <button
                                     onClick={() => handleRemoveLocation(loc.id)}
                                     className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
                                   >
-                                    Yes
+                                    {t('confirm_yes')}
                                   </button>
                                   <button
                                     onClick={() => setConfirmRemoveLocId(null)}
                                     className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
                                   >
-                                    No
+                                    {t('confirm_no')}
                                   </button>
                                 </div>
                               ) : (
                                 <button
                                   onClick={() => setConfirmRemoveLocId(loc.id)}
-                                  title="Remove from locations"
+                                  title={t('confirm_remove')}
                                   className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                                 >
                                   <span className="material-symbols-outlined text-[14px]">close</span>
@@ -620,7 +622,7 @@ export default function NpcDetailPage() {
                               {isGm && (
                                 <button
                                   onClick={() => setLocationPresenceVisibility.mutate({ npcId: npc.id, locationId: loc.id, playerVisible: !(presence?.playerVisible ?? true) })}
-                                  title={presence?.playerVisible === false ? 'Hidden from players — click to show' : 'Visible to players — click to hide'}
+                                  title={presence?.playerVisible === false ? t('hidden_click_to_show') : t('visible_click_to_hide')}
                                   className={`px-2 border-l border-outline-variant/10 transition-colors ${
                                     presence?.playerVisible === false
                                       ? 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
@@ -645,14 +647,14 @@ export default function NpcDetailPage() {
                                     if (e.key === 'Enter') handleSaveNote(loc.id, noteInput);
                                     if (e.key === 'Escape') setEditingNoteForLocId(null);
                                   }}
-                                  placeholder="e.g. Frequents the tavern at night…"
+                                  placeholder="e.g. Frequents the tavern at night\u2026"
                                   className="flex-1 bg-surface-container border border-outline-variant/30 focus:border-primary rounded-sm px-2 py-1 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:ring-0 focus:outline-none"
                                 />
                                 <button
                                   onClick={() => handleSaveNote(loc.id, noteInput)}
                                   className="px-2 py-1 bg-primary text-on-primary text-[10px] rounded-sm uppercase tracking-wider"
                                 >
-                                  Save
+                                  {t('common:save')}
                                 </button>
                                 <button
                                   onClick={() => setEditingNoteForLocId(null)}
@@ -670,7 +672,7 @@ export default function NpcDetailPage() {
                                     className="text-[10px] text-on-surface-variant/20 italic flex-1 cursor-pointer opacity-0 group-hover/card:opacity-100 transition-opacity"
                                     onClick={() => { setEditingNoteForLocId(loc.id); setNoteInput(''); }}
                                   >
-                                    Add presence note…
+                                    Add presence note\u2026
                                   </p>
                                 ) : null}
                               </div>
@@ -696,7 +698,7 @@ export default function NpcDetailPage() {
                 <section className="space-y-8 min-w-0">
                   <div className="flex items-center gap-4">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      Quests
+                      {t('section_quests')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                   </div>
@@ -726,7 +728,7 @@ export default function NpcDetailPage() {
                               playerVisible: !q.playerVisible,
                               playerVisibleFields: q.playerVisibleFields ?? [],
                             })}
-                            title={q.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                            title={q.playerVisible ? t('visible_click_to_hide') : t('hidden_click_to_show')}
                             className={`px-2 border-l border-outline-variant/10 transition-colors ${
                               q.playerVisible
                                 ? 'text-primary/60 hover:text-primary'
@@ -754,12 +756,12 @@ export default function NpcDetailPage() {
                 <section className="space-y-8 min-w-0">
                   <div className="flex items-center gap-4">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      Session Appearances
+                      {t('section_session_appearances')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                   </div>
                   {sessionAppearances.length === 0 ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">No sessions tagged yet.</p>
+                    <p className="text-xs text-on-surface-variant/40 italic">{t('no_sessions_tagged')}</p>
                   ) : (
                     <div className="space-y-2">
                       {sessionAppearances.map((session) => (
@@ -770,7 +772,7 @@ export default function NpcDetailPage() {
                         >
                           <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors text-[18px]">auto_stories</span>
                           <p className="text-sm text-on-surface group-hover:text-primary transition-colors flex-1 truncate">
-                            Session {session.number} — {session.title}
+                            {t('session_appearance', { number: session.number, title: session.title })}
                           </p>
                           <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                         </Link>
@@ -786,7 +788,7 @@ export default function NpcDetailPage() {
               <section className="space-y-8 min-w-0">
                 <div className="flex items-center gap-4">
                   <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                    Relations
+                    {t('section_relations')}
                   </h2>
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>

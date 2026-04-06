@@ -1,0 +1,137 @@
+{
+  "save": "Save",
+  "save_changes": "Save Changes",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "create": "Create",
+  "edit": "Edit",
+  "close": "Close",
+  "yes": "Yes",
+  "no": "No",
+  "done": "Done",
+  "loading": "Loading\u2026",
+  "error": "Error",
+  "not_found": "Not found.",
+  "search_placeholder": "Search by name or email...",
+  "name": "Name",
+  "all": "All",
+  "basic": "Basic",
+  "none": "None",
+  "always": "always",
+  "clear": "Clear",
+  "reset": "reset",
+  "roll": "Roll",
+  "manage": "Manage",
+  "active": "Active",
+  "archive": "Archive",
+  "restore": "Restore",
+  "sections": "Sections",
+  "campaign": "Campaign",
+
+  "gm_notes": "GM Notes",
+  "gm_notes_empty": "No GM notes yet.",
+  "gm_only": "gm only",
+  "not_recorded_yet": "Not recorded yet.",
+  "fill_in": "Fill in",
+
+  "player_visibility": "Player Visibility",
+  "visible_to_players": "Visible to players",
+  "shared": "Shared",
+
+  "section_not_enabled": "Section not enabled",
+  "section_not_enabled_desc": "This section is hidden for this campaign. You can enable it in the sidebar \u2014 all your data is preserved.",
+  "enable_sections": "Enable sections",
+
+  "connection_error_title": "Something went wrong",
+  "connection_error_desc": "An error occurred while communicating with the server. Please try again later or contact your administrator.",
+  "reload_page": "Reload page",
+
+  "app_name": "Arcane Ledger",
+  "app_tagline": "Campaign Companion",
+  "copyright": "\u00a9 2026 Ivan Shumov",
+
+  "nav": {
+    "dashboard": "Dashboard",
+    "all_campaigns": "All Campaigns",
+    "my_campaigns": "My Campaigns",
+    "home": "Home",
+    "changelog": "Changelog",
+    "profile": "Profile",
+    "admin": "Admin",
+    "sign_out": "Sign out",
+    "whats_new": "What's New",
+    "collapse": "Collapse",
+    "edit_sections": "Edit Sections",
+    "back": "Back"
+  },
+
+  "nav_sections": {
+    "world": "World",
+    "adventure": "Adventure"
+  },
+
+  "nav_items": {
+    "locations": "Locations",
+    "location_types": "Location Types",
+    "npcs": "NPCs",
+    "groups": "Groups",
+    "group_types": "Group Types",
+    "species": "Species",
+    "species_types": "Species Types",
+    "sessions": "Sessions",
+    "party": "Party",
+    "quests": "Quests",
+    "social_graph": "Social Graph"
+  },
+
+  "roles": {
+    "game_master": "Game Master",
+    "player": "Player"
+  },
+
+  "footer": {
+    "home": "Home",
+    "changelog": "Changelog",
+    "telegram": "Telegram",
+    "email": "Email"
+  },
+
+  "changelog_drawer": {
+    "title": "What's New",
+    "tag_new": "New",
+    "tag_improved": "Updated",
+    "tag_fixed": "Fixed",
+    "current": "Current"
+  },
+
+  "dice_roller": {
+    "title": "Dice Roller",
+    "history": "History",
+    "clear": "Clear",
+    "no_rolls_yet": "No rolls yet",
+    "no_dice_selected": "No dice selected",
+    "click_to_add": "Click to add \u00b7 right-click to remove",
+    "modifier": "Mod",
+    "roll": "Roll",
+    "critical_hit": "Critical Hit",
+    "critical_fail": "Critical Fail"
+  },
+
+  "of": "of",
+  "back": "Back",
+  "open_app": "Open App",
+  "changelog": "Changelog",
+  "changelog_release_history": "Release history",
+  "changelog_subtitle": "What's been built, fixed, and improved in Arcane Ledger.",
+  "changelog_latest": "Latest",
+  "tag_new": "New",
+  "tag_updated": "Updated",
+  "tag_fixed": "Fixed",
+
+  "manage_sections": {
+    "title": "Manage Sections",
+    "subtitle": "Toggle sidebar sections on or off",
+    "always_on": "Always on",
+    "footer_hint": "Hidden sections are removed from the sidebar and dashboard. Data is preserved and can be re-enabled at any time."
+  }
+}

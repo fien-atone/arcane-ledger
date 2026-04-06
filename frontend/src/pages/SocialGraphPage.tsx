@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useParty } from '@/features/characters/api/queries';
@@ -25,6 +26,7 @@ type ViewMode = 'force' | 'chord';
 const PARTY_GROUP_ID = '__party__';
 
 export default function SocialGraphPage() {
+  const { t } = useTranslation('social');
   const { id: campaignId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
@@ -94,7 +96,7 @@ export default function SocialGraphPage() {
   const partyGroup = useMemo(() => ({
     id: PARTY_GROUP_ID,
     campaignId: campaignId ?? '',
-    name: 'The Party',
+    name: t('virtual_group_party'),
     type: '',
     aliases: [],
     description: '',
@@ -295,7 +297,7 @@ export default function SocialGraphPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -304,10 +306,10 @@ export default function SocialGraphPage() {
         <div className="flex flex-wrap justify-between items-start gap-4">
           <div>
             <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
-              Social Graph
+              {t('title')}
             </h1>
             <p className="text-on-surface-variant text-sm mt-1">
-              Relationships between NPCs visualized.
+              {t('subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -315,7 +317,7 @@ export default function SocialGraphPage() {
             <div className="flex bg-surface-container-high rounded-sm border border-outline-variant/20 overflow-hidden">
               <button
                 onClick={() => setViewMode('force')}
-                title="Force graph"
+                title={t('view_force_title')}
                 className={`px-3 py-2 flex items-center gap-1.5 text-xs transition-colors ${
                   viewMode === 'force'
                     ? 'bg-primary/15 text-primary font-semibold'
@@ -323,11 +325,11 @@ export default function SocialGraphPage() {
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">hub</span>
-                <span className="hidden sm:inline">Force</span>
+                <span className="hidden sm:inline">{t('view_force')}</span>
               </button>
               <button
                 onClick={() => setViewMode('chord')}
-                title="Chord diagram"
+                title={t('view_chord_title')}
                 className={`px-3 py-2 flex items-center gap-1.5 text-xs transition-colors ${
                   viewMode === 'chord'
                     ? 'bg-primary/15 text-primary font-semibold'
@@ -335,17 +337,17 @@ export default function SocialGraphPage() {
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">donut_large</span>
-                <span className="hidden sm:inline">Chord</span>
+                <span className="hidden sm:inline">{t('view_chord')}</span>
               </button>
             </div>
             {/* List view link */}
             <Link
               to={`/campaigns/${campaignId}/npcs`}
               className="flex items-center gap-1.5 px-3 py-2 text-xs text-on-surface-variant border border-outline-variant/20 rounded-sm hover:text-primary hover:border-primary/30 transition-colors"
-              title="NPC List"
+              title={t('view_list_title')}
             >
               <span className="material-symbols-outlined text-[18px]">list</span>
-              <span className="hidden sm:inline">List</span>
+              <span className="hidden sm:inline">{t('view_list')}</span>
             </Link>
           </div>
         </div>
@@ -355,15 +357,15 @@ export default function SocialGraphPage() {
       {isLoading && (
         <div className="flex items-center gap-3 p-12 text-on-surface-variant">
           <span className="material-symbols-outlined animate-spin">progress_activity</span>
-          Loading...
+          {t('loading')}
         </div>
       )}
 
       {isEmpty && (
         <EmptyState
           icon="group_off"
-          title="No NPCs yet."
-          subtitle="Create some NPCs first, then come back to see their social web."
+          title={t('empty_title')}
+          subtitle={t('empty_subtitle')}
         />
       )}
 

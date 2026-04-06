@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { RichContent } from './RichContent';
 
 interface Props {
@@ -11,7 +12,9 @@ interface Props {
   variant?: 'card' | 'sidebar';
 }
 
-export function GmNotesSection({ notes, fallback = 'No GM notes yet.', variant = 'card' }: Props) {
+export function GmNotesSection({ notes, fallback, variant = 'card' }: Props) {
+  const { t } = useTranslation();
+  const emptyText = fallback ?? t('gm_notes_empty');
   if (variant === 'sidebar') {
     return (
       <div className="relative">
@@ -24,11 +27,11 @@ export function GmNotesSection({ notes, fallback = 'No GM notes yet.', variant =
             >
               lock
             </span>
-            <h4 className="text-[10px] font-label uppercase tracking-widest text-primary">GM Notes</h4>
+            <h4 className="text-[10px] font-label uppercase tracking-widest text-primary">{t('gm_notes')}</h4>
           </div>
           {notes
             ? <RichContent value={notes} className="prose-p:text-on-surface-variant/90 prose-p:italic prose-p:text-sm" />
-            : <p className="text-sm text-on-surface-variant/40 italic">{fallback}</p>}
+            : <p className="text-sm text-on-surface-variant/40 italic">{emptyText}</p>}
         </div>
       </div>
     );
@@ -47,11 +50,11 @@ export function GmNotesSection({ notes, fallback = 'No GM notes yet.', variant =
           >
             lock
           </span>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-primary">GM Notes</h3>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-primary">{t('gm_notes')}</h3>
         </div>
         {notes
           ? <RichContent value={notes} className="prose-p:text-on-surface-variant prose-p:italic prose-p:text-sm" />
-          : <p className="text-sm text-on-surface-variant/40 italic">{fallback}</p>}
+          : <p className="text-sm text-on-surface-variant/40 italic">{emptyText}</p>}
       </div>
     </section>
   );

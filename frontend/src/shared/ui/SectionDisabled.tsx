@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
 
 interface SectionDisabledProps {
@@ -7,6 +8,7 @@ interface SectionDisabledProps {
 
 /** Shown when a user navigates to a route whose section is disabled for the campaign. */
 export function SectionDisabled({ campaignId }: SectionDisabledProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setEditMode = useCampaignUiStore((s) => s.setEditMode);
 
@@ -28,10 +30,10 @@ export function SectionDisabled({ campaignId }: SectionDisabledProps) {
         {/* Text */}
         <div className="space-y-2">
           <h2 className="font-headline text-xl font-bold text-on-surface">
-            Section not enabled
+            {t('section_not_enabled')}
           </h2>
           <p className="text-sm text-on-surface-variant/50 leading-relaxed">
-            This section is hidden for this campaign. You can enable it in the sidebar — all your data is preserved.
+            {t('section_not_enabled_desc')}
           </p>
         </div>
 
@@ -42,14 +44,14 @@ export function SectionDisabled({ campaignId }: SectionDisabledProps) {
             className="flex items-center gap-2 px-5 py-2.5 text-xs font-label uppercase tracking-widest text-on-surface-variant border border-outline-variant/25 rounded-sm hover:border-outline-variant/50 hover:text-on-surface transition-colors"
           >
             <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-            Dashboard
+            {t('nav.dashboard')}
           </Link>
           <button
             onClick={handleEnableSections}
             className="flex items-center gap-2 px-5 py-2.5 text-xs font-label uppercase tracking-widest text-primary border border-primary/30 rounded-sm hover:bg-primary/5 transition-colors"
           >
             <span className="material-symbols-outlined text-[14px]">tune</span>
-            Enable sections
+            {t('enable_sections')}
           </button>
         </div>
       </div>

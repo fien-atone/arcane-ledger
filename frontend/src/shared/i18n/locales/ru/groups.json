@@ -1,0 +1,88 @@
+{
+  "title": "Группы",
+  "subtitle": "Фракции, гильдии, семьи и другие социальные структуры.",
+  "add_group": "Добавить группу",
+  "search_placeholder": "Поиск...",
+  "loading": "Загрузка\u2026",
+  "error": "Не удалось загрузить группы.",
+  "not_found": "Группа не найдена.",
+  "empty_title": "Группы не найдены.",
+  "empty_subtitle": "Создайте первую группу, чтобы начать.",
+
+  "column_name": "Название",
+  "column_type": "Тип",
+  "filter_all": "Все",
+
+  "visible_to_players": "Видима игрокам",
+  "hidden_from_players": "Скрыта от игроков",
+
+  "confirm_delete": "Удалить?",
+  "confirm_remove": "Убрать?",
+  "confirm_yes": "Да",
+  "confirm_no": "Нет",
+  "edit": "Редактировать",
+  "add": "Добавить",
+  "cancel": "Отмена",
+
+  "section_about": "Описание",
+  "section_goals": "Цели",
+  "section_symbols": "Символы и знаки отличия",
+  "section_gm_notes": "Заметки Мастера",
+  "section_members": "Члены",
+  "section_pc_label": "ПИ",
+
+  "placeholder_about": "Опишите эту группу\u2026",
+  "placeholder_goals": "Каковы их цели\u2026",
+  "placeholder_symbols": "Знамёна, цвета, знаки отличия\u2026",
+
+  "no_members": "Членов пока нет.",
+  "remove_from_group": "Убрать из группы",
+
+  "add_member_title": "Добавить члена",
+  "add_member_subtitle": "Выберите NPC для добавления",
+  "search_npcs": "Поиск NPC\u2026",
+  "all_npcs_members": "Все NPC уже являются членами.",
+  "no_npcs_found": "NPC не найдены.",
+  "add_member": "Добавить члена",
+
+  "role_label": "Роль",
+  "role_optional": "(необязательно)",
+  "role_placeholder": "напр. Лидер, Шпион\u2026",
+
+  "drawer_edit_title": "Редактирование группы",
+  "drawer_new_title": "Новая группа",
+
+  "field_name": "Название",
+  "field_type": "Тип",
+  "field_aliases": "Псевдонимы",
+  "field_aliases_hint": "(через запятую)",
+  "placeholder_name": "Название группы\u2026",
+  "placeholder_type_none": "Без типа",
+  "placeholder_aliases": "Альтернативные названия\u2026",
+
+  "save": "Сохранить",
+  "create": "Создать",
+
+  "types_title": "Типы групп",
+  "types_subtitle": "Управление типами, по которым классифицируются группы в этом мире кампании.",
+  "types_add": "Добавить тип",
+  "types_search_placeholder": "Поиск типов\u2026",
+  "types_loading": "Загрузка\u2026",
+  "types_empty_title": "Типов групп пока нет.",
+  "types_empty_subtitle": "Создайте первый тип группы, чтобы начать.",
+  "types_select_prompt": "Выберите тип группы",
+
+  "types_field_name": "Название",
+  "types_field_icon": "Иконка",
+  "types_field_description": "Описание",
+
+  "types_delete": "Удалить",
+  "types_delete_confirm": "Удалить?",
+  "types_edit": "Редактировать",
+  "types_save": "Сохранить",
+  "types_create": "Создать",
+  "types_cancel": "Отмена",
+
+  "types_drawer_new_title": "Новый тип группы",
+  "types_drawer_edit_title": "Редактирование типа группы"
+}

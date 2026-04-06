@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSaveGroupType } from '../api';
 import { IconPicker } from '@/shared/ui';
 import type { GroupTypeEntry } from '@/entities/groupType';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Props) {
+  const { t } = useTranslation('groups');
   const save = useSaveGroupType(campaignId);
   const isNew = !groupType;
 
@@ -55,7 +57,7 @@ export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Pr
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="font-headline text-xl font-bold text-on-surface">
-              {isNew ? 'New Group Type' : 'Edit Group Type'}
+              {isNew ? t('types_drawer_new_title') : t('types_drawer_edit_title')}
             </h2>
             {!isNew && (
               <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
@@ -73,7 +75,7 @@ export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Pr
 
           {/* Name */}
           <div>
-            <label className={labelCls}>Name <span className="text-primary">*</span></label>
+            <label className={labelCls}>{t('types_field_name')} <span className="text-primary">*</span></label>
             <input
               type="text"
               value={name}
@@ -86,7 +88,7 @@ export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Pr
 
           {/* Icon picker */}
           <div>
-            <label className={labelCls}>Icon <span className="text-primary">*</span></label>
+            <label className={labelCls}>{t('types_field_icon')} <span className="text-primary">*</span></label>
             <IconPicker value={icon} onChange={setIcon} />
           </div>
 
@@ -98,7 +100,7 @@ export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Pr
             onClick={onClose}
             className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
           >
-            Cancel
+            {t('types_cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -110,7 +112,7 @@ export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Pr
             ) : (
               <span className="material-symbols-outlined text-sm">save</span>
             )}
-            {isNew ? 'Create' : 'Save Changes'}
+            {isNew ? t('types_create') : t('types_save')}
           </button>
         </div>
       </div>

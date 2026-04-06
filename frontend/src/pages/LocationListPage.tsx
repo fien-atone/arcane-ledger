@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useLocations, useSetLocationVisibility } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
@@ -14,6 +15,7 @@ const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', '
 type TypeMap = Map<string, LocationTypeEntry>;
 
 export default function LocationListPage() {
+  const { t } = useTranslation('locations');
   const { id: campaignId } = useParams<{ id: string }>();
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
@@ -29,7 +31,7 @@ export default function LocationListPage() {
 
   const [addOpen, setAddOpen] = useState(false);
 
-  // Build id → entry lookup
+  // Build id -> entry lookup
   const typeMap = useMemo<TypeMap>(
     () => new Map(locationTypes.map((t) => [t.id, t])),
     [locationTypes],
@@ -50,10 +52,10 @@ export default function LocationListPage() {
       .map((id) => typeMap.get(id))
       .filter((t): t is LocationTypeEntry => !!t && usedTypeIds.has(t.id));
     return [
-      { value: 'all' as const, label: 'All' },
-      ...usedTypes.map((t) => ({ value: t.id, label: t.name })),
+      { value: 'all' as const, label: t('filter_all') },
+      ...usedTypes.map((lt) => ({ value: lt.id, label: lt.name })),
     ];
-  }, [locations, typeOrder, typeMap]);
+  }, [locations, typeOrder, typeMap, t]);
 
   // Depth map for hierarchy indent
   const depthMap = useMemo(() => {
@@ -90,7 +92,7 @@ export default function LocationListPage() {
       return matchesType && matchesSearch;
     }) ?? [];
 
-    // In "all" mode without search: hierarchical sort (parents → children)
+    // In "all" mode without search: hierarchical sort (parents -> children)
     if (typeFilter === 'all' && !search) {
       const byParent = new Map<string, Location[]>();
       const roots: Location[] = [];
@@ -132,7 +134,7 @@ export default function LocationListPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -142,8 +144,8 @@ export default function LocationListPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">Locations</h1>
-              <p className="text-on-surface-variant text-sm mt-1">Known places, landmarks, and territories.</p>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">{t('title')}</h1>
+              <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
             </div>
             {isGm && (
               <button
@@ -151,7 +153,7 @@ export default function LocationListPage() {
                 className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
               >
                 <span className="material-symbols-outlined text-[18px]">add_location</span>
-                <span className="font-label text-xs uppercase tracking-widest">Add Location</span>
+                <span className="font-label text-xs uppercase tracking-widest">{t('add_location')}</span>
               </button>
             )}
           </div>
@@ -162,7 +164,7 @@ export default function LocationListPage() {
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t('search_placeholder')}
                 value={search}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -200,24 +202,24 @@ export default function LocationListPage() {
               </div>
             )}
             <span className="ml-auto text-[10px] text-on-surface-variant/40">
-              <span className="text-on-surface font-bold">{filtered.length}</span> of <span className="text-primary font-bold">{locations?.length ?? 0}</span>
+              <span className="text-on-surface font-bold">{filtered.length}</span> {t('common:of')} <span className="text-primary font-bold">{locations?.length ?? 0}</span>
             </span>
           </div>
         </div>
 
-        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading locations...</div>}
-        {isError && <p className="text-tertiary text-sm p-12">Failed to load locations. Check your connection and try again.</p>}
+        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>{t('loading')}</div>}
+        {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
 
         {!isLoading && !isError && (
           filtered.length === 0 ? (
-            <EmptyState icon="location_on" title="No locations found." subtitle="Create your first location to get started." />
+            <EmptyState icon="location_on" title={t('empty_title')} subtitle={t('empty_subtitle')} />
           ) : (
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm divide-y divide-outline-variant/10">
               {/* Column headers */}
               <div className="flex items-center gap-3 px-6 py-2 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
                 <span className="w-9 flex-shrink-0" />
-                <span className="flex-1 min-w-0">Name</span>
-                <span className="w-20 flex-shrink-0 hidden xl:block">Population</span>
+                <span className="flex-1 min-w-0">{t('column_name')}</span>
+                <span className="w-20 flex-shrink-0 hidden xl:block">{t('column_population')}</span>
                 {isGm && <span className="w-8 flex-shrink-0" />}
               </div>
               {filtered.map((loc) => {
@@ -264,7 +266,7 @@ export default function LocationListPage() {
                       </div>
                       {/* Population */}
                       <span className="w-20 flex-shrink-0 text-xs text-on-surface-variant/60 hidden xl:block">
-                        {loc.settlementPopulation ? loc.settlementPopulation.toLocaleString() : '—'}
+                        {loc.settlementPopulation ? loc.settlementPopulation.toLocaleString() : '\u2014'}
                       </span>
                       {/* Visibility toggle */}
                       {isGm && (
@@ -279,7 +281,7 @@ export default function LocationListPage() {
                               playerVisibleFields: loc.playerVisibleFields ?? [],
                             });
                           }}
-                          title={loc.playerVisible ? 'Visible to players' : 'Hidden from players'}
+                          title={loc.playerVisible ? t('visible_to_players') : t('hidden_from_players')}
                           className={`w-8 flex-shrink-0 flex items-center justify-center transition-colors ${
                             loc.playerVisible ? 'text-primary/60 hover:text-primary' : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
                           }`}

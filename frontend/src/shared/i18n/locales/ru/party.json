@@ -1,0 +1,100 @@
+{
+  "title": "Партия",
+  "subtitle": "Участники кампании и их персонажи.",
+  "invite_player": "Пригласить игрока",
+  "add_character": "Добавить персонажа",
+  "create_character": "Создать персонажа",
+  "loading": "Загрузка...",
+  "error": "Не удалось загрузить партию.",
+  "not_found": "Персонаж не найден.",
+  "empty_title": "Участников пока нет",
+  "empty_subtitle": "Пригласите игроков или создайте персонажей, чтобы начать.",
+
+  "section_my_character": "Мой персонаж",
+  "section_pending_invitations": "Ожидающие приглашения",
+  "section_party_members": "Члены партии",
+  "section_unassigned_characters": "Неназначенные персонажи",
+
+  "column_player": "Игрок",
+  "column_character": "Персонаж",
+
+  "status_pending": "Ожидает",
+
+  "no_character": "Нет персонажа",
+  "select_character": "Выберите персонажа...",
+  "select_player": "Выберите игрока...",
+
+  "assign": "Назначить",
+  "create": "Создать",
+  "view": "Просмотр",
+  "view_character": "Просмотр персонажа",
+  "kick": "Исключить",
+  "kick_confirm": "Исключить?",
+
+  "unlink_character": "Отвязать персонажа от игрока",
+
+  "cancel_invitation": "Отменить приглашение",
+  "cancel_confirm": "Отменить?",
+  "confirm_yes": "Да",
+  "confirm_no": "Нет",
+
+  "detail": {
+    "section_appearance": "Внешность",
+    "section_backstory": "Предыстория",
+    "section_personality": "Характер",
+    "section_motivation": "Мотивация и идеалы",
+    "section_bonds": "Привязанности",
+    "section_flaws": "Слабости",
+    "section_gm_notes": "Заметки Мастера",
+    "section_group_memberships": "Членство в группах",
+
+    "placeholder_appearance": "Физическое описание\u2026",
+    "placeholder_backstory": "История, происхождение, ключевые события\u2026",
+    "placeholder_personality": "Черты характера, манеры, причуды\u2026",
+    "placeholder_motivation": "Что ими движет, во что верят\u2026",
+    "placeholder_bonds": "Люди, места, вещи, которые им дороги\u2026",
+    "placeholder_flaws": "Слабости, пороки, страхи\u2026",
+
+    "no_group_memberships": "Нет членства в группах.",
+    "search_groups": "Поиск групп\u2026",
+    "no_groups_in_campaign": "В этой кампании нет групп.",
+    "no_groups_found": "Группы не найдены.",
+
+    "role_label": "Роль",
+    "role_optional": "(необязательно)",
+    "role_placeholder": "напр. Лидер, Шпион\u2026",
+
+    "confirm_delete": "Удалить?",
+    "confirm_remove": "Убрать?",
+    "confirm_yes": "Да",
+    "confirm_no": "Нет",
+    "edit": "Редактировать",
+    "add": "Добавить",
+    "cancel": "Отмена",
+    "remove_from_group": "Убрать из группы"
+  },
+
+  "drawer_new_title": "Новый персонаж",
+  "drawer_edit_title": "Редактирование персонажа",
+  "drawer_new_subtitle": "Добавить персонажа в партию",
+
+  "field_name": "Имя",
+  "field_species": "Вид",
+  "field_class": "Класс",
+  "field_gender": "Пол",
+  "field_age": "Возраст",
+
+  "placeholder_name": "Имя персонажа\u2026",
+  "placeholder_species_none": "\u2014 Нет \u2014",
+  "placeholder_class": "Волшебник\u2026",
+  "placeholder_gender_none": "\u2014",
+  "placeholder_age_none": "\u2014",
+
+  "gender_male": "Мужской",
+  "gender_female": "Женский",
+  "gender_nonbinary": "Небинарный",
+
+  "save_changes": "Сохранить изменения",
+  "create_character_btn": "Создать персонажа",
+  "cancel": "Отмена"
+}

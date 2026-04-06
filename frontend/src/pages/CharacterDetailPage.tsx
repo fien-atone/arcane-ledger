@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useParty, useSaveCharacter, useDeleteCharacter, useAddCharacterGroupMembership, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { CharacterEditDrawer } from '@/features/characters/ui';
@@ -13,6 +14,7 @@ import { useAuthStore } from '@/features/auth';
 import type { PlayerCharacter } from '@/entities/character';
 
 export default function CharacterDetailPage() {
+  const { t } = useTranslation('party');
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
@@ -75,7 +77,7 @@ export default function CharacterDetailPage() {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
-        Loading…
+        {t('loading')}
       </main>
     );
   }
@@ -83,7 +85,7 @@ export default function CharacterDetailPage() {
   if (isError || !character) {
     return (
       <main className="p-12">
-        <p className="text-tertiary text-sm">Character not found.</p>
+        <p className="text-tertiary text-sm">{t('not_found')}</p>
       </main>
     );
   }
@@ -92,13 +94,11 @@ export default function CharacterDetailPage() {
     ? allSpecies?.find((s) => s.id === character.speciesId || s.name.toLowerCase() === character.species?.toLowerCase())
     : undefined;
   const displaySpecies = speciesEnabled ? (matchedSpecies?.name ?? character.species) : undefined;
-  const displayGender = character.gender === 'nonbinary'
-    ? 'Non-binary'
-    : character.gender
-      ? character.gender.charAt(0).toUpperCase() + character.gender.slice(1)
-      : undefined;
+  const displayGender = character.gender
+    ? t(`gender_${character.gender}`)
+    : undefined;
 
-  const demoBadge = [displaySpecies, displayGender, character.class, character.age != null ? `Age ${character.age}` : null]
+  const demoBadge = [displaySpecies, displayGender, character.class, character.age != null ? `${t('field_age')} ${character.age}` : null]
     .filter(Boolean).join(' · ');
 
   return (
@@ -112,7 +112,7 @@ export default function CharacterDetailPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -147,11 +147,11 @@ export default function CharacterDetailPage() {
             <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
               {confirmDelete ? (
                 <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                  <span className="text-[9px] text-on-surface-variant">{t('detail.confirm_delete')}</span>
                   <button onClick={() => deleteCharacter.mutate({ campaignId: campaignId!, charId: character.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/party`) })}
-                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('detail.confirm_yes')}</button>
                   <button onClick={() => setConfirmDelete(false)}
-                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('detail.confirm_no')}</button>
                 </div>
               ) : (
                 <button onClick={() => setConfirmDelete(true)}
@@ -164,7 +164,7 @@ export default function CharacterDetailPage() {
                 className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">edit</span>
-                Edit
+                {t('detail.edit')}
               </button>
             </div>
           )}
@@ -177,46 +177,46 @@ export default function CharacterDetailPage() {
           <div className="flex-1 min-w-0 space-y-8">
 
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-              <InlineRichField label="Appearance" value={character.appearance}
+              <InlineRichField label={t('detail.section_appearance')} value={character.appearance}
                 onSave={(html) => saveField('appearance', html)}
-                placeholder="Physical description…" readOnly={!isGm} />
+                placeholder={t('detail.placeholder_appearance')} readOnly={!isGm} />
             </div>
 
             {canViewAll && (
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label="Backstory" value={character.background}
+                <InlineRichField label={t('detail.section_backstory')} value={character.background}
                   onSave={(html) => saveField('background', html)}
-                  placeholder="History, origin, key events…"
+                  placeholder={t('detail.placeholder_backstory')}
                   readOnly={!isGm} />
               </div>
             )}
 
             {canViewAll && (<>
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label="Personality" value={character.personality}
+                <InlineRichField label={t('detail.section_personality')} value={character.personality}
                   onSave={(html) => saveField('personality', html)}
-                  placeholder="Traits, mannerisms, quirks…" readOnly={!isGm} />
+                  placeholder={t('detail.placeholder_personality')} readOnly={!isGm} />
               </div>
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label="Motivation & Ideals" value={character.motivation}
+                <InlineRichField label={t('detail.section_motivation')} value={character.motivation}
                   onSave={(html) => saveField('motivation', html)}
-                  placeholder="What drives them, what they believe in…" readOnly={!isGm} />
+                  placeholder={t('detail.placeholder_motivation')} readOnly={!isGm} />
               </div>
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label="Bonds" value={character.bonds}
+                <InlineRichField label={t('detail.section_bonds')} value={character.bonds}
                   onSave={(html) => saveField('bonds', html)}
-                  placeholder="People, places, things they hold dear…" readOnly={!isGm} />
+                  placeholder={t('detail.placeholder_bonds')} readOnly={!isGm} />
               </div>
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label="Flaws" value={character.flaws}
+                <InlineRichField label={t('detail.section_flaws')} value={character.flaws}
                   onSave={(html) => saveField('flaws', html)}
-                  placeholder="Weaknesses, vices, fears…" readOnly={!isGm} />
+                  placeholder={t('detail.placeholder_flaws')} readOnly={!isGm} />
               </div>
             </>)}
 
             {isGm && (
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label="GM Notes" value={character.gmNotes} isGmNotes
+                <InlineRichField label={t('detail.section_gm_notes')} value={character.gmNotes} isGmNotes
                   onSave={(html) => saveField('gmNotes', html)} />
               </div>
             )}
@@ -253,7 +253,7 @@ export default function CharacterDetailPage() {
                 <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 space-y-4">
                   <div className="flex items-center gap-4">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      Group Memberships
+                      {t('detail.section_group_memberships')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                     {isGm && (
@@ -262,7 +262,7 @@ export default function CharacterDetailPage() {
                       className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                     >
                       <span className="material-symbols-outlined text-[13px]">group_add</span>
-                      Add
+                      {t('detail.add')}
                     </button>
                     )}
                   </div>
@@ -276,14 +276,14 @@ export default function CharacterDetailPage() {
                           type="text"
                           value={addGroupSearch}
                           onChange={(e) => setAddGroupSearch(e.target.value)}
-                          placeholder="Search groups…"
+                          placeholder={t('detail.search_groups')}
                           className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
                         />
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {availableGroups.length === 0 ? (
                           <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">
-                            {(groups ?? []).length === 0 ? 'No groups in this campaign.' : 'No groups found.'}
+                            {(groups ?? []).length === 0 ? t('detail.no_groups_in_campaign') : t('detail.no_groups_found')}
                           </p>
                         ) : availableGroups.map((g) => (
                           <button
@@ -305,14 +305,14 @@ export default function CharacterDetailPage() {
                         <div className="px-4 py-3 border-t border-outline-variant/20 space-y-3">
                           <div>
                             <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1">
-                              Role <span className="normal-case tracking-normal text-on-surface-variant/40">(optional)</span>
+                              {t('detail.role_label')} <span className="normal-case tracking-normal text-on-surface-variant/40">{t('detail.role_optional')}</span>
                             </label>
                             <input
                               type="text"
                               value={addGroupRole}
                               onChange={(e) => setAddGroupRole(e.target.value)}
                               onKeyDown={(e) => { if (e.key === 'Enter') handleAddGroup(); }}
-                              placeholder="e.g. Leader, Spy…"
+                              placeholder={t('detail.role_placeholder')}
                               className="w-full bg-surface-container border border-outline-variant/20 focus:border-primary rounded-sm py-1.5 px-2 text-xs text-on-surface focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
                             />
                           </div>
@@ -321,7 +321,7 @@ export default function CharacterDetailPage() {
                               onClick={() => { setAddGroupOpen(false); setSelectedGroupId(null); }}
                               className="px-3 py-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
                             >
-                              Cancel
+                              {t('detail.cancel')}
                             </button>
                             <button
                               onClick={handleAddGroup}
@@ -329,7 +329,7 @@ export default function CharacterDetailPage() {
                               className="flex items-center gap-1 px-4 py-1.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-[10px] font-label uppercase tracking-widest rounded-sm disabled:opacity-40 transition-opacity"
                             >
                               <span className="material-symbols-outlined text-[13px]">group_add</span>
-                              Add
+                              {t('detail.add')}
                             </button>
                           </div>
                         </div>
@@ -338,7 +338,7 @@ export default function CharacterDetailPage() {
                   )}
 
                   {(character.groupMemberships ?? []).length === 0 && !addGroupOpen ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">No group memberships.</p>
+                    <p className="text-xs text-on-surface-variant/40 italic">{t('detail.no_group_memberships')}</p>
                   ) : (character.groupMemberships ?? []).length > 0 ? (
                     <div className="flex flex-wrap gap-4">
                       {(character.groupMemberships ?? []).map((m) => (
@@ -364,24 +364,24 @@ export default function CharacterDetailPage() {
                           </Link>
                           {isGm && (confirmRemoveGroupId === m.groupId ? (
                             <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
-                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">{t('detail.confirm_remove')}</span>
                               <button
                                 onClick={() => handleRemoveGroup(m.groupId)}
                                 className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
                               >
-                                Yes
+                                {t('detail.confirm_yes')}
                               </button>
                               <button
                                 onClick={() => setConfirmRemoveGroupId(null)}
                                 className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
                               >
-                                No
+                                {t('detail.confirm_no')}
                               </button>
                             </div>
                           ) : (
                             <button
                               onClick={() => setConfirmRemoveGroupId(m.groupId)}
-                              title="Remove from group"
+                              title={t('detail.remove_from_group')}
                               className="px-2 py-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                             >
                               <span className="material-symbols-outlined text-[14px]">close</span>

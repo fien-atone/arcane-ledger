@@ -1,0 +1,52 @@
+{
+  "title": "Quests",
+  "subtitle": "Active threads and chronicle of completed tasks.",
+  "new_quest": "New Quest",
+  "search_placeholder": "Search...",
+  "loading": "Loading\u2026",
+  "error": "Failed to load quests.",
+  "not_found": "Quest not found.",
+  "empty_title": "No quests found.",
+  "empty_subtitle": "Create a quest to track objectives.",
+
+  "column_title": "Title",
+  "column_status": "Status",
+
+  "filter_all": "All",
+
+  "status_active": "Active",
+  "status_completed": "Completed",
+  "status_failed": "Failed",
+  "status_unavailable": "Unavailable",
+  "status_undiscovered": "Undiscovered",
+
+  "visible_to_players": "Visible to players",
+  "hidden_from_players": "Hidden from players",
+
+  "section_description": "Description",
+  "section_gm_notes": "GM Notes",
+  "section_quest_giver": "Quest Giver",
+  "section_reward": "Reward",
+  "section_sessions": "Sessions",
+
+  "placeholder_description": "What is this quest about\u2026",
+  "placeholder_reward": "Gold, items, reputation\u2026",
+  "no_quest_giver": "No quest giver set.",
+
+  "confirm_delete": "Delete?",
+  "confirm_yes": "Yes",
+  "confirm_no": "No",
+  "edit": "Edit",
+
+  "drawer_edit_title": "Edit Quest",
+  "drawer_new_title": "New Quest",
+
+  "field_title": "Title",
+  "field_quest_giver": "Quest Giver",
+  "placeholder_title": "Quest title\u2026",
+  "placeholder_quest_giver": "Select NPC\u2026",
+
+  "save": "Save",
+  "create": "Create",
+  "cancel": "Cancel"
+}

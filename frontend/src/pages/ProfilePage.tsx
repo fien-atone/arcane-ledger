@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { SectionBackground } from '@/shared/ui';
+import { useTranslation } from 'react-i18next';
+import { SectionBackground, Select } from '@/shared/ui';
 import { useAuthStore } from '@/features/auth';
 import { useUpdateProfile, useChangePassword } from '@/features/auth/api/queries';
 
@@ -14,6 +15,12 @@ const inputDisabledCls =
   'w-full bg-surface-container-low border border-outline-variant/10 text-on-surface-variant/50 text-sm rounded-sm py-2.5 px-3 cursor-not-allowed';
 
 export default function ProfilePage() {
+  const { t, i18n } = useTranslation('profile');
+
+  const LANGUAGES = [
+    { value: 'en', label: 'English' },
+    { value: 'ru', label: 'Русский' },
+  ];
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
 
@@ -40,12 +47,12 @@ export default function ProfilePage() {
       const { data } = await updateProfile.mutate(name.trim());
       if (data?.updateProfile) {
         updateUser({ name: data.updateProfile.name });
-        setProfileMsg({ type: 'success', text: 'Profile updated successfully.' });
+        setProfileMsg({ type: 'success', text: t('profile_updated') });
       }
     } catch (err: any) {
       setProfileMsg({
         type: 'error',
-        text: err?.message || 'Failed to update profile.',
+        text: err?.message || t('profile_update_failed'),
       });
     }
   };
@@ -54,15 +61,15 @@ export default function ProfilePage() {
     setPasswordMsg(null);
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordMsg({ type: 'error', text: 'All fields are required.' });
+      setPasswordMsg({ type: 'error', text: t('validation.all_fields_required') });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: 'error', text: 'New passwords do not match.' });
+      setPasswordMsg({ type: 'error', text: t('validation.passwords_not_match') });
       return;
     }
     if (newPassword.length < 4) {
-      setPasswordMsg({ type: 'error', text: 'New password must be at least 4 characters.' });
+      setPasswordMsg({ type: 'error', text: t('validation.password_min_length') });
       return;
     }
 
@@ -72,12 +79,12 @@ export default function ProfilePage() {
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        setPasswordMsg({ type: 'success', text: 'Password changed successfully.' });
+        setPasswordMsg({ type: 'success', text: t('password_changed') });
       }
     } catch (err: any) {
       setPasswordMsg({
         type: 'error',
-        text: err?.message || 'Failed to change password.',
+        text: err?.message || t('password_change_failed'),
       });
     }
   };
@@ -92,7 +99,7 @@ export default function ProfilePage() {
         className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
       >
         <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-        My Campaigns
+        {t('common:nav.my_campaigns')}
       </Link>
     </div>
 
@@ -100,34 +107,34 @@ export default function ProfilePage() {
       {/* Page header */}
       <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
         <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
-          Profile Settings
+          {t('title')}
         </h1>
         <p className="text-on-surface-variant text-sm mt-1">
-          Account preferences
+          {t('subtitle')}
         </p>
       </div>
 
       {/* Profile section */}
       <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Profile Information</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">{t('profile_information')}</h3>
           <div className="h-px flex-1 bg-outline-variant/20" />
         </div>
 
         <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6 space-y-5">
           <div>
-            <label className={labelCls}>Name</label>
+            <label className={labelCls}>{t('name_label')}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className={inputCls}
-              placeholder="Your name"
+              placeholder={t('name_placeholder')}
             />
           </div>
 
           <div>
-            <label className={labelCls}>Email</label>
+            <label className={labelCls}>{t('email_label')}</label>
             <input
               type="text"
               value={user?.email || ''}
@@ -135,7 +142,7 @@ export default function ProfilePage() {
               className={inputDisabledCls}
             />
             <p className="text-[10px] text-on-surface-variant/40 mt-1.5 italic">
-              Email cannot be changed.
+              {t('email_cannot_change')}
             </p>
           </div>
 
@@ -158,8 +165,26 @@ export default function ProfilePage() {
               {updateProfile.loading && (
                 <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
               )}
-              Save Changes
+              {t('save_changes')}
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Language section */}
+      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">{t('language')}</h3>
+          <div className="h-px flex-1 bg-outline-variant/20" />
+        </div>
+        <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6">
+          <label className={labelCls}>{t('language_label')}</label>
+          <div className="max-w-xs">
+            <Select
+              value={i18n.language.startsWith('ru') ? 'ru' : 'en'}
+              options={LANGUAGES}
+              onChange={(v) => i18n.changeLanguage(v || 'en')}
+            />
           </div>
         </div>
       </div>
@@ -167,41 +192,41 @@ export default function ProfilePage() {
       {/* Change Password section */}
       <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Change Password</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">{t('change_password')}</h3>
           <div className="h-px flex-1 bg-outline-variant/20" />
         </div>
 
         <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6 space-y-5">
           <div>
-            <label className={labelCls}>Current Password</label>
+            <label className={labelCls}>{t('current_password_label')}</label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               className={inputCls}
-              placeholder="Enter current password"
+              placeholder={t('current_password_placeholder')}
             />
           </div>
 
           <div>
-            <label className={labelCls}>New Password</label>
+            <label className={labelCls}>{t('new_password_label')}</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className={inputCls}
-              placeholder="Enter new password"
+              placeholder={t('new_password_placeholder')}
             />
           </div>
 
           <div>
-            <label className={labelCls}>Confirm New Password</label>
+            <label className={labelCls}>{t('confirm_password_label')}</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className={inputCls}
-              placeholder="Confirm new password"
+              placeholder={t('confirm_password_placeholder')}
             />
           </div>
 
@@ -224,7 +249,7 @@ export default function ProfilePage() {
               {changePassword.loading && (
                 <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
               )}
-              Change Password
+              {t('change_password_button')}
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
@@ -89,7 +90,7 @@ function EditingField({
         <ToolbarBtn onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')} icon="ms:format_quote" title="Blockquote" />
         <div className="flex-1" />
-        <span className="text-[10px] text-on-surface-variant/25 pr-1 select-none">Esc to cancel</span>
+        <span className="text-[10px] text-on-surface-variant/25 pr-1 select-none">Esc</span>
       </div>
       <div className="px-3 py-2.5">
         <EditorContent editor={editor} />
@@ -109,8 +110,10 @@ interface Props {
   readOnly?: boolean;
 }
 
-export const InlineRichField = memo(function InlineRichField({ label, value, onSave, isGmNotes, placeholder = 'Not recorded yet.', readOnly }: Props) {
+export const InlineRichField = memo(function InlineRichField({ label, value, onSave, isGmNotes, placeholder, readOnly }: Props) {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
+  const resolvedPlaceholder = placeholder ?? t('not_recorded_yet');
 
   const handleSave = (html: string) => {
     setIsEditing(false);
@@ -134,18 +137,18 @@ export const InlineRichField = memo(function InlineRichField({ label, value, onS
       dangerouslySetInnerHTML={{ __html: value }}
     />
   ) : readOnly ? (
-    <p className="text-xs text-on-surface-variant/30 italic">{placeholder}</p>
+    <p className="text-xs text-on-surface-variant/30 italic">{resolvedPlaceholder}</p>
   ) : (
     <button
       onClick={() => setIsEditing(true)}
       className="w-full flex items-center justify-between py-3 px-4 border border-dashed border-outline-variant/20 rounded-sm hover:border-primary/30 hover:bg-primary/3 transition-all group/empty"
     >
       <span className="text-xs text-on-surface-variant/30 italic group-hover/empty:text-on-surface-variant/50 transition-colors">
-        {placeholder}
+        {resolvedPlaceholder}
       </span>
       <span className="flex items-center gap-1 text-[10px] text-primary/30 group-hover/empty:text-primary uppercase tracking-widest transition-colors">
         <span className="material-symbols-outlined text-[12px]">edit</span>
-        Fill in
+        {t('fill_in')}
       </span>
     </button>
   );
@@ -163,7 +166,7 @@ export const InlineRichField = memo(function InlineRichField({ label, value, onS
         <div className="relative z-10 space-y-4">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-            <h3 className="text-sm font-bold uppercase tracking-widest text-primary">GM Notes</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-primary">{t('gm_notes')}</h3>
           </div>
           {content}
         </div>

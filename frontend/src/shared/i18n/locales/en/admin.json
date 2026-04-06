@@ -1,0 +1,51 @@
+{
+  "title": "User Management",
+  "subtitle": "System administration",
+  "create_user": "Create User",
+
+  "users_section": "Users",
+  "search_label": "Search Users",
+  "search_placeholder": "Search by name or email...",
+  "loading_users": "Loading users...",
+  "no_users_search": "No users match your search.",
+  "no_users": "No users found.",
+
+  "table": {
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "created": "Created",
+    "actions": "Actions"
+  },
+
+  "roles": {
+    "admin": "Admin",
+    "user": "User"
+  },
+
+  "edit_user_title": "Edit User",
+  "create_user_title": "Create User",
+  "add_user_subtitle": "Add a new user to the system",
+
+  "form": {
+    "name_label": "Name",
+    "name_placeholder": "Full name...",
+    "email_label": "Email",
+    "email_placeholder": "user@example.com",
+    "password_label": "Password",
+    "password_placeholder_create": "Enter password...",
+    "password_placeholder_edit": "Leave empty to keep current",
+    "role_label": "Role"
+  },
+
+  "cancel": "Cancel",
+  "save_changes": "Save Changes",
+
+  "edit_user": "Edit user",
+  "delete_user": "Delete user",
+  "cannot_delete_self": "Cannot delete yourself",
+  "confirm_delete": "Delete?",
+  "confirm_yes": "Yes",
+  "confirm_no": "No",
+  "my_campaigns": "My Campaigns"
+}

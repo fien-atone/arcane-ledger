@@ -1,0 +1,137 @@
+{
+  "save": "Сохранить",
+  "save_changes": "Сохранить изменения",
+  "cancel": "Отмена",
+  "delete": "Удалить",
+  "create": "Создать",
+  "edit": "Редактировать",
+  "close": "Закрыть",
+  "yes": "Да",
+  "no": "Нет",
+  "done": "Готово",
+  "loading": "Загрузка\u2026",
+  "error": "Ошибка",
+  "not_found": "Не найдено.",
+  "search_placeholder": "Поиск по имени или email...",
+  "name": "Название",
+  "all": "Все",
+  "basic": "Основные",
+  "none": "Ничего",
+  "always": "всегда",
+  "clear": "Очистить",
+  "reset": "сброс",
+  "roll": "Бросить",
+  "manage": "Управление",
+  "active": "Активные",
+  "archive": "Архив",
+  "restore": "Восстановить",
+  "sections": "Разделы",
+  "campaign": "Кампания",
+
+  "gm_notes": "Заметки Мастера",
+  "gm_notes_empty": "Заметок Мастера пока нет.",
+  "gm_only": "только для Мастера",
+  "not_recorded_yet": "Пока не заполнено.",
+  "fill_in": "Заполнить",
+
+  "player_visibility": "Видимость для игроков",
+  "visible_to_players": "Видно игрокам",
+  "shared": "Общее",
+
+  "section_not_enabled": "Раздел не включён",
+  "section_not_enabled_desc": "Этот раздел скрыт для данной кампании. Ты можешь включить его в боковой панели \u2014 все данные сохранены.",
+  "enable_sections": "Включить разделы",
+
+  "connection_error_title": "Что-то пошло не так",
+  "connection_error_desc": "Произошла ошибка при связи с сервером. Попробуй позже или обратись к администратору.",
+  "reload_page": "Перезагрузить страницу",
+
+  "app_name": "Arcane Ledger",
+  "app_tagline": "Спутник кампании",
+  "copyright": "\u00a9 2026 Иван Шумов",
+
+  "nav": {
+    "dashboard": "Обзор",
+    "all_campaigns": "Все кампании",
+    "my_campaigns": "Мои кампании",
+    "home": "Главная",
+    "changelog": "Список изменений",
+    "profile": "Профиль",
+    "admin": "Администрирование",
+    "sign_out": "Выйти",
+    "whats_new": "Что нового",
+    "collapse": "Свернуть",
+    "edit_sections": "Настроить разделы",
+    "back": "Назад"
+  },
+
+  "nav_sections": {
+    "world": "Мир",
+    "adventure": "Приключение"
+  },
+
+  "nav_items": {
+    "locations": "Локации",
+    "location_types": "Типы локаций",
+    "npcs": "NPC",
+    "groups": "Группы",
+    "group_types": "Типы групп",
+    "species": "Расы",
+    "species_types": "Типы рас",
+    "sessions": "Сессии",
+    "party": "Партия",
+    "quests": "Квесты",
+    "social_graph": "Связи"
+  },
+
+  "roles": {
+    "game_master": "Мастер",
+    "player": "Игрок"
+  },
+
+  "footer": {
+    "home": "Главная",
+    "changelog": "Изменения",
+    "telegram": "Telegram",
+    "email": "Почта"
+  },
+
+  "changelog_drawer": {
+    "title": "Что нового",
+    "tag_new": "Новое",
+    "tag_improved": "Обновлено",
+    "tag_fixed": "Исправлено",
+    "current": "Текущая"
+  },
+
+  "dice_roller": {
+    "title": "Бросок кубиков",
+    "history": "История",
+    "clear": "Очистить",
+    "no_rolls_yet": "Бросков пока нет",
+    "no_dice_selected": "Кубики не выбраны",
+    "click_to_add": "Клик \u2014 добавить \u00b7 правый клик \u2014 убрать",
+    "modifier": "Мод",
+    "roll": "Бросить",
+    "critical_hit": "Критический успех",
+    "critical_fail": "Критический провал"
+  },
+
+  "of": "из",
+  "back": "Назад",
+  "open_app": "Открыть приложение",
+  "changelog": "История изменений",
+  "changelog_release_history": "История релизов",
+  "changelog_subtitle": "Что было создано, исправлено и улучшено в Arcane Ledger.",
+  "changelog_latest": "Последний",
+  "tag_new": "Новое",
+  "tag_updated": "Обновлено",
+  "tag_fixed": "Исправлено",
+
+  "manage_sections": {
+    "title": "Управление разделами",
+    "subtitle": "Включай и выключай разделы в боковой панели",
+    "always_on": "Всегда включён",
+    "footer_hint": "Скрытые разделы убираются из боковой панели и обзора. Данные сохраняются и могут быть включены снова в любой момент."
+  }
+}

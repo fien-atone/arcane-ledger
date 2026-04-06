@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSpeciesById, useSaveSpecies, useDeleteSpecies } from '@/features/species/api';
 import { useSpeciesTypes } from '@/features/speciesTypes/api';
@@ -7,14 +8,10 @@ import { SpeciesEditDrawer } from '@/features/species/ui';
 import { InlineRichField, SectionBackground } from '@/shared/ui';
 import type { SpeciesSize } from '@/entities/species';
 
-const SIZE_LABEL: Record<SpeciesSize, string> = {
-  tiny: 'Tiny', small: 'Small', medium: 'Medium',
-  large: 'Large', huge: 'Huge', gargantuan: 'Gargantuan',
-};
-
 const SIZE_ORDER: SpeciesSize[] = ['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'];
 
 export default function SpeciesDetailPage() {
+  const { t } = useTranslation('species');
   const { id: campaignId, speciesId } = useParams<{ id: string; speciesId: string }>();
   const { data: campaign } = useCampaign(campaignId ?? '');
   const { data: species, isLoading, isError } = useSpeciesById(campaignId, speciesId);
@@ -35,13 +32,13 @@ export default function SpeciesDetailPage() {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
-        Loading...
+        {t('loading')}
       </main>
     );
   }
 
   if (isError || !species) {
-    return <main className="p-12 text-on-surface-variant text-sm">Species not found.</main>;
+    return <main className="p-12 text-on-surface-variant text-sm">{t('not_found')}</main>;
   }
 
   const sizeIdx = SIZE_ORDER.indexOf(species.size);
@@ -58,7 +55,7 @@ export default function SpeciesDetailPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -69,11 +66,11 @@ export default function SpeciesDetailPage() {
           <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
             {confirmDelete ? (
               <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                <span className="text-[9px] text-on-surface-variant">{t('confirm_delete')}</span>
                 <button onClick={() => deleteSpecies.mutate(species.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/species`) })}
-                  className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                  className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
                 <button onClick={() => setConfirmDelete(false)}
-                  className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                  className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
               </div>
             ) : (
               <button onClick={() => setConfirmDelete(true)}
@@ -86,7 +83,7 @@ export default function SpeciesDetailPage() {
               className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
             >
               <span className="material-symbols-outlined text-sm">edit</span>
-              Edit
+              {t('edit')}
             </button>
           </div>
 
@@ -98,7 +95,7 @@ export default function SpeciesDetailPage() {
               </span>
             )}
             <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-label tracking-widest uppercase rounded-sm border border-outline-variant/10">
-              {SIZE_LABEL[species.size]}
+              {t(`size_${species.size}`)}
             </span>
           </div>
 
@@ -107,13 +104,13 @@ export default function SpeciesDetailPage() {
             {species.name}
           </h1>
           {species.pluralName && species.pluralName !== species.name + 's' && (
-            <p className="text-on-surface-variant/50 text-xs italic mt-1">pl. {species.pluralName}</p>
+            <p className="text-on-surface-variant/50 text-xs italic mt-1">{t('plural_prefix')} {species.pluralName}</p>
           )}
         </section>
 
         {/* Size bar card */}
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold mb-2">Size</p>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold mb-2">{t('size_bar_label')}</p>
           <div className="flex items-center gap-1">
             {SIZE_ORDER.map((sz, i) => (
               <div
@@ -123,21 +120,21 @@ export default function SpeciesDetailPage() {
             ))}
           </div>
           <div className="flex justify-between mt-1">
-            <span className="text-[9px] text-on-surface-variant/30 uppercase tracking-widest">Tiny</span>
+            <span className="text-[9px] text-on-surface-variant/30 uppercase tracking-widest">{t('size_tiny')}</span>
             <span className={`text-[9px] font-bold uppercase tracking-widest ${species.size !== 'tiny' && species.size !== 'gargantuan' ? 'text-primary/70' : 'text-on-surface-variant/40'}`}>
-              {SIZE_LABEL[species.size]}
+              {t(`size_${species.size}`)}
             </span>
-            <span className="text-[9px] text-on-surface-variant/30 uppercase tracking-widest">Gargantuan</span>
+            <span className="text-[9px] text-on-surface-variant/30 uppercase tracking-widest">{t('size_gargantuan')}</span>
           </div>
         </div>
 
         {/* Description card */}
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <InlineRichField
-            label="Overview"
+            label={t('section_overview')}
             value={species.description}
             onSave={saveDescription}
-            placeholder="Describe this species..."
+            placeholder={t('placeholder_overview')}
           />
         </div>
 
@@ -145,7 +142,7 @@ export default function SpeciesDetailPage() {
         {species.traits && species.traits.length > 0 && (
           <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
             <div className="flex items-center gap-4 mb-4">
-              <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">Racial Traits</h2>
+              <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">{t('section_racial_traits')}</h2>
               <div className="h-px flex-1 bg-outline-variant/20" />
             </div>
             <div className="flex flex-wrap gap-2">

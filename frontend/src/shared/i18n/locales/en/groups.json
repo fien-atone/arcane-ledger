@@ -1,0 +1,88 @@
+{
+  "title": "Groups",
+  "subtitle": "Factions, guilds, families, and other social structures.",
+  "add_group": "Add Group",
+  "search_placeholder": "Search...",
+  "loading": "Loading\u2026",
+  "error": "Failed to load groups.",
+  "not_found": "Group not found.",
+  "empty_title": "No groups found.",
+  "empty_subtitle": "Create your first group to get started.",
+
+  "column_name": "Name",
+  "column_type": "Type",
+  "filter_all": "All",
+
+  "visible_to_players": "Visible to players",
+  "hidden_from_players": "Hidden from players",
+
+  "confirm_delete": "Delete?",
+  "confirm_remove": "Remove?",
+  "confirm_yes": "Yes",
+  "confirm_no": "No",
+  "edit": "Edit",
+  "add": "Add",
+  "cancel": "Cancel",
+
+  "section_about": "About",
+  "section_goals": "Goals",
+  "section_symbols": "Symbols & Insignia",
+  "section_gm_notes": "GM Notes",
+  "section_members": "Members",
+  "section_pc_label": "PC",
+
+  "placeholder_about": "Describe this group\u2026",
+  "placeholder_goals": "What are their objectives\u2026",
+  "placeholder_symbols": "Banners, colours, insignia\u2026",
+
+  "no_members": "No members yet.",
+  "remove_from_group": "Remove from group",
+
+  "add_member_title": "Add Member",
+  "add_member_subtitle": "Select an NPC to add",
+  "search_npcs": "Search NPCs\u2026",
+  "all_npcs_members": "All NPCs are already members.",
+  "no_npcs_found": "No NPCs found.",
+  "add_member": "Add Member",
+
+  "role_label": "Role",
+  "role_optional": "(optional)",
+  "role_placeholder": "e.g. Leader, Spy\u2026",
+
+  "drawer_edit_title": "Edit Group",
+  "drawer_new_title": "New Group",
+
+  "field_name": "Name",
+  "field_type": "Type",
+  "field_aliases": "Aliases",
+  "field_aliases_hint": "(comma-separated)",
+  "placeholder_name": "Group name\u2026",
+  "placeholder_type_none": "No type",
+  "placeholder_aliases": "Alternative names\u2026",
+
+  "save": "Save",
+  "create": "Create",
+
+  "types_title": "Group Types",
+  "types_subtitle": "Manage the types that classify groups in this campaign world.",
+  "types_add": "Add Type",
+  "types_search_placeholder": "Search types\u2026",
+  "types_loading": "Loading\u2026",
+  "types_empty_title": "No group types yet.",
+  "types_empty_subtitle": "Create your first group type to get started.",
+  "types_select_prompt": "Select a group type",
+
+  "types_field_name": "Name",
+  "types_field_icon": "Icon",
+  "types_field_description": "Description",
+
+  "types_delete": "Delete",
+  "types_delete_confirm": "Delete?",
+  "types_edit": "Edit",
+  "types_save": "Save",
+  "types_create": "Create",
+  "types_cancel": "Cancel",
+
+  "types_drawer_new_title": "New Group Type",
+  "types_drawer_edit_title": "Edit Group Type"
+}

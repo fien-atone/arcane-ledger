@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useGroups, useSetGroupVisibility } from '@/features/groups/api';
 import { GroupEditDrawer } from '@/features/groups/ui';
@@ -13,6 +14,7 @@ function resolveType(typeId: string, groupTypes: GroupTypeEntry[] | undefined): 
 }
 
 export default function GroupListPage() {
+  const { t } = useTranslation('groups');
   const { id: campaignId } = useParams<{ id: string }>();
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
@@ -38,7 +40,7 @@ export default function GroupListPage() {
   }
 
   const typeFilterItems: Array<{ value: string; label: string }> = groupTypesEnabled ? [
-    { value: 'all', label: 'All' },
+    { value: 'all', label: t('filter_all') },
     ...(groupTypes ?? []).map((t) => ({ value: t.id, label: t.name })),
   ] : [];
 
@@ -55,7 +57,7 @@ export default function GroupListPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -65,8 +67,8 @@ export default function GroupListPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">Groups</h1>
-              <p className="text-on-surface-variant text-sm mt-1">Factions, guilds, families, and other social structures.</p>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">{t('title')}</h1>
+              <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
             </div>
             {isGm && (
               <button
@@ -74,7 +76,7 @@ export default function GroupListPage() {
                 className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
               >
                 <span className="material-symbols-outlined text-[20px]">add</span>
-                <span className="font-label text-xs uppercase tracking-widest">Add Group</span>
+                <span className="font-label text-xs uppercase tracking-widest">{t('add_group')}</span>
               </button>
             )}
           </div>
@@ -85,7 +87,7 @@ export default function GroupListPage() {
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t('search_placeholder')}
                 value={search}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -128,19 +130,19 @@ export default function GroupListPage() {
           </div>
         </div>
 
-        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading…</div>}
-        {isError && <p className="text-tertiary text-sm p-12">Failed to load groups.</p>}
+        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>{t('loading')}</div>}
+        {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
 
         {!isLoading && !isError && (
           filtered.length === 0 ? (
-            <EmptyState icon="groups" title="No groups found." subtitle="Create your first group to get started." />
+            <EmptyState icon="groups" title={t('empty_title')} subtitle={t('empty_subtitle')} />
           ) : (
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm divide-y divide-outline-variant/10">
               {/* Column headers */}
               <div className="flex items-center gap-3 px-6 py-2 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
                 <span className="w-9 flex-shrink-0" />
-                <span className="flex-1 min-w-0">Name</span>
-                {groupTypesEnabled && <span className="w-28 flex-shrink-0 hidden lg:block">Type</span>}
+                <span className="flex-1 min-w-0">{t('column_name')}</span>
+                {groupTypesEnabled && <span className="w-28 flex-shrink-0 hidden lg:block">{t('column_type')}</span>}
                 {isGm && <span className="w-8 flex-shrink-0" />}
               </div>
               {filtered.map((g) => {
@@ -180,7 +182,7 @@ export default function GroupListPage() {
                               playerVisibleFields: g.playerVisibleFields ?? [],
                             });
                           }}
-                          title={g.playerVisible ? 'Visible to players' : 'Hidden from players'}
+                          title={g.playerVisible ? t('visible_to_players') : t('hidden_from_players')}
                           className={`w-8 flex-shrink-0 flex items-center justify-center transition-colors ${
                             g.playerVisible ? 'text-primary/60 hover:text-primary' : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
                           }`}

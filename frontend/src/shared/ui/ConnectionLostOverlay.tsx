@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next';
 import { useConnectionStore } from '@/shared/api/connectionStatus';
 
 export function ConnectionLostOverlay() {
+  const { t } = useTranslation();
   const backendDown = useConnectionStore((s) => s.backendDown);
 
   if (!backendDown) return null;
@@ -15,9 +17,9 @@ export function ConnectionLostOverlay() {
 
         {/* Text */}
         <div className="space-y-2">
-          <h2 className="font-headline text-xl font-bold text-on-surface">Something went wrong</h2>
+          <h2 className="font-headline text-xl font-bold text-on-surface">{t('connection_error_title')}</h2>
           <p className="text-sm text-on-surface-variant/60 leading-relaxed">
-            An error occurred while communicating with the server. Please try again later or contact your administrator.
+            {t('connection_error_desc')}
           </p>
         </div>
 
@@ -28,7 +30,7 @@ export function ConnectionLostOverlay() {
             className="flex items-center gap-2 px-5 py-2.5 text-xs font-label uppercase tracking-widest text-primary border border-primary/30 rounded-sm hover:bg-primary/5 transition-colors"
           >
             <span className="material-symbols-outlined text-[14px]">refresh</span>
-            Reload page
+            {t('reload_page')}
           </button>
         </div>
       </div>

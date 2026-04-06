@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSaveLocation, useLocations } from '@/features/locations/api/queries';
 import { useLocationTypes, useContainmentRules } from '@/features/locationTypes';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export function LocationEditDrawer({ open, onClose, campaignId, location, initialParentId, onSaved, elevated }: Props) {
+  const { t } = useTranslation('locations');
   const save = useSaveLocation(campaignId);
   const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
   const { data: locationTypes = [] } = useLocationTypes(campaignId);
@@ -118,10 +120,10 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="font-headline text-xl font-bold text-on-surface">
-              {isNew ? 'New Location' : 'Edit Location'}
+              {isNew ? t('drawer_new_title') : t('drawer_edit_title')}
             </h2>
             <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
-              {isNew ? 'Add a location to the world' : location!.name}
+              {isNew ? t('drawer_new_subtitle') : location!.name}
             </p>
           </div>
           <button onClick={onClose} className="p-2 text-on-surface-variant hover:text-on-surface transition-colors">
@@ -134,14 +136,14 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
 
           {/* Name */}
           <div>
-            <label className={labelCls}>Name <span className="text-primary">*</span></label>
+            <label className={labelCls}>{t('field_name')} <span className="text-primary">*</span></label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
           </div>
 
           {/* Location Type */}
           {locationTypesEnabled && (
             <div>
-              <label className={labelCls}>Type</label>
+              <label className={labelCls}>{t('field_type')}</label>
               <Select
                 value={type}
                 options={locationTypeOptions}
@@ -155,11 +157,11 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           {/* Parent location — hidden when creating from map (auto-assigned) */}
           {locationTypesEnabled && !initialParentId && parentOptions.length > 0 && (
             <div>
-              <label className={labelCls}>Part of</label>
+              <label className={labelCls}>{t('field_part_of')}</label>
               <Select
                 value={parentLocationId}
                 options={parentOptions}
-                placeholder="— none —"
+                placeholder={t('placeholder_part_of_none')}
                 onChange={setParentLocationId}
               />
             </div>
@@ -168,13 +170,13 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           {/* Population — only for settlement types */}
           {locationTypesEnabled && selectedTypeEntry?.isSettlement && (
             <div>
-              <label className={labelCls}>Population</label>
+              <label className={labelCls}>{t('field_population')}</label>
               <input
                 type="number"
                 min={0}
                 value={settlementPopulation}
                 onChange={(e) => setSettlementPopulation(e.target.value)}
-                placeholder="e.g. 12 000"
+                placeholder={t('placeholder_population')}
                 className={inputCls}
               />
             </div>
@@ -183,11 +185,11 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           {/* Biome / terrain sub-type */}
           {locationTypesEnabled && biomeOptions.length > 0 && (
             <div>
-              <label className={labelCls}>Terrain</label>
+              <label className={labelCls}>{t('field_terrain')}</label>
               <Select
                 value={biome}
                 options={biomeOptions}
-                placeholder="— not set —"
+                placeholder={t('placeholder_terrain_none')}
                 onChange={setBiome}
               />
             </div>
@@ -199,7 +201,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container-lowest">
           <button onClick={onClose} className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -211,7 +213,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
             ) : (
               <span className="material-symbols-outlined text-sm">save</span>
             )}
-            {isNew ? 'Create Location' : 'Save Changes'}
+            {isNew ? t('create_location') : t('save_changes')}
           </button>
         </div>
       </div>

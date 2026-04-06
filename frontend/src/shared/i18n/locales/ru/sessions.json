@@ -1,0 +1,84 @@
+{
+  "title": "Сессии",
+  "subtitle": "Хроника всех проведённых сессий, от новых к старым.",
+  "new_session": "Новая сессия",
+  "search_placeholder": "Поиск...",
+  "loading": "Загрузка\u2026",
+  "error": "Не удалось загрузить сессии.",
+  "not_found": "Сессия не найдена.",
+  "empty_title": "Сессии не найдены.",
+  "empty_subtitle": "Запишите первую сессию, чтобы начать.",
+
+  "column_number": "#",
+  "column_title": "Название",
+  "column_date": "Дата",
+
+  "badge_today": "Сегодня",
+  "badge_tomorrow": "Завтра",
+  "badge_next": "Следующая",
+  "badge_previous": "Предыдущая",
+
+  "date_tbd": "Дата не определена",
+
+  "session_prefix": "Сессия #",
+  "nav_previous": "Предыдущая",
+  "nav_next": "Следующая",
+
+  "section_brief": "Краткое содержание",
+  "section_gm_notes": "Заметки Мастера",
+  "section_my_notes": "Мои заметки",
+  "section_npcs": "NPC",
+  "section_locations": "Локации",
+  "section_quests": "Квесты",
+
+  "notes_private": "Личное",
+  "placeholder_brief": "Публичное описание сессии — то, что известно игрокам\u2026",
+  "placeholder_gm_notes": "Ваши личные заметки Мастера для этой сессии\u2026",
+  "placeholder_player_notes": "Добавьте свои личные заметки для этой сессии\u2026",
+  "no_brief": "Описание пока отсутствует.",
+
+  "no_npcs_tagged": "NPC ещё не отмечены.",
+  "no_locations_tagged": "Локации ещё не отмечены.",
+  "no_quests_linked": "Квесты ещё не привязаны.",
+  "search_npcs": "Поиск NPC\u2026",
+  "search_locations": "Поиск локаций\u2026",
+  "search_quests": "Поиск квестов\u2026",
+  "no_npcs_found": "NPC не найдены.",
+  "no_locations_found": "Локации не найдены.",
+  "no_quests_found": "Квесты не найдены.",
+
+  "add": "Добавить",
+  "edit": "Редактировать",
+  "cancel": "Отмена",
+  "confirm_delete": "Удалить?",
+  "confirm_remove": "Убрать?",
+  "confirm_yes": "Да",
+  "confirm_no": "Нет",
+
+  "calendar": "Календарь",
+  "calendar_google": "Google Календарь",
+  "calendar_ics": "Apple / Outlook (.ics)",
+
+  "remove_from_session": "Убрать из сессии",
+
+  "drawer_edit_title": "Редактирование сессии",
+  "drawer_new_title": "Новая сессия",
+  "drawer_edit_subtitle": "Сессия #{{number}}",
+  "drawer_new_subtitle": "Будет сессия #{{number}}",
+
+  "field_title": "Название",
+  "field_title_optional": "(необязательно)",
+  "field_date": "Дата",
+  "field_date_optional": "(необязательно)",
+  "field_start_time": "Время начала",
+  "field_start_time_optional": "(необязательно)",
+  "field_session_number": "Сессия #",
+  "placeholder_title": "Сессия {{number}}",
+
+  "save": "Сохранить",
+  "create": "Создать",
+
+  "session_label": "Сессия #{{number}}",
+  "markers_count": "{{count}} маркер",
+  "markers_count_plural": "{{count}} маркеров"
+}

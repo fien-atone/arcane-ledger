@@ -1,0 +1,47 @@
+{
+  "title": "Social Graph",
+  "subtitle": "Relationships between NPCs visualized.",
+  "loading": "Loading...",
+  "empty_title": "No NPCs yet.",
+  "empty_subtitle": "Create some NPCs first, then come back to see their social web.",
+
+  "view_force": "Force",
+  "view_chord": "Chord",
+  "view_force_title": "Force graph",
+  "view_chord_title": "Chord diagram",
+  "view_list": "List",
+  "view_list_title": "NPC List",
+
+  "virtual_group_party": "The Party",
+
+  "relations_title": "Social Relations",
+  "relations_add": "Add",
+  "relations_search_placeholder": "Search NPCs\u2026",
+  "relations_no_npcs": "No NPCs found.",
+  "relations_empty": "No social relations.",
+  "relations_outgoing": "Their perspective \u2192",
+  "relations_incoming": "\u2190 Others' perspective",
+  "relations_note_placeholder": "Note (optional)\u2026",
+  "relations_remove_confirm": "Remove?",
+
+  "attitude_label": "Attitude",
+  "attitude_hostile": "Hostile",
+  "attitude_unfriendly": "Unfriendly",
+  "attitude_neutral": "Neutral",
+  "attitude_friendly": "Friendly",
+  "attitude_allied": "Allied",
+
+  "controls_zoom_in": "Zoom in",
+  "controls_zoom_out": "Zoom out",
+  "controls_fit_to_view": "Fit to view",
+  "controls_reset_layout": "Reset layout",
+
+  "filter_status": "Status",
+  "filter_group_types": "Group Types",
+  "filter_groups": "Groups",
+
+  "status_alive": "Alive",
+  "status_dead": "Dead",
+  "status_missing": "Missing",
+  "status_unknown": "Unknown"
+}

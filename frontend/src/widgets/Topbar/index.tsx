@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
 
 export function Topbar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -54,7 +56,7 @@ export function Topbar() {
             className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
           >
             <span className="material-symbols-outlined text-base">person</span>
-            Profile
+            {t('nav.profile')}
           </Link>
           {user?.systemRole === 'admin' && (
             <Link
@@ -63,7 +65,7 @@ export function Topbar() {
               className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-base">admin_panel_settings</span>
-              Admin
+              {t('nav.admin')}
             </Link>
           )}
           <button
@@ -71,7 +73,7 @@ export function Topbar() {
             className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-2"
           >
             <span className="material-symbols-outlined text-base">logout</span>
-            Sign out
+            {t('nav.sign_out')}
           </button>
         </div>
       )}

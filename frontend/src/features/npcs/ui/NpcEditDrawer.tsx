@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSaveNpc } from '@/features/npcs/api';
 import { useSpecies } from '@/features/species/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
@@ -15,10 +16,10 @@ interface Props {
 
 const STATUS_OPTIONS: NpcStatus[] = ['alive', 'dead', 'missing', 'unknown'];
 
-const GENDER_OPTIONS: SelectOption<NpcGender | ''>[] = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'nonbinary', label: 'Non-binary' },
+const GENDER_KEYS: { value: NpcGender; labelKey: string }[] = [
+  { value: 'male', labelKey: 'gender_male' },
+  { value: 'female', labelKey: 'gender_female' },
+  { value: 'nonbinary', labelKey: 'gender_nonbinary' },
 ];
 
 const now = () => new Date().toISOString();
@@ -40,14 +41,20 @@ const labelCls =
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
+  const { t } = useTranslation('npcs');
   const save = useSaveNpc();
   const speciesEnabled = useSectionEnabled(campaignId, 'species');
   const { data: allSpecies } = useSpecies(campaignId);
   const isEdit = !!npc;
 
+  const genderOptions = useMemo<SelectOption<NpcGender | ''>[]>(
+    () => GENDER_KEYS.map((g) => ({ value: g.value, label: t(g.labelKey) })),
+    [t],
+  );
+
   const statusOptions = useMemo<SelectOption<NpcStatus>[]>(
-    () => STATUS_OPTIONS.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
-    [],
+    () => STATUS_OPTIONS.map((s) => ({ value: s, label: t(`status_${s}`) })),
+    [t],
   );
 
   const speciesOptions = useMemo<SelectOption<string>[]>(
@@ -121,10 +128,10 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="font-headline text-xl font-bold text-on-surface">
-              {isEdit ? 'Edit NPC' : 'New NPC'}
+              {isEdit ? t('drawer_edit_title') : t('drawer_new_title')}
             </h2>
             <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
-              {isEdit ? npc.name : 'Create a new character record'}
+              {isEdit ? npc.name : t('drawer_new_subtitle')}
             </p>
           </div>
           <button
@@ -141,13 +148,13 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           {/* Name */}
           <div>
             <label className={labelCls}>
-              Name <span className="text-primary">*</span>
+              {t('field_name')} <span className="text-primary">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Character name…"
+              placeholder={t('placeholder_name')}
               className={inputCls}
             />
           </div>
@@ -155,16 +162,16 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           {/* Aliases */}
           <div>
             <label className={labelCls}>
-              Aliases
+              {t('field_aliases')}
               <span className="normal-case tracking-normal text-on-surface-variant/40 ml-2 font-normal text-[10px]">
-                comma-separated
+                {t('field_aliases_hint')}
               </span>
             </label>
             <input
               type="text"
               value={aliases}
               onChange={(e) => setAliases(e.target.value)}
-              placeholder="Alias one, Alias two…"
+              placeholder={t('placeholder_aliases')}
               className={inputCls}
             />
           </div>
@@ -172,7 +179,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           {/* Status / Gender / Age row */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className={labelCls}>Status</label>
+              <label className={labelCls}>{t('field_status')}</label>
               <Select
                 value={status}
                 options={statusOptions}
@@ -181,22 +188,22 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
               />
             </div>
             <div>
-              <label className={labelCls}>Gender</label>
+              <label className={labelCls}>{t('field_gender')}</label>
               <Select<NpcGender | ''>
                 value={gender}
-                options={GENDER_OPTIONS}
-                placeholder="—"
+                options={genderOptions}
+                placeholder={t('placeholder_gender_none')}
                 onChange={(v) => setGender(v ?? '')}
               />
             </div>
             <div>
-              <label className={labelCls}>Age</label>
+              <label className={labelCls}>{t('field_age')}</label>
               <input
                 type="number"
                 min={0}
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
-                placeholder="—"
+                placeholder={t('placeholder_age_none')}
                 className={inputCls}
               />
             </div>
@@ -205,11 +212,11 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           {/* Species */}
           {speciesEnabled && (
           <div>
-            <label className={labelCls}>Species</label>
+            <label className={labelCls}>{t('field_species')}</label>
             <Select
               value={speciesId}
               options={speciesOptions}
-              placeholder="— None —"
+              placeholder={t('placeholder_species_none')}
               searchable
               onChange={(v) => setSpeciesId(v ?? '')}
             />
@@ -224,7 +231,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
             onClick={onClose}
             className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -236,7 +243,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
             ) : (
               <span className="material-symbols-outlined text-sm">save</span>
             )}
-            {isEdit ? 'Save Changes' : 'Create NPC'}
+            {isEdit ? t('save_changes') : t('create_npc')}
           </button>
         </div>
       </div>

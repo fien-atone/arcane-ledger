@@ -1,0 +1,51 @@
+{
+  "title": "Управление пользователями",
+  "subtitle": "Администрирование системы",
+  "create_user": "Создать пользователя",
+
+  "users_section": "Пользователи",
+  "search_label": "Поиск пользователей",
+  "search_placeholder": "Поиск по имени или email...",
+  "loading_users": "Загрузка пользователей...",
+  "no_users_search": "Пользователи не найдены по запросу.",
+  "no_users": "Пользователи не найдены.",
+
+  "table": {
+    "name": "Имя",
+    "email": "Email",
+    "role": "Роль",
+    "created": "Создан",
+    "actions": "Действия"
+  },
+
+  "roles": {
+    "admin": "Админ",
+    "user": "Пользователь"
+  },
+
+  "edit_user_title": "Редактировать пользователя",
+  "create_user_title": "Создать пользователя",
+  "add_user_subtitle": "Добавить нового пользователя в систему",
+
+  "form": {
+    "name_label": "Имя",
+    "name_placeholder": "Полное имя...",
+    "email_label": "Email",
+    "email_placeholder": "user@example.com",
+    "password_label": "Пароль",
+    "password_placeholder_create": "Введи пароль...",
+    "password_placeholder_edit": "Оставь пустым, чтобы сохранить текущий",
+    "role_label": "Роль"
+  },
+
+  "cancel": "Отмена",
+  "save_changes": "Сохранить изменения",
+
+  "edit_user": "Редактировать пользователя",
+  "delete_user": "Удалить пользователя",
+  "cannot_delete_self": "Нельзя удалить самого себя",
+  "confirm_delete": "Удалить?",
+  "confirm_yes": "Да",
+  "confirm_no": "Нет",
+  "my_campaigns": "Мои кампании"
+}

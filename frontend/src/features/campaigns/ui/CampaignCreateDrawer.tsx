@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCreateCampaign } from '../api/queries';
 import { RichTextEditor } from '@/shared/ui';
 import type { CampaignSummary } from '@/entities/campaign';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function CampaignCreateDrawer({ open, onClose }: Props) {
+  const { t } = useTranslation('campaigns');
   const navigate = useNavigate();
   const create = useCreateCampaign();
   const [title, setTitle] = useState('');
@@ -52,8 +54,8 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-outline-variant/10 flex-shrink-0">
           <div>
-            <h2 className="font-headline text-lg font-bold text-on-surface">New Campaign</h2>
-            <p className="text-xs text-on-surface-variant/50 mt-0.5">Start a new adventure</p>
+            <h2 className="font-headline text-lg font-bold text-on-surface">{t('create_drawer.title')}</h2>
+            <p className="text-xs text-on-surface-variant/50 mt-0.5">{t('create_drawer.subtitle')}</p>
           </div>
           <button onClick={onClose} className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors">
             <span className="material-symbols-outlined text-xl">close</span>
@@ -63,23 +65,23 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
         {/* Form */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
           <div>
-            <label className={labelCls}>Title <span className="text-primary">*</span></label>
+            <label className={labelCls}>{t('create_drawer.title_label')} <span className="text-primary">*</span></label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Campaign name…"
+              placeholder={t('create_drawer.title_placeholder')}
               className={inputCls}
               autoFocus
             />
           </div>
 
           <div>
-            <label className={labelCls}>Description</label>
+            <label className={labelCls}>{t('create_drawer.description_label')}</label>
             <RichTextEditor
               value={description}
               onChange={setDescription}
-              placeholder="Setting, premise, tone…"
+              placeholder={t('create_drawer.description_placeholder')}
               minHeight="6rem"
             />
           </div>
@@ -91,7 +93,7 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
             onClick={onClose}
             className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:border-primary/50 transition-colors"
           >
-            Cancel
+            {t('create_drawer.cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -101,7 +103,7 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
             {create.isPending
               ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
               : <span className="material-symbols-outlined text-sm">add</span>}
-            Create
+            {t('create_drawer.create')}
           </button>
         </div>
       </div>

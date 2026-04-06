@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useNpcs, useSetNpcVisibility } from '@/features/npcs/api/queries';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
@@ -10,19 +11,13 @@ import type { NPC, NpcStatus } from '@/entities/npc';
 
 type StatusFilter = 'all' | NpcStatus;
 
-const STATUS_PILLS: { label: string; value: StatusFilter }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Alive', value: 'alive' },
-  { label: 'Dead', value: 'dead' },
-  { label: 'Missing', value: 'missing' },
-  { label: 'Unknown', value: 'unknown' },
-];
+const STATUS_KEYS: StatusFilter[] = ['all', 'alive', 'dead', 'missing', 'unknown'];
 
-const STATUS_STYLES: Record<NpcStatus, { pill: string; dot: string; label: string }> = {
-  alive:   { pill: 'bg-primary/10 text-primary border border-primary/20', dot: 'bg-primary',                label: 'Alive' },
-  dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20', dot: 'bg-outline-variant', label: 'Dead' },
-  missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20', dot: 'bg-on-surface-variant', label: 'Missing' },
-  unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10', dot: 'bg-outline',                     label: 'Unknown' },
+const STATUS_STYLES: Record<NpcStatus, { pill: string; dot: string }> = {
+  alive:   { pill: 'bg-primary/10 text-primary border border-primary/20', dot: 'bg-primary' },
+  dead:    { pill: 'bg-surface-container-highest text-on-surface-variant/40 border border-outline-variant/20', dot: 'bg-outline-variant' },
+  missing: { pill: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20', dot: 'bg-on-surface-variant' },
+  unknown: { pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10', dot: 'bg-outline' },
 };
 
 function NpcAvatar({ name, image }: { name: string; image?: string }) {
@@ -42,6 +37,7 @@ function NpcAvatar({ name, image }: { name: string; image?: string }) {
 }
 
 export default function NpcListPage() {
+  const { t } = useTranslation('npcs');
   const { id: campaignId } = useParams<{ id: string }>();
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
@@ -85,7 +81,7 @@ export default function NpcListPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -95,19 +91,19 @@ export default function NpcListPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">NPCs</h1>
-              <p className="text-on-surface-variant text-sm mt-1">Inhabitants, allies, and adversaries.</p>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">{t('title')}</h1>
+              <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
             </div>
             <div className="flex items-center gap-3">
               {socialGraphEnabled && (
                 <div className="flex bg-surface-container-high rounded-sm border border-outline-variant/20 overflow-hidden">
-                  <button className="p-2 bg-primary/15 text-primary" title="List view" disabled>
+                  <button className="p-2 bg-primary/15 text-primary" title={t('list_view')} disabled>
                     <span className="material-symbols-outlined text-[20px]">list</span>
                   </button>
                   <Link
                     to={`/campaigns/${campaignId}/npcs/relationships`}
                     className="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors"
-                    title="Graph view"
+                    title={t('graph_view')}
                   >
                     <span className="material-symbols-outlined text-[20px]">hub</span>
                   </Link>
@@ -119,7 +115,7 @@ export default function NpcListPage() {
                   className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
                 >
                   <span className="material-symbols-outlined text-[20px]">add</span>
-                  <span className="font-label text-xs uppercase tracking-widest">Add NPC</span>
+                  <span className="font-label text-xs uppercase tracking-widest">{t('add_npc')}</span>
                 </button>
               )}
             </div>
@@ -131,7 +127,7 @@ export default function NpcListPage() {
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t('search_placeholder')}
                 value={search}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -144,7 +140,8 @@ export default function NpcListPage() {
               />
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {STATUS_PILLS.map(({ label, value }) => {
+              {STATUS_KEYS.map((value) => {
+                const label = t(`status_${value}`);
                 const count = value === 'all' ? (npcs?.length ?? 0) : (npcs?.filter((n) => n.status === value).length ?? 0);
                 return (
                   <button
@@ -170,21 +167,21 @@ export default function NpcListPage() {
           </div>
         </div>
 
-      {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading…</div>}
-      {isError && <p className="text-tertiary text-sm p-12">Failed to load NPCs.</p>}
+      {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>{t('loading')}</div>}
+      {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
 
       {!isLoading && !isError && (
         filtered.length === 0 ? (
-          <EmptyState icon="person_off" title="No NPCs found." subtitle="Create your first NPC to get started." />
+          <EmptyState icon="person_off" title={t('empty_title')} subtitle={t('empty_subtitle')} />
         ) : (
           <div className="bg-surface-container border border-outline-variant/20 rounded-sm divide-y divide-outline-variant/10">
             {/* Column headers */}
             <div className="flex items-center gap-3 px-6 py-2 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
               <span className="w-9 flex-shrink-0" />
-              <span className="flex-1 min-w-0">Name</span>
-              <span className="w-28 flex-shrink-0 hidden lg:block">Species</span>
-              <span className="w-14 flex-shrink-0 hidden xl:block">Age</span>
-              <span className="w-24 flex-shrink-0">Status</span>
+              <span className="flex-1 min-w-0">{t('column_name')}</span>
+              <span className="w-28 flex-shrink-0 hidden lg:block">{t('column_species')}</span>
+              <span className="w-14 flex-shrink-0 hidden xl:block">{t('column_age')}</span>
+              <span className="w-24 flex-shrink-0">{t('column_status')}</span>
               {isGm && <span className="w-8 flex-shrink-0" />}
             </div>
             {filtered.map((npc) => {
@@ -201,18 +198,18 @@ export default function NpcListPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">{npc.name}</p>
                       <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5 truncate lg:hidden">
-                        {[species, npc.age != null ? `Age ${npc.age}` : null].filter(Boolean).join(' · ') || '—'}
+                        {[species, npc.age != null ? `${t('age_prefix')} ${npc.age}` : null].filter(Boolean).join(' · ') || '\u2014'}
                       </p>
                     </div>
                     <span className="w-28 flex-shrink-0 text-xs text-on-surface-variant/60 truncate hidden lg:block">
-                      {species || '—'}
+                      {species || '\u2014'}
                     </span>
                     <span className="w-14 flex-shrink-0 text-xs text-on-surface-variant/60 hidden xl:block">
-                      {npc.age != null ? npc.age : '—'}
+                      {npc.age != null ? npc.age : '\u2014'}
                     </span>
                     <span className={`w-24 flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[8px] font-bold uppercase tracking-wider ${st.pill}`}>
                       <span className={`w-1 h-1 rounded-full ${st.dot}`} />
-                      {st.label}
+                      {t(`status_${npc.status}`)}
                     </span>
                     {isGm && (
                       <button
@@ -226,7 +223,7 @@ export default function NpcListPage() {
                             playerVisibleFields: npc.playerVisibleFields ?? [],
                           });
                         }}
-                        title={npc.playerVisible ? 'Visible to players' : 'Hidden from players'}
+                        title={npc.playerVisible ? t('visible_to_players') : t('hidden_from_players')}
                         className={`w-8 flex-shrink-0 flex items-center justify-center transition-colors ${
                           npc.playerVisible ? 'text-primary/60 hover:text-primary' : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
                         }`}

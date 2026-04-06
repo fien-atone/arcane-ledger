@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchUsers, useInvitePlayer } from '@/features/invitations/api/queries';
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function InvitePanel({ campaignId, onClose }: Props) {
+  const { t } = useTranslation('campaigns');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,7 +40,7 @@ export function InvitePanel({ campaignId, onClose }: Props) {
     <div className="border border-secondary/20 bg-secondary/5 rounded-sm p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[10px] font-label font-bold uppercase tracking-widest text-secondary">
-          Invite Player
+          {t('invite_panel.title')}
         </h3>
         <button
           onClick={onClose}
@@ -55,7 +57,7 @@ export function InvitePanel({ campaignId, onClose }: Props) {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search by name or email..."
+          placeholder={t('invite_panel.search_placeholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-8 pr-3 py-2.5 bg-surface-container border border-outline-variant/25 focus:border-secondary rounded-sm text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
@@ -67,13 +69,13 @@ export function InvitePanel({ campaignId, onClose }: Props) {
           {isLoading && (
             <div className="flex items-center gap-2 py-4 px-2 text-on-surface-variant/40 text-xs">
               <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-              Searching...
+              {t('invite_panel.searching')}
             </div>
           )}
 
           {!isLoading && users.length === 0 && (
             <p className="py-4 px-2 text-xs text-on-surface-variant/40 italic">
-              No users found matching "{debouncedSearch}"
+              {t('invite_panel.no_users_found')} "{debouncedSearch}"
             </p>
           )}
 
@@ -97,7 +99,7 @@ export function InvitePanel({ campaignId, onClose }: Props) {
                 className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-secondary border border-secondary/30 rounded-sm hover:bg-secondary/10 transition-colors disabled:opacity-40"
               >
                 <span className="material-symbols-outlined text-[14px]">person_add</span>
-                Invite
+                {t('invite_panel.invite')}
               </button>
             </div>
           ))}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
 import { useGroupTypes, useDeleteGroupType, useSaveGroupType } from '@/features/groupTypes/api';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
@@ -8,6 +9,7 @@ import { InlineRichField, EmptyState, SectionDisabled, SectionBackground } from 
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 export default function GroupTypesPage() {
+  const { t } = useTranslation('groups');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const { id: campaignId } = useParams<{ id: string }>();
@@ -55,7 +57,7 @@ export default function GroupTypesPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -66,9 +68,9 @@ export default function GroupTypesPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">Group Types</h1>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">{t('types_title')}</h1>
               <p className="text-on-surface-variant text-sm mt-1">
-                Manage the types that classify groups in this campaign world.
+                {t('types_subtitle')}
               </p>
             </div>
             <button
@@ -76,7 +78,7 @@ export default function GroupTypesPage() {
               className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity flex-shrink-0"
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
-              <span className="font-label text-xs uppercase tracking-widest">Add Type</span>
+              <span className="font-label text-xs uppercase tracking-widest">{t('types_add')}</span>
             </button>
           </div>
         </div>
@@ -84,7 +86,7 @@ export default function GroupTypesPage() {
         {isLoading ? (
           <div className="flex items-center gap-3 p-12 text-on-surface-variant">
             <span className="material-symbols-outlined animate-spin">progress_activity</span>
-            Loading…
+            {t('types_loading')}
           </div>
         ) : (
           <div className="flex flex-col md:flex-row gap-8 min-h-[480px]">
@@ -97,7 +99,7 @@ export default function GroupTypesPage() {
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
                   <input
                     type="text"
-                    placeholder="Search types…"
+                    placeholder={t('types_search_placeholder')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-surface-container-high border border-outline-variant/20 rounded-sm focus:ring-0 focus:border-primary text-on-surface text-sm placeholder:text-on-surface-variant/30 transition-colors"
@@ -107,7 +109,7 @@ export default function GroupTypesPage() {
 
               <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
                 {(!groupTypes || groupTypes.length === 0) ? (
-                  <EmptyState icon="category" title="No group types found." />
+                  <EmptyState icon="category" title={t('types_empty_title')} />
                 ) : groupTypes.map((t) => (
                     <button
                       key={t.id}
@@ -153,7 +155,7 @@ export default function GroupTypesPage() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-on-surface-variant/30 text-sm italic">
-                  Select a group type
+                  {t('types_select_prompt')}
                 </div>
               )}
             </div>
@@ -183,6 +185,7 @@ function GroupTypeDetail({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation('groups');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const saveType = useSaveGroupType(campaignId);
   return (
@@ -192,18 +195,18 @@ function GroupTypeDetail({
         <div className="flex items-center justify-end gap-2">
           {confirmDelete ? (
             <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-              <span className="text-[10px] text-on-surface-variant">Delete this type?</span>
+              <span className="text-[10px] text-on-surface-variant">{t('types_delete_confirm')}</span>
               <button
                 onClick={() => { onDelete(); setConfirmDelete(false); }}
                 className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
               >
-                Yes
+                {t('confirm_yes')}
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
                 className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
               >
-                No
+                {t('confirm_no')}
               </button>
             </div>
           ) : (
@@ -219,7 +222,7 @@ function GroupTypeDetail({
             className="inline-flex items-center gap-1.5 px-3 py-2 border border-outline-variant/20 text-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
           >
             <span className="material-symbols-outlined text-[14px]">edit</span>
-            Edit
+            {t('types_edit')}
           </button>
         </div>
         {/* Name + icon badge */}
@@ -238,10 +241,10 @@ function GroupTypeDetail({
 
         {/* Description -- edit in place */}
         <InlineRichField
-          label="Description"
+          label={t('types_field_description')}
           value={entry.description}
           onSave={(html) => saveType.mutate({ ...entry, description: html || undefined })}
-          placeholder="Describe this group type…"
+          placeholder={t('placeholder_about')}
         />
 
       </div>

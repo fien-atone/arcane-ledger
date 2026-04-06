@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSubscription } from '@apollo/client/react';
 import { useMyInvitations, useRespondToInvitation } from '@/features/invitations/api/queries';
 import { useAuthStore } from '@/features/auth';
@@ -20,6 +21,7 @@ function timeAgo(dateStr: string | undefined | null): string {
 }
 
 export function InvitationBanner() {
+  const { t } = useTranslation('campaigns');
   const { data: invitations, isLoading, refetch } = useMyInvitations();
   const userId = useAuthStore((s) => s.user?.id);
 
@@ -45,7 +47,7 @@ export function InvitationBanner() {
     <section className="mb-10">
       <div className="flex items-center gap-4 mb-4">
         <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-secondary whitespace-nowrap">
-          Invitations
+          {t('invitations.title')}
         </h2>
         <div className="h-px flex-1 bg-outline-variant/20" />
         <span className="text-[10px] text-on-surface-variant/30">{pending.length}</span>
@@ -62,14 +64,14 @@ export function InvitationBanner() {
                 {inv.campaign?.title ?? 'Campaign'}
               </p>
               <p className="text-xs text-on-surface-variant mt-0.5">
-                {inv.invitedBy.name} invited you{' '}
+                {inv.invitedBy.name} {t('invitations.invited_you')}{' '}
                 <span className="text-on-surface-variant/40">{timeAgo(inv.createdAt)}</span>
               </p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {decliningId === inv.id ? (
                 <>
-                  <span className="text-[10px] text-on-surface-variant/60 uppercase tracking-wider">Decline?</span>
+                  <span className="text-[10px] text-on-surface-variant/60 uppercase tracking-wider">{t('invitations.decline_confirm')}</span>
                   <button
                     onClick={() => {
                       respond.mutate({ id: inv.id, accept: false });
@@ -77,13 +79,13 @@ export function InvitationBanner() {
                     }}
                     className="px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10 transition-colors"
                   >
-                    Yes
+                    {t('common:yes')}
                   </button>
                   <button
                     onClick={() => setDecliningId(null)}
                     className="px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
                   >
-                    No
+                    {t('common:no')}
                   </button>
                 </>
               ) : (
@@ -94,13 +96,13 @@ export function InvitationBanner() {
                     className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-br from-primary to-primary-container text-on-primary text-[10px] font-label uppercase tracking-widest rounded-sm hover:opacity-90 transition-opacity disabled:opacity-40"
                   >
                     <span className="material-symbols-outlined text-[14px]">check</span>
-                    Accept
+                    {t('invitations.accept')}
                   </button>
                   <button
                     onClick={() => setDecliningId(inv.id)}
                     className="px-4 py-2 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
                   >
-                    Decline
+                    {t('invitations.decline')}
                   </button>
                 </>
               )}

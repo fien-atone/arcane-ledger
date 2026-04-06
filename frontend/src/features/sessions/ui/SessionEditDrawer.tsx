@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSessions, useSaveSession } from '@/features/sessions/api/queries';
 import { DatePicker } from '@/shared/ui';
 import type { Session } from '@/entities/session';
@@ -35,6 +36,7 @@ function toIso(date: string, time: string): string {
 }
 
 export function SessionEditDrawer({ open, onClose, campaignId, session }: Props) {
+  const { t } = useTranslation('sessions');
   const save = useSaveSession(campaignId);
   const { data: allSessions } = useSessions(campaignId);
   const isEdit = !!session;
@@ -94,16 +96,16 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
         <div className="flex items-center justify-between px-8 py-5 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="text-lg font-headline font-bold text-on-surface">
-              {isEdit ? 'Edit Session' : 'New Session'}
+              {isEdit ? t('drawer_edit_title') : t('drawer_new_title')}
             </h2>
             {isEdit && (
               <p className="text-xs text-on-surface-variant/50 mt-0.5">
-                Session #{String(session.number).padStart(2, '0')}
+                {t('drawer_edit_subtitle', { number: String(session.number).padStart(2, '0') })}
               </p>
             )}
             {!isEdit && (
               <p className="text-xs text-on-surface-variant/50 mt-0.5">
-                Will be Session #{String(number).padStart(2, '0')}
+                {t('drawer_new_subtitle', { number: String(number).padStart(2, '0') })}
               </p>
             )}
           </div>
@@ -115,11 +117,11 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
           <div>
-            <label className={labelCls}>Title <span className="text-on-surface-variant/30 normal-case tracking-normal">(optional)</span></label>
+            <label className={labelCls}>{t('field_title')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_title_optional')}</span></label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={`Session ${number}`}
+              placeholder={t('placeholder_title', { number })}
               className={inputCls}
               autoFocus
             />
@@ -128,13 +130,13 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>
-                Date <span className="text-on-surface-variant/30 normal-case tracking-normal">(optional)</span>
+                {t('field_date')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_date_optional')}</span>
               </label>
               <DatePicker value={date} onChange={setDate} />
             </div>
             <div>
               <label className={labelCls}>
-                Start time <span className="text-on-surface-variant/30 normal-case tracking-normal">(optional)</span>
+                {t('field_start_time')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_start_time_optional')}</span>
               </label>
               <input
                 type="time"
@@ -147,7 +149,7 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
 
           {isEdit && (
             <div>
-              <label className={labelCls}>Session #</label>
+              <label className={labelCls}>{t('field_session_number')}</label>
               <input
                 type="number"
                 min={1}
@@ -165,14 +167,14 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
             onClick={onClose}
             className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:border-primary/50 transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={save.isPending}
             className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
-            {isEdit ? 'Save' : 'Create'}
+            {isEdit ? t('save') : t('create')}
           </button>
         </div>
       </div>

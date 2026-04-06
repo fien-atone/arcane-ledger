@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSaveQuest } from '@/features/quests/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
@@ -19,6 +20,7 @@ const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
+  const { t } = useTranslation('quests');
   const save = useSaveQuest(campaignId);
   const npcsEnabled = useSectionEnabled(campaignId, 'npcs');
   const { data: allNpcs } = useNpcs(campaignId);
@@ -68,7 +70,7 @@ export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
         <div className="flex items-center justify-between px-8 py-5 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="text-lg font-headline font-bold text-on-surface">
-              {isEdit ? 'Edit Quest' : 'New Quest'}
+              {isEdit ? t('drawer_edit_title') : t('drawer_new_title')}
             </h2>
           </div>
           <button onClick={onClose} className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors">
@@ -79,11 +81,11 @@ export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
           <div>
-            <label className={labelCls}>Title <span className="text-primary">*</span></label>
+            <label className={labelCls}>{t('field_title')} <span className="text-primary">*</span></label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Quest title…"
+              placeholder={t('placeholder_title')}
               className={inputCls}
               autoFocus
             />
@@ -91,12 +93,12 @@ export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
 
           {npcsEnabled && (
           <div>
-            <label className={labelCls}>Quest Giver</label>
+            <label className={labelCls}>{t('field_quest_giver')}</label>
             <Select<string>
               value={giverId}
               options={npcOptions}
               onChange={(v) => setGiverId(v || '')}
-              placeholder="Select NPC…"
+              placeholder={t('placeholder_quest_giver')}
               nullable
               searchable
             />
@@ -111,14 +113,14 @@ export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
             onClick={onClose}
             className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:border-primary/50 transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={!title.trim() || save.isPending}
             className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
-            {isEdit ? 'Save' : 'Create'}
+            {isEdit ? t('save') : t('create')}
           </button>
         </div>
       </div>

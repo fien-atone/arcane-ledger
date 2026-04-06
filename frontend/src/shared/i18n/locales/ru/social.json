@@ -1,0 +1,47 @@
+{
+  "title": "Социальный граф",
+  "subtitle": "Визуализация отношений между NPC.",
+  "loading": "Загрузка...",
+  "empty_title": "NPC пока нет.",
+  "empty_subtitle": "Сначала создайте несколько NPC, а затем вернитесь, чтобы увидеть их социальную сеть.",
+
+  "view_force": "Граф",
+  "view_chord": "Хорда",
+  "view_force_title": "Силовой граф",
+  "view_chord_title": "Хордовая диаграмма",
+  "view_list": "Список",
+  "view_list_title": "Список NPC",
+
+  "virtual_group_party": "Партия",
+
+  "relations_title": "Социальные связи",
+  "relations_add": "Добавить",
+  "relations_search_placeholder": "Поиск NPC\u2026",
+  "relations_no_npcs": "NPC не найдены.",
+  "relations_empty": "Нет социальных связей.",
+  "relations_outgoing": "Их отношение \u2192",
+  "relations_incoming": "\u2190 Отношение других",
+  "relations_note_placeholder": "Заметка (необязательно)\u2026",
+  "relations_remove_confirm": "Удалить?",
+
+  "attitude_label": "Отношение",
+  "attitude_hostile": "Враждебный",
+  "attitude_unfriendly": "Недружелюбный",
+  "attitude_neutral": "Нейтральный",
+  "attitude_friendly": "Дружелюбный",
+  "attitude_allied": "Союзник",
+
+  "controls_zoom_in": "Приблизить",
+  "controls_zoom_out": "Отдалить",
+  "controls_fit_to_view": "Вписать в экран",
+  "controls_reset_layout": "Сбросить расположение",
+
+  "filter_status": "Статус",
+  "filter_group_types": "Типы групп",
+  "filter_groups": "Группы",
+
+  "status_alive": "Жив",
+  "status_dead": "Мёртв",
+  "status_missing": "Пропал",
+  "status_unknown": "Неизвестно"
+}

@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { D20Icon } from '@/shared/ui';
 
 const DICE = [4, 6, 8, 10, 12, 20, 100] as const;
@@ -113,6 +114,7 @@ const DIE_COLORS: Record<Die, string> = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function DiceRoller() {
+  const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const [pool, setPool] = useState<Partial<Record<Die, number>>>({});
   const [modifier, setModifier] = useState(0);
@@ -167,7 +169,7 @@ export function DiceRoller() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          title="Dice Roller"
+          title={t('dice_roller.title')}
           className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-xl shadow-primary/25 flex items-center justify-center active:scale-95 transition-all group cursor-pointer"
         >
           <div className="w-8 h-8 transition-transform duration-700 group-hover:rotate-[360deg]">
@@ -189,7 +191,7 @@ export function DiceRoller() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/10 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <D20Icon className="w-5 h-5 text-primary" />
-            <h2 className="font-headline text-base font-bold text-on-surface">Dice Roller</h2>
+            <h2 className="font-headline text-base font-bold text-on-surface">{t('dice_roller.title')}</h2>
           </div>
           <button onClick={() => setOpen(false)} className="p-1 text-on-surface-variant hover:text-on-surface transition-colors">
             <span className="material-symbols-outlined">close</span>
@@ -200,13 +202,13 @@ export function DiceRoller() {
         <div className="flex-1 flex flex-col min-h-0">
           {/* Title bar */}
           <div className="px-4 pt-3 pb-2 flex items-center justify-between flex-shrink-0">
-            <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 font-bold">History</span>
+            <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 font-bold">{t('dice_roller.history')}</span>
             {history.length > 0 && (
               <button
                 onClick={() => setHistory([])}
                 className="text-[9px] uppercase tracking-widest text-on-surface-variant/20 hover:text-on-surface-variant/60 transition-colors cursor-pointer"
               >
-                Clear
+                {t('dice_roller.clear')}
               </button>
             )}
           </div>
@@ -217,7 +219,7 @@ export function DiceRoller() {
             className="flex-1 overflow-y-auto flex flex-col min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-outline-variant/30 [&::-webkit-scrollbar-thumb]:rounded-full"
           >
             {history.length === 0 ? (
-              <p className="m-auto text-center text-on-surface-variant/20 text-xs italic">No rolls yet</p>
+              <p className="m-auto text-center text-on-surface-variant/20 text-xs italic">{t('dice_roller.no_rolls_yet')}</p>
             ) : (
               <div className="mt-auto px-4 pb-3 space-y-1.5">
                 {[...history].reverse().map((entry, i, arr) => {
@@ -246,8 +248,8 @@ export function DiceRoller() {
                           {entry.total}
                         </span>
                       </div>
-                      {entryCrit && <p className="text-[9px] font-bold uppercase tracking-widest text-secondary mt-1">★ Critical Hit</p>}
-                      {entryFumble && <p className="text-[9px] font-bold uppercase tracking-widest text-red-400 mt-1">Critical Fail</p>}
+                      {entryCrit && <p className="text-[9px] font-bold uppercase tracking-widest text-secondary mt-1">★ {t('dice_roller.critical_hit')}</p>}
+                      {entryFumble && <p className="text-[9px] font-bold uppercase tracking-widest text-red-400 mt-1">{t('dice_roller.critical_fail')}</p>}
 
                       {/* Breakdown — only when expanded, one row per die type */}
                       {isExpanded && (
@@ -274,7 +276,7 @@ export function DiceRoller() {
                           ))}
                           {entry.modifier !== 0 && (
                             <div className="flex items-center gap-2 pt-1 border-t border-outline-variant/10">
-                              <span className="text-[10px] text-on-surface-variant/40 uppercase tracking-wider">Mod</span>
+                              <span className="text-[10px] text-on-surface-variant/40 uppercase tracking-wider">{t('dice_roller.modifier')}</span>
                               <span className="text-[11px] font-headline font-bold text-on-surface-variant/60">{formatModifier(entry.modifier)}</span>
                             </div>
                           )}
@@ -294,7 +296,7 @@ export function DiceRoller() {
           {/* Die picker — top of roll block */}
           <div className="px-4 pt-3 pb-2">
             <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 mb-2">
-              Click to add · right-click to remove
+              {t('dice_roller.click_to_add')}
             </p>
             <div className="grid grid-cols-4 gap-2">
               {DICE.map((d) => {
@@ -337,7 +339,7 @@ export function DiceRoller() {
             {/* Pool chips */}
             <div className="min-h-[24px] flex items-center gap-1.5 flex-wrap">
               {poolEmpty ? (
-                <span className="text-[11px] text-on-surface-variant/25 italic">No dice selected</span>
+                <span className="text-[11px] text-on-surface-variant/25 italic">{t('dice_roller.no_dice_selected')}</span>
               ) : (
                 <>
                   {DICE.filter((d) => (pool[d] ?? 0) > 0).map((d, i) => (
@@ -356,7 +358,7 @@ export function DiceRoller() {
                     onClick={clearPool}
                     className="ml-auto text-[10px] text-on-surface-variant/30 hover:text-on-surface-variant transition-colors uppercase tracking-wider cursor-pointer"
                   >
-                    Clear
+                    {t('dice_roller.clear')}
                   </button>
                 </>
               )}
@@ -364,7 +366,7 @@ export function DiceRoller() {
 
             {/* Modifier + Roll button */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 flex-shrink-0">Mod</span>
+              <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 flex-shrink-0">{t('dice_roller.modifier')}</span>
               <button onClick={() => setModifier((m) => m - 1)} className="w-7 h-7 rounded-sm bg-surface-container-low text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors flex-shrink-0 cursor-pointer">
                 <span className="material-symbols-outlined text-sm">remove</span>
               </button>
@@ -376,7 +378,7 @@ export function DiceRoller() {
               </button>
               {modifier !== 0 && (
                 <button onClick={() => setModifier(0)} className="text-[10px] text-on-surface-variant/30 hover:text-on-surface-variant transition-colors flex-shrink-0 cursor-pointer">
-                  reset
+                  {t('common:reset')}
                 </button>
               )}
               <button
@@ -385,7 +387,7 @@ export function DiceRoller() {
                 className="ml-auto flex-1 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary font-label text-[10px] uppercase tracking-widest rounded-sm font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <D20Icon className="w-3.5 h-3.5" />
-                Roll
+                {t('dice_roller.roll')}
               </button>
             </div>
           </div>

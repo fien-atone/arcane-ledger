@@ -1,0 +1,72 @@
+{
+  "my_campaigns": "My Campaigns",
+  "create_campaign": "Create Campaign",
+  "loading": "Loading\u2026",
+  "failed_to_load": "Failed to load campaigns.",
+  "no_campaigns_title": "No campaigns yet.",
+  "no_campaigns_desc": "Create the first campaign to get started.",
+  "no_sessions": "No sessions",
+
+  "session_badge": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "next": "Next"
+  },
+
+  "create_drawer": {
+    "title": "New Campaign",
+    "subtitle": "Start a new adventure",
+    "title_label": "Title",
+    "title_placeholder": "Campaign name\u2026",
+    "description_label": "Description",
+    "description_placeholder": "Setting, premise, tone\u2026",
+    "cancel": "Cancel",
+    "create": "Create"
+  },
+
+  "dashboard": {
+    "loading": "Loading campaign\u2026",
+    "not_found": "Campaign not found.",
+    "description_placeholder": "Campaign description...",
+    "archive_confirm": "Archive this campaign?",
+    "restore_confirm": "Restore this campaign?",
+    "click_to_edit": "Click to edit",
+
+    "next_session": "Next Session",
+    "session_today": "Session Today!",
+    "session_tomorrow": "Session Tomorrow",
+    "starts_at": "Starts at",
+    "no_upcoming_session": "No upcoming session",
+    "schedule_next_session": "Schedule the next session",
+
+    "recent_sessions": "Recent Sessions",
+    "all_sessions": "All sessions",
+    "no_sessions_recorded": "No sessions recorded yet.",
+
+    "active_quests": "Active Quests",
+    "all_quests": "All quests",
+    "no_active_quests": "No active quests.",
+
+    "calendar": "Calendar",
+
+    "the_party": "The Party",
+    "manage": "Manage",
+    "no_characters": "No characters yet."
+  },
+
+  "invitations": {
+    "title": "Invitations",
+    "invited_you": "invited you",
+    "decline_confirm": "Decline?",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+
+  "invite_panel": {
+    "title": "Invite Player",
+    "search_placeholder": "Search by name or email...",
+    "searching": "Searching...",
+    "no_users_found": "No users found matching",
+    "invite": "Invite"
+  }
+}

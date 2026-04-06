@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { Select, EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
 import {
@@ -23,15 +24,6 @@ import {
 
 // -- Constants ----------------------------------------------------------------
 
-const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] = [
-  { value: 'world',        label: 'World-scale',        dot: CATEGORY_DOT_CLS.world },
-  { value: 'civilization', label: 'Civilization',       dot: CATEGORY_DOT_CLS.civilization },
-  { value: 'geographic',   label: 'Geographic',         dot: CATEGORY_DOT_CLS.geographic },
-  { value: 'water',        label: 'Water Bodies',       dot: CATEGORY_DOT_CLS.water },
-  { value: 'poi',          label: 'Points of Interest', dot: CATEGORY_DOT_CLS.poi },
-  { value: 'travel',       label: 'Travel',             dot: CATEGORY_DOT_CLS.travel },
-];
-
 const CATEGORY_ORDER: LocationTypeCategory[] = ['world', 'civilization', 'geographic', 'water', 'poi', 'travel'];
 
 // Re-alias for local convenience
@@ -39,8 +31,6 @@ const CATEGORY_ICON = CATEGORY_ICON_COLOR;
 
 const inputCls =
   'w-full bg-surface-container border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2 px-3 text-on-surface text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 // -- Icon suggestions ---------------------------------------------------------
 
@@ -66,11 +56,19 @@ interface RelationSectionProps {
   addSearch: string;
   setAdding: (v: boolean) => void;
   setAddSearch: (v: string) => void;
+  labels: {
+    add: string;
+    none: string;
+    remove: string;
+    filter: string;
+    noMore: string;
+  };
 }
 
 function RelationSection({
   title, icon, activeItems, allOthers,
   onRemove, onAdd, adding, addSearch, setAdding, setAddSearch,
+  labels,
 }: RelationSectionProps) {
   const inactive = allOthers.filter(
     (t) => !activeItems.some((a) => a.id === t.id) &&
@@ -88,7 +86,7 @@ function RelationSection({
       </div>
       <div className="flex flex-wrap gap-1.5 items-center">
         {activeItems.length === 0 && !adding && (
-          <span className="text-xs text-on-surface-variant/40 italic">None</span>
+          <span className="text-xs text-on-surface-variant/40 italic">{labels.none}</span>
         )}
         {activeItems.map((t) => (
           <span key={t.id} className="inline-flex items-stretch h-8">
@@ -99,7 +97,7 @@ function RelationSection({
             <button
               onClick={() => onRemove(t.id)}
               className="flex items-center px-1.5 rounded-r-sm border border-l-0 border-outline-variant/30 bg-surface-container text-on-surface-variant/40 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-500/5 transition-colors"
-              title="Remove"
+              title={labels.remove}
             >
               <span className="material-symbols-outlined text-[14px]">close</span>
             </button>
@@ -114,7 +112,7 @@ function RelationSection({
           }`}
         >
           <span className="material-symbols-outlined text-[12px]">add</span>
-          Add
+          {labels.add}
         </button>
       </div>
       {adding && (
@@ -122,7 +120,7 @@ function RelationSection({
           <input
             value={addSearch}
             onChange={(e) => setAddSearch(e.target.value)}
-            placeholder="Filter types..."
+            placeholder={labels.filter}
             className="w-full bg-surface-container-low border-0 border-b border-outline-variant/20 focus:border-primary py-1.5 px-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/30 transition-colors"
             autoFocus
           />
@@ -138,7 +136,7 @@ function RelationSection({
               </button>
             ))}
             {inactive.length === 0 && (
-              <p className="text-xs text-on-surface-variant/40 italic py-1">No more types to add.</p>
+              <p className="text-xs text-on-surface-variant/40 italic py-1">{labels.noMore}</p>
             )}
           </div>
         </div>
@@ -165,6 +163,7 @@ function LocationTypeDetail({
   saveType, deleteType, saveContain, deleteContain,
   onDeleted,
 }: DetailProps) {
+  const { t } = useTranslation('locations');
   const [editName, setEditName] = useState(entry.name);
   const [editIcon, setEditIcon] = useState(entry.icon);
   const [editCat, setEditCat] = useState<LocationTypeCategory>(entry.category);
@@ -178,6 +177,18 @@ function LocationTypeDetail({
   const [addChildOfSearch, setAddChildOfSearch] = useState('');
   const [addingContain, setAddingContain] = useState(false);
   const [addContainSearch, setAddContainSearch] = useState('');
+
+  const labelCls =
+    'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
+
+  const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] = [
+    { value: 'world',        label: t('category_world'),        dot: CATEGORY_DOT_CLS.world },
+    { value: 'civilization', label: t('category_civilization'), dot: CATEGORY_DOT_CLS.civilization },
+    { value: 'geographic',   label: t('category_geographic'),   dot: CATEGORY_DOT_CLS.geographic },
+    { value: 'water',        label: t('category_water'),        dot: CATEGORY_DOT_CLS.water },
+    { value: 'poi',          label: t('category_poi'),          dot: CATEGORY_DOT_CLS.poi },
+    { value: 'travel',       label: t('category_travel'),       dot: CATEGORY_DOT_CLS.travel },
+  ];
 
   useEffect(() => {
     setEditName(entry.name);
@@ -228,7 +239,7 @@ function LocationTypeDetail({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-rose-400 text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-rose-500/10 transition-colors"
             >
               <span className="material-symbols-outlined text-[13px]">delete</span>
-              Delete
+              {t('types_delete')}
             </button>
           )}
           <button
@@ -237,7 +248,7 @@ function LocationTypeDetail({
             className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-[10px] font-label uppercase tracking-widest rounded-sm disabled:opacity-40 transition-opacity hover:opacity-90"
           >
             <span className="material-symbols-outlined text-[13px]">save</span>
-            Save Changes
+            {t('types_save_changes')}
           </button>
       </div>
 
@@ -249,7 +260,7 @@ function LocationTypeDetail({
 
           {/* Icon + Name combined row */}
           <div>
-            <label className={labelCls}>Name</label>
+            <label className={labelCls}>{t('types_field_name')}</label>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => { setShowIconPicker((p) => !p); setIconSearch(''); }}
@@ -258,7 +269,7 @@ function LocationTypeDetail({
                     ? 'border-primary/40 bg-primary/10'
                     : 'border-outline-variant/25 bg-surface-container hover:border-primary/30'
                 }`}
-                title="Change icon"
+                title={t('types_field_icon')}
               >
                 <span
                   className={`material-symbols-outlined text-[22px] ${CATEGORY_ICON[editCat]}`}
@@ -274,7 +285,7 @@ function LocationTypeDetail({
                 <input
                   value={iconSearch}
                   onChange={(e) => setIconSearch(e.target.value)}
-                  placeholder="Search icons..."
+                  placeholder={t('types_search_icons')}
                   className="w-full bg-surface-container-low border-0 border-b border-outline-variant/20 focus:border-primary py-1.5 px-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/30 transition-colors"
                   autoFocus
                 />
@@ -294,7 +305,7 @@ function LocationTypeDetail({
                     </button>
                   ))}
                   {filteredIcons.length === 0 && (
-                    <p className="col-span-8 text-[10px] text-on-surface-variant/40 italic py-2 text-center">No icons match.</p>
+                    <p className="col-span-8 text-[10px] text-on-surface-variant/40 italic py-2 text-center">{t('types_no_icons_match')}</p>
                   )}
                 </div>
               </div>
@@ -302,7 +313,7 @@ function LocationTypeDetail({
           </div>
 
           <div>
-            <label className={labelCls}>Category</label>
+            <label className={labelCls}>{t('types_field_category')}</label>
             <Select<LocationTypeCategory>
               value={editCat}
               options={CATEGORIES.map((c) => ({ value: c.value, label: c.label, dot: c.dot }))}
@@ -313,7 +324,7 @@ function LocationTypeDetail({
 
         {/* Can be child of */}
         <RelationSection
-          title="Can be child of"
+          title={t('types_relation_can_be_child_of')}
           icon="arrow_upward"
           activeItems={activeParents}
           allOthers={others}
@@ -323,11 +334,18 @@ function LocationTypeDetail({
           addSearch={addChildOfSearch}
           setAdding={setAddingChildOf}
           setAddSearch={setAddChildOfSearch}
+          labels={{
+            add: t('types_add_btn'),
+            none: t('types_none'),
+            remove: t('types_remove'),
+            filter: t('types_filter_placeholder'),
+            noMore: t('types_no_more_to_add'),
+          }}
         />
 
         {/* Can contain */}
         <RelationSection
-          title="Can contain"
+          title={t('types_relation_can_contain')}
           icon="arrow_downward"
           activeItems={activeChildren}
           allOthers={others}
@@ -337,6 +355,13 @@ function LocationTypeDetail({
           addSearch={addContainSearch}
           setAdding={setAddingContain}
           setAddSearch={setAddContainSearch}
+          labels={{
+            add: t('types_add_btn'),
+            none: t('types_none'),
+            remove: t('types_remove'),
+            filter: t('types_filter_placeholder'),
+            noMore: t('types_no_more_to_add'),
+          }}
         />
 
       </div>
@@ -353,11 +378,24 @@ interface NewTypeFormProps {
 }
 
 function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
+  const { t } = useTranslation('locations');
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('place');
   const [cat, setCat] = useState<LocationTypeCategory>('geographic');
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
+
+  const labelCls =
+    'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
+
+  const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] = [
+    { value: 'world',        label: t('category_world'),        dot: CATEGORY_DOT_CLS.world },
+    { value: 'civilization', label: t('category_civilization'), dot: CATEGORY_DOT_CLS.civilization },
+    { value: 'geographic',   label: t('category_geographic'),   dot: CATEGORY_DOT_CLS.geographic },
+    { value: 'water',        label: t('category_water'),        dot: CATEGORY_DOT_CLS.water },
+    { value: 'poi',          label: t('category_poi'),          dot: CATEGORY_DOT_CLS.poi },
+    { value: 'travel',       label: t('category_travel'),       dot: CATEGORY_DOT_CLS.travel },
+  ];
 
   const handleCreate = () => {
     if (!name.trim()) return;
@@ -377,7 +415,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
       {/* Top bar */}
       <div className="flex-shrink-0 flex items-center justify-end gap-2 px-6 py-3.5 border-b border-outline-variant/10">
         <button onClick={onCancel} className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-on-surface-variant text-[10px] font-label uppercase tracking-widest rounded-sm hover:border-outline-variant/40 transition-colors">
-          Cancel
+          {t('types_cancel')}
         </button>
         <button
           onClick={handleCreate}
@@ -385,7 +423,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
           className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-[10px] font-label uppercase tracking-widest rounded-sm disabled:opacity-40 transition-opacity hover:opacity-90"
         >
           <span className="material-symbols-outlined text-[13px]">add</span>
-          Create Type
+          {t('types_create_type')}
         </button>
       </div>
 
@@ -394,7 +432,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
 
         {/* Icon + Name */}
         <div>
-          <label className={labelCls}>Name</label>
+          <label className={labelCls}>{t('types_field_name')}</label>
           <div className="flex items-center gap-2">
             <button
               onClick={() => { setShowIconPicker((p) => !p); setIconSearch(''); }}
@@ -403,7 +441,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
                   ? 'border-primary/40 bg-primary/10'
                   : 'border-outline-variant/25 bg-surface-container hover:border-primary/30'
               }`}
-              title="Change icon"
+              title={t('types_field_icon')}
             >
               <span
                 className={`material-symbols-outlined text-[22px] ${CATEGORY_ICON[cat]}`}
@@ -415,7 +453,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Dungeon Complex"
+              placeholder={t('type_name_placeholder')}
               className={`${inputCls} flex-1`}
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
@@ -426,7 +464,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
               <input
                 value={iconSearch}
                 onChange={(e) => setIconSearch(e.target.value)}
-                placeholder="Search icons..."
+                placeholder={t('types_search_icons')}
                 className="w-full bg-surface-container-low border-0 border-b border-outline-variant/20 focus:border-primary py-1.5 px-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/30 transition-colors"
                 autoFocus
               />
@@ -446,7 +484,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
                   </button>
                 ))}
                 {filteredIcons.length === 0 && (
-                  <p className="col-span-8 text-[10px] text-on-surface-variant/40 italic py-2 text-center">No icons match.</p>
+                  <p className="col-span-8 text-[10px] text-on-surface-variant/40 italic py-2 text-center">{t('types_no_icons_match')}</p>
                 )}
               </div>
             </div>
@@ -455,7 +493,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
 
         {/* Category */}
         <div>
-          <label className={labelCls}>Category</label>
+          <label className={labelCls}>{t('types_field_category')}</label>
           <Select<LocationTypeCategory>
             value={cat}
             options={CATEGORIES.map((c) => ({ value: c.value, label: c.label, dot: c.dot }))}
@@ -470,7 +508,7 @@ function NewTypeForm({ saveType, onCreated, onCancel }: NewTypeFormProps) {
 
 // -- Type row (left panel) ----------------------------------------------------
 
-function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: boolean; onSelect: () => void }) {
+function TypeRow({ t: entry, isActive, onSelect, builtInLabel }: { t: LocationTypeEntry; isActive: boolean; onSelect: () => void; builtInLabel: string }) {
   return (
     <button
       onClick={onSelect}
@@ -484,19 +522,19 @@ function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: bo
         isActive ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-highest border-outline-variant/20'
       }`}>
         <span
-          className={`material-symbols-outlined text-[17px] ${CATEGORY_ICON[t.category]}`}
+          className={`material-symbols-outlined text-[17px] ${CATEGORY_ICON[entry.category]}`}
           style={{ fontVariationSettings: "'FILL' 1" }}
         >
-          {t.icon}
+          {entry.icon}
         </span>
       </div>
       <div className="flex-1 min-w-0">
         <p className={`text-sm truncate transition-colors ${isActive ? 'text-primary font-semibold' : 'text-on-surface font-medium'}`}>
-          {t.name}
+          {entry.name}
         </p>
-        {t.builtin && (
+        {entry.builtin && (
           <p className={`text-[9px] mt-0.5 uppercase tracking-widest ${isActive ? 'text-primary/40' : 'text-on-surface-variant/30'}`}>
-            built-in
+            {builtInLabel}
           </p>
         )}
       </div>
@@ -507,6 +545,7 @@ function TypeRow({ t, isActive, onSelect }: { t: LocationTypeEntry; isActive: bo
 // -- Page ---------------------------------------------------------------------
 
 export default function LocationTypesPage() {
+  const { t } = useTranslation('locations');
   const { id: campaignId } = useParams<{ id: string }>();
   const { data: campaign } = useCampaign(campaignId ?? '');
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
@@ -534,6 +573,15 @@ export default function LocationTypesPage() {
 
   const selected = types?.find((t) => t.id === selectedId) ?? sorted[0] ?? null;
 
+  const CATEGORIES: { value: LocationTypeCategory; label: string; dot: string }[] = [
+    { value: 'world',        label: t('category_world'),        dot: CATEGORY_DOT_CLS.world },
+    { value: 'civilization', label: t('category_civilization'), dot: CATEGORY_DOT_CLS.civilization },
+    { value: 'geographic',   label: t('category_geographic'),   dot: CATEGORY_DOT_CLS.geographic },
+    { value: 'water',        label: t('category_water'),        dot: CATEGORY_DOT_CLS.water },
+    { value: 'poi',          label: t('category_poi'),          dot: CATEGORY_DOT_CLS.poi },
+    { value: 'travel',       label: t('category_travel'),       dot: CATEGORY_DOT_CLS.travel },
+  ];
+
   if (!locationsEnabled) {
     return <SectionDisabled campaignId={campaignId ?? ''} />;
   }
@@ -549,7 +597,7 @@ export default function LocationTypesPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -560,9 +608,9 @@ export default function LocationTypesPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">Location Types</h1>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">{t('types_title')}</h1>
               <p className="text-on-surface-variant text-sm mt-1">
-                Define which location types exist and how they relate to each other.
+                {t('types_subtitle')}
               </p>
             </div>
             <button
@@ -570,7 +618,7 @@ export default function LocationTypesPage() {
               className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity flex-shrink-0"
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
-              <span className="font-label text-xs uppercase tracking-widest">Add Type</span>
+              <span className="font-label text-xs uppercase tracking-widest">{t('types_add')}</span>
             </button>
           </div>
         </div>
@@ -578,7 +626,7 @@ export default function LocationTypesPage() {
         {isLoading ? (
           <div className="flex items-center gap-3 p-12 text-on-surface-variant">
             <span className="material-symbols-outlined animate-spin">progress_activity</span>
-            Loading...
+            {t('types_loading')}
           </div>
         ) : (
           <div className="flex flex-col md:flex-row gap-8 min-h-[480px]">
@@ -592,7 +640,7 @@ export default function LocationTypesPage() {
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
                   <input
                     type="text"
-                    placeholder="Search types..."
+                    placeholder={t('types_search_placeholder')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-surface-container-high border border-outline-variant/20 rounded-sm focus:ring-0 focus:border-primary text-on-surface text-sm placeholder:text-on-surface-variant/30 transition-colors"
@@ -602,15 +650,15 @@ export default function LocationTypesPage() {
 
               <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
                 {filtered.length === 0 && (
-                  <EmptyState icon="account_tree" title={search.trim() ? "No types match." : "No location types yet."} subtitle={search.trim() ? undefined : "Create your first location type to get started."} />
+                  <EmptyState icon="account_tree" title={search.trim() ? t('types_empty_search') : t('types_empty')} subtitle={search.trim() ? undefined : t('types_empty_subtitle')} />
                 )}
                 {search.trim() ? (
                   // Flat list when searching
-                  filtered.map((t) => <TypeRow key={t.id} t={t} isActive={!showNew && selected?.id === t.id} onSelect={() => { setSelectedId(t.id); setShowNew(false); }} />)
+                  filtered.map((lt) => <TypeRow key={lt.id} t={lt} isActive={!showNew && selected?.id === lt.id} onSelect={() => { setSelectedId(lt.id); setShowNew(false); }} builtInLabel={t('types_built_in')} />)
                 ) : (
                   // Grouped by category
                   CATEGORY_ORDER.map((cat) => {
-                    const group = filtered.filter((t) => t.category === cat);
+                    const group = filtered.filter((lt) => lt.category === cat);
                     if (group.length === 0) return null;
                     const meta = CATEGORIES.find((c) => c.value === cat)!;
                     return (
@@ -621,7 +669,7 @@ export default function LocationTypesPage() {
                             {meta.label}
                           </span>
                         </div>
-                        {group.map((t) => <TypeRow key={t.id} t={t} isActive={!showNew && selected?.id === t.id} onSelect={() => { setSelectedId(t.id); setShowNew(false); }} />)}
+                        {group.map((lt) => <TypeRow key={lt.id} t={lt} isActive={!showNew && selected?.id === lt.id} onSelect={() => { setSelectedId(lt.id); setShowNew(false); }} builtInLabel={t('types_built_in')} />)}
                       </div>
                     );
                   })
@@ -629,7 +677,7 @@ export default function LocationTypesPage() {
               </div>
               <div className="px-4 py-2 border-t border-outline-variant/10 flex-shrink-0">
                 <p className="text-[10px] text-on-surface-variant/40">
-                  <span className="text-primary font-bold">{sorted.length}</span> types
+                  <span className="text-primary font-bold">{sorted.length}</span> {t('types_count_suffix')}
                 </p>
               </div>
             </div>
@@ -656,7 +704,7 @@ export default function LocationTypesPage() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-on-surface-variant/30 text-sm italic">
-                  Select a location type
+                  {t('types_select_prompt')}
                 </div>
               )}
             </div>

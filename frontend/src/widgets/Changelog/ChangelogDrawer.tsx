@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CHANGELOG } from '@/shared/changelog/entries';
 
 const STORAGE_KEY = 'ttrpg_changelog_seen';
@@ -18,11 +19,11 @@ const TAG_STYLES = {
   fixed: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20',
 };
 
-const TAG_LABEL = {
-  new: 'New',
-  improved: 'Updated',
-  fixed: 'Fixed',
-};
+const TAG_LABEL_KEYS = {
+  new: 'changelog_drawer.tag_new',
+  improved: 'changelog_drawer.tag_improved',
+  fixed: 'changelog_drawer.tag_fixed',
+} as const;
 
 interface Props {
   open: boolean;
@@ -30,11 +31,15 @@ interface Props {
 }
 
 export function ChangelogDrawer({ open, onClose }: Props) {
+  const { t, i18n } = useTranslation('common');
+
   useEffect(() => {
     if (open) markRead();
   }, [open]);
 
   if (!open) return null;
+
+  const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
 
   return (
     <>
@@ -44,10 +49,7 @@ export function ChangelogDrawer({ open, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
-            <h2 className="font-headline text-xl font-bold text-on-surface">What's New</h2>
-            <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
-              История обновлений
-            </p>
+            <h2 className="font-headline text-xl font-bold text-on-surface">{t('changelog_drawer.title')}</h2>
           </div>
           <button onClick={onClose} className="p-2 text-on-surface-variant hover:text-on-surface transition-colors">
             <span className="material-symbols-outlined">close</span>
@@ -64,11 +66,11 @@ export function ChangelogDrawer({ open, onClose }: Props) {
                   v{entry.version}
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 font-label">
-                  {new Date(entry.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {new Date(entry.date).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
                 {i === 0 && (
                   <span className="ml-auto px-2.5 py-0.5 bg-primary text-on-primary text-[9px] font-bold uppercase tracking-widest rounded-full">
-                    Актуально
+                    {t('changelog_drawer.current')}
                   </span>
                 )}
               </div>
@@ -91,7 +93,7 @@ export function ChangelogDrawer({ open, onClose }: Props) {
                     </p>
                     {item.tag && (
                       <span className={`flex-shrink-0 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest rounded-full ${TAG_STYLES[item.tag]}`}>
-                        {TAG_LABEL[item.tag]}
+                        {t(TAG_LABEL_KEYS[item.tag])}
                       </span>
                     )}
                   </div>
@@ -108,7 +110,7 @@ export function ChangelogDrawer({ open, onClose }: Props) {
         {/* Footer */}
         <div className="px-8 py-4 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container-lowest">
           <p className="text-[10px] text-on-surface-variant/30 text-center uppercase tracking-widest">
-            Arcane Ledger — Campaign Companion
+            {t('app_name')} — {t('app_tagline')}
           </p>
         </div>
       </div>

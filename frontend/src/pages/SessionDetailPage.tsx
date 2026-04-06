@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useSessions, useSaveSession, useDeleteSession, useSessionNote } from '@/features/sessions/api/queries';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
@@ -10,15 +11,6 @@ import { LocationIcon, InlineRichField, RichContent, SectionDisabled, SectionBac
 import type { Session } from '@/entities/session';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { QuestStatus } from '@/entities/quest';
-
-function formatDateTime(iso: string) {
-  const d = new Date(iso);
-  const date = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-  const h = d.getHours();
-  const m = d.getMinutes();
-  if (h === 0 && m === 0) return date;
-  return `${date}, ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}
 
 const QUEST_STATUS_PILL: Record<QuestStatus, { cls: string; icon: string; iconColor: string }> = {
   active:      { cls: 'bg-secondary/10 text-secondary border-secondary/20', icon: 'bolt',           iconColor: 'text-secondary' },
@@ -72,6 +64,18 @@ function downloadIcs(title: string, datetime: string, description?: string) {
 }
 
 export default function SessionDetailPage() {
+  const { t, i18n } = useTranslation('sessions');
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
+
+  function formatDateTime(iso: string) {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+    const h = d.getHours();
+    const m = d.getMinutes();
+    if (h === 0 && m === 0) return date;
+    return `${date}, ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
   const { id: campaignId, sessionId } = useParams<{ id: string; sessionId: string }>();
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
@@ -113,7 +117,7 @@ export default function SessionDetailPage() {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
-        Loading…
+        {t('loading')}
       </main>
     );
   }
@@ -121,7 +125,7 @@ export default function SessionDetailPage() {
   if (isError || !session) {
     return (
       <main className="p-12">
-        <p className="text-tertiary text-sm">Session not found.</p>
+        <p className="text-tertiary text-sm">{t('not_found')}</p>
       </main>
     );
   }
@@ -143,7 +147,7 @@ export default function SessionDetailPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -152,7 +156,7 @@ export default function SessionDetailPage() {
         <section className="relative bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8 mb-8">
           <div className="flex items-center gap-4 mb-3">
             <span className="text-[10px] font-label uppercase tracking-widest text-primary font-bold">
-              Session #{String(session.number).padStart(2, '0')}
+              {t('session_prefix')}{String(session.number).padStart(2, '0')}
             </span>
             <div className="h-px w-12 bg-outline-variant/30" />
             {session.datetime && (
@@ -174,8 +178,8 @@ export default function SessionDetailPage() {
               >
                 <span className="material-symbols-outlined text-[16px]">chevron_left</span>
                 <span>
-                  <span className="text-[9px] font-label uppercase tracking-widest text-on-surface-variant/50 block">Previous</span>
-                  <span className="font-medium">Session #{String(prevSession.number).padStart(2, '0')}</span>
+                  <span className="text-[9px] font-label uppercase tracking-widest text-on-surface-variant/50 block">{t('nav_previous')}</span>
+                  <span className="font-medium">{t('session_prefix')}{String(prevSession.number).padStart(2, '0')}</span>
                 </span>
               </Link>
             ) : <div />}
@@ -185,8 +189,8 @@ export default function SessionDetailPage() {
                 className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-high border border-outline-variant/20 rounded-sm text-sm text-on-surface-variant hover:text-primary hover:border-primary/30 transition-colors"
               >
                 <span>
-                  <span className="text-[9px] font-label uppercase tracking-widest text-on-surface-variant/50 block">Next</span>
-                  <span className="font-medium">Session #{String(nextSession.number).padStart(2, '0')}</span>
+                  <span className="text-[9px] font-label uppercase tracking-widest text-on-surface-variant/50 block">{t('nav_next')}</span>
+                  <span className="font-medium">{t('session_prefix')}{String(nextSession.number).padStart(2, '0')}</span>
                 </span>
                 <span className="material-symbols-outlined text-[16px]">chevron_right</span>
               </Link>
@@ -203,7 +207,7 @@ export default function SessionDetailPage() {
                   className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface-variant text-xs font-label uppercase tracking-widest rounded-sm hover:text-primary hover:border-primary/30 transition-colors"
                 >
                   <span className="material-symbols-outlined text-sm">calendar_add_on</span>
-                  Calendar
+                  {t('calendar')}
                 </button>
                 {calMenuOpen && (
                   <div className="absolute z-50 top-full mt-1 right-0 w-48 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl py-1">
@@ -215,14 +219,14 @@ export default function SessionDetailPage() {
                       className="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-high transition-colors text-xs text-on-surface"
                     >
                       <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">event</span>
-                      Google Calendar
+                      {t('calendar_google')}
                     </a>
                     <button
                       onClick={() => { downloadIcs(`${campaign?.title ? campaign.title + ' — ' : ''}Session #${session.number}`, session.datetime, session.brief); setCalMenuOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-high transition-colors text-xs text-on-surface text-left"
                     >
                       <span className="material-symbols-outlined text-[16px] text-on-surface-variant/60">download</span>
-                      Apple / Outlook (.ics)
+                      {t('calendar_ics')}
                     </button>
                   </div>
                 )}
@@ -232,18 +236,18 @@ export default function SessionDetailPage() {
               <>
                 {confirmDelete ? (
                   <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                    <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                    <span className="text-[9px] text-on-surface-variant">{t('confirm_delete')}</span>
                     <button
                       onClick={() => deleteSession.mutate(session.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/sessions`) })}
                       className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
                     >
-                      Yes
+                      {t('confirm_yes')}
                     </button>
                     <button
                       onClick={() => setConfirmDelete(false)}
                       className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
                     >
-                      No
+                      {t('confirm_no')}
                     </button>
                   </div>
                 ) : (
@@ -259,7 +263,7 @@ export default function SessionDetailPage() {
                   className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
                 >
                   <span className="material-symbols-outlined text-sm">edit</span>
-                  Edit
+                  {t('edit')}
                 </button>
               </>
             )}
@@ -276,15 +280,15 @@ export default function SessionDetailPage() {
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               {isGm ? (
                 <InlineRichField
-                  label="Brief"
+                  label={t('section_brief')}
                   value={session.brief}
                   onSave={(html) => saveField('brief', html)}
-                  placeholder="Public session brief — what the players know…"
+                  placeholder={t('placeholder_brief')}
                 />
               ) : session.brief ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">Brief</h2>
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">{t('section_brief')}</h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                   </div>
                   <RichContent value={session.brief} className="prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:my-1" />
@@ -292,10 +296,10 @@ export default function SessionDetailPage() {
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">Brief</h2>
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">{t('section_brief')}</h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                   </div>
-                  <p className="text-xs text-on-surface-variant/40 italic">No brief yet.</p>
+                  <p className="text-xs text-on-surface-variant/40 italic">{t('no_brief')}</p>
                 </div>
               )}
             </div>
@@ -306,15 +310,15 @@ export default function SessionDetailPage() {
                 {!isGm && (
                   <div className="flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-secondary text-sm">edit_note</span>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-secondary">My Notes</h3>
-                    <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 border border-outline-variant/15 px-1.5 py-0.5 rounded-full">Private</span>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-secondary">{t('section_my_notes')}</h3>
+                    <span className="text-[9px] uppercase tracking-widest text-on-surface-variant/30 border border-outline-variant/15 px-1.5 py-0.5 rounded-full">{t('notes_private')}</span>
                   </div>
                 )}
                 <InlineRichField
-                  label={isGm ? 'GM Notes' : ''}
+                  label={isGm ? t('section_gm_notes') : ''}
                   value={session.myNote?.content}
                   onSave={(html) => sessionNote.mutate(session.id, html)}
-                  placeholder={isGm ? 'Your private GM notes for this session…' : 'Add your personal notes for this session…'}
+                  placeholder={isGm ? t('placeholder_gm_notes') : t('placeholder_player_notes')}
                   isGmNotes={isGm}
                 />
               </section>
@@ -348,7 +352,7 @@ export default function SessionDetailPage() {
                 <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                   <div className="flex items-center gap-4 mb-4">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      NPCs
+                      {t('section_npcs')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                     {isGm && (
@@ -357,7 +361,7 @@ export default function SessionDetailPage() {
                         className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                       >
                         <span className="material-symbols-outlined text-[13px]">person_add</span>
-                        Add
+                        {t('add')}
                       </button>
                     )}
                   </div>
@@ -367,14 +371,14 @@ export default function SessionDetailPage() {
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
                         <input
-                          autoFocus type="text" placeholder="Search NPCs…"
+                          autoFocus type="text" placeholder={t('search_npcs')}
                           value={npcSearch} onChange={(e) => setNpcSearch(e.target.value)}
                           className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
                         />
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {available.length === 0 ? (
-                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">No NPCs found.</p>
+                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">{t('no_npcs_found')}</p>
                         ) : available.map((n) => (
                           <button key={n.id} onClick={() => addNpc(n.id)}
                             className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-surface-container transition-colors">
@@ -388,7 +392,7 @@ export default function SessionDetailPage() {
                   )}
 
                   {linked.length === 0 && !npcSearchOpen ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">No NPCs tagged yet.</p>
+                    <p className="text-xs text-on-surface-variant/40 italic">{t('no_npcs_tagged')}</p>
                   ) : linked.length > 0 ? (
                     <div className="space-y-2">
                       {linked.map((npc) => {
@@ -413,12 +417,12 @@ export default function SessionDetailPage() {
                               </Link>
                               {isGm && (confirmRemoveNpcId === npc.id ? (
                                 <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                                  <span className="text-[10px] text-on-surface-variant">Remove?</span>
-                                  <button onClick={() => removeNpc(npc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                                  <button onClick={() => setConfirmRemoveNpcId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                                  <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>
+                                  <button onClick={() => removeNpc(npc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
+                                  <button onClick={() => setConfirmRemoveNpcId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
                                 </div>
                               ) : (
-                                <button onClick={() => setConfirmRemoveNpcId(npc.id)} title="Remove from session"
+                                <button onClick={() => setConfirmRemoveNpcId(npc.id)} title={t('remove_from_session')}
                                   className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                                   <span className="material-symbols-outlined text-[14px]">person_remove</span>
                                 </button>
@@ -456,7 +460,7 @@ export default function SessionDetailPage() {
                 <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                   <div className="flex items-center gap-4 mb-4">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      Locations
+                      {t('section_locations')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                     {isGm && (
@@ -465,7 +469,7 @@ export default function SessionDetailPage() {
                         className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                       >
                         <span className="material-symbols-outlined text-[13px]">add_location</span>
-                        Add
+                        {t('add')}
                       </button>
                     )}
                   </div>
@@ -474,14 +478,14 @@ export default function SessionDetailPage() {
                     <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
-                        <input autoFocus type="text" placeholder="Search locations…"
+                        <input autoFocus type="text" placeholder={t('search_locations')}
                           value={locSearch} onChange={(e) => setLocSearch(e.target.value)}
                           className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
                         />
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {available.length === 0 ? (
-                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">No locations found.</p>
+                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">{t('no_locations_found')}</p>
                         ) : available.map((l) => (
                           <button key={l.id} onClick={() => addLoc(l.id)}
                             className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-surface-container transition-colors">
@@ -494,7 +498,7 @@ export default function SessionDetailPage() {
                   )}
 
                   {linked.length === 0 && !locSearchOpen ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">No locations tagged yet.</p>
+                    <p className="text-xs text-on-surface-variant/40 italic">{t('no_locations_tagged')}</p>
                   ) : linked.length > 0 ? (
                     <div className="space-y-2">
                       {linked.map((loc) => (
@@ -508,12 +512,12 @@ export default function SessionDetailPage() {
                             </Link>
                             {isGm && (confirmRemoveLocId === loc.id ? (
                               <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                                <span className="text-[10px] text-on-surface-variant">Remove?</span>
-                                <button onClick={() => removeLoc(loc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                                <button onClick={() => setConfirmRemoveLocId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                                <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>
+                                <button onClick={() => removeLoc(loc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
+                                <button onClick={() => setConfirmRemoveLocId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
                               </div>
                             ) : (
-                              <button onClick={() => setConfirmRemoveLocId(loc.id)} title="Remove from session"
+                              <button onClick={() => setConfirmRemoveLocId(loc.id)} title={t('remove_from_session')}
                                 className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                                 <span className="material-symbols-outlined text-[14px]">close</span>
                               </button>
@@ -550,7 +554,7 @@ export default function SessionDetailPage() {
                 <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                   <div className="flex items-center gap-4 mb-4">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      Quests
+                      {t('section_quests')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                     {isGm && (
@@ -559,7 +563,7 @@ export default function SessionDetailPage() {
                         className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                       >
                         <span className="material-symbols-outlined text-[13px]">add_task</span>
-                        Add
+                        {t('add')}
                       </button>
                     )}
                   </div>
@@ -568,14 +572,14 @@ export default function SessionDetailPage() {
                     <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
-                        <input autoFocus type="text" placeholder="Search quests…"
+                        <input autoFocus type="text" placeholder={t('search_quests')}
                           value={questSearch} onChange={(e) => setQuestSearch(e.target.value)}
                           className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
                         />
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {available.length === 0 ? (
-                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">No quests found.</p>
+                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">{t('no_quests_found')}</p>
                         ) : available.map((q) => (
                           <button key={q.id} onClick={() => addQuest(q.id)}
                             className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-surface-container transition-colors">
@@ -588,7 +592,7 @@ export default function SessionDetailPage() {
                   )}
 
                   {linked.length === 0 && !questSearchOpen ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">No quests linked yet.</p>
+                    <p className="text-xs text-on-surface-variant/40 italic">{t('no_quests_linked')}</p>
                   ) : linked.length > 0 ? (
                     <div className="space-y-2">
                       {linked.map((quest) => (
@@ -604,12 +608,12 @@ export default function SessionDetailPage() {
                             </Link>
                             {isGm && (confirmRemoveQuestId === quest.id ? (
                               <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                                <span className="text-[10px] text-on-surface-variant">Remove?</span>
-                                <button onClick={() => removeQuest(quest.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                                <button onClick={() => setConfirmRemoveQuestId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                                <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>
+                                <button onClick={() => removeQuest(quest.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
+                                <button onClick={() => setConfirmRemoveQuestId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
                               </div>
                             ) : (
-                              <button onClick={() => setConfirmRemoveQuestId(quest.id)} title="Remove from session"
+                              <button onClick={() => setConfirmRemoveQuestId(quest.id)} title={t('remove_from_session')}
                                 className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                                 <span className="material-symbols-outlined text-[14px]">close</span>
                               </button>

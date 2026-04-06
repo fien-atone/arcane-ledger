@@ -1,0 +1,33 @@
+{
+  "title": "Настройки профиля",
+  "subtitle": "Параметры аккаунта",
+
+  "profile_information": "Данные профиля",
+  "name_label": "Имя",
+  "name_placeholder": "Твоё имя",
+  "email_label": "Email",
+  "email_cannot_change": "Email нельзя изменить.",
+  "save_changes": "Сохранить изменения",
+  "profile_updated": "Профиль успешно обновлён.",
+  "profile_update_failed": "Не удалось обновить профиль.",
+
+  "change_password": "Сменить пароль",
+  "current_password_label": "Текущий пароль",
+  "current_password_placeholder": "Введи текущий пароль",
+  "new_password_label": "Новый пароль",
+  "new_password_placeholder": "Введи новый пароль",
+  "confirm_password_label": "Подтверди новый пароль",
+  "confirm_password_placeholder": "Подтверди новый пароль",
+  "change_password_button": "Сменить пароль",
+  "password_changed": "Пароль успешно изменён.",
+  "password_change_failed": "Не удалось сменить пароль.",
+
+  "validation": {
+    "all_fields_required": "Все поля обязательны.",
+    "passwords_not_match": "Пароли не совпадают.",
+    "password_min_length": "Новый пароль должен содержать не менее 4 символов."
+  },
+
+  "language": "Язык",
+  "language_label": "Язык интерфейса"
+}

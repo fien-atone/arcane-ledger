@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCreateUser, useUpdateUser } from '@/features/admin/api/queries';
 import { Select } from '@/shared/ui';
-import type { SelectOption } from '@/shared/ui/Select';
 import type { User } from '@/entities/user';
 
 interface Props {
@@ -10,9 +10,9 @@ interface Props {
   user?: User;
 }
 
-const ROLE_OPTIONS: SelectOption<string>[] = [
-  { value: 'USER', label: 'User' },
-  { value: 'ADMIN', label: 'Admin' },
+const ROLE_KEYS: { value: string; labelKey: string }[] = [
+  { value: 'USER', labelKey: 'roles.user' },
+  { value: 'ADMIN', labelKey: 'roles.admin' },
 ];
 
 const inputCls =
@@ -22,6 +22,7 @@ const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 export function AdminUserDrawer({ open, onClose, user }: Props) {
+  const { t } = useTranslation('admin');
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
   const isEdit = !!user;
@@ -91,10 +92,10 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="font-headline text-xl font-bold text-on-surface">
-              {isEdit ? 'Edit User' : 'Create User'}
+              {isEdit ? t('edit_user_title') : t('create_user_title')}
             </h2>
             <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
-              {isEdit ? user.name : 'Add a new user to the system'}
+              {isEdit ? user.name : t('add_user_subtitle')}
             </p>
           </div>
           <button
@@ -110,13 +111,13 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
           {/* Name */}
           <div>
             <label className={labelCls}>
-              Name <span className="text-primary">*</span>
+              {t('form.name_label')} <span className="text-primary">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Full name..."
+              placeholder={t('form.name_placeholder')}
               className={inputCls}
             />
           </div>
@@ -124,13 +125,13 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
           {/* Email */}
           <div>
             <label className={labelCls}>
-              Email <span className="text-primary">*</span>
+              {t('form.email_label')} <span className="text-primary">*</span>
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@example.com"
+              placeholder={t('form.email_placeholder')}
               className={inputCls}
             />
           </div>
@@ -138,13 +139,13 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
           {/* Password */}
           <div>
             <label className={labelCls}>
-              Password {!isEdit && <span className="text-primary">*</span>}
+              {t('form.password_label')} {!isEdit && <span className="text-primary">*</span>}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={isEdit ? 'Leave empty to keep current' : 'Enter password...'}
+              placeholder={isEdit ? t('form.password_placeholder_edit') : t('form.password_placeholder_create')}
               autoComplete="new-password"
               className={inputCls}
             />
@@ -152,10 +153,10 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
 
           {/* Role */}
           <div>
-            <label className={labelCls}>Role</label>
+            <label className={labelCls}>{t('form.role_label')}</label>
             <Select
               value={role}
-              options={ROLE_OPTIONS}
+              options={ROLE_KEYS.map((r) => ({ value: r.value, label: t(r.labelKey) }))}
               nullable={false}
               onChange={(v) => setRole(v || 'USER')}
             />
@@ -168,7 +169,7 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
             onClick={onClose}
             className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -180,7 +181,7 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
             ) : (
               <span className="material-symbols-outlined text-sm">save</span>
             )}
-            {isEdit ? 'Save Changes' : 'Create User'}
+            {isEdit ? t('save_changes') : t('create_user')}
           </button>
         </div>
       </div>

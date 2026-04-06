@@ -1,0 +1,84 @@
+{
+  "title": "Sessions",
+  "subtitle": "Chronicle of all gathered sessions, newest first.",
+  "new_session": "New Session",
+  "search_placeholder": "Search...",
+  "loading": "Loading\u2026",
+  "error": "Failed to load sessions.",
+  "not_found": "Session not found.",
+  "empty_title": "No sessions found.",
+  "empty_subtitle": "Log your first session to begin.",
+
+  "column_number": "#",
+  "column_title": "Title",
+  "column_date": "Date",
+
+  "badge_today": "Today",
+  "badge_tomorrow": "Tomorrow",
+  "badge_next": "Next",
+  "badge_previous": "Previous",
+
+  "date_tbd": "Date TBD",
+
+  "session_prefix": "Session #",
+  "nav_previous": "Previous",
+  "nav_next": "Next",
+
+  "section_brief": "Brief",
+  "section_gm_notes": "GM Notes",
+  "section_my_notes": "My Notes",
+  "section_npcs": "NPCs",
+  "section_locations": "Locations",
+  "section_quests": "Quests",
+
+  "notes_private": "Private",
+  "placeholder_brief": "Public session brief \u2014 what the players know\u2026",
+  "placeholder_gm_notes": "Your private GM notes for this session\u2026",
+  "placeholder_player_notes": "Add your personal notes for this session\u2026",
+  "no_brief": "No brief yet.",
+
+  "no_npcs_tagged": "No NPCs tagged yet.",
+  "no_locations_tagged": "No locations tagged yet.",
+  "no_quests_linked": "No quests linked yet.",
+  "search_npcs": "Search NPCs\u2026",
+  "search_locations": "Search locations\u2026",
+  "search_quests": "Search quests\u2026",
+  "no_npcs_found": "No NPCs found.",
+  "no_locations_found": "No locations found.",
+  "no_quests_found": "No quests found.",
+
+  "add": "Add",
+  "edit": "Edit",
+  "cancel": "Cancel",
+  "confirm_delete": "Delete?",
+  "confirm_remove": "Remove?",
+  "confirm_yes": "Yes",
+  "confirm_no": "No",
+
+  "calendar": "Calendar",
+  "calendar_google": "Google Calendar",
+  "calendar_ics": "Apple / Outlook (.ics)",
+
+  "remove_from_session": "Remove from session",
+
+  "drawer_edit_title": "Edit Session",
+  "drawer_new_title": "New Session",
+  "drawer_edit_subtitle": "Session #{{number}}",
+  "drawer_new_subtitle": "Will be Session #{{number}}",
+
+  "field_title": "Title",
+  "field_title_optional": "(optional)",
+  "field_date": "Date",
+  "field_date_optional": "(optional)",
+  "field_start_time": "Start time",
+  "field_start_time_optional": "(optional)",
+  "field_session_number": "Session #",
+  "placeholder_title": "Session {{number}}",
+
+  "save": "Save",
+  "create": "Create",
+
+  "session_label": "Session #{{number}}",
+  "markers_count": "{{count}} marker",
+  "markers_count_plural": "{{count}} markers"
+}

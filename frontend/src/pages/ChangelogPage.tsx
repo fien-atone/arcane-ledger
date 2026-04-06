@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CHANGELOG } from '@/shared/changelog/entries';
 import { Footer, BackLink } from '@/shared/ui';
 
@@ -8,13 +9,16 @@ const TAG_STYLES = {
   fixed: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20',
 };
 
-const TAG_LABEL = {
-  new: 'New',
-  improved: 'Updated',
-  fixed: 'Fixed',
-};
-
 export default function ChangelogPage() {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
+
+  const TAG_LABEL = {
+    new: t('tag_new'),
+    improved: t('tag_updated'),
+    fixed: t('tag_fixed'),
+  };
+
   return (
     <div className="bg-background text-on-background min-h-screen">
 
@@ -25,7 +29,7 @@ export default function ChangelogPage() {
           to="/login"
           className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2 rounded-sm text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
         >
-          Open App
+          {t('open_app')}
         </Link>
       </nav>
 
@@ -33,10 +37,10 @@ export default function ChangelogPage() {
 
         {/* Header */}
         <div className="mb-16">
-          <BackLink to="/">Back</BackLink>
-          <span className="text-[10px] font-label uppercase tracking-widest text-primary block mb-3">Release history</span>
-          <h1 className="font-headline text-5xl font-bold text-on-surface">Changelog</h1>
-          <p className="text-on-surface-variant mt-3">What's been built, fixed, and improved in Arcane Ledger.</p>
+          <BackLink to="/">{t('back')}</BackLink>
+          <span className="text-[10px] font-label uppercase tracking-widest text-primary block mb-3">{t('changelog_release_history')}</span>
+          <h1 className="font-headline text-5xl font-bold text-on-surface">{t('changelog')}</h1>
+          <p className="text-on-surface-variant mt-3">{t('changelog_subtitle')}</p>
         </div>
 
         {/* Entries */}
@@ -55,11 +59,11 @@ export default function ChangelogPage() {
                   <span className="font-headline text-2xl font-bold text-on-surface">v{entry.version}</span>
                   {i === 0 && (
                     <span className="px-2.5 py-0.5 bg-primary text-on-primary text-[9px] font-bold uppercase tracking-widest rounded-full">
-                      Latest
+                      {t('changelog_latest')}
                     </span>
                   )}
                   <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 font-label ml-auto">
-                    {new Date(entry.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {new Date(entry.date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                 </div>
 

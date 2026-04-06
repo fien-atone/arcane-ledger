@@ -1,0 +1,52 @@
+{
+  "title": "Квесты",
+  "subtitle": "Активные задания и хроника завершённых дел.",
+  "new_quest": "Новый квест",
+  "search_placeholder": "Поиск...",
+  "loading": "Загрузка\u2026",
+  "error": "Не удалось загрузить квесты.",
+  "not_found": "Квест не найден.",
+  "empty_title": "Квесты не найдены.",
+  "empty_subtitle": "Создайте квест для отслеживания целей.",
+
+  "column_title": "Название",
+  "column_status": "Статус",
+
+  "filter_all": "Все",
+
+  "status_active": "Активный",
+  "status_completed": "Завершён",
+  "status_failed": "Провален",
+  "status_unavailable": "Недоступен",
+  "status_undiscovered": "Не обнаружен",
+
+  "visible_to_players": "Видим игрокам",
+  "hidden_from_players": "Скрыт от игроков",
+
+  "section_description": "Описание",
+  "section_gm_notes": "Заметки Мастера",
+  "section_quest_giver": "Квестодатель",
+  "section_reward": "Награда",
+  "section_sessions": "Сессии",
+
+  "placeholder_description": "О чём этот квест\u2026",
+  "placeholder_reward": "Золото, предметы, репутация\u2026",
+  "no_quest_giver": "Квестодатель не назначен.",
+
+  "confirm_delete": "Удалить?",
+  "confirm_yes": "Да",
+  "confirm_no": "Нет",
+  "edit": "Редактировать",
+
+  "drawer_edit_title": "Редактирование квеста",
+  "drawer_new_title": "Новый квест",
+
+  "field_title": "Название",
+  "field_quest_giver": "Квестодатель",
+  "placeholder_title": "Название квеста\u2026",
+  "placeholder_quest_giver": "Выберите NPC\u2026",
+
+  "save": "Сохранить",
+  "create": "Создать",
+  "cancel": "Отмена"
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
 import { useCampaign, getEnabledSections, useUpdateCampaignSections } from '@/features/campaigns/api/queries';
 import { ChangelogDrawer, getHasUnread } from '@/widgets/Changelog/ChangelogDrawer';
@@ -8,7 +9,7 @@ import { ALL_SECTIONS } from '@/entities/campaign';
 import type { CampaignSection } from '@/entities/campaign';
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   icon: string;
   to: (id: string) => string;
   exact: boolean;
@@ -18,34 +19,34 @@ interface NavItem {
 }
 
 interface NavSection {
-  section: string;
-  sectionIds: CampaignSection[]; // all section IDs in this group
+  sectionKey: string;
+  sectionIds: CampaignSection[];
   items: NavItem[];
 }
 
 const NAV: Array<NavItem | NavSection> = [
-  { label: 'Dashboard', icon: 'dashboard', to: (id) => `/campaigns/${id}`, exact: true },
+  { labelKey: 'nav.dashboard', icon: 'dashboard', to: (id) => `/campaigns/${id}`, exact: true },
   {
-    section: 'World',
+    sectionKey: 'nav_sections.world',
     sectionIds: ['locations', 'location_types', 'npcs', 'groups', 'group_types', 'species', 'species_types'],
     items: [
-      { label: 'Locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false, sectionId: 'locations' },
-      { label: 'Location Types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true, sectionId: 'location_types', gmOnly: true },
-      { label: 'NPCs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false, sectionId: 'npcs' },
-      { label: 'Groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false, sectionId: 'groups' },
-      { label: 'Group Types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true, sectionId: 'group_types', gmOnly: true },
-      { label: 'Species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false, sectionId: 'species', gmOnly: true },
-      { label: 'Species Types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true, sectionId: 'species_types', gmOnly: true },
+      { labelKey: 'nav_items.locations', icon: 'location_on', to: (id) => `/campaigns/${id}/locations`, exact: false, sectionId: 'locations' },
+      { labelKey: 'nav_items.location_types', icon: 'account_tree', to: (id) => `/campaigns/${id}/location-types`, exact: false, sub: true, sectionId: 'location_types', gmOnly: true },
+      { labelKey: 'nav_items.npcs', icon: 'group', to: (id) => `/campaigns/${id}/npcs`, exact: false, sectionId: 'npcs' },
+      { labelKey: 'nav_items.groups', icon: 'groups', to: (id) => `/campaigns/${id}/groups`, exact: false, sectionId: 'groups' },
+      { labelKey: 'nav_items.group_types', icon: 'category', to: (id) => `/campaigns/${id}/group-types`, exact: false, sub: true, sectionId: 'group_types', gmOnly: true },
+      { labelKey: 'nav_items.species', icon: 'blur_on', to: (id) => `/campaigns/${id}/species`, exact: false, sectionId: 'species', gmOnly: true },
+      { labelKey: 'nav_items.species_types', icon: 'category', to: (id) => `/campaigns/${id}/species-types`, exact: false, sub: true, sectionId: 'species_types', gmOnly: true },
     ],
   },
   {
-    section: 'Adventure',
+    sectionKey: 'nav_sections.adventure',
     sectionIds: ['sessions', 'party', 'quests', 'social_graph'],
     items: [
-      { label: 'Sessions', icon: 'event', to: (id) => `/campaigns/${id}/sessions`, exact: false, sectionId: 'sessions' },
-      { label: 'Party', icon: 'shield_person', to: (id) => `/campaigns/${id}/party`, exact: false, sectionId: 'party' },
-      { label: 'Quests', icon: 'assignment', to: (id) => `/campaigns/${id}/quests`, exact: false, sectionId: 'quests' },
-      { label: 'Social Graph', icon: 'hub', to: (id) => `/campaigns/${id}/npcs/relationships`, exact: false, sectionId: 'social_graph' },
+      { labelKey: 'nav_items.sessions', icon: 'event', to: (id) => `/campaigns/${id}/sessions`, exact: false, sectionId: 'sessions' },
+      { labelKey: 'nav_items.party', icon: 'shield_person', to: (id) => `/campaigns/${id}/party`, exact: false, sectionId: 'party' },
+      { labelKey: 'nav_items.quests', icon: 'assignment', to: (id) => `/campaigns/${id}/quests`, exact: false, sectionId: 'quests' },
+      { labelKey: 'nav_items.social_graph', icon: 'hub', to: (id) => `/campaigns/${id}/npcs/relationships`, exact: false, sectionId: 'social_graph' },
     ],
   },
 ];
@@ -67,6 +68,7 @@ function SectionToggle({ on, onClick, small }: { on: boolean; onClick: () => voi
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { pathname } = useLocation();
 
@@ -139,7 +141,7 @@ export function Sidebar() {
   const displayNav = useMemo(() => {
     if (editMode) return NAV;
     return NAV.map((entry) => {
-      if ('section' in entry) {
+      if ('sectionKey' in entry) {
         const items = entry.items.filter(
           (item) =>
             (!item.sectionId || enabledSet.has(item.sectionId)) &&
@@ -173,10 +175,10 @@ export function Sidebar() {
         ) : (
           <div className="overflow-hidden">
             <span className="font-serif italic text-primary text-lg leading-tight block whitespace-nowrap">
-              Arcane Ledger
+              {t('app_name')}
             </span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/60 block whitespace-nowrap truncate max-w-[180px]" title={campaign?.title}>
-              {campaign?.title ?? 'Campaign'}
+              {campaign?.title ?? t('campaign')}
             </span>
           </div>
         )}
@@ -186,11 +188,11 @@ export function Sidebar() {
       <div className="px-2 pt-3 pb-1">
         <Link
           to="/campaigns"
-          title={collapsed ? 'All Campaigns' : undefined}
+          title={collapsed ? t('nav.all_campaigns') : undefined}
           className="flex items-center gap-3 px-3 py-2 rounded-sm text-xs text-on-surface-variant/60 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
         >
           <span className="material-symbols-outlined flex-shrink-0 text-[18px]">arrow_back</span>
-          {!collapsed && <span className="whitespace-nowrap font-label uppercase tracking-widest">All Campaigns</span>}
+          {!collapsed && <span className="whitespace-nowrap font-label uppercase tracking-widest">{t('nav.all_campaigns')}</span>}
         </Link>
       </div>
 
@@ -198,16 +200,17 @@ export function Sidebar() {
       <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
         <ul className="px-2 space-y-0.5">
           {displayNav.map((entry) => {
-            if ('section' in entry) {
-              const { section, sectionIds, items } = entry;
+            if ('sectionKey' in entry) {
+              const { sectionKey, sectionIds, items } = entry;
+              const sectionLabel = t(sectionKey);
               const groupAllOn = sectionIds.every((sid) => enabledSet.has(sid));
 
               return (
-                <li key={section}>
+                <li key={sectionKey}>
                   {!collapsed ? (
                     <div className="flex items-center px-3 pt-4 pb-1">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/35 select-none flex-1">
-                        {section}
+                        {sectionLabel}
                       </p>
                       {editMode && (
                         <SectionToggle on={groupAllOn} onClick={() => toggleGroup(sectionIds)} small />
@@ -217,14 +220,15 @@ export function Sidebar() {
                     <div className="mx-3 my-3 h-px bg-outline-variant/20" />
                   )}
                   <ul className="space-y-0.5">
-                    {items.map(({ label, icon, to, exact, sub, sectionId }) => {
+                    {items.map(({ labelKey, icon, to, exact, sub, sectionId }) => {
+                      const label = t(labelKey);
                       const href = id ? to(id) : '#';
                       const active = id ? isActive(href, exact) : false;
                       const isOn = !sectionId || enabledSet.has(sectionId);
                       const dimmed = editMode && !isOn;
 
                       return (
-                        <li key={label} className={dimmed ? 'opacity-40' : ''}>
+                        <li key={labelKey} className={dimmed ? 'opacity-40' : ''}>
                           <div className="flex items-center">
                             <Link
                               to={editMode ? '#' : href}
@@ -265,11 +269,12 @@ export function Sidebar() {
               );
             }
             // Top-level item (Dashboard)
-            const { label, icon, to, exact } = entry;
+            const { labelKey, icon, to, exact } = entry;
+            const label = t(labelKey);
             const href = id ? to(id) : '#';
             const active = id ? isActive(href, exact) : false;
             return (
-              <li key={label}>
+              <li key={labelKey}>
                 <Link
                   to={editMode ? '#' : href}
                   onClick={editMode ? (e) => e.preventDefault() : undefined}
@@ -313,7 +318,7 @@ export function Sidebar() {
             <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
               {editMode ? 'check' : 'tune'}
             </span>
-            <span className="whitespace-nowrap">{editMode ? 'Done' : 'Edit Sections'}</span>
+            <span className="whitespace-nowrap">{editMode ? t('done') : t('nav.edit_sections')}</span>
           </button>
         )}
         {isGm && collapsed && (
@@ -329,7 +334,7 @@ export function Sidebar() {
         {/* What's New */}
         <button
           onClick={() => { setChangelogOpen(true); setHasUnread(false); }}
-          title={collapsed ? "What's New" : undefined}
+          title={collapsed ? t('nav.whats_new') : undefined}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300 relative"
         >
           <span className="relative flex-shrink-0">
@@ -338,7 +343,7 @@ export function Sidebar() {
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary" />
             )}
           </span>
-          {!collapsed && <span className="whitespace-nowrap">What's New</span>}
+          {!collapsed && <span className="whitespace-nowrap">{t('nav.whats_new')}</span>}
         </button>
 
         {/* Collapse/Expand toggle */}

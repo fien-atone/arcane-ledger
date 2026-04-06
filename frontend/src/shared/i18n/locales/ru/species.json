@@ -1,0 +1,78 @@
+{
+  "title": "Расы",
+  "subtitle": "Расы и народы мира.",
+  "add_species": "Добавить вид",
+  "search_placeholder": "Поиск...",
+  "loading": "Загрузка...",
+  "error": "Не удалось загрузить расы.",
+  "not_found": "Раса не найдена.",
+  "empty_title": "Расы не найдены.",
+  "empty_subtitle": "Создайте первую расу, чтобы начать.",
+
+  "column_name": "Название",
+  "column_type": "Тип",
+  "column_size": "Размер",
+  "filter_all": "Все",
+
+  "size_tiny": "Крошечный",
+  "size_small": "Маленький",
+  "size_medium": "Средний",
+  "size_large": "Большой",
+  "size_huge": "Огромный",
+  "size_gargantuan": "Исполинский",
+
+  "size_bar_label": "Размер",
+
+  "section_overview": "Обзор",
+  "section_racial_traits": "Расовые особенности",
+  "plural_prefix": "мн.",
+
+  "placeholder_overview": "Опишите этот вид...",
+
+  "confirm_delete": "Удалить?",
+  "confirm_yes": "Да",
+  "confirm_no": "Нет",
+  "edit": "Редактировать",
+
+  "drawer_new_title": "Новый вид",
+  "drawer_edit_title": "Редактирование вида",
+
+  "field_name": "Название",
+  "field_plural": "Множественное число",
+  "field_type": "Тип",
+  "field_size": "Размер",
+  "field_traits": "Особенности",
+  "field_traits_hint": "Через запятую",
+
+  "placeholder_name": "Человек",
+  "placeholder_plural": "Люди",
+  "placeholder_traits": "Тёмное зрение, Удача, Храбрость\u2026",
+
+  "save_changes": "Сохранить изменения",
+  "create": "Создать",
+  "cancel": "Отмена",
+
+  "types_title": "Типы рас",
+  "types_subtitle": "Управление типами, по которым классифицируются расы в этом мире кампании.",
+  "types_add": "Добавить тип",
+  "types_search_placeholder": "Поиск типов\u2026",
+  "types_loading": "Загрузка...",
+
+  "types_field_name": "Название",
+  "types_field_icon": "Иконка",
+  "types_field_description": "Описание",
+
+  "types_drawer_new_title": "Новый тип расы",
+  "types_drawer_edit_title": "Редактирование типа расы",
+
+  "types_empty_title": "Типов рас пока нет.",
+  "types_empty_subtitle": "Создайте первый тип расы, чтобы начать.",
+  "types_select_prompt": "Выберите тип расы",
+
+  "types_delete": "Удалить",
+  "types_delete_confirm": "Удалить?",
+  "types_edit": "Редактировать",
+  "types_save": "Сохранить",
+  "types_create": "Создать",
+  "types_cancel": "Отмена"
+}

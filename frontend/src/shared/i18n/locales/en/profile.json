@@ -1,0 +1,33 @@
+{
+  "title": "Profile Settings",
+  "subtitle": "Account preferences",
+
+  "profile_information": "Profile Information",
+  "name_label": "Name",
+  "name_placeholder": "Your name",
+  "email_label": "Email",
+  "email_cannot_change": "Email cannot be changed.",
+  "save_changes": "Save Changes",
+  "profile_updated": "Profile updated successfully.",
+  "profile_update_failed": "Failed to update profile.",
+
+  "change_password": "Change Password",
+  "current_password_label": "Current Password",
+  "current_password_placeholder": "Enter current password",
+  "new_password_label": "New Password",
+  "new_password_placeholder": "Enter new password",
+  "confirm_password_label": "Confirm New Password",
+  "confirm_password_placeholder": "Confirm new password",
+  "change_password_button": "Change Password",
+  "password_changed": "Password changed successfully.",
+  "password_change_failed": "Failed to change password.",
+
+  "validation": {
+    "all_fields_required": "All fields are required.",
+    "passwords_not_match": "New passwords do not match.",
+    "password_min_length": "New password must be at least 4 characters."
+  },
+
+  "language": "Language",
+  "language_label": "Display Language"
+}

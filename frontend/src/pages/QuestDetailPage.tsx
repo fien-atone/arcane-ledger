@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuest, useSaveQuest, useDeleteQuest, useSetQuestVisibility } from '@/features/quests/api/queries';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
@@ -8,15 +9,16 @@ import { QUEST_VISIBILITY_FIELDS, QUEST_BASIC_PRESET } from '@/shared/lib/visibi
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Quest, QuestStatus } from '@/entities/quest';
 
-const STATUS_CONFIG: Record<QuestStatus, { label: string; icon: string; pill: string }> = {
-  active:       { label: 'Active',       icon: 'bolt',          pill: 'bg-secondary/10 text-secondary border border-secondary/20' },
-  completed:    { label: 'Completed',    icon: 'check_circle',  pill: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
-  failed:       { label: 'Failed',       icon: 'cancel',        pill: 'bg-rose-500/10 text-rose-400 border border-rose-500/20' },
-  unavailable:  { label: 'Unavailable',  icon: 'block',         pill: 'bg-surface-container-highest text-on-surface-variant/50 border border-outline-variant/20' },
-  undiscovered: { label: 'Undiscovered',  icon: 'visibility_off', pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10' },
+const STATUS_STYLE: Record<QuestStatus, { icon: string; pill: string }> = {
+  active:       { icon: 'bolt',          pill: 'bg-secondary/10 text-secondary border border-secondary/20' },
+  completed:    { icon: 'check_circle',  pill: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
+  failed:       { icon: 'cancel',        pill: 'bg-rose-500/10 text-rose-400 border border-rose-500/20' },
+  unavailable:  { icon: 'block',         pill: 'bg-surface-container-highest text-on-surface-variant/50 border border-outline-variant/20' },
+  undiscovered: { icon: 'visibility_off', pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/10' },
 };
 
 export default function QuestDetailPage() {
+  const { t } = useTranslation('quests');
   const { id: campaignId, questId } = useParams<{ id: string; questId: string }>();
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
@@ -46,7 +48,7 @@ export default function QuestDetailPage() {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
-        Loading…
+        {t('loading')}
       </main>
     );
   }
@@ -54,12 +56,12 @@ export default function QuestDetailPage() {
   if (isError || !quest) {
     return (
       <main className="p-12">
-        <p className="text-tertiary text-sm">Quest not found.</p>
+        <p className="text-tertiary text-sm">{t('not_found')}</p>
       </main>
     );
   }
 
-  const st = STATUS_CONFIG[quest.status];
+  const st = { ...STATUS_STYLE[quest.status], label: t(`status_${quest.status}`) };
   const giver = quest.giver;
   const linkedSessions = [...(quest.sessions ?? [])].sort((a, b) => b.number - a.number);
 
@@ -74,7 +76,7 @@ export default function QuestDetailPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -99,7 +101,9 @@ export default function QuestDetailPage() {
             )}
             {statusOpen && (
               <div className="absolute top-full left-0 mt-1 z-50 bg-surface-container border border-outline-variant/20 rounded-sm shadow-xl py-1 min-w-[160px]">
-                {(Object.entries(STATUS_CONFIG) as [QuestStatus, typeof st][]).map(([key, cfg]) => (
+                {(Object.keys(STATUS_STYLE) as QuestStatus[]).map((key) => {
+                  const cfg = { ...STATUS_STYLE[key], label: t(`status_${key}`) };
+                  return (
                   <button
                     key={key}
                     onClick={() => {
@@ -111,7 +115,8 @@ export default function QuestDetailPage() {
                     <span className="material-symbols-outlined text-[14px]">{cfg.icon}</span>
                     {cfg.label}
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -124,18 +129,18 @@ export default function QuestDetailPage() {
             <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
               {confirmDelete ? (
                 <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                  <span className="text-[9px] text-on-surface-variant">{t('confirm_delete')}</span>
                   <button
                     onClick={() => deleteQuest.mutate(quest.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/quests`) })}
                     className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
                   >
-                    Yes
+                    {t('confirm_yes')}
                   </button>
                   <button
                     onClick={() => setConfirmDelete(false)}
                     className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
                   >
-                    No
+                    {t('confirm_no')}
                   </button>
                 </div>
               ) : (
@@ -151,7 +156,7 @@ export default function QuestDetailPage() {
                 className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">edit</span>
-                Edit
+                {t('edit')}
               </button>
             </div>
           )}
@@ -164,10 +169,10 @@ export default function QuestDetailPage() {
           <div className="flex-1 min-w-0 space-y-8">
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <InlineRichField
-                label="Description"
+                label={t('section_description')}
                 value={quest.description}
                 onSave={(html) => saveField('description', html)}
-                placeholder="What is this quest about…"
+                placeholder={t('placeholder_description')}
                 readOnly={!isGm}
               />
             </div>
@@ -175,7 +180,7 @@ export default function QuestDetailPage() {
             {isGm && (
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <InlineRichField
-                  label="GM Notes"
+                  label={t('section_gm_notes')}
                   value={quest.notes}
                   onSave={(html) => saveField('notes', html)}
                   isGmNotes
@@ -192,7 +197,7 @@ export default function QuestDetailPage() {
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                    Quest Giver
+                    {t('section_quest_giver')}
                   </h2>
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>
@@ -219,7 +224,7 @@ export default function QuestDetailPage() {
                     <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-all">arrow_forward</span>
                   </Link>
                 ) : (
-                  <p className="text-xs text-on-surface-variant/40 italic">No quest giver set.</p>
+                  <p className="text-xs text-on-surface-variant/40 italic">{t('no_quest_giver')}</p>
                 )}
               </div>
             )}
@@ -228,7 +233,7 @@ export default function QuestDetailPage() {
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <div className="flex items-center gap-4 mb-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                  Reward
+                  {t('section_reward')}
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
               </div>
@@ -236,7 +241,7 @@ export default function QuestDetailPage() {
                 label=""
                 value={quest.reward}
                 onSave={(html) => saveField('reward', html)}
-                placeholder="Gold, items, reputation…"
+                placeholder={t('placeholder_reward')}
                 readOnly={!isGm}
               />
             </div>
@@ -246,7 +251,7 @@ export default function QuestDetailPage() {
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                    Sessions
+                    {t('section_sessions')}
                   </h2>
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>

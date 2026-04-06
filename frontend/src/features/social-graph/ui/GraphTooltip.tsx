@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { GraphEdge, GraphNode } from '../lib/graphTypes';
 import { FRIENDLINESS_COLORS } from '../lib/graphTypes';
 import { friendlinessLabel } from '@/entities/relation';
@@ -10,7 +11,16 @@ interface Props {
   y: number;
 }
 
+const ATTITUDE_KEYS: Record<string, string> = {
+  Hostile: 'attitude_hostile',
+  Unfriendly: 'attitude_unfriendly',
+  Neutral: 'attitude_neutral',
+  Friendly: 'attitude_friendly',
+  Allied: 'attitude_allied',
+};
+
 export function GraphTooltip({ edge, sourceNode, targetNode, x, y }: Props) {
+  const { t } = useTranslation('social');
   const label = friendlinessLabel(edge.friendliness);
   const color = FRIENDLINESS_COLORS[label] || '#fbbf24';
   const noteText =
@@ -18,7 +28,7 @@ export function GraphTooltip({ edge, sourceNode, targetNode, x, y }: Props) {
       ? edge.note.slice(0, 77) + '...'
       : edge.note;
 
-  const arrow = edge.isBidirectional ? '↔' : '→';
+  const arrow = edge.isBidirectional ? '\u2194' : '\u2192';
 
   return (
     <div
@@ -35,7 +45,7 @@ export function GraphTooltip({ edge, sourceNode, targetNode, x, y }: Props) {
         {targetNode.name}
       </p>
       <p className="text-[11px] font-semibold mt-0.5" style={{ color }}>
-        {label}
+        {t(ATTITUDE_KEYS[label] || 'attitude_neutral')}
       </p>
       {noteText && (
         <p className="text-[10px] text-on-surface-variant/60 mt-1 leading-snug">

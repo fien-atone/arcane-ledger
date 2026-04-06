@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { VisibilityFieldDef } from '@/shared/lib/visibilityFields';
 
 interface VisibilityPanelProps {
@@ -25,6 +26,7 @@ export function VisibilityPanel({
   onSetPreset,
   isPending,
 }: VisibilityPanelProps) {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const visibleSet = new Set(playerVisibleFields ?? []);
 
@@ -40,11 +42,11 @@ export function VisibilityPanel({
           {playerVisible ? 'visibility' : 'visibility_off'}
         </span>
         <span className="text-[10px] font-label font-bold uppercase tracking-[0.2em] text-on-surface-variant flex-1 text-left">
-          Player Visibility
+          {t('player_visibility')}
         </span>
         {playerVisible && (
           <span className="text-[9px] text-secondary font-bold uppercase tracking-wider">
-            Shared
+            {t('shared')}
           </span>
         )}
         <span className={`material-symbols-outlined text-[14px] text-on-surface-variant/40 transition-transform ${collapsed ? '' : 'rotate-180'}`}>
@@ -75,7 +77,7 @@ export function VisibilityPanel({
               />
             </button>
             <span className="text-xs text-on-surface group-hover:text-primary transition-colors">
-              Visible to players
+              {t('visible_to_players')}
             </span>
           </label>
 
@@ -87,8 +89,8 @@ export function VisibilityPanel({
                 <span className="inline-flex h-3.5 w-6.5 flex-shrink-0 rounded-full bg-secondary/70 border border-secondary/40 items-center justify-end pr-[2px]">
                   <span className="inline-block h-2.5 w-2.5 rounded-full bg-on-surface shadow-sm" />
                 </span>
-                <span className="text-xs text-on-surface">Name</span>
-                <span className="text-[8px] text-on-surface-variant/40 uppercase tracking-wider">always</span>
+                <span className="text-xs text-on-surface">{t('name')}</span>
+                <span className="text-[8px] text-on-surface-variant/40 uppercase tracking-wider">{t('always')}</span>
               </div>
 
               {/* Extra auto-visible fields */}
@@ -98,7 +100,7 @@ export function VisibilityPanel({
                     <span className="inline-block h-2.5 w-2.5 rounded-full bg-on-surface shadow-sm" />
                   </span>
                   <span className="text-xs text-on-surface">{label}</span>
-                  <span className="text-[8px] text-on-surface-variant/40 uppercase tracking-wider">always</span>
+                  <span className="text-[8px] text-on-surface-variant/40 uppercase tracking-wider">{t('always')}</span>
                 </div>
               ))}
 
@@ -107,8 +109,8 @@ export function VisibilityPanel({
                 <span className="inline-flex h-3.5 w-6.5 flex-shrink-0 rounded-full bg-surface-container-highest border border-outline-variant/20 items-center pl-[2px]">
                   <span className="inline-block h-2.5 w-2.5 rounded-full bg-on-surface-variant/50 shadow-sm" />
                 </span>
-                <span className="text-xs text-on-surface-variant/40">GM Notes</span>
-                <span className="text-[8px] text-on-surface-variant/30 uppercase tracking-wider">gm only</span>
+                <span className="text-xs text-on-surface-variant/40">{t('gm_notes')}</span>
+                <span className="text-[8px] text-on-surface-variant/30 uppercase tracking-wider">{t('gm_only')}</span>
               </div>
 
               {/* Preset buttons */}
@@ -119,7 +121,7 @@ export function VisibilityPanel({
                   disabled={isPending}
                   className="px-2.5 py-1 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container border border-outline-variant/20 rounded-sm hover:text-primary hover:border-primary/30 transition-colors disabled:opacity-40"
                 >
-                  All
+                  {t('all')}
                 </button>
                 <button
                   type="button"
@@ -127,7 +129,7 @@ export function VisibilityPanel({
                   disabled={isPending}
                   className="px-2.5 py-1 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container border border-outline-variant/20 rounded-sm hover:text-secondary hover:border-secondary/30 transition-colors disabled:opacity-40"
                 >
-                  Basic
+                  {t('basic')}
                 </button>
                 <button
                   type="button"
@@ -135,7 +137,7 @@ export function VisibilityPanel({
                   disabled={isPending}
                   className="px-2.5 py-1 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container border border-outline-variant/20 rounded-sm hover:text-error hover:border-error/30 transition-colors disabled:opacity-40"
                 >
-                  None
+                  {t('none')}
                 </button>
               </div>
 
@@ -173,7 +175,7 @@ export function VisibilityPanel({
                           ? 'text-on-surface'
                           : 'text-on-surface-variant/40 group-hover/field:text-on-surface-variant/70'
                       }`}>
-                        {field.label}
+                        {t(field.labelKey)}
                       </span>
                     </label>
                   );

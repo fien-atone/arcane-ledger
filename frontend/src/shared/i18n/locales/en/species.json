@@ -1,0 +1,78 @@
+{
+  "title": "Species",
+  "subtitle": "Races and peoples of the world.",
+  "add_species": "Add Species",
+  "search_placeholder": "Search...",
+  "loading": "Loading...",
+  "error": "Failed to load species.",
+  "not_found": "Species not found.",
+  "empty_title": "No species found.",
+  "empty_subtitle": "Create your first species to get started.",
+
+  "column_name": "Name",
+  "column_type": "Type",
+  "column_size": "Size",
+  "filter_all": "All",
+
+  "size_tiny": "Tiny",
+  "size_small": "Small",
+  "size_medium": "Medium",
+  "size_large": "Large",
+  "size_huge": "Huge",
+  "size_gargantuan": "Gargantuan",
+
+  "size_bar_label": "Size",
+
+  "section_overview": "Overview",
+  "section_racial_traits": "Racial Traits",
+  "plural_prefix": "pl.",
+
+  "placeholder_overview": "Describe this species...",
+
+  "confirm_delete": "Delete?",
+  "confirm_yes": "Yes",
+  "confirm_no": "No",
+  "edit": "Edit",
+
+  "drawer_new_title": "New Species",
+  "drawer_edit_title": "Edit Species",
+
+  "field_name": "Name",
+  "field_plural": "Plural",
+  "field_type": "Type",
+  "field_size": "Size",
+  "field_traits": "Traits",
+  "field_traits_hint": "Comma-separated",
+
+  "placeholder_name": "Human",
+  "placeholder_plural": "Humans",
+  "placeholder_traits": "Darkvision, Lucky, Brave\u2026",
+
+  "save_changes": "Save Changes",
+  "create": "Create",
+  "cancel": "Cancel",
+
+  "types_title": "Species Types",
+  "types_subtitle": "Manage the types that classify species in this campaign world.",
+  "types_add": "Add Type",
+  "types_search_placeholder": "Search types\u2026",
+  "types_loading": "Loading...",
+
+  "types_field_name": "Name",
+  "types_field_icon": "Icon",
+  "types_field_description": "Description",
+
+  "types_drawer_new_title": "New Species Type",
+  "types_drawer_edit_title": "Edit Species Type",
+
+  "types_empty_title": "No species types yet.",
+  "types_empty_subtitle": "Create your first species type to get started.",
+  "types_select_prompt": "Select a species type",
+
+  "types_delete": "Delete",
+  "types_delete_confirm": "Delete?",
+  "types_edit": "Edit",
+  "types_save": "Save",
+  "types_create": "Create",
+  "types_cancel": "Cancel"
+}

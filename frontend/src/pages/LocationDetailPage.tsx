@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useLocations, useSaveLocation, useDeleteLocation } from '@/features/locations/api';
 import { LocationEditDrawer } from '@/features/locations/ui';
 import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPresence, useSetNPCLocationPresenceVisibility } from '@/features/npcs/api/queries';
@@ -34,6 +35,7 @@ interface LocationPlaceholderProps {
 }
 
 function LocationPlaceholder({ name, imageUrl, markers, childLocations, typeMap, onUpload, onOpenMap }: LocationPlaceholderProps) {
+  const { t } = useTranslation('locations');
   const containerRef = useRef<HTMLDivElement>(null);
   const [imgBounds, setImgBounds] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
@@ -80,7 +82,7 @@ function LocationPlaceholder({ name, imageUrl, markers, childLocations, typeMap,
         onUpload={onUpload ?? (() => {})}
         onView={imageUrl ? onOpenMap : undefined}
         hideControls={!onUpload}
-        uploadLabel="Upload Map"
+        uploadLabel={t('upload_map')}
         onLoad={recalc}
       />
       {/* Map markers overlay */}
@@ -229,6 +231,7 @@ function MapViewer({
   externalMarkerToAdd,
   onExternalMarkerAdded,
 }: MapViewerProps) {
+  const { t } = useTranslation('locations');
   const viewportRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -461,7 +464,7 @@ function MapViewer({
           <span className="font-headline text-on-surface text-base font-bold">{locationName}</span>
           {markers.length > 0 && (
             <span className="text-[10px] text-on-surface-variant/50 uppercase tracking-widest">
-              {markers.length} marker{markers.length !== 1 ? 's' : ''}
+              {t('section_markers')} · {markers.length}
             </span>
           )}
         </div>
@@ -472,12 +475,12 @@ function MapViewer({
             className="flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-label uppercase tracking-widest rounded-sm border border-outline-variant/30 text-on-surface-variant hover:border-primary/50 hover:text-primary transition-colors"
           >
             <span className="material-symbols-outlined text-sm">add_location_alt</span>
-            Add Location
+            {t('map_add_location')}
           </button>
           <button
             onClick={() => { onSave(markers); onClose(); }}
             className="p-1.5 text-on-surface-variant hover:text-on-surface transition-colors"
-            title="Close"
+            title={t('map_close')}
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
@@ -600,8 +603,8 @@ function MapViewer({
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
             <div className="flex items-center gap-2 px-4 py-2 bg-surface-container/90 backdrop-blur-sm border border-primary/30 rounded-sm shadow-lg">
               <span className="material-symbols-outlined text-[14px] text-primary animate-pulse">add_location_alt</span>
-              <span className="text-[10px] font-label uppercase tracking-widest text-primary">Click on map to place a new location</span>
-              <span className="text-[10px] text-on-surface-variant/40 ml-1">Esc to cancel</span>
+              <span className="text-[10px] font-label uppercase tracking-widest text-primary">{t('map_click_to_place')}</span>
+              <span className="text-[10px] text-on-surface-variant/40 ml-1">{t('map_esc_to_cancel')}</span>
             </div>
           </div>
         )}
@@ -657,7 +660,7 @@ function MapViewer({
                   className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-300 mt-1"
                 >
                   <span className="material-symbols-outlined text-xs">delete</span>
-                  Delete marker
+                  {t('map_delete_marker')}
                 </button>
               </div>
             );
@@ -666,7 +669,7 @@ function MapViewer({
 
         {/* Zoom hint */}
         <div className="absolute bottom-4 left-4 text-[10px] text-white/30 pointer-events-none select-none">
-          Scroll to zoom · Drag to pan{addLocMode ? ' · Click to place' : ''} · {Math.round(scale * 100)}%
+          {t('zoom_hint_scroll')} · {t('zoom_hint_drag')}{addLocMode ? ` · ${t('zoom_hint_click')}` : ''} · {Math.round(scale * 100)}%
         </div>
       </div>
 
@@ -674,10 +677,10 @@ function MapViewer({
       <div className="w-56 flex-shrink-0 bg-surface-container-low border-l border-outline-variant/20 flex flex-col overflow-hidden">
         <div className="px-4 py-3 border-b border-outline-variant/20 flex-shrink-0">
           <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/50 font-label flex items-center justify-between">
-            <span>Locations</span>
+            <span>{t('section_locations_sidebar')}</span>
             {childLocations.length > 0 && (
               <span>
-                <span className="text-on-surface-variant/50">{markers.filter(m => m.linkedLocationId).length} of </span>
+                <span className="text-on-surface-variant/50">{markers.filter(m => m.linkedLocationId).length} {t('common:of')} </span>
                 <span className="text-primary font-bold">{childLocations.length}</span>
               </span>
             )}
@@ -708,7 +711,7 @@ function MapViewer({
 
             const isEmpty = childLocations.length === 0 && markers.length === 0;
             if (isEmpty) {
-              return <p className="text-[10px] text-on-surface-variant/30 italic px-4 pt-4">No locations or markers yet.</p>;
+              return <p className="text-[10px] text-on-surface-variant/30 italic px-4 pt-4">{t('no_locations_or_markers')}</p>;
             }
 
             return (
@@ -742,7 +745,7 @@ function MapViewer({
                                 setPendingLinkLocId(loc.id);
                                 setSelectedMarkerId(null);
                               }}
-                              title="Place on map"
+                              title={t('map_place_on_map')}
                               className="opacity-0 group-hover/unplaced:opacity-100 p-1 text-on-surface-variant/30 hover:text-primary transition-all"
                             >
                               <span className="material-symbols-outlined text-[14px]">add_location_alt</span>
@@ -785,7 +788,7 @@ function MapViewer({
                 {unlinkedMarkers.length > 0 && (
                   <div>
                     <div className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/30 flex items-center gap-2">
-                      <span>Markers</span>
+                      <span>{t('section_markers')}</span>
                       <div className="flex-1 h-px bg-outline-variant/10" />
                     </div>
                     {unlinkedMarkers.map((m) => {
@@ -839,6 +842,7 @@ const CATEGORY_ORDER = ['world', 'geographic', 'water', 'civilization', 'poi', '
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function LocationDetailPage() {
+  const { t } = useTranslation('locations');
   const { id: campaignId, locationId } = useParams<{ id: string; locationId: string }>();
   const [imgVersion, setImgVersion] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
@@ -898,7 +902,7 @@ export default function LocationDetailPage() {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
-        Loading…
+        {t('loading')}
       </main>
     );
   }
@@ -906,7 +910,7 @@ export default function LocationDetailPage() {
   if (isError || !location) {
     return (
       <main className="p-12">
-        <p className="text-tertiary text-sm">Location not found.</p>
+        <p className="text-tertiary text-sm">{t('not_found')}</p>
       </main>
     );
   }
@@ -981,13 +985,13 @@ export default function LocationDetailPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
 
-        {/* ── Header card (full width) ── */}
+        {/* -- Header card (full width) -- */}
         <section className="relative bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8 mb-8">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
@@ -1025,11 +1029,11 @@ export default function LocationDetailPage() {
             <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
               {confirmDelete ? (
                 <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                  <span className="text-[9px] text-on-surface-variant">{t('confirm_delete')}</span>
                   <button onClick={() => deleteLocation.mutate(location.id, { onSuccess: () => navigate(`/campaigns/${campaignId}/locations`) })}
-                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
                   <button onClick={() => setConfirmDelete(false)}
-                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
                 </div>
               ) : (
                 <button onClick={() => setConfirmDelete(true)}
@@ -1042,13 +1046,13 @@ export default function LocationDetailPage() {
                 className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">edit</span>
-                Edit
+                {t('edit')}
               </button>
             </div>
           )}
         </section>
 
-        {/* ── Two-column layout ── */}
+        {/* -- Two-column layout -- */}
         <div className="flex flex-col md:flex-row gap-8 min-w-0">
 
           {/* ── Left column ──────────────────────────────── */}
@@ -1057,10 +1061,10 @@ export default function LocationDetailPage() {
             {/* Description */}
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
               <InlineRichField
-                label="Description"
+                label={t('section_description')}
                 value={location.description}
                 onSave={(html) => saveMutation.mutate({ ...location, description: html })}
-                placeholder="Describe this location…"
+                placeholder={t('placeholder_description')}
                 readOnly={!isGm}
               />
             </div>
@@ -1069,7 +1073,7 @@ export default function LocationDetailPage() {
             {isGm && (
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <InlineRichField
-                  label="GM Notes"
+                  label={t('section_gm_notes')}
                   value={location.gmNotes}
                   onSave={(html) => saveMutation.mutate({ ...location, gmNotes: html || undefined })}
                   isGmNotes
@@ -1083,7 +1087,7 @@ export default function LocationDetailPage() {
                 <section className="space-y-4">
                   <div className="flex items-center gap-4 min-w-0">
                     <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      Adjacent / Reachable
+                      {t('adjacent_reachable')}
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                   </div>
@@ -1125,7 +1129,7 @@ export default function LocationDetailPage() {
             <section className="space-y-4">
               <div className="flex items-center gap-4 min-w-0">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                  NPCs Here
+                  {t('section_npcs_here')}
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
                 {isGm && (
@@ -1134,7 +1138,7 @@ export default function LocationDetailPage() {
                     className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                   >
                     <span className="material-symbols-outlined text-[13px]">person_add</span>
-                    Add
+                    {t('sessions:add')}
                   </button>
                 )}
               </div>
@@ -1154,7 +1158,7 @@ export default function LocationDetailPage() {
                       <input
                         autoFocus
                         type="text"
-                        placeholder="Search NPCs…"
+                        placeholder={t('search_npcs')}
                         value={addNpcSearch}
                         onChange={(e) => setAddNpcSearch(e.target.value)}
                         className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
@@ -1162,7 +1166,7 @@ export default function LocationDetailPage() {
                     </div>
                     <div className="max-h-48 overflow-y-auto">
                       {shown.length === 0 ? (
-                        <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">No NPCs found.</p>
+                        <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">{t('no_npcs_found')}</p>
                       ) : (
                         shown.map((n) => (
                           <button
@@ -1184,7 +1188,7 @@ export default function LocationDetailPage() {
 
               {npcsHere.length === 0 && !addNpcOpen ? (
                 <p className="text-xs text-on-surface-variant/40 italic">
-                  No NPCs tagged to this location.
+                  {t('no_npcs_tagged')}
                 </p>
               ) : npcsHere.length > 0 ? (
                 <div className="space-y-2">
@@ -1227,25 +1231,25 @@ export default function LocationDetailPage() {
                           </Link>
                           {isGm && (confirmRemoveNpcId === npc.id ? (
                             <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">Remove?</span>
+                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">{t('confirm_delete')}</span>
                               <button
                                 onClick={() => { handleRemoveNpc(npc); setConfirmRemoveNpcId(null); }}
                                 disabled={saveNpc.isPending}
                                 className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors disabled:opacity-40"
                               >
-                                Yes
+                                {t('confirm_yes')}
                               </button>
                               <button
                                 onClick={() => setConfirmRemoveNpcId(null)}
                                 className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
                               >
-                                No
+                                {t('confirm_no')}
                               </button>
                             </div>
                           ) : (
                             <button
                               onClick={() => setConfirmRemoveNpcId(npc.id)}
-                              title="Remove from location"
+                              title={t('remove_from_location')}
                               className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                             >
                               <span className="material-symbols-outlined text-[14px]">person_remove</span>
@@ -1254,7 +1258,7 @@ export default function LocationDetailPage() {
                           {isGm && presence && (
                             <button
                               onClick={() => setPresenceVisibility.mutate({ npcId: npc.id, locationId: location.id, playerVisible: !presence.playerVisible })}
-                              title={presence.playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                              title={presence.playerVisible ? t('visible_click_to_hide') : t('hidden_click_to_show')}
                               className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
                                 presence.playerVisible
                                   ? 'text-primary/60 hover:text-primary'
@@ -1279,7 +1283,7 @@ export default function LocationDetailPage() {
                                 if (e.key === 'Enter') handleSaveNote(npc, noteInput);
                                 if (e.key === 'Escape') setEditingNoteForNpcId(null);
                               }}
-                              placeholder="e.g. Only here in the evenings…"
+                              placeholder={t('npc_presence_placeholder')}
                               className="flex-1 bg-surface-container border border-outline-variant/30 focus:border-primary rounded-sm px-2 py-1 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:ring-0 focus:outline-none"
                             />
                             <button
@@ -1287,7 +1291,7 @@ export default function LocationDetailPage() {
                               disabled={saveNpc.isPending}
                               className="px-2 py-1 bg-primary text-on-primary text-[10px] rounded-sm uppercase tracking-wider disabled:opacity-40"
                             >
-                              Save
+                              {t('common:save')}
                             </button>
                             <button
                               onClick={() => setEditingNoteForNpcId(null)}
@@ -1305,7 +1309,7 @@ export default function LocationDetailPage() {
                                 className="text-[10px] text-on-surface-variant/20 italic flex-1 cursor-pointer opacity-0 group-hover/card:opacity-100 transition-opacity"
                                 onClick={() => { setEditingNoteForNpcId(npc.id); setNoteInput(''); }}
                               >
-                                Add presence note…
+                                {t('add_presence_note')}
                               </p>
                             ) : null}
                           </div>
@@ -1325,13 +1329,13 @@ export default function LocationDetailPage() {
             <section className="space-y-4">
               <div className="flex items-center gap-4 min-w-0">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                  Session Appearances
+                  {t('section_session_appearances')}
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
               </div>
               {sessionAppearances.length === 0 ? (
                 <p className="text-xs text-on-surface-variant/40 italic">
-                  No sessions tagged yet.
+                  {t('no_sessions_tagged')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -1345,7 +1349,7 @@ export default function LocationDetailPage() {
                         auto_stories
                       </span>
                       <p className="text-sm text-on-surface group-hover:text-primary transition-colors flex-1 truncate">
-                        Session {session.number} — {session.title}
+                        {t('session_appearance', { number: session.number, title: session.title })}
                       </p>
                       <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">
                         arrow_forward
@@ -1379,7 +1383,7 @@ export default function LocationDetailPage() {
             {parentLocation && (
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-3">
-                  Part of
+                  {t('section_part_of')}
                 </h4>
                 <Link
                   to={`/campaigns/${campaignId}/locations/${parentLocation.id}`}
@@ -1419,7 +1423,7 @@ export default function LocationDetailPage() {
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-2 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[13px] text-primary">my_location</span>
-                  On the map of {parentLocation.name}
+                  {t('section_on_map_of', { name: parentLocation.name })}
                 </h4>
                 <Link
                   to={`/campaigns/${campaignId}/locations/${parentLocation.id}`}
@@ -1438,7 +1442,7 @@ export default function LocationDetailPage() {
                   <div className="absolute inset-0 flex items-end justify-end p-2.5 opacity-0 group-hover/minimap:opacity-100 transition-opacity pointer-events-none">
                     <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface/90 backdrop-blur-sm border border-outline-variant/30 rounded-sm text-[10px] font-label uppercase tracking-widest text-primary">
                       <span className="material-symbols-outlined text-[12px]">open_in_new</span>
-                      Open {parentLocation.name}
+                      {t('open_parent', { name: parentLocation.name })}
                     </div>
                   </div>
                 </Link>
@@ -1449,7 +1453,7 @@ export default function LocationDetailPage() {
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <div className="flex items-center gap-3 mb-3 min-w-0">
                   <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
-                    Notable Places
+                    {t('section_notable_places')}
                   </h4>
                   <div className="h-px flex-1 bg-outline-variant/10" />
                   {isGm && <button
@@ -1457,13 +1461,13 @@ export default function LocationDetailPage() {
                     className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
                   >
                     <span className="material-symbols-outlined text-[13px]">add_location_alt</span>
-                    Add
+                    {t('sessions:add')}
                   </button>}
                 </div>
 
                 <div className="space-y-1.5">
                   {childLocations.length === 0 && (
-                    <p className="text-xs text-on-surface-variant/40 italic py-2">No notable places yet.</p>
+                    <p className="text-xs text-on-surface-variant/40 italic py-2">{t('no_notable_places')}</p>
                   )}
                   {childLocations.map((child) => {
                     const hasMarker = (location.mapMarkers ?? []).some((mk) => mk.linkedLocationId === child.id);
@@ -1505,7 +1509,7 @@ export default function LocationDetailPage() {
                               playerVisible: !(child as any).playerVisible,
                               playerVisibleFields: (child as any).playerVisibleFields ?? [],
                             })}
-                            title={(child as any).playerVisible ? 'Visible to players — click to hide' : 'Hidden from players — click to show'}
+                            title={(child as any).playerVisible ? t('visible_click_to_hide') : t('hidden_click_to_show')}
                             className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
                               (child as any).playerVisible
                                 ? 'text-primary/60 hover:text-primary'
@@ -1531,7 +1535,7 @@ export default function LocationDetailPage() {
                   playerVisibleFields={location.playerVisibleFields ?? []}
                   fields={LOCATION_VISIBILITY_FIELDS}
                   basicPreset={LOCATION_BASIC_PRESET}
-                  autoVisibleLabels={['Type']}
+                  autoVisibleLabels={[t('field_type')]}
                   onToggleVisible={(v) => setLocationVisibility.mutate({
                     campaignId: campaignId!, id: location.id,
                     playerVisible: v, playerVisibleFields: location.playerVisibleFields ?? [],

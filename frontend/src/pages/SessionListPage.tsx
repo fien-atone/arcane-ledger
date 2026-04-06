@@ -1,15 +1,18 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useSessions } from '@/features/sessions/api/queries';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { SessionEditDrawer } from '@/features/sessions/ui';
 import { EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
 export default function SessionListPage() {
+  const { t, i18n } = useTranslation('sessions');
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+
   const { id: campaignId } = useParams<{ id: string }>();
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
   const { data: campaign } = useCampaign(campaignId ?? '');
@@ -59,10 +62,10 @@ export default function SessionListPage() {
     const isNext = session.id === nextSessionId && !isToday && !isTomorrow;
     const isLast = session.id === lastSessionId;
 
-    if (isToday) return { label: 'Today', cls: 'bg-primary/15 text-primary border-primary/30', pulse: true, dotCls: 'bg-primary' };
-    if (isTomorrow) return { label: 'Tomorrow', cls: 'bg-secondary/10 text-secondary border-secondary/20', pulse: true, dotCls: 'bg-secondary' };
-    if (isNext) return { label: 'Next', cls: 'bg-secondary/10 text-secondary border-secondary/20', pulse: false, dotCls: '' };
-    if (isLast) return { label: 'Previous', cls: 'bg-primary/10 text-primary border-primary/20', pulse: false, dotCls: '' };
+    if (isToday) return { label: t('badge_today'), cls: 'bg-primary/15 text-primary border-primary/30', pulse: true, dotCls: 'bg-primary' };
+    if (isTomorrow) return { label: t('badge_tomorrow'), cls: 'bg-secondary/10 text-secondary border-secondary/20', pulse: true, dotCls: 'bg-secondary' };
+    if (isNext) return { label: t('badge_next'), cls: 'bg-secondary/10 text-secondary border-secondary/20', pulse: false, dotCls: '' };
+    if (isLast) return { label: t('badge_previous'), cls: 'bg-primary/10 text-primary border-primary/20', pulse: false, dotCls: '' };
     return null;
   }
 
@@ -77,18 +80,18 @@ export default function SessionListPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
-      {/* Content — single max-width container */}
+      {/* Content */}
       <div className="px-4 sm:px-8 max-w-5xl mx-auto w-full pb-20">
         {/* Header card */}
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight">Sessions</h1>
-              <p className="text-on-surface-variant text-sm mt-1">Chronicle of all gathered sessions, newest first.</p>
+              <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight">{t('title')}</h1>
+              <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
             </div>
             {isGm && (
               <button
@@ -96,7 +99,7 @@ export default function SessionListPage() {
                 className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
               >
                 <span className="material-symbols-outlined text-[20px]">add</span>
-                <span className="font-label text-xs uppercase tracking-widest">New Session</span>
+                <span className="font-label text-xs uppercase tracking-widest">{t('new_session')}</span>
               </button>
             )}
           </div>
@@ -107,7 +110,7 @@ export default function SessionListPage() {
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t('search_placeholder')}
                 value={search}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -120,24 +123,24 @@ export default function SessionListPage() {
               />
             </div>
             <span className="ml-auto text-[10px] text-on-surface-variant/40">
-              <span className="text-on-surface font-bold">{filtered.length}</span> of <span className="text-primary font-bold">{sessions?.length ?? 0}</span>
+              <span className="text-on-surface font-bold">{filtered.length}</span> {t('common:of')} <span className="text-primary font-bold">{sessions?.length ?? 0}</span>
             </span>
           </div>
         </div>
 
-        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading…</div>}
-        {isError && <p className="text-tertiary text-sm p-12">Failed to load sessions.</p>}
+        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>{t('loading')}</div>}
+        {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
 
         {!isLoading && !isError && (
           filtered.length === 0 ? (
-            <EmptyState icon="auto_stories" title="No sessions found." subtitle="Log your first session to begin." />
+            <EmptyState icon="auto_stories" title={t('empty_title')} subtitle={t('empty_subtitle')} />
           ) : (
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm divide-y divide-outline-variant/10">
               {/* Column headers */}
               <div className="flex items-center gap-3 px-6 py-2 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
-                <span className="w-10 flex-shrink-0">#</span>
-                <span className="flex-1 min-w-0">Title</span>
-                <span className="w-28 flex-shrink-0 hidden sm:block">Date</span>
+                <span className="w-10 flex-shrink-0">{t('column_number')}</span>
+                <span className="flex-1 min-w-0">{t('column_title')}</span>
+                <span className="w-28 flex-shrink-0 hidden sm:block">{t('column_date')}</span>
                 <span className="w-24 flex-shrink-0" />
               </div>
               {filtered.map((session) => {
@@ -157,11 +160,11 @@ export default function SessionListPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">{session.title}</p>
                         <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5 truncate sm:hidden">
-                          {session.datetime ? formatDate(session.datetime) : 'Date TBD'}
+                          {session.datetime ? formatDate(session.datetime) : t('date_tbd')}
                         </p>
                       </div>
                       <span className="w-28 flex-shrink-0 text-xs text-on-surface-variant/60 hidden sm:block">
-                        {session.datetime ? formatDate(session.datetime) : 'Date TBD'}
+                        {session.datetime ? formatDate(session.datetime) : t('date_tbd')}
                       </span>
                       <span className="w-24 flex-shrink-0 flex justify-end">
                         {badge && (
@@ -178,7 +181,7 @@ export default function SessionListPage() {
             </div>
           )
         )}
-      </div>{/* end max-w-5xl container */}
+      </div>
 
     </main>
 

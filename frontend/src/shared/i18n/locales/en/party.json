@@ -1,0 +1,100 @@
+{
+  "title": "Party",
+  "subtitle": "Campaign members and their characters.",
+  "invite_player": "Invite Player",
+  "add_character": "Add Character",
+  "create_character": "Create Character",
+  "loading": "Loading...",
+  "error": "Failed to load party.",
+  "not_found": "Character not found.",
+  "empty_title": "No party members yet",
+  "empty_subtitle": "Invite players or create characters to get started.",
+
+  "section_my_character": "My Character",
+  "section_pending_invitations": "Pending Invitations",
+  "section_party_members": "Party Members",
+  "section_unassigned_characters": "Unassigned Characters",
+
+  "column_player": "Player",
+  "column_character": "Character",
+
+  "status_pending": "Pending",
+
+  "no_character": "No character",
+  "select_character": "Select character...",
+  "select_player": "Select player...",
+
+  "assign": "Assign",
+  "create": "Create",
+  "view": "View",
+  "view_character": "View character",
+  "kick": "Kick",
+  "kick_confirm": "Kick?",
+
+  "unlink_character": "Unlink character from player",
+
+  "cancel_invitation": "Cancel invitation",
+  "cancel_confirm": "Cancel?",
+  "confirm_yes": "Yes",
+  "confirm_no": "No",
+
+  "detail": {
+    "section_appearance": "Appearance",
+    "section_backstory": "Backstory",
+    "section_personality": "Personality",
+    "section_motivation": "Motivation & Ideals",
+    "section_bonds": "Bonds",
+    "section_flaws": "Flaws",
+    "section_gm_notes": "GM Notes",
+    "section_group_memberships": "Group Memberships",
+
+    "placeholder_appearance": "Physical description\u2026",
+    "placeholder_backstory": "History, origin, key events\u2026",
+    "placeholder_personality": "Traits, mannerisms, quirks\u2026",
+    "placeholder_motivation": "What drives them, what they believe in\u2026",
+    "placeholder_bonds": "People, places, things they hold dear\u2026",
+    "placeholder_flaws": "Weaknesses, vices, fears\u2026",
+
+    "no_group_memberships": "No group memberships.",
+    "search_groups": "Search groups\u2026",
+    "no_groups_in_campaign": "No groups in this campaign.",
+    "no_groups_found": "No groups found.",
+
+    "role_label": "Role",
+    "role_optional": "(optional)",
+    "role_placeholder": "e.g. Leader, Spy\u2026",
+
+    "confirm_delete": "Delete?",
+    "confirm_remove": "Remove?",
+    "confirm_yes": "Yes",
+    "confirm_no": "No",
+    "edit": "Edit",
+    "add": "Add",
+    "cancel": "Cancel",
+    "remove_from_group": "Remove from group"
+  },
+
+  "drawer_new_title": "New Character",
+  "drawer_edit_title": "Edit Character",
+  "drawer_new_subtitle": "Add a character to the party",
+
+  "field_name": "Name",
+  "field_species": "Species",
+  "field_class": "Class",
+  "field_gender": "Gender",
+  "field_age": "Age",
+
+  "placeholder_name": "Character name\u2026",
+  "placeholder_species_none": "\u2014 None \u2014",
+  "placeholder_class": "Wizard\u2026",
+  "placeholder_gender_none": "\u2014",
+  "placeholder_age_none": "\u2014",
+
+  "gender_male": "Male",
+  "gender_female": "Female",
+  "gender_nonbinary": "Non-binary",
+
+  "save_changes": "Save Changes",
+  "create_character_btn": "Create Character",
+  "cancel": "Cancel"
+}

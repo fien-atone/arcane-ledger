@@ -1,42 +1,43 @@
+import { useTranslation } from 'react-i18next';
 import { useUpdateCampaignSections, getEnabledSections } from '../api/queries';
 import { ALL_SECTIONS } from '@/entities/campaign';
 import type { CampaignSection, CampaignSummary } from '@/entities/campaign';
 
 interface SectionItem {
   id: CampaignSection;
-  label: string;
+  labelKey: string;
   icon: string;
   sub?: boolean;
 }
 
 interface SectionGroup {
-  title: string;
+  titleKey: string;
   icon: string;
   items: SectionItem[];
 }
 
 const SECTION_GROUPS: SectionGroup[] = [
   {
-    title: 'World',
+    titleKey: 'nav_sections.world',
     icon: 'public',
     items: [
-      { id: 'locations', label: 'Locations', icon: 'location_on' },
-      { id: 'location_types', label: 'Location Types', icon: 'account_tree' },
-      { id: 'npcs', label: 'NPCs', icon: 'group' },
-      { id: 'groups', label: 'Groups', icon: 'groups' },
-      { id: 'group_types', label: 'Group Types', icon: 'category' },
-      { id: 'species', label: 'Species', icon: 'blur_on' },
-      { id: 'species_types', label: 'Species Types', icon: 'category' },
+      { id: 'locations', labelKey: 'nav_items.locations', icon: 'location_on' },
+      { id: 'location_types', labelKey: 'nav_items.location_types', icon: 'account_tree' },
+      { id: 'npcs', labelKey: 'nav_items.npcs', icon: 'group' },
+      { id: 'groups', labelKey: 'nav_items.groups', icon: 'groups' },
+      { id: 'group_types', labelKey: 'nav_items.group_types', icon: 'category' },
+      { id: 'species', labelKey: 'nav_items.species', icon: 'blur_on' },
+      { id: 'species_types', labelKey: 'nav_items.species_types', icon: 'category' },
     ],
   },
   {
-    title: 'Adventure',
+    titleKey: 'nav_sections.adventure',
     icon: 'auto_stories',
     items: [
-      { id: 'sessions', label: 'Sessions', icon: 'event' },
-      { id: 'party', label: 'Party', icon: 'shield_person' },
-      { id: 'quests', label: 'Quests', icon: 'assignment' },
-      { id: 'social_graph', label: 'Social Graph', icon: 'hub' },
+      { id: 'sessions', labelKey: 'nav_items.sessions', icon: 'event' },
+      { id: 'party', labelKey: 'nav_items.party', icon: 'shield_person' },
+      { id: 'quests', labelKey: 'nav_items.quests', icon: 'assignment' },
+      { id: 'social_graph', labelKey: 'nav_items.social_graph', icon: 'hub' },
     ],
   },
 ];
@@ -48,6 +49,7 @@ interface Props {
 }
 
 export function ManageSectionsDrawer({ open, onClose, campaign }: Props) {
+  const { t } = useTranslation('common');
   const { mutate, isPending } = useUpdateCampaignSections();
   const enabled = getEnabledSections(campaign);
   const enabledSet = new Set(enabled);
@@ -99,8 +101,8 @@ export function ManageSectionsDrawer({ open, onClose, campaign }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-outline-variant/10 flex-shrink-0">
           <div>
-            <h2 className="font-headline text-lg font-bold text-on-surface">Manage Sections</h2>
-            <p className="text-xs text-on-surface-variant/50 mt-0.5">Toggle sidebar sections on or off</p>
+            <h2 className="font-headline text-lg font-bold text-on-surface">{t('manage_sections.title')}</h2>
+            <p className="text-xs text-on-surface-variant/50 mt-0.5">{t('manage_sections.subtitle')}</p>
           </div>
           <button onClick={onClose} className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors">
             <span className="material-symbols-outlined text-xl">close</span>
@@ -112,8 +114,8 @@ export function ManageSectionsDrawer({ open, onClose, campaign }: Props) {
           {/* Dashboard — always on */}
           <div className="flex items-center gap-4 px-3 py-2 opacity-50">
             <span className="material-symbols-outlined text-on-surface-variant text-[20px]">dashboard</span>
-            <span className="flex-1 text-sm text-on-surface">Dashboard</span>
-            <span className="text-[9px] font-label uppercase tracking-widest text-on-surface-variant/40">Always on</span>
+            <span className="flex-1 text-sm text-on-surface">{t('nav.dashboard')}</span>
+            <span className="text-[9px] font-label uppercase tracking-widest text-on-surface-variant/40">{t('manage_sections.always_on')}</span>
           </div>
 
           {SECTION_GROUPS.map((group) => {
@@ -122,7 +124,7 @@ export function ManageSectionsDrawer({ open, onClose, campaign }: Props) {
             const someGroupOn = groupIds.some((id) => enabledSet.has(id));
 
             return (
-              <div key={group.title}>
+              <div key={group.titleKey}>
                 {/* Group header with toggle */}
                 <button
                   type="button"
@@ -132,7 +134,7 @@ export function ManageSectionsDrawer({ open, onClose, campaign }: Props) {
                 >
                   <span className="material-symbols-outlined text-[14px] text-on-surface-variant/40">{group.icon}</span>
                   <span className="text-[10px] font-label font-bold uppercase tracking-[0.2em] text-on-surface-variant/50 flex-1 text-left">
-                    {group.title}
+                    {t(group.titleKey)}
                   </span>
                   <div
                     className={`relative w-8 h-4 rounded-full transition-colors ${
@@ -165,7 +167,7 @@ export function ManageSectionsDrawer({ open, onClose, campaign }: Props) {
                           {item.icon}
                         </span>
                         <span className={`flex-1 text-sm text-left transition-colors ${isOn ? 'text-on-surface' : 'text-on-surface-variant/40'}`}>
-                          {item.label}
+                          {t(item.labelKey)}
                         </span>
                         <div
                           className={`relative w-9 h-[18px] rounded-full transition-colors ${
@@ -190,7 +192,7 @@ export function ManageSectionsDrawer({ open, onClose, campaign }: Props) {
         {/* Footer hint */}
         <div className="px-8 py-4 border-t border-outline-variant/10 flex-shrink-0">
           <p className="text-[10px] text-on-surface-variant/40 leading-relaxed">
-            Hidden sections are removed from the sidebar and dashboard. Data is preserved and can be re-enabled at any time.
+            {t('manage_sections.footer_hint')}
           </p>
         </div>
       </div>

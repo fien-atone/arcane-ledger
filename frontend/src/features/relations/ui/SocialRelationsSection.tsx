@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useRelationsForEntity, useSaveRelation, useDeleteRelation } from '../api';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useParty } from '@/features/characters/api/queries';
@@ -26,7 +27,16 @@ const SEGMENTS = [
   { threshold: 100, color: '#34d399' },  // emerald-400
 ];
 
+const ATTITUDE_KEYS: Record<string, string> = {
+  Hostile: 'attitude_hostile',
+  Unfriendly: 'attitude_unfriendly',
+  Neutral: 'attitude_neutral',
+  Friendly: 'attitude_friendly',
+  Allied: 'attitude_allied',
+};
+
 function FriendlinessBar({ score }: { score: number }) {
+  const { t } = useTranslation('social');
   const snapped = snapFriendliness(score);
   const label = friendlinessLabel(snapped);
   const labelColor = friendlinessColor(snapped);
@@ -45,13 +55,14 @@ function FriendlinessBar({ score }: { score: number }) {
         ))}
       </div>
       <span className={`text-[10px] font-bold uppercase tracking-widest w-20 text-right ${labelColor}`}>
-        {label}
+        {t(ATTITUDE_KEYS[label] || 'attitude_neutral')}
       </span>
     </div>
   );
 }
 
 export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props) {
+  const { t } = useTranslation('social');
   const { data: relations } = useRelationsForEntity(campaignId, entityId);
   const { data: allNpcs } = useNpcs(campaignId);
   const { data: allChars } = useParty(campaignId);
@@ -152,15 +163,15 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
           </div>
           <div>
             <label className="block text-[9px] font-label uppercase tracking-widest text-on-surface-variant mb-2">
-              Attitude
+              {t('attitude_label')}
             </label>
             {(() => {
               const levels = [
-                { value: -80, label: 'Hostile',    color: '#fb7185', labelColor: 'text-rose-400' },
-                { value: -40, label: 'Unfriendly', color: '#f87171', labelColor: 'text-rose-400/70' },
-                { value: 0,   label: 'Neutral',    color: '#fbbf24', labelColor: 'text-amber-400' },
-                { value: 40,  label: 'Friendly',   color: '#6ee7b7', labelColor: 'text-emerald-400/70' },
-                { value: 80,  label: 'Allied',     color: '#34d399', labelColor: 'text-emerald-400' },
+                { value: -80, label: t('attitude_hostile'),    color: '#fb7185', labelColor: 'text-rose-400' },
+                { value: -40, label: t('attitude_unfriendly'), color: '#f87171', labelColor: 'text-rose-400/70' },
+                { value: 0,   label: t('attitude_neutral'),    color: '#fbbf24', labelColor: 'text-amber-400' },
+                { value: 40,  label: t('attitude_friendly'),   color: '#6ee7b7', labelColor: 'text-emerald-400/70' },
+                { value: 80,  label: t('attitude_allied'),     color: '#34d399', labelColor: 'text-emerald-400' },
               ];
               const activeIdx = levels.findIndex((l) => l.value === editScore);
               const activeLevel = levels[activeIdx];
@@ -193,14 +204,14 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
             <input
               value={editNote}
               onChange={(e) => setEditNote(e.target.value)}
-              placeholder="Note (optional)…"
+              placeholder={t('relations_note_placeholder')}
               className="w-full bg-surface-container border border-outline-variant/25 focus:border-primary rounded-sm py-1.5 px-2 text-xs text-on-surface focus:ring-0 focus:outline-none placeholder:text-on-surface-variant/30"
               onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(rel); if (e.key === 'Escape') setEditingId(null); }}
             />
           </div>
           <div className="flex justify-end gap-2">
-            <button onClick={() => setEditingId(null)} className="px-3 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">Cancel</button>
-            <button onClick={() => handleSaveEdit(rel)} className="px-3 py-1 bg-primary text-on-primary text-[10px] font-label uppercase tracking-wider rounded-sm">Save</button>
+            <button onClick={() => setEditingId(null)} className="px-3 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('common:cancel')}</button>
+            <button onClick={() => handleSaveEdit(rel)} className="px-3 py-1 bg-primary text-on-primary text-[10px] font-label uppercase tracking-wider rounded-sm">{t('common:save')}</button>
           </div>
         </div>
       );
@@ -226,9 +237,9 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
           {direction === 'out' && !readOnly && (
             confirmDeleteId === rel.id ? (
               <div className="absolute inset-0 flex items-center justify-end gap-1 bg-surface-container-low/95 backdrop-blur-sm">
-                <span className="text-[9px] text-on-surface-variant">Remove?</span>
-                <button onClick={() => handleDelete(rel.id)} className="px-1.5 py-0.5 text-[9px] font-label uppercase text-error">Yes</button>
-                <button onClick={() => setConfirmDeleteId(null)} className="px-1.5 py-0.5 text-[9px] font-label uppercase text-on-surface-variant">No</button>
+                <span className="text-[9px] text-on-surface-variant">{t('relations_remove_confirm')}</span>
+                <button onClick={() => handleDelete(rel.id)} className="px-1.5 py-0.5 text-[9px] font-label uppercase text-error">{t('common:yes')}</button>
+                <button onClick={() => setConfirmDeleteId(null)} className="px-1.5 py-0.5 text-[9px] font-label uppercase text-on-surface-variant">{t('common:no')}</button>
               </div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-end gap-0.5 opacity-0 group-hover/rel:opacity-100 transition-opacity bg-surface-container-low/95 backdrop-blur-sm">
@@ -250,7 +261,7 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
     <section className="space-y-4">
       <div className="flex items-center gap-4">
         <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-          Social Relations
+          {t('relations_title')}
         </h2>
         <div className="h-px flex-1 bg-outline-variant/20" />
         {!readOnly && (
@@ -259,7 +270,7 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
           className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
         >
           <span className="material-symbols-outlined text-[13px]">person_add</span>
-          Add
+          {t('relations_add')}
         </button>
         )}
       </div>
@@ -271,7 +282,7 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
             <input
               autoFocus
               type="text"
-              placeholder="Search NPCs…"
+              placeholder={t('relations_search_placeholder')}
               value={addSearch}
               onChange={(e) => setAddSearch(e.target.value)}
               className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
@@ -279,7 +290,7 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
           </div>
           <div className="max-h-48 overflow-y-auto">
             {availableNpcs.length === 0 ? (
-              <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">No NPCs found.</p>
+              <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">{t('relations_no_npcs')}</p>
             ) : availableNpcs.map((n) => (
               <button
                 key={n.id}
@@ -295,14 +306,14 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
       )}
 
       {outgoing.length === 0 && incoming.length === 0 && !addOpen && (
-        <p className="text-xs text-on-surface-variant/40 italic">No social relations.</p>
+        <p className="text-xs text-on-surface-variant/40 italic">{t('relations_empty')}</p>
       )}
 
       <div className="space-y-6">
         {outgoing.length > 0 && (
           <div className="space-y-2">
             <p className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold">
-              Their perspective →
+              {t('relations_outgoing')}
             </p>
             {outgoing.map((rel) => renderRow(rel, rel.toEntity, 'out'))}
           </div>
@@ -311,7 +322,7 @@ export function SocialRelationsSection({ campaignId, entityId, readOnly }: Props
         {incoming.length > 0 && (
           <div className="space-y-2">
             <p className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold">
-              ← Others' perspective
+              {t('relations_incoming')}
             </p>
             {incoming.map((rel) => renderRow(rel, rel.fromEntity, 'in'))}
           </div>

@@ -1,0 +1,72 @@
+{
+  "my_campaigns": "Мои кампании",
+  "create_campaign": "Создать кампанию",
+  "loading": "Загрузка\u2026",
+  "failed_to_load": "Не удалось загрузить кампании.",
+  "no_campaigns_title": "Кампаний пока нет.",
+  "no_campaigns_desc": "Создай первую кампанию, чтобы начать.",
+  "no_sessions": "Нет сессий",
+
+  "session_badge": {
+    "today": "Сегодня",
+    "tomorrow": "Завтра",
+    "next": "Следующая"
+  },
+
+  "create_drawer": {
+    "title": "Новая кампания",
+    "subtitle": "Начни новое приключение",
+    "title_label": "Название",
+    "title_placeholder": "Название кампании\u2026",
+    "description_label": "Описание",
+    "description_placeholder": "Сеттинг, завязка, тон\u2026",
+    "cancel": "Отмена",
+    "create": "Создать"
+  },
+
+  "dashboard": {
+    "loading": "Загрузка кампании\u2026",
+    "not_found": "Кампания не найдена.",
+    "description_placeholder": "Описание кампании...",
+    "archive_confirm": "Архивировать эту кампанию?",
+    "restore_confirm": "Восстановить эту кампанию?",
+    "click_to_edit": "Нажми, чтобы редактировать",
+
+    "next_session": "Следующая сессия",
+    "session_today": "Сессия сегодня!",
+    "session_tomorrow": "Сессия завтра",
+    "starts_at": "Начало в",
+    "no_upcoming_session": "Нет запланированных сессий",
+    "schedule_next_session": "Запланируй следующую сессию",
+
+    "recent_sessions": "Последние сессии",
+    "all_sessions": "Все сессии",
+    "no_sessions_recorded": "Сессий пока не записано.",
+
+    "active_quests": "Активные квесты",
+    "all_quests": "Все квесты",
+    "no_active_quests": "Нет активных квестов.",
+
+    "calendar": "Календарь",
+
+    "the_party": "Партия",
+    "manage": "Управление",
+    "no_characters": "Персонажей пока нет."
+  },
+
+  "invitations": {
+    "title": "Приглашения",
+    "invited_you": "приглашает тебя",
+    "decline_confirm": "Отклонить?",
+    "accept": "Принять",
+    "decline": "Отклонить"
+  },
+
+  "invite_panel": {
+    "title": "Пригласить игрока",
+    "search_placeholder": "Поиск по имени или email...",
+    "searching": "Поиск...",
+    "no_users_found": "Пользователи не найдены по запросу",
+    "invite": "Пригласить"
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSaveSpecies } from '../api';
 import { useSpeciesTypes } from '@/features/speciesTypes/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
@@ -6,13 +7,13 @@ import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Species, SpeciesSize } from '@/entities/species';
 
-const SIZE_OPTIONS: SelectOption<SpeciesSize>[] = [
-  { value: 'tiny',       label: 'Tiny' },
-  { value: 'small',      label: 'Small' },
-  { value: 'medium',     label: 'Medium' },
-  { value: 'large',      label: 'Large' },
-  { value: 'huge',       label: 'Huge' },
-  { value: 'gargantuan', label: 'Gargantuan' },
+const SIZE_KEYS: { value: SpeciesSize; labelKey: string }[] = [
+  { value: 'tiny',       labelKey: 'size_tiny' },
+  { value: 'small',      labelKey: 'size_small' },
+  { value: 'medium',     labelKey: 'size_medium' },
+  { value: 'large',      labelKey: 'size_large' },
+  { value: 'huge',       labelKey: 'size_huge' },
+  { value: 'gargantuan', labelKey: 'size_gargantuan' },
 ];
 
 const inputCls =
@@ -30,13 +31,19 @@ interface Props {
 
 
 export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props) {
+  const { t } = useTranslation('species');
   const save = useSaveSpecies(campaignId);
   const typesEnabled = useSectionEnabled(campaignId, 'species_types');
   const { data: speciesTypes } = useSpeciesTypes(campaignId);
   const isNew = !species;
 
+  const sizeOptions = useMemo<SelectOption<SpeciesSize>[]>(
+    () => SIZE_KEYS.map((s) => ({ value: s.value, label: t(s.labelKey) })),
+    [t],
+  );
+
   const typeOptions = useMemo<SelectOption<string>[]>(
-    () => (speciesTypes ?? []).map((t) => ({ value: t.id, label: t.name, icon: t.icon })),
+    () => (speciesTypes ?? []).map((st) => ({ value: st.id, label: st.name, icon: st.icon })),
     [speciesTypes],
   );
 
@@ -86,7 +93,7 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="font-headline text-xl font-bold text-on-surface">
-              {isNew ? 'New Species' : 'Edit Species'}
+              {isNew ? t('drawer_new_title') : t('drawer_edit_title')}
             </h2>
             {!isNew && (
               <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
@@ -105,23 +112,23 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
           {/* Name + Plural */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Name <span className="text-primary">*</span></label>
+              <label className={labelCls}>{t('field_name')} <span className="text-primary">*</span></label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Human"
+                placeholder={t('placeholder_name')}
                 className={inputCls}
                 autoFocus
               />
             </div>
             <div>
-              <label className={labelCls}>Plural</label>
+              <label className={labelCls}>{t('field_plural')}</label>
               <input
                 type="text"
                 value={pluralName}
                 onChange={(e) => setPluralName(e.target.value)}
-                placeholder="Humans"
+                placeholder={t('placeholder_plural')}
                 className={inputCls}
               />
             </div>
@@ -131,7 +138,7 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
           <div className={`grid gap-4 ${typesEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
             {typesEnabled && (
               <div>
-                <label className={labelCls}>Type</label>
+                <label className={labelCls}>{t('field_type')}</label>
                 <Select<string>
                   value={type}
                   options={typeOptions}
@@ -141,10 +148,10 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
               </div>
             )}
             <div>
-              <label className={labelCls}>Size</label>
+              <label className={labelCls}>{t('field_size')}</label>
               <Select
                 value={size}
-                options={SIZE_OPTIONS}
+                options={sizeOptions}
                 nullable={false}
                 onChange={(v) => setSize((v || 'medium') as SpeciesSize)}
               />
@@ -153,16 +160,16 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
 
           {/* Traits */}
           <div>
-            <label className={labelCls}>Traits</label>
+            <label className={labelCls}>{t('field_traits')}</label>
             <input
               type="text"
               value={traitsRaw}
               onChange={(e) => setTraitsRaw(e.target.value)}
-              placeholder="Darkvision, Lucky, Brave…"
+              placeholder={t('placeholder_traits')}
               className={inputCls}
             />
             <p className="text-[10px] text-on-surface-variant/40 mt-1.5">
-              Comma-separated
+              {t('field_traits_hint')}
             </p>
           </div>
         </div>
@@ -173,7 +180,7 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
             onClick={onClose}
             className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -185,7 +192,7 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
             ) : (
               <span className="material-symbols-outlined text-sm">save</span>
             )}
-            {isNew ? 'Create' : 'Save Changes'}
+            {isNew ? t('create') : t('save_changes')}
           </button>
         </div>
       </div>

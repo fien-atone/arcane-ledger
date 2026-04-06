@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Footer } from '@/shared/ui';
 import { useAuthStore } from '@/features/auth';
 
 export default function LoginPage() {
+  const { t } = useTranslation('auth');
   const user = useAuthStore((s) => s.user);
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
@@ -48,10 +50,10 @@ export default function LoginPage() {
             </span>
           </div>
           <h1 className="text-3xl font-serif italic text-primary tracking-tight mb-2">
-            Arcane Ledger
+            {t('common:app_name')}
           </h1>
           <p className="font-label text-xs uppercase tracking-[0.2em] text-on-surface-variant/60">
-            Chronicle your destiny
+            {t('tagline')}
           </p>
         </div>
 
@@ -62,10 +64,10 @@ export default function LoginPage() {
 
           <header className="mb-8">
             <h2 className="text-2xl text-on-surface font-serif mb-1">
-              Welcome back, Archivist
+              {t('welcome_title')}
             </h2>
             <p className="text-on-surface-variant text-sm">
-              Enter your credentials to access the codex.
+              {t('welcome_subtitle')}
             </p>
           </header>
 
@@ -76,7 +78,7 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="block font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-semibold"
               >
-                Email Address
+                {t('email_label')}
               </label>
               <input
                 id="email"
@@ -84,7 +86,7 @@ export default function LoginPage() {
                 type="text"
                 required
                 autoComplete="username"
-                placeholder="archivist@arcaneldger.com"
+                placeholder={t('email_placeholder')}
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(false); }}
                 className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/20 focus:border-primary focus:outline-none text-on-surface py-3 px-1 transition-all duration-300 placeholder:text-on-surface-variant/30"
@@ -97,7 +99,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-semibold"
               >
-                Security Cipher
+                {t('password_label')}
               </label>
               <input
                 id="password"
@@ -105,7 +107,7 @@ export default function LoginPage() {
                 type="password"
                 required
                 autoComplete="current-password"
-                placeholder="••••••••••••"
+                placeholder={t('password_placeholder')}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(false); }}
                 className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/20 focus:border-primary focus:outline-none text-on-surface py-3 px-1 transition-all duration-300 placeholder:text-on-surface-variant/30"
@@ -115,7 +117,7 @@ export default function LoginPage() {
             {/* Error */}
             {error && (
               <p className="text-tertiary text-xs tracking-wide">
-                Invalid credentials. Check your email and cipher.
+                {t('invalid_credentials')}
               </p>
             )}
 
@@ -126,7 +128,7 @@ export default function LoginPage() {
                 disabled={submitting}
                 className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-semibold rounded-sm hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/10 flex items-center justify-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Sign In
+                {t('sign_in')}
                 <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
                   arrow_forward
                 </span>
@@ -136,7 +138,7 @@ export default function LoginPage() {
 
           <p className="mt-8 pt-8 border-t border-outline-variant/10 text-on-surface-variant/40 text-[11px] leading-relaxed text-center flex items-start gap-1.5 justify-center">
             <span className="material-symbols-outlined text-[13px] mt-px flex-shrink-0">info</span>
-            Your session is stored locally. Campaign data syncs with your server.
+            {t('session_info')}
           </p>
         </div>
       </main>

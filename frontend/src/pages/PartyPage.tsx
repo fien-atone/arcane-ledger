@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useParty } from '@/features/characters/api/queries';
@@ -56,6 +57,7 @@ function MemberCard({
   isGm: boolean;
   onCreateCharacter: (forUserId: string) => void;
 }) {
+  const { t } = useTranslation('party');
   const member = slot.member!;
   const char = slot.character;
   const assign = useAssignCharacterToPlayer();
@@ -85,7 +87,7 @@ function MemberCard({
             <div className="flex-shrink-0">
               {kickConfirm.isConfirming('kick') ? (
                 <div className="flex items-center gap-1">
-                  <span className="text-[9px] text-on-surface-variant/50">Kick?</span>
+                  <span className="text-[9px] text-on-surface-variant/50">{t('kick_confirm')}</span>
                   <button
                     onClick={() => {
                       kick.mutate({ campaignId, userId: member.user.id });
@@ -93,13 +95,13 @@ function MemberCard({
                     }}
                     className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
                   >
-                    Yes
+                    {t('confirm_yes')}
                   </button>
                   <button
                     onClick={() => kickConfirm.cancel()}
                     className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
                   >
-                    No
+                    {t('confirm_no')}
                   </button>
                 </div>
               ) : (
@@ -108,7 +110,7 @@ function MemberCard({
                   className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant/40 hover:text-tertiary hover:border-tertiary/30 border border-transparent rounded-sm transition-colors"
                 >
                   <span className="material-symbols-outlined text-[14px]">person_remove</span>
-                  Kick
+                  {t('kick')}
                 </button>
               )}
             </div>
@@ -123,17 +125,17 @@ function MemberCard({
                 <button
                   onClick={() => { assign.mutate({ characterId: char.id, userId: null }); unlinkConfirm.cancel(); }}
                   className="text-[9px] text-tertiary hover:text-tertiary/80"
-                >Yes</button>
+                >{t('confirm_yes')}</button>
                 <button
                   onClick={() => unlinkConfirm.cancel()}
                   className="text-[9px] text-on-surface-variant/40"
-                >No</button>
+                >{t('confirm_no')}</button>
               </div>
             ) : (
               <button
                 onClick={() => unlinkConfirm.startConfirm('unlink')}
                 className="p-1 text-on-surface-variant/20 hover:text-tertiary transition-colors"
-                title="Unlink character from player"
+                title={t('unlink_character')}
               >
                 <span className="material-symbols-outlined text-[16px]">link_off</span>
               </button>
@@ -169,7 +171,7 @@ function MemberCard({
                 className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant/40 hover:text-primary hover:border-primary/30 border border-transparent rounded-sm transition-colors flex-shrink-0"
               >
                 <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                View
+                {t('view')}
               </Link>
             </>
           ) : (
@@ -177,7 +179,7 @@ function MemberCard({
               <div className="w-10 h-10 rounded-sm border border-dashed border-outline-variant/20 bg-surface-container-highest/50 flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-[16px] text-on-surface-variant/20">person_off</span>
               </div>
-              <span className="text-xs text-on-surface-variant/40 italic flex-1">No character</span>
+              <span className="text-xs text-on-surface-variant/40 italic flex-1">{t('no_character')}</span>
               {isGm && (
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {assigning ? (
@@ -192,7 +194,7 @@ function MemberCard({
                               setAssigning(false);
                             }
                           }}
-                          placeholder="Select character..."
+                          placeholder={t('select_character')}
                           options={unassignedCharacters.map((c) => ({
                             value: c.id,
                             label: c.name,
@@ -214,7 +216,7 @@ function MemberCard({
                           className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-secondary border border-secondary/30 rounded-sm hover:bg-secondary/10 transition-colors"
                         >
                           <span className="material-symbols-outlined text-[14px]">link</span>
-                          Assign
+                          {t('assign')}
                         </button>
                       )}
                       <button
@@ -222,7 +224,7 @@ function MemberCard({
                         className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-primary border border-primary/30 rounded-sm hover:bg-primary/10 transition-colors"
                       >
                         <span className="material-symbols-outlined text-[14px]">add</span>
-                        Create
+                        {t('create')}
                       </button>
                     </>
                   )}
@@ -249,6 +251,7 @@ function UnassignedCharacterCard({
   membersWithoutCharacter: { userId: string; userName: string }[];
   isGm: boolean;
 }) {
+  const { t } = useTranslation('party');
   const assign = useAssignCharacterToPlayer();
   const [assigning, setAssigning] = useState(false);
   const initials = char.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
@@ -286,7 +289,7 @@ function UnassignedCharacterCard({
                         setAssigning(false);
                       }
                     }}
-                    placeholder="Select player..."
+                    placeholder={t('select_player')}
                     options={membersWithoutCharacter.map((m) => ({
                       value: m.userId,
                       label: m.userName,
@@ -306,7 +309,7 @@ function UnassignedCharacterCard({
                 className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-secondary border border-secondary/30 rounded-sm hover:bg-secondary/10 transition-colors"
               >
                 <span className="material-symbols-outlined text-[14px]">person_add</span>
-                Assign
+                {t('assign')}
               </button>
             )}
           </>
@@ -314,7 +317,7 @@ function UnassignedCharacterCard({
         <Link
           to={`/campaigns/${campaignId}/characters/${char.id}`}
           className="p-1.5 text-on-surface-variant/40 hover:text-primary transition-colors"
-          title="View character"
+          title={t('view_character')}
         >
           <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
         </Link>
@@ -326,6 +329,7 @@ function UnassignedCharacterCard({
 // ── Main page ─────────────────────────────────────────────────────
 
 export default function PartyPage() {
+  const { t } = useTranslation('party');
   const { id: campaignId } = useParams<{ id: string }>();
   const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: campaign } = useCampaign(campaignId ?? '');
@@ -374,7 +378,7 @@ export default function PartyPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -384,8 +388,8 @@ export default function PartyPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">Party</h1>
-              <p className="text-on-surface-variant text-sm mt-1">Campaign members and their characters.</p>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">{t('title')}</h1>
+              <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
             </div>
             {isGm && (
               <div className="flex items-center gap-3">
@@ -394,14 +398,14 @@ export default function PartyPage() {
                   className="flex items-center gap-2 px-5 py-2.5 text-secondary border border-secondary/30 rounded-sm text-xs font-label uppercase tracking-widest hover:bg-secondary/10 transition-colors"
                 >
                   <span className="material-symbols-outlined text-[18px]">person_add</span>
-                  Invite Player
+                  {t('invite_player')}
                 </button>
                 <button
                   onClick={() => setAddCharOpen(true)}
                   className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
                 >
                   <span className="material-symbols-outlined text-[18px]">add</span>
-                  <span className="font-label text-xs uppercase tracking-widest">Add Character</span>
+                  <span className="font-label text-xs uppercase tracking-widest">{t('add_character')}</span>
                 </button>
               </div>
             )}
@@ -415,10 +419,10 @@ export default function PartyPage() {
 
         {isLoading && (
           <div className="flex items-center gap-3 p-12 text-on-surface-variant">
-            <span className="material-symbols-outlined animate-spin">progress_activity</span>Loading...
+            <span className="material-symbols-outlined animate-spin">progress_activity</span>{t('loading')}
           </div>
         )}
-        {isError && <p className="text-tertiary text-sm p-12">Failed to load party.</p>}
+        {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
 
         {!isLoading && !isError && (
           <>
@@ -428,8 +432,8 @@ export default function PartyPage() {
                 <div className="flex flex-col items-center justify-center py-8">
                   <EmptyState
                     icon="groups"
-                    title="No party members yet"
-                    subtitle="Invite players or create characters to get started."
+                    title={t('empty_title')}
+                    subtitle={t('empty_subtitle')}
                   />
                   {isGm && (
                     <div className="flex items-center gap-3 mt-4">
@@ -438,14 +442,14 @@ export default function PartyPage() {
                         className="flex items-center gap-2 px-5 py-2.5 text-secondary border border-secondary/30 rounded-sm text-xs font-label uppercase tracking-widest hover:bg-secondary/10 transition-colors"
                       >
                         <span className="material-symbols-outlined text-[16px]">person_add</span>
-                        Invite Player
+                        {t('invite_player')}
                       </button>
                       <button
                         onClick={() => setAddCharOpen(true)}
                         className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-sm text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
                       >
                         <span className="material-symbols-outlined text-[16px]">add</span>
-                        Create Character
+                        {t('create_character')}
                       </button>
                     </div>
                   )}
@@ -458,7 +462,7 @@ export default function PartyPage() {
                 {/* My Character — shown separately for players */}
                 {mySlot && mySlot.character && (
                   <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                    <SectionHeader title="My Character" />
+                    <SectionHeader title={t('section_my_character')} />
                     <Link
                       to={`/campaigns/${campaignId}/characters/${mySlot.character.id}`}
                       className="border border-primary/20 bg-surface-container-low rounded-sm p-4 flex items-center gap-4 hover:border-primary/40 transition-colors group"
@@ -486,7 +490,7 @@ export default function PartyPage() {
                 {/* Pending Invitations */}
                 {invitationSlots.length > 0 && (
                   <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                    <SectionHeader title="Pending Invitations" count={invitationSlots.length} />
+                    <SectionHeader title={t('section_pending_invitations')} count={invitationSlots.length} />
                     <div className="space-y-2">
                       {invitationSlots.map((inv) => (
                         <div
@@ -501,13 +505,13 @@ export default function PartyPage() {
                             <p className="text-[10px] text-on-surface-variant/50 truncate">{inv.user.email}</p>
                           </div>
                           <span className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-secondary bg-secondary/10 border border-secondary/20 rounded-full">
-                            Pending
+                            {t('status_pending')}
                           </span>
                           {isGm && (
                             <div className="flex-shrink-0">
                               {cancelConfirm.isConfirming(inv.id) ? (
                                 <div className="flex items-center gap-1">
-                                  <span className="text-[9px] text-on-surface-variant/50">Cancel?</span>
+                                  <span className="text-[9px] text-on-surface-variant/50">{t('cancel_confirm')}</span>
                                   <button
                                     onClick={() => {
                                       cancelInvitation.mutate(inv.id);
@@ -515,20 +519,20 @@ export default function PartyPage() {
                                     }}
                                     className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
                                   >
-                                    Yes
+                                    {t('confirm_yes')}
                                   </button>
                                   <button
                                     onClick={() => cancelConfirm.cancel()}
                                     className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
                                   >
-                                    No
+                                    {t('confirm_no')}
                                   </button>
                                 </div>
                               ) : (
                                 <button
                                   onClick={() => cancelConfirm.startConfirm(inv.id)}
                                   className="p-1.5 text-on-surface-variant/30 hover:text-tertiary transition-colors"
-                                  title="Cancel invitation"
+                                  title={t('cancel_invitation')}
                                 >
                                   <span className="material-symbols-outlined text-[16px]">close</span>
                                 </button>
@@ -544,12 +548,12 @@ export default function PartyPage() {
                 {/* Party Members */}
                 {otherSlots.length > 0 && (
                   <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                    <SectionHeader title="Party Members" count={otherSlots.length} />
+                    <SectionHeader title={t('section_party_members')} count={otherSlots.length} />
                     {/* Column headers */}
                     <div className="grid grid-cols-[1fr_auto_1fr] mb-2 px-1">
-                      <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">Player</span>
+                      <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">{t('column_player')}</span>
                       <div className="w-[52px]" />
-                      <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">Character</span>
+                      <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">{t('column_character')}</span>
                     </div>
                     <div className="space-y-3">
                       {otherSlots.map((slot) => (
@@ -569,7 +573,7 @@ export default function PartyPage() {
                 {/* Unassigned Characters */}
                 {unassignedCharacters.length > 0 && (
                   <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                    <SectionHeader title="Unassigned Characters" count={unassignedCharacters.length} />
+                    <SectionHeader title={t('section_unassigned_characters')} count={unassignedCharacters.length} />
                     <div className="space-y-2">
                       {unassignedCharacters.map((char) => (
                         <UnassignedCharacterCard

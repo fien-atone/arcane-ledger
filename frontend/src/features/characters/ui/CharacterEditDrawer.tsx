@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSaveCharacter } from '@/features/characters/api/queries';
 import { useSpecies } from '@/features/species/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
@@ -24,6 +25,7 @@ const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 export function CharacterEditDrawer({ open, onClose, campaignId, character, forUserId }: Props) {
+  const { t } = useTranslation('party');
   const save = useSaveCharacter();
   const speciesEnabled = useSectionEnabled(campaignId, 'species');
   const { data: allSpecies } = useSpecies(campaignId);
@@ -83,10 +85,10 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character, forU
         <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
           <div>
             <h2 className="font-headline text-xl font-bold text-on-surface">
-              {isNew ? 'New Character' : 'Edit Character'}
+              {isNew ? t('drawer_new_title') : t('drawer_edit_title')}
             </h2>
             <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
-              {isNew ? 'Add a character to the party' : character!.name}
+              {isNew ? t('drawer_new_subtitle') : character!.name}
             </p>
           </div>
           <button onClick={onClose} className="p-2 text-on-surface-variant hover:text-on-surface transition-colors">
@@ -99,20 +101,20 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character, forU
 
           {/* Name */}
           <div>
-            <label className={labelCls}>Name <span className="text-primary">*</span></label>
+            <label className={labelCls}>{t('field_name')} <span className="text-primary">*</span></label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="Character name…" className={inputCls} autoFocus={isNew} />
+              placeholder={t('placeholder_name')} className={inputCls} autoFocus={isNew} />
           </div>
 
           {/* Species / Class */}
           <div className={`grid gap-3 ${speciesEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
             {speciesEnabled && (
             <div>
-              <label className={labelCls}>Species</label>
+              <label className={labelCls}>{t('field_species')}</label>
               <Select
                 value={speciesId}
                 onChange={(v) => setSpeciesId(v)}
-                placeholder="— None —"
+                placeholder={t('placeholder_species_none')}
                 options={[...(allSpecies ?? [])]
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((s) => ({ value: s.id, label: s.name }))}
@@ -120,31 +122,31 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character, forU
             </div>
             )}
             <div>
-              <label className={labelCls}>Class</label>
+              <label className={labelCls}>{t('field_class')}</label>
               <input type="text" value={cls} onChange={(e) => setCls(e.target.value)}
-                placeholder="Wizard…" className={inputCls} />
+                placeholder={t('placeholder_class')} className={inputCls} />
             </div>
           </div>
 
           {/* Gender / Age */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Gender</label>
+              <label className={labelCls}>{t('field_gender')}</label>
               <Select<CharacterGender>
                 value={gender}
                 onChange={(v) => setGender(v)}
-                placeholder="—"
+                placeholder={t('placeholder_gender_none')}
                 options={[
-                  { value: 'male', label: 'Male' },
-                  { value: 'female', label: 'Female' },
-                  { value: 'nonbinary', label: 'Non-binary' },
+                  { value: 'male', label: t('gender_male') },
+                  { value: 'female', label: t('gender_female') },
+                  { value: 'nonbinary', label: t('gender_nonbinary') },
                 ]}
               />
             </div>
             <div>
-              <label className={labelCls}>Age</label>
+              <label className={labelCls}>{t('field_age')}</label>
               <input type="number" min={0} value={age} onChange={(e) => setAge(e.target.value)}
-                placeholder="—" className={inputCls} />
+                placeholder={t('placeholder_age_none')} className={inputCls} />
             </div>
           </div>
 
@@ -153,14 +155,14 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character, forU
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container-lowest">
           <button onClick={onClose} className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">
-            Cancel
+            {t('cancel')}
           </button>
           <button onClick={handleSave} disabled={!name.trim() || save.isPending}
             className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
             {save.isPending
               ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
               : <span className="material-symbols-outlined text-sm">save</span>}
-            {isNew ? 'Create Character' : 'Save Changes'}
+            {isNew ? t('create_character_btn') : t('save_changes')}
           </button>
         </div>
       </div>

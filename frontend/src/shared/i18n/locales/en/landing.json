@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "features": "Features",
+    "roadmap": "Roadmap",
+    "changelog": "Changelog",
+    "open_app": "Open App"
+  },
+
+  "hero": {
+    "badge": "Demo",
+    "headline_1": "Your campaign.",
+    "headline_2": "Remembered.",
+    "description": "Arcane Ledger is a GM-first campaign companion for TTRPG. Track your world \u2014 locations, NPCs, factions, sessions, and characters \u2014 in one focused tool.",
+    "cta_primary": "Begin Your Chronicle",
+    "cta_secondary": "Explore features",
+    "disclaimer": "All data stored locally in your browser \u00b7 No account required"
+  },
+
+  "stats": {
+    "entity_types": "Entity types",
+    "locations_maps": "Locations & maps",
+    "dice_roller": "Dice roller",
+    "in_active_dev": "In active dev",
+    "entity_types_value": "10+",
+    "locations_maps_value": "\u221e",
+    "in_active_dev_value": "Beta"
+  },
+
+  "features": {
+    "overline": "What's inside",
+    "title": "Everything a GM needs",
+    "locations_maps": "Locations & Maps",
+    "locations_maps_desc": "Hierarchical world-building: regions, settlements, districts, buildings, dungeons. Upload maps and drop markers linked to locations and NPCs.",
+    "npcs": "NPCs",
+    "npcs_desc": "Rich character sheets with portrait, appearance, backstory, personality, GM notes, and social relations.",
+    "party_characters": "Party & Characters",
+    "party_characters_desc": "Player character profiles with inline WYSIWYG editing \u2014 backstory, motivation, bonds, flaws.",
+    "factions_groups": "Factions & Groups",
+    "factions_groups_desc": "Track guilds, cults, families, councils. Manage membership, goals, and relationship to the party.",
+    "session_journal": "Session Journal",
+    "session_journal_desc": "Log every session with short recap and full notes. Auto-formatted timeline of your campaign.",
+    "social_relations": "Social Relations",
+    "social_relations_desc": "Directional relationship graph between any entities \u2014 characters, NPCs, groups. Friendliness scale with notes.",
+    "species_races": "Species & Races",
+    "species_races_desc": "Homebrew species catalogue with traits, size, and lore. Linked to characters and NPCs automatically.",
+    "quests": "Quests",
+    "quests_desc": "Active and completed quest tracking with objectives, status, and related sessions.",
+    "dice_roller": "Dice Roller",
+    "dice_roller_desc": "d4 through d100 \u2014 roll any combination, see full history. Always available from the sidebar.",
+    "gm_notes": "GM Notes",
+    "gm_notes_desc": "Private notes on every entity \u2014 locations, NPCs, characters, groups. Separate from player-facing content."
+  },
+
+  "roadmap": {
+    "overline": "Coming next",
+    "title": "On the horizon",
+    "description": "These features are planned or in progress. The app is actively developed.",
+    "items_artifacts": "Items & Artifacts",
+    "items_artifacts_desc": "Magical items, homebrew equipment, cursed relics \u2014 with properties and history.",
+    "campaign_timeline": "Campaign Timeline",
+    "campaign_timeline_desc": "Visual chronological map of sessions, events, and quest milestones.",
+    "export_pdf": "Export to PDF",
+    "export_pdf_desc": "Print-ready character sheets, session summaries, and location compendium.",
+    "player_view": "Player View",
+    "player_view_desc": "Separate access level \u2014 players see their own sheet and shared world lore.",
+    "gm_screen": "GM Screen",
+    "gm_screen_desc": "Dedicated GM screen with encounter tools, reference tables, and session prep.",
+    "cloud_sync": "Cloud Sync",
+    "cloud_sync_desc": "Real-time sync across devices and players."
+  },
+
+  "contact": {
+    "overline": "Get in touch",
+    "title": "Say hello",
+    "description": "Questions, feedback, collaboration \u2014 reach out on any of these.",
+    "telegram": "Telegram \u00b7 @inoise",
+    "twitter": "Twitter \u00b7 @inoise",
+    "email": "ivnshumov@gmail.com"
+  },
+
+  "cta": {
+    "title": "Ready to start?",
+    "description": "Use the test credentials to explore \u2014 or sign in and start building your world.",
+    "button": "Open Arcane Ledger"
+  }
+}

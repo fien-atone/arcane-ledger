@@ -1,18 +1,15 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useSpecies } from '@/features/species/api';
 import { useSpeciesTypes } from '@/features/speciesTypes/api';
 import { useSectionEnabled, useCampaign } from '@/features/campaigns/api/queries';
 import { SpeciesEditDrawer } from '@/features/species/ui';
 import { EmptyState, SectionDisabled, SectionBackground } from '@/shared/ui';
-import type { SpeciesSize } from '@/entities/species';
-
-const SIZE_LABEL: Record<SpeciesSize, string> = {
-  tiny: 'Tiny', small: 'Small', medium: 'Medium',
-  large: 'Large', huge: 'Huge', gargantuan: 'Gargantuan',
-};
+// SIZE_LABEL resolved via t() inside the component
 
 export default function SpeciesPage() {
+  const { t } = useTranslation('species');
   const { id: campaignId } = useParams<{ id: string }>();
   const { data: campaign } = useCampaign(campaignId ?? '');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
@@ -32,7 +29,7 @@ export default function SpeciesPage() {
   const typeFilters = useMemo(() => {
     if (!typesEnabled) return [];
     return [
-      { value: 'all', label: 'All' },
+      { value: 'all', label: t('filter_all') },
       ...(speciesTypes ?? []).map((t) => ({ value: t.id, label: t.name })),
     ];
   }, [typesEnabled, speciesTypes]);
@@ -61,7 +58,7 @@ export default function SpeciesPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? 'Campaign'}
+          {campaign?.title ?? t('common:campaign')}
         </Link>
       </div>
 
@@ -71,15 +68,15 @@ export default function SpeciesPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">Species</h1>
-              <p className="text-on-surface-variant text-sm mt-1">Races and peoples of the world.</p>
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">{t('title')}</h1>
+              <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
             </div>
             <button
               onClick={() => setDrawerOpen(true)}
               className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
-              <span className="font-label text-xs uppercase tracking-widest">Add Species</span>
+              <span className="font-label text-xs uppercase tracking-widest">{t('add_species')}</span>
             </button>
           </div>
 
@@ -89,7 +86,7 @@ export default function SpeciesPage() {
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[16px]">search</span>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t('search_placeholder')}
                 value={search}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -132,20 +129,20 @@ export default function SpeciesPage() {
           </div>
         </div>
 
-        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>Loading...</div>}
-        {isError && <p className="text-tertiary text-sm p-12">Failed to load species.</p>}
+        {isLoading && <div className="flex items-center gap-3 p-12 text-on-surface-variant"><span className="material-symbols-outlined animate-spin">progress_activity</span>{t('loading')}</div>}
+        {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
 
         {!isLoading && !isError && (
           filtered.length === 0 ? (
-            <EmptyState icon="blur_on" title="No species found." subtitle="Create your first species to get started." />
+            <EmptyState icon="blur_on" title={t('empty_title')} subtitle={t('empty_subtitle')} />
           ) : (
             <div className="bg-surface-container border border-outline-variant/20 rounded-sm divide-y divide-outline-variant/10">
               {/* Column headers */}
               <div className="flex items-center gap-3 px-6 py-2 text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
                 <span className="w-9 flex-shrink-0" />
-                <span className="flex-1 min-w-0">Name</span>
-                <span className="w-28 flex-shrink-0 hidden lg:block">Type</span>
-                <span className="w-24 flex-shrink-0 hidden md:block">Size</span>
+                <span className="flex-1 min-w-0">{t('column_name')}</span>
+                <span className="w-28 flex-shrink-0 hidden lg:block">{t('column_type')}</span>
+                <span className="w-24 flex-shrink-0 hidden md:block">{t('column_size')}</span>
               </div>
               {filtered.map((s) => {
                 const typeName = resolveTypeName(s.type);
@@ -164,14 +161,14 @@ export default function SpeciesPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors truncate">{s.name}</p>
                         <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5 truncate md:hidden">
-                          {[typesEnabled ? typeName : null, SIZE_LABEL[s.size]].filter(Boolean).join(' · ') || '—'}
+                          {[typesEnabled ? typeName : null, t(`size_${s.size}`)].filter(Boolean).join(' · ') || '—'}
                         </p>
                       </div>
                       <span className="w-28 flex-shrink-0 text-xs text-on-surface-variant/60 truncate hidden lg:block">
                         {typesEnabled && typeName ? typeName : '—'}
                       </span>
                       <span className="w-24 flex-shrink-0 text-xs text-on-surface-variant/60 hidden md:block">
-                        {SIZE_LABEL[s.size]}
+                        {t(`size_${s.size}`)}
                       </span>
                     </div>
                   </Link>

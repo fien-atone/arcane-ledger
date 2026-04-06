@@ -1,23 +1,15 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { SectionBackground } from '@/shared/ui';
 import { useAdminUsers, useDeleteUser } from '@/features/admin/api/queries';
 import { AdminUserDrawer } from '@/features/admin/ui/AdminUserDrawer';
 import { useAuthStore } from '@/features/auth';
 import type { User } from '@/entities/user';
 
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
 export default function AdminUsersPage() {
+  const { t, i18n } = useTranslation('admin');
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
   const currentUser = useAuthStore((s) => s.user);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -29,6 +21,17 @@ export default function AdminUsersPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const labelCls =
+    'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
 
   // Debounce search
   useEffect(() => {
@@ -70,7 +73,7 @@ export default function AdminUsersPage() {
           className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-          My Campaigns
+          {t('my_campaigns')}
         </Link>
       </div>
 
@@ -87,10 +90,10 @@ export default function AdminUsersPage() {
               </span>
               <div>
                 <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
-                  User Management
+                  {t('title')}
                 </h1>
                 <p className="text-on-surface-variant text-sm mt-1">
-                  System administration
+                  {t('subtitle')}
                 </p>
               </div>
             </div>
@@ -99,7 +102,7 @@ export default function AdminUsersPage() {
               className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm hover:opacity-90 transition-opacity"
             >
               <span className="material-symbols-outlined text-sm">person_add</span>
-              Create User
+              {t('create_user')}
             </button>
           </div>
         </div>
@@ -108,7 +111,7 @@ export default function AdminUsersPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
           {/* Section header */}
           <div className="flex items-center gap-4 mb-4">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Users</h3>
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">{t('users_section')}</h3>
             <div className="h-px flex-1 bg-outline-variant/20" />
             {users && users.length > 0 && (
               <span className="text-[10px] text-on-surface-variant/30">{users.length}</span>
@@ -117,7 +120,7 @@ export default function AdminUsersPage() {
 
           {/* Search */}
           <div className="mb-6">
-            <label className={labelCls}>Search Users</label>
+            <label className={labelCls}>{t('search_label')}</label>
             <div className="relative max-w-sm">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-lg">
                 search
@@ -126,7 +129,7 @@ export default function AdminUsersPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name or email..."
+                placeholder={t('search_placeholder')}
                 className="w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 pl-10 pr-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
               />
             </div>
@@ -136,24 +139,24 @@ export default function AdminUsersPage() {
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
               <span className="material-symbols-outlined animate-spin text-primary mr-3">progress_activity</span>
-              <span className="text-on-surface-variant text-sm">Loading users...</span>
+              <span className="text-on-surface-variant text-sm">{t('loading_users')}</span>
             </div>
           ) : !users || users.length === 0 ? (
             <div className="text-center py-20">
               <span className="material-symbols-outlined text-5xl text-on-surface-variant/20 mb-4 block">group</span>
               <p className="text-on-surface-variant/50 text-sm">
-                {debouncedSearch ? 'No users match your search.' : 'No users found.'}
+                {debouncedSearch ? t('no_users_search') : t('no_users')}
               </p>
             </div>
           ) : (
             <div className="border border-outline-variant/10 rounded-sm overflow-hidden">
               {/* Table header */}
               <div className="grid grid-cols-[1fr_1fr_100px_120px_80px] gap-4 px-6 py-3 bg-surface-container-low border-b border-outline-variant/10">
-                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">Name</span>
-                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">Email</span>
-                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">Role</span>
-                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">Created</span>
-                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50 text-right">Actions</span>
+                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">{t('table.name')}</span>
+                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">{t('table.email')}</span>
+                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">{t('table.role')}</span>
+                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">{t('table.created')}</span>
+                <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50 text-right">{t('table.actions')}</span>
               </div>
 
               {/* Table rows */}
@@ -194,7 +197,7 @@ export default function AdminUsersPage() {
                             : 'bg-surface-container text-on-surface-variant/60 border border-outline-variant/10'
                         }`}
                       >
-                        {isAdmin ? 'Admin' : 'User'}
+                        {isAdmin ? t('roles.admin') : t('roles.user')}
                       </span>
                     </div>
 
@@ -211,20 +214,20 @@ export default function AdminUsersPage() {
                             onClick={() => handleDelete(u.id)}
                             className="px-2 py-1 text-[10px] font-label uppercase tracking-widest text-tertiary hover:text-on-surface transition-colors"
                           >
-                            Yes
+                            {t('confirm_yes')}
                           </button>
                           <button
                             onClick={() => setConfirmDeleteId(null)}
                             className="px-2 py-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
                           >
-                            No
+                            {t('confirm_no')}
                           </button>
                         </div>
                       ) : (
                         <>
                           <button
                             onClick={() => handleEdit(u)}
-                            title="Edit user"
+                            title={t('edit_user')}
                             className="p-1.5 text-on-surface-variant/50 hover:text-primary transition-colors"
                           >
                             <span className="material-symbols-outlined text-lg">edit</span>
@@ -232,7 +235,7 @@ export default function AdminUsersPage() {
                           <button
                             onClick={() => setConfirmDeleteId(u.id)}
                             disabled={isSelf}
-                            title={isSelf ? 'Cannot delete yourself' : 'Delete user'}
+                            title={isSelf ? t('cannot_delete_self') : t('delete_user')}
                             className="p-1.5 text-on-surface-variant/50 hover:text-tertiary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <span className="material-symbols-outlined text-lg">delete</span>

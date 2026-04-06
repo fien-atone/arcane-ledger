@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface Props {
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -6,11 +8,13 @@ interface Props {
 }
 
 export function GraphControls({ onZoomIn, onZoomOut, onFitToView, onResetLayout }: Props) {
+  const { t } = useTranslation('social');
+
   const buttons = [
-    { icon: 'zoom_in', label: 'Zoom in', onClick: onZoomIn },
-    { icon: 'zoom_out', label: 'Zoom out', onClick: onZoomOut },
-    { icon: 'fit_screen', label: 'Fit to view', onClick: onFitToView },
-    { icon: 'refresh', label: 'Reset layout', onClick: onResetLayout },
+    { icon: 'zoom_in', label: t('controls_zoom_in'), onClick: onZoomIn },
+    { icon: 'zoom_out', label: t('controls_zoom_out'), onClick: onZoomOut },
+    { icon: 'fit_screen', label: t('controls_fit_to_view'), onClick: onFitToView },
+    { icon: 'refresh', label: t('controls_reset_layout'), onClick: onResetLayout },
   ];
 
   return (

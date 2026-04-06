@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CampaignCreateDrawer, useCampaigns } from '@/features/campaigns';
 import { useSessions } from '@/features/sessions/api/queries';
 import { InvitationBanner } from '@/features/invitations/ui/InvitationBanner';
@@ -8,12 +9,13 @@ import type { CampaignSummary } from '@/entities/campaign';
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-
 function CampaignRow({ campaign }: { campaign: CampaignSummary }) {
+  const { t, i18n } = useTranslation('campaigns');
   const isArchived = !!campaign.archivedAt;
   const { data: sessions } = useSessions(campaign.id);
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const now = new Date();
   const todayStr = now.toDateString();
@@ -49,12 +51,12 @@ function CampaignRow({ campaign }: { campaign: CampaignSummary }) {
         {campaign.myRole.toUpperCase() === 'GM' ? (
           <p className="flex items-center gap-1 mt-0.5 text-[8px] uppercase tracking-widest text-primary/40">
             <span className="material-symbols-outlined text-[10px]">shield</span>
-            Game Master
+            {t('common:roles.game_master')}
           </p>
         ) : (
           <p className="flex items-center gap-1 mt-0.5 text-[8px] uppercase tracking-widest text-secondary/40">
             <span className="material-symbols-outlined text-[10px]">person</span>
-            Player
+            {t('common:roles.player')}
           </p>
         )}
       </div>
@@ -66,18 +68,18 @@ function CampaignRow({ campaign }: { campaign: CampaignSummary }) {
             {isToday && (
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[8px] font-bold uppercase tracking-wider border border-primary/30">
                 <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                Today
+                {t('session_badge.today')}
               </span>
             )}
             {isTomorrow && !isToday && (
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[8px] font-bold uppercase tracking-wider border border-secondary/20">
                 <span className="w-1 h-1 rounded-full bg-secondary animate-pulse" />
-                Tomorrow
+                {t('session_badge.tomorrow')}
               </span>
             )}
             {!isToday && !isTomorrow && (
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[8px] font-bold uppercase tracking-wider border border-secondary/20">
-                Next
+                {t('session_badge.next')}
               </span>
             )}
             <span className="text-[10px] font-label uppercase tracking-widest text-primary/60 flex-shrink-0">
@@ -95,7 +97,7 @@ function CampaignRow({ campaign }: { campaign: CampaignSummary }) {
             <span className="text-[10px] text-on-surface-variant/30 flex-shrink-0">{formatDate(ls.datetime)}</span>
           </>
         ) : (
-          <span className="text-xs text-on-surface-variant/30 italic">No sessions</span>
+          <span className="text-xs text-on-surface-variant/30 italic">{t('no_sessions')}</span>
         )}
       </div>
 
@@ -110,6 +112,7 @@ function CampaignRow({ campaign }: { campaign: CampaignSummary }) {
 const CAMPAIGN_COLORS = ['#f2ca50', '#14b8a6', '#a78bfa', '#f87171', '#60a5fa', '#fb923c'];
 
 function GlobalCalendar({ campaigns }: { campaigns: CampaignSummary[] }) {
+  const { i18n } = useTranslation('campaigns');
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const activeCampaigns = campaigns.filter((c) => !c.archivedAt);
   // Only include campaigns with sessions enabled (empty array = all enabled)
@@ -147,10 +150,11 @@ function GlobalCalendar({ campaigns }: { campaigns: CampaignSummary[] }) {
     return map;
   }, [allSessions]);
 
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-GB';
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const startDay = (() => { const d = new Date(viewYear, viewMonth, 1).getDay(); return d === 0 ? 6 : d - 1; })();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 
   const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
   const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
@@ -268,6 +272,7 @@ function GlobalCalendar({ campaigns }: { campaigns: CampaignSummary[] }) {
 }
 
 export default function CampaignsPage() {
+  const { t } = useTranslation('campaigns');
   const { data: campaigns, isLoading, isError } = useCampaigns();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -290,14 +295,14 @@ export default function CampaignsPage() {
         <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
           <div className="flex items-baseline justify-between">
             <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
-              My Campaigns
+              {t('my_campaigns')}
             </h1>
             <button
               onClick={() => setCreateOpen(true)}
               className="flex items-center gap-2 bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg shadow-primary/10"
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
-              Create Campaign
+              {t('create_campaign')}
             </button>
           </div>
         </div>
@@ -305,20 +310,20 @@ export default function CampaignsPage() {
         {isLoading && (
           <div className="flex items-center gap-3 text-on-surface-variant p-12">
             <span className="material-symbols-outlined animate-spin">progress_activity</span>
-            Loading…
+            {t('loading')}
           </div>
         )}
 
         {isError && (
-          <p className="text-tertiary text-sm p-12">Failed to load campaigns.</p>
+          <p className="text-tertiary text-sm p-12">{t('failed_to_load')}</p>
         )}
 
         {campaigns && campaigns.length === 0 && (
           <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
             <div className="text-center py-16 flex flex-col items-center gap-4">
               <span className="material-symbols-outlined text-on-surface-variant/20 text-6xl">auto_stories</span>
-              <p className="font-headline text-2xl text-on-surface-variant">No campaigns yet.</p>
-              <p className="text-on-surface-variant/50 text-sm">Create the first campaign to get started.</p>
+              <p className="font-headline text-2xl text-on-surface-variant">{t('no_campaigns_title')}</p>
+              <p className="text-on-surface-variant/50 text-sm">{t('no_campaigns_desc')}</p>
             </div>
           </div>
         )}
@@ -335,7 +340,7 @@ export default function CampaignsPage() {
               {active.length > 0 && (
                 <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Active</h3>
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">{t('common:active')}</h3>
                     <div className="h-px flex-1 bg-outline-variant/20" />
                     <span className="text-[10px] text-on-surface-variant/30">{active.length}</span>
                   </div>
@@ -349,7 +354,7 @@ export default function CampaignsPage() {
               {archived.length > 0 && (
                 <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/40">Archive</h3>
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/40">{t('common:archive')}</h3>
                     <div className="h-px flex-1 bg-outline-variant/10" />
                     <span className="text-[10px] text-on-surface-variant/30">{archived.length}</span>
                   </div>

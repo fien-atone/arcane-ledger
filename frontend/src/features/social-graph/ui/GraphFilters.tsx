@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { NpcStatus } from '@/entities/npc';
 import type { Group } from '@/entities/group';
 import type { GroupTypeEntry } from '@/entities/groupType';
@@ -14,12 +15,7 @@ interface Props {
   groupTypes: GroupTypeEntry[];
 }
 
-const STATUSES: { value: NpcStatus; label: string }[] = [
-  { value: 'alive', label: 'Alive' },
-  { value: 'dead', label: 'Dead' },
-  { value: 'missing', label: 'Missing' },
-  { value: 'unknown', label: 'Unknown' },
-];
+const STATUS_KEYS: NpcStatus[] = ['alive', 'dead', 'missing', 'unknown'];
 
 export function GraphFilters({
   statusFilters,
@@ -30,6 +26,8 @@ export function GraphFilters({
   groupColorMap,
   groupTypes,
 }: Props) {
+  const { t } = useTranslation('social');
+
   // Group groups by type
   const typeToGroups = useMemo(() => {
     const map = new Map<string, Group[]>();
@@ -71,10 +69,10 @@ export function GraphFilters({
   return (
     <div className="absolute top-4 left-4 bg-surface-container/95 backdrop-blur-sm rounded-sm border border-outline-variant/20 shadow-lg p-3 max-w-[240px] max-h-[calc(100%-2rem)] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-outline-variant/30">
       <p className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-1.5">
-        Status
+        {t('filter_status')}
       </p>
       <div className="flex flex-wrap gap-1">
-        {STATUSES.map(({ value, label }) => {
+        {STATUS_KEYS.map((value) => {
           const active = statusFilters.has(value);
           const color = STATUS_STROKE_COLORS[value];
           return (
@@ -87,7 +85,7 @@ export function GraphFilters({
               style={active ? { backgroundColor: `${color}20`, border: `1px solid ${color}50` } : { backgroundColor: 'transparent', border: '1px solid transparent' }}
             >
               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color, opacity: active ? 1 : 0.3 }} />
-              {label}
+              {t(`status_${value}`)}
             </button>
           );
         })}
@@ -96,7 +94,7 @@ export function GraphFilters({
       {typesWithGroups.length > 0 && (
         <>
           <p className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-1.5 mt-3">
-            Group Types
+            {t('filter_group_types')}
           </p>
           <div className="flex flex-wrap gap-1">
             {typesWithGroups.map((gt) => {
@@ -121,7 +119,7 @@ export function GraphFilters({
       {groups.length > 0 && (
         <>
           <p className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-1.5 mt-3">
-            Groups
+            {t('filter_groups')}
           </p>
           <div className="flex flex-wrap gap-1">
             {[...groups].sort((a, b) => a.name.localeCompare(b.name)).map((g) => {

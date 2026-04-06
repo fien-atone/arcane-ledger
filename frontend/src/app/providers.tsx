@@ -1,3 +1,4 @@
+import '@/shared/i18n';
 import { ApolloProvider } from '@apollo/client/react';
 import { RouterProvider } from 'react-router-dom';
 import { apolloClient } from '@/shared/api/apolloClient';

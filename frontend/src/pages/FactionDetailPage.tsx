@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
 import { useFactions, useFaction } from '@/features/factions/api';
 import { BackLink, GmNotesSection } from '@/shared/ui';
@@ -18,26 +19,15 @@ function FactionHero({ name }: { name: string }) {
   );
 }
 
-const RELATION_CONFIG: Record<string, { label: string; pill: string }> = {
-  allied: {
-    label: 'Allied',
-    pill: 'bg-secondary/10 text-secondary border border-secondary/20',
-  },
-  neutral: {
-    label: 'Neutral',
-    pill: 'bg-surface-variant text-on-surface-variant border border-outline-variant/20',
-  },
-  hostile: {
-    label: 'Hostile',
-    pill: 'bg-primary/10 text-primary border border-primary/20',
-  },
-  unknown: {
-    label: 'Unknown',
-    pill: 'bg-surface-container text-on-surface-variant/60 border border-outline-variant/10',
-  },
+const RELATION_PILL: Record<string, string> = {
+  allied: 'bg-secondary/10 text-secondary border border-secondary/20',
+  neutral: 'bg-surface-variant text-on-surface-variant border border-outline-variant/20',
+  hostile: 'bg-primary/10 text-primary border border-primary/20',
+  unknown: 'bg-surface-container text-on-surface-variant/60 border border-outline-variant/10',
 };
 
 export default function FactionDetailPage() {
+  const { t } = useTranslation('factions');
   const { id: campaignId, factionId } = useParams<{ id: string; factionId: string }>();
   const { data: factions } = useFactions(campaignId ?? '');
   const { data: faction, isLoading, isError } = useFaction(
@@ -48,15 +38,16 @@ export default function FactionDetailPage() {
   const displayFaction = faction;
   const displayId = factionId;
 
-  const relation = displayFaction?.partyRelation
-    ? (RELATION_CONFIG[displayFaction.partyRelation] ?? RELATION_CONFIG.unknown)
+  const relationKey = displayFaction?.partyRelation ?? null;
+  const relation = relationKey
+    ? { label: t(`relation_${relationKey}`), pill: RELATION_PILL[relationKey] ?? RELATION_PILL.unknown }
     : null;
 
   if (isLoading) {
     return (
       <main className="p-12 flex items-center gap-3 text-on-surface-variant">
         <span className="material-symbols-outlined animate-spin">progress_activity</span>
-        Loading…
+        {t('loading')}
       </main>
     );
   }
@@ -69,19 +60,19 @@ export default function FactionDetailPage() {
           <div className="flex justify-between items-end">
             <div>
               <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">
-                Factions
+                {t('title')}
               </h1>
               <p className="text-on-surface-variant text-sm mt-1">
-                Powers, alliances, and rival organisations.
+                {t('subtitle')}
               </p>
             </div>
             <button
               disabled
               className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 opacity-50 cursor-not-allowed"
-              title="Coming soon"
+              title={t('coming_soon')}
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
-              <span className="font-label text-xs uppercase tracking-widest">Add Faction</span>
+              <span className="font-label text-xs uppercase tracking-widest">{t('add_faction')}</span>
             </button>
           </div>
         </header>
@@ -91,7 +82,7 @@ export default function FactionDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {factions.map((f) => {
                 const rel = f.partyRelation
-                  ? (RELATION_CONFIG[f.partyRelation] ?? RELATION_CONFIG.unknown)
+                  ? { label: t(`relation_${f.partyRelation}`), pill: RELATION_PILL[f.partyRelation] ?? RELATION_PILL.unknown }
                   : null;
                 return (
                   <Link
@@ -114,14 +105,14 @@ export default function FactionDetailPage() {
                     </h3>
                     {f.aliases.length > 0 && (
                       <p className="text-[10px] text-on-surface-variant/40 italic mb-3">
-                        aka {f.aliases.join(', ')}
+                        {t('alias_prefix')} {f.aliases.join(', ')}
                       </p>
                     )}
                     <p className="text-xs text-on-surface-variant/70 leading-relaxed line-clamp-2">
                       {f.description}
                     </p>
                     <div className="mt-4 flex items-center gap-1 text-[10px] text-primary/50 group-hover:text-primary transition-colors uppercase tracking-widest">
-                      View details
+                      {t('view_details')}
                       <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                     </div>
                   </Link>
@@ -133,7 +124,7 @@ export default function FactionDetailPage() {
               <span className="material-symbols-outlined text-on-surface-variant/20 text-6xl">
                 flag
               </span>
-              <p className="font-headline text-2xl text-on-surface-variant">No factions recorded.</p>
+              <p className="font-headline text-2xl text-on-surface-variant">{t('empty_title')}</p>
             </div>
           )}
         </div>
@@ -145,7 +136,7 @@ export default function FactionDetailPage() {
     <main className="flex-1 min-h-screen bg-surface">
       {/* Breadcrumb */}
       <div className="px-10 pt-8">
-        <BackLink to={`/campaigns/${campaignId}/factions`}>Factions</BackLink>
+        <BackLink to={`/campaigns/${campaignId}/factions`}>{t('title')}</BackLink>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-10 py-8 pb-20">
@@ -187,7 +178,7 @@ export default function FactionDetailPage() {
             <section className="space-y-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                  About
+                  {t('section_about')}
                 </h2>
                 <div className="h-px flex-1 bg-outline-variant/20" />
               </div>
@@ -201,7 +192,7 @@ export default function FactionDetailPage() {
               <section className="space-y-4">
                 <div className="flex items-center gap-4">
                   <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                    Goals
+                    {t('section_goals')}
                   </h2>
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>
@@ -218,7 +209,7 @@ export default function FactionDetailPage() {
               <section className="space-y-4">
                 <div className="flex items-center gap-4">
                   <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-                    Symbols & Insignia
+                    {t('section_symbols')}
                   </h2>
                   <div className="h-px flex-1 bg-outline-variant/20" />
                 </div>
@@ -229,7 +220,7 @@ export default function FactionDetailPage() {
             )}
 
             {/* GM Notes */}
-            <GmNotesSection notes={null} fallback={`Private GM notes for ${displayFaction.name}. Editable in a future update.`} />
+            <GmNotesSection notes={null} fallback={t('section_gm_notes_fallback', { name: displayFaction.name })} />
           </div>
 
           {/* ── Right column (35%) ──────────────────────────────── */}
@@ -240,29 +231,29 @@ export default function FactionDetailPage() {
               <button
                 disabled
                 className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm opacity-50 cursor-not-allowed"
-                title="Coming soon"
+                title={t('coming_soon')}
               >
                 <span className="material-symbols-outlined text-sm">edit</span>
-                Edit Faction
+                {t('edit_faction')}
               </button>
             </div>
 
             {/* Stats card */}
             <div className="bg-surface-container-low p-6 rounded-sm ring-1 ring-outline-variant/10 space-y-4">
               <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
-                Faction Profile
+                {t('profile_title')}
               </h4>
               <div className="space-y-3">
                 {relation && (
                   <div className="flex justify-between text-[11px]">
-                    <span className="text-on-surface-variant/60 italic">Party Relation</span>
+                    <span className="text-on-surface-variant/60 italic">{t('profile_party_relation')}</span>
                     <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-widest ${relation.pill}`}>
                       {relation.label}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-on-surface-variant/60 italic">Known Aliases</span>
+                  <span className="text-on-surface-variant/60 italic">{t('profile_known_aliases')}</span>
                   <span className="text-on-surface">{displayFaction.aliases.length}</span>
                 </div>
               </div>
@@ -272,10 +263,10 @@ export default function FactionDetailPage() {
             <section>
               <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm">group</span>
-                Key Members
+                {t('key_members_title')}
               </h4>
               <p className="text-xs text-on-surface-variant/40 italic">
-                NPC links will appear here once tagged.
+                {t('key_members_empty')}
               </p>
             </section>
 
@@ -283,10 +274,10 @@ export default function FactionDetailPage() {
             <section>
               <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm">location_on</span>
-                Known Bases
+                {t('known_bases_title')}
               </h4>
               <p className="text-xs text-on-surface-variant/40 italic">
-                Location links will appear here once tagged.
+                {t('known_bases_empty')}
               </p>
             </section>
 
@@ -294,7 +285,7 @@ export default function FactionDetailPage() {
             {factions && factions.filter((f) => f.id !== displayFaction.id).length > 0 && (
               <section className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40">
-                  Other Factions
+                  {t('other_factions')}
                 </h4>
                 <div className="space-y-2">
                   {factions
