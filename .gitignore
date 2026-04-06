@@ -23,6 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Audit reports
+audit/
+
 # Project-specific ignores
 .claude/
 .obsidian/
