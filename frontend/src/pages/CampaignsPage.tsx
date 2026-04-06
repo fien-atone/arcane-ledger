@@ -41,11 +41,22 @@ function CampaignRow({ campaign }: { campaign: CampaignSummary }) {
       to={`/campaigns/${campaign.id}`}
       className={`group grid grid-cols-[1fr_auto_auto] items-center gap-6 p-5 bg-surface-container-low border border-outline-variant/10 hover:border-primary/20 transition-colors ${isArchived ? 'opacity-60 hover:opacity-100' : ''}`}
     >
-      {/* Name */}
+      {/* Name + role tag */}
       <div className="min-w-0">
         <p className="text-base font-bold text-on-surface group-hover:text-primary transition-colors truncate">
           {campaign.title}
         </p>
+        {campaign.myRole.toUpperCase() === 'GM' ? (
+          <p className="flex items-center gap-1 mt-0.5 text-[8px] uppercase tracking-widest text-primary/40">
+            <span className="material-symbols-outlined text-[10px]">shield</span>
+            Game Master
+          </p>
+        ) : (
+          <p className="flex items-center gap-1 mt-0.5 text-[8px] uppercase tracking-widest text-secondary/40">
+            <span className="material-symbols-outlined text-[10px]">person</span>
+            Player
+          </p>
+        )}
       </div>
 
       {/* Session info */}
@@ -144,10 +155,8 @@ function GlobalCalendar({ campaigns }: { campaigns: CampaignSummary[] }) {
   const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
   const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
 
-  if (allSessions.length === 0) return null;
-
   return (
-    <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-5 sticky top-8">
+    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-5 sticky top-8">
       <div className="flex items-center justify-between mb-4">
         <button type="button" onClick={prevMonth} className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors">
           <span className="material-symbols-outlined text-[18px]">chevron_left</span>
@@ -262,97 +271,102 @@ export default function CampaignsPage() {
   const { data: campaigns, isLoading, isError } = useCampaigns();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const active = (campaigns ?? []).filter((c) => !c.archivedAt);
+  const active = (campaigns ?? [])
+    .filter((c) => !c.archivedAt)
+    .sort((a, b) => {
+      const aGm = a.myRole.toUpperCase() === 'GM' ? 0 : 1;
+      const bGm = b.myRole.toUpperCase() === 'GM' ? 0 : 1;
+      if (aGm !== bGm) return aGm - bGm;
+      return a.title.localeCompare(b.title);
+    });
   const archived = (campaigns ?? []).filter((c) => !!c.archivedAt);
 
   return (
     <>
     <SectionBackground />
-    <main className="max-w-6xl mx-auto px-8 py-12 pb-24 relative z-10">
-      {/* Header */}
-      <div className="flex items-baseline justify-between mb-10">
-        <h1 className="font-headline text-5xl font-bold tracking-tight text-on-surface">
-          My Campaigns
-        </h1>
-        <button
-          onClick={() => setCreateOpen(true)}
-          className="flex items-center gap-2 bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg shadow-primary/10"
-        >
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          Create Campaign
-        </button>
+    <main className="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
+      <div className="px-4 sm:px-8 pt-16 max-w-5xl mx-auto w-full pb-20">
+        {/* Header card */}
+        <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+          <div className="flex items-baseline justify-between">
+            <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
+              My Campaigns
+            </h1>
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="flex items-center gap-2 bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg shadow-primary/10"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              Create Campaign
+            </button>
+          </div>
+        </div>
+
+        {isLoading && (
+          <div className="flex items-center gap-3 text-on-surface-variant p-12">
+            <span className="material-symbols-outlined animate-spin">progress_activity</span>
+            Loading…
+          </div>
+        )}
+
+        {isError && (
+          <p className="text-tertiary text-sm p-12">Failed to load campaigns.</p>
+        )}
+
+        {campaigns && campaigns.length === 0 && (
+          <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+            <div className="text-center py-16 flex flex-col items-center gap-4">
+              <span className="material-symbols-outlined text-on-surface-variant/20 text-6xl">auto_stories</span>
+              <p className="font-headline text-2xl text-on-surface-variant">No campaigns yet.</p>
+              <p className="text-on-surface-variant/50 text-sm">Create the first campaign to get started.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Pending invitations */}
+        <InvitationBanner />
+
+        {/* Two-column layout: campaigns + calendar */}
+        {campaigns && campaigns.length > 0 && (
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Left column — campaign lists */}
+            <div className="flex-1 min-w-0 space-y-8">
+              {/* Active campaigns (GM first, then Player) */}
+              {active.length > 0 && (
+                <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Active</h3>
+                    <div className="h-px flex-1 bg-outline-variant/20" />
+                    <span className="text-[10px] text-on-surface-variant/30">{active.length}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {active.map((c) => <CampaignRow key={c.id} campaign={c} />)}
+                  </div>
+                </div>
+              )}
+
+              {/* Archived campaigns */}
+              {archived.length > 0 && (
+                <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/40">Archive</h3>
+                    <div className="h-px flex-1 bg-outline-variant/10" />
+                    <span className="text-[10px] text-on-surface-variant/30">{archived.length}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {archived.map((c) => <CampaignRow key={c.id} campaign={c} />)}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right column — calendar */}
+            <div className="w-full lg:w-72 flex-shrink-0">
+              <GlobalCalendar campaigns={campaigns} />
+            </div>
+          </div>
+        )}
       </div>
-
-      <div className="flex gap-10">
-
-      {/* Left column — campaign lists */}
-      <div className="flex-1 min-w-0">
-
-      {isLoading && (
-        <div className="flex items-center gap-3 text-on-surface-variant p-12">
-          <span className="material-symbols-outlined animate-spin">progress_activity</span>
-          Loading…
-        </div>
-      )}
-
-      {isError && (
-        <p className="text-tertiary text-sm p-12">Failed to load campaigns.</p>
-      )}
-
-      {campaigns && campaigns.length === 0 && (
-        <div className="text-center py-24 flex flex-col items-center gap-4">
-          <span className="material-symbols-outlined text-on-surface-variant/20 text-6xl">auto_stories</span>
-          <p className="font-headline text-2xl text-on-surface-variant">No campaigns yet.</p>
-          <p className="text-on-surface-variant/50 text-sm">Create the first campaign to get started.</p>
-        </div>
-      )}
-
-      {/* Pending invitations */}
-      <InvitationBanner />
-
-      {/* Active */}
-      {active.length > 0 && (
-        <section className="mb-10">
-          <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-              Active
-            </h2>
-            <div className="h-px flex-1 bg-outline-variant/20" />
-            <span className="text-[10px] text-on-surface-variant/30">{active.length}</span>
-          </div>
-          <div className="space-y-3">
-            {active.map((c) => <CampaignRow key={c.id} campaign={c} />)}
-          </div>
-        </section>
-      )}
-
-      {/* Archived */}
-      {archived.length > 0 && (
-        <section>
-          <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-on-surface-variant/40 whitespace-nowrap">
-              Archive
-            </h2>
-            <div className="h-px flex-1 bg-outline-variant/10" />
-            <span className="text-[10px] text-on-surface-variant/30">{archived.length}</span>
-          </div>
-          <div className="space-y-3">
-            {archived.map((c) => <CampaignRow key={c.id} campaign={c} />)}
-          </div>
-        </section>
-      )}
-
-      </div>{/* end left column */}
-
-      {/* Right column — calendar */}
-      {campaigns && campaigns.length > 0 && (
-        <div className="w-72 flex-shrink-0">
-          <GlobalCalendar campaigns={campaigns} />
-        </div>
-      )}
-
-      </div>{/* end flex container */}
-
     </main>
 
     <CampaignCreateDrawer open={createOpen} onClose={() => setCreateOpen(false)} />

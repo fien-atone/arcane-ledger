@@ -117,49 +117,116 @@ export default function CharacterDetailPage() {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
-        <div className="flex flex-col lg:flex-row gap-16">
+        {/* ── Header card: portrait + identity (full width) ── */}
+        <section className="relative flex flex-col sm:flex-row gap-8 items-start mb-8 bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8">
+          <div className="relative group flex-shrink-0">
+            <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+            <ImageUpload
+              image={resolveImageUrl(character.image, imgVersion)}
+              name={character.name}
+              className="relative w-36 sm:w-48 h-48 sm:h-64"
+              onUpload={handleImageUpload}
+              onView={character.image ? () => setLightbox(true) : undefined}
+              hideControls={!isGm}
+            />
+          </div>
+
+          <div className="flex-1 min-w-0 pt-4 space-y-4">
+            {demoBadge && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
+                <span className="material-symbols-outlined text-[13px]">person</span>
+                {demoBadge}
+              </span>
+            )}
+            <h1 className="font-headline text-3xl sm:text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
+              {character.name}
+            </h1>
+          </div>
+
+          {isGm && (
+            <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
+              {confirmDelete ? (
+                <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
+                  <span className="text-[9px] text-on-surface-variant">Delete?</span>
+                  <button onClick={() => deleteCharacter.mutate({ campaignId: campaignId!, charId: character.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/party`) })}
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)}
+                  className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
+              <button
+                onClick={() => setDetailsOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">edit</span>
+                Edit
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* ── Two-column layout ── */}
+        <div className="flex flex-col md:flex-row gap-8 min-w-0">
 
           {/* ── Left column ─────────────────────────────────────── */}
-          <div className="lg:w-[65%] space-y-12">
+          <div className="flex-1 min-w-0 space-y-8">
 
-            <section className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="relative group flex-shrink-0">
-                <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                <ImageUpload
-                  image={resolveImageUrl(character.image, imgVersion)}
-                  name={character.name}
-                  className="relative w-48 h-64"
-                  onUpload={handleImageUpload}
-                  onView={character.image ? () => setLightbox(true) : undefined}
-                  hideControls={!isGm}
-                />
-              </div>
+            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+              <InlineRichField label="Appearance" value={character.appearance}
+                onSave={(html) => saveField('appearance', html)}
+                placeholder="Physical description…" readOnly={!isGm} />
+            </div>
 
-              <div className="flex-1 pt-4 space-y-4">
-                {demoBadge && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
-                    <span className="material-symbols-outlined text-[13px]">person</span>
-                    {demoBadge}
-                  </span>
-                )}
-                <h1 className="font-headline text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
-                  {character.name}
-                </h1>
+            {canViewAll && (
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField label="Backstory" value={character.background}
+                  onSave={(html) => saveField('background', html)}
+                  placeholder="History, origin, key events…"
+                  readOnly={!isGm} />
               </div>
-            </section>
+            )}
+
+            {canViewAll && (<>
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField label="Personality" value={character.personality}
+                  onSave={(html) => saveField('personality', html)}
+                  placeholder="Traits, mannerisms, quirks…" readOnly={!isGm} />
+              </div>
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField label="Motivation & Ideals" value={character.motivation}
+                  onSave={(html) => saveField('motivation', html)}
+                  placeholder="What drives them, what they believe in…" readOnly={!isGm} />
+              </div>
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField label="Bonds" value={character.bonds}
+                  onSave={(html) => saveField('bonds', html)}
+                  placeholder="People, places, things they hold dear…" readOnly={!isGm} />
+              </div>
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField label="Flaws" value={character.flaws}
+                  onSave={(html) => saveField('flaws', html)}
+                  placeholder="Weaknesses, vices, fears…" readOnly={!isGm} />
+              </div>
+            </>)}
 
             {isGm && (
-              <InlineRichField label="GM Notes" value={character.gmNotes} isGmNotes
-                onSave={(html) => saveField('gmNotes', html)} />
-            )}
-            {canViewAll && (
-            <InlineRichField label="Backstory" value={character.background}
-              onSave={(html) => saveField('background', html)}
-              placeholder="History, origin, key events…"
-              readOnly={!isGm} />
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <InlineRichField label="GM Notes" value={character.gmNotes} isGmNotes
+                  onSave={(html) => saveField('gmNotes', html)} />
+              </div>
             )}
 
-            {/* Group Memberships — GM only */}
+          </div>
+
+          {/* ── Right column ────────────────────────────────────── */}
+          <div className="md:w-[40%] lg:w-[35%] min-w-0 space-y-8">
+
+            {/* Group Memberships */}
             {canViewAll && groupsEnabled && (() => {
               const memberGroupIds = new Set((character.groupMemberships ?? []).map((m) => m.groupId));
               const availableGroups = (groups ?? [])
@@ -183,9 +250,9 @@ export default function CharacterDetailPage() {
               };
 
               return (
-                <section className="space-y-4">
+                <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 space-y-4">
                   <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
+                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
                       Group Memberships
                     </h2>
                     <div className="h-px flex-1 bg-outline-variant/20" />
@@ -328,53 +395,11 @@ export default function CharacterDetailPage() {
               );
             })()}
 
-            {isGm && <SocialRelationsSection campaignId={campaignId ?? ''} entityId={charId ?? ''} />}
-          </div>
-
-          {/* ── Right column ────────────────────────────────────── */}
-          <div className="lg:w-[35%] space-y-8 lg:sticky lg:top-8 self-start">
-
             {isGm && (
-              <div className="flex justify-end gap-2">
-                {confirmDelete ? (
-                  <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-                    <span className="text-[10px] text-on-surface-variant">Delete this character?</span>
-                    <button onClick={() => deleteCharacter.mutate({ campaignId: campaignId!, charId: character.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/party`) })}
-                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">Yes</button>
-                    <button onClick={() => setConfirmDelete(false)}
-                      className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">No</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setConfirmDelete(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant/30 text-on-surface-variant/40 text-xs font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
-                    <span className="material-symbols-outlined text-sm">delete</span>
-                  </button>
-                )}
-                <button onClick={() => setDetailsOpen(true)}
-                  className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary hover:border-primary/50 text-xs font-label uppercase tracking-widest rounded-sm transition-colors">
-                  <span className="material-symbols-outlined text-sm">edit</span>
-                  Edit
-                </button>
+              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+                <SocialRelationsSection campaignId={campaignId ?? ''} entityId={charId ?? ''} />
               </div>
             )}
-
-            <InlineRichField label="Appearance" value={character.appearance}
-              onSave={(html) => saveField('appearance', html)}
-              placeholder="Physical description…" readOnly={!isGm} />
-            {canViewAll && (<>
-            <InlineRichField label="Personality" value={character.personality}
-              onSave={(html) => saveField('personality', html)}
-              placeholder="Traits, mannerisms, quirks…" readOnly={!isGm} />
-            <InlineRichField label="Motivation & Ideals" value={character.motivation}
-              onSave={(html) => saveField('motivation', html)}
-              placeholder="What drives them, what they believe in…" readOnly={!isGm} />
-            <InlineRichField label="Bonds" value={character.bonds}
-              onSave={(html) => saveField('bonds', html)}
-              placeholder="People, places, things they hold dear…" readOnly={!isGm} />
-            <InlineRichField label="Flaws" value={character.flaws}
-              onSave={(html) => saveField('flaws', html)}
-              placeholder="Weaknesses, vices, fears…" readOnly={!isGm} />
-            </>)}
 
           </div>
         </div>

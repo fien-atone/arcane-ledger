@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { SectionBackground } from '@/shared/ui';
 import { useAuthStore } from '@/features/auth';
 import { useUpdateProfile, useChangePassword } from '@/features/auth/api/queries';
@@ -84,30 +85,34 @@ export default function ProfilePage() {
   return (
     <>
     <SectionBackground />
-    <div className="max-w-2xl mx-auto px-8 py-10 relative z-10">
+    <main className="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
+    <div className="flex justify-center pt-6 pb-8">
+      <Link
+        to="/campaigns"
+        className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+      >
+        <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+        My Campaigns
+      </Link>
+    </div>
+
+    <div className="px-4 sm:px-8 max-w-3xl mx-auto w-full pb-20">
       {/* Page header */}
-      <div className="flex items-center gap-3 mb-10">
-        <span
-          className="material-symbols-outlined text-primary"
-          style={{ fontSize: '32px' }}
-        >
-          person
-        </span>
-        <div>
-          <h1 className="font-headline text-2xl font-bold text-on-surface">
-            Profile Settings
-          </h1>
-          <p className="text-xs text-on-surface-variant/60 uppercase tracking-widest mt-0.5">
-            Account preferences
-          </p>
-        </div>
+      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
+          Profile Settings
+        </h1>
+        <p className="text-on-surface-variant text-sm mt-1">
+          Account preferences
+        </p>
       </div>
 
       {/* Profile section */}
-      <section className="mb-10">
-        <h2 className="text-[10px] font-label uppercase tracking-widest text-primary mb-5">
-          Profile Information
-        </h2>
+      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Profile Information</h3>
+          <div className="h-px flex-1 bg-outline-variant/20" />
+        </div>
 
         <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6 space-y-5">
           <div>
@@ -157,13 +162,14 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Change Password section */}
-      <section>
-        <h2 className="text-[10px] font-label uppercase tracking-widest text-primary mb-5">
-          Change Password
-        </h2>
+      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Change Password</h3>
+          <div className="h-px flex-1 bg-outline-variant/20" />
+        </div>
 
         <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6 space-y-5">
           <div>
@@ -222,8 +228,9 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
-      </section>
+      </div>
     </div>
+    </main>
     </>
   );
 }

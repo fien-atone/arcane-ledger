@@ -41,7 +41,7 @@ export default function SocialGraphPage() {
   const { data: relations } = useRelationsForCampaign(campaignId ?? '');
 
   // View mode
-  const [viewMode, setViewMode] = useState<ViewMode>('force');
+  const [viewMode, setViewMode] = useState<ViewMode>('chord');
 
   // Filters
   const [statusFilters, setStatusFilters] = useState<Set<NpcStatus>>(new Set(['alive', 'unknown']));
@@ -299,35 +299,54 @@ export default function SocialGraphPage() {
         </Link>
       </div>
 
-      {/* Header */}
-      <header className="flex-shrink-0 sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-10 pt-6 pb-6 border-b border-outline-variant/5">
-        <div className="flex justify-between items-start">
+      {/* Header card */}
+      <header className="flex-shrink-0 mx-4 sm:mx-8 mb-4 bg-surface-container border border-outline-variant/20 rounded-sm p-6 overflow-hidden">
+        <div className="flex flex-wrap justify-between items-start gap-4">
           <div>
-            <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight">
+            <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
               Social Graph
             </h1>
             <p className="text-on-surface-variant text-sm mt-1">
               Relationships between NPCs visualized.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {/* View toggle */}
-            <div className="flex bg-surface-container rounded-sm border border-outline-variant/20 overflow-hidden">
-              <Link
-                to={`/campaigns/${campaignId}/npcs`}
-                className="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors"
-                title="List view"
-              >
-                <span className="material-symbols-outlined text-[20px]">list</span>
-              </Link>
+          <div className="flex items-center gap-3">
+            {/* Graph type toggle */}
+            <div className="flex bg-surface-container-high rounded-sm border border-outline-variant/20 overflow-hidden">
               <button
-                className="p-2 bg-primary/15 text-primary"
-                title="Graph view"
-                disabled
+                onClick={() => setViewMode('force')}
+                title="Force graph"
+                className={`px-3 py-2 flex items-center gap-1.5 text-xs transition-colors ${
+                  viewMode === 'force'
+                    ? 'bg-primary/15 text-primary font-semibold'
+                    : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-highest'
+                }`}
               >
-                <span className="material-symbols-outlined text-[20px]">hub</span>
+                <span className="material-symbols-outlined text-[18px]">hub</span>
+                <span className="hidden sm:inline">Force</span>
+              </button>
+              <button
+                onClick={() => setViewMode('chord')}
+                title="Chord diagram"
+                className={`px-3 py-2 flex items-center gap-1.5 text-xs transition-colors ${
+                  viewMode === 'chord'
+                    ? 'bg-primary/15 text-primary font-semibold'
+                    : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-highest'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">donut_large</span>
+                <span className="hidden sm:inline">Chord</span>
               </button>
             </div>
+            {/* List view link */}
+            <Link
+              to={`/campaigns/${campaignId}/npcs`}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs text-on-surface-variant border border-outline-variant/20 rounded-sm hover:text-primary hover:border-primary/30 transition-colors"
+              title="NPC List"
+            >
+              <span className="material-symbols-outlined text-[18px]">list</span>
+              <span className="hidden sm:inline">List</span>
+            </Link>
           </div>
         </div>
       </header>
@@ -349,7 +368,7 @@ export default function SocialGraphPage() {
       )}
 
       {!isLoading && !isEmpty && (
-        <div ref={containerRef} className="flex-1 relative overflow-hidden">
+        <div ref={containerRef} className="flex-1 relative overflow-hidden mx-4 sm:mx-8 border border-outline-variant/20 rounded-sm bg-surface-container">
           {viewMode === 'chord' ? (
             <ChordView
               npcs={filteredNpcs}
@@ -445,31 +464,6 @@ export default function SocialGraphPage() {
             </>
           )}
 
-          {/* View mode toggle */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex bg-surface-container rounded-sm border border-outline-variant/20 overflow-hidden shadow-lg">
-            <button
-              onClick={() => setViewMode('force')}
-              title="Force graph"
-              className={`p-2 transition-colors ${
-                viewMode === 'force'
-                  ? 'bg-primary/15 text-primary'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">hub</span>
-            </button>
-            <button
-              onClick={() => setViewMode('chord')}
-              title="Chord diagram"
-              className={`p-2 transition-colors ${
-                viewMode === 'chord'
-                  ? 'bg-primary/15 text-primary'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">donut_large</span>
-            </button>
-          </div>
 
           {/* Controls */}
           {viewMode === 'force' && (

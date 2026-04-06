@@ -161,9 +161,37 @@ export default function SessionDetailPage() {
               </span>
             )}
           </div>
-          <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight leading-tight">
+          <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight leading-tight mb-4">
             {session.title}
           </h1>
+
+          {/* Prev / Next navigation */}
+          <div className="flex items-center gap-3 mt-2">
+            {prevSession ? (
+              <Link
+                to={`/campaigns/${campaignId}/sessions/${prevSession.id}`}
+                className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-high border border-outline-variant/20 rounded-sm text-sm text-on-surface-variant hover:text-primary hover:border-primary/30 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                <span>
+                  <span className="text-[9px] font-label uppercase tracking-widest text-on-surface-variant/50 block">Previous</span>
+                  <span className="font-medium">Session #{String(prevSession.number).padStart(2, '0')}</span>
+                </span>
+              </Link>
+            ) : <div />}
+            {nextSession && (
+              <Link
+                to={`/campaigns/${campaignId}/sessions/${nextSession.id}`}
+                className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-high border border-outline-variant/20 rounded-sm text-sm text-on-surface-variant hover:text-primary hover:border-primary/30 transition-colors"
+              >
+                <span>
+                  <span className="text-[9px] font-label uppercase tracking-widest text-on-surface-variant/50 block">Next</span>
+                  <span className="font-medium">Session #{String(nextSession.number).padStart(2, '0')}</span>
+                </span>
+                <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+              </Link>
+            )}
+          </div>
 
           {/* Edit/Delete/Calendar — absolute top-right */}
           <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
@@ -292,39 +320,6 @@ export default function SessionDetailPage() {
               </section>
             </div>
 
-            {/* Prev / next navigation */}
-            <div className="flex items-center justify-between pt-8 border-t border-outline-variant/10">
-              {prevSession ? (
-                <Link
-                  to={`/campaigns/${campaignId}/sessions/${prevSession.id}`}
-                  className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors text-sm group"
-                >
-                  <span className="material-symbols-outlined">chevron_left</span>
-                  <span>
-                    <span className="text-[10px] uppercase tracking-widest block text-on-surface-variant/50">
-                      Previous
-                    </span>
-                    Session #{String(prevSession.number).padStart(2, '0')}
-                  </span>
-                </Link>
-              ) : (
-                <div />
-              )}
-              {nextSession && (
-                <Link
-                  to={`/campaigns/${campaignId}/sessions/${nextSession.id}`}
-                  className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors text-sm group text-right"
-                >
-                  <span>
-                    <span className="text-[10px] uppercase tracking-widest block text-on-surface-variant/50">
-                      Next
-                    </span>
-                    Session #{String(nextSession.number).padStart(2, '0')}
-                  </span>
-                  <span className="material-symbols-outlined">chevron_right</span>
-                </Link>
-              )}
-            </div>
           </div>
 
           {/* Right column — NPCs, Locations, Quests */}

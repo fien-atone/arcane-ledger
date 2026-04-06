@@ -5,8 +5,11 @@ import { useAuthStore } from '@/features/auth';
 import { USER_EVENT_SUBSCRIPTION } from '@/shared/api/subscriptions';
 import { D20Icon } from '@/shared/ui';
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+function timeAgo(dateStr: string | undefined | null): string {
+  if (!dateStr) return '';
+  const ts = new Date(dateStr).getTime();
+  if (isNaN(ts)) return '';
+  const diff = Date.now() - ts;
   const minutes = Math.floor(diff / 60000);
   if (minutes < 1) return 'just now';
   if (minutes < 60) return `${minutes}m ago`;
@@ -51,7 +54,7 @@ export function InvitationBanner() {
         {pending.map((inv) => (
           <div
             key={inv.id}
-            className="flex items-center gap-4 p-5 bg-secondary/5 border border-secondary/20 rounded-sm"
+            className="flex items-center gap-4 p-5 bg-surface-container border border-secondary/30 rounded-sm"
           >
             <D20Icon className="w-8 h-8 text-secondary/60 flex-shrink-0" />
             <div className="flex-1 min-w-0">

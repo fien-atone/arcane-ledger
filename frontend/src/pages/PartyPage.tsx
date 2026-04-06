@@ -406,6 +406,11 @@ export default function PartyPage() {
               </div>
             )}
           </div>
+          {invitePanelOpen && isGm && (
+            <div className="mt-4">
+              <InvitePanel campaignId={campaignId ?? ''} onClose={() => setInvitePanelOpen(false)} />
+            </div>
+          )}
         </div>
 
         {isLoading && (
@@ -592,9 +597,6 @@ export default function PartyPage() {
       campaignId={campaignId ?? ''}
       forUserId={createForUserId ?? undefined}
     />
-    {invitePanelOpen && isGm && (
-      <InvitePanel campaignId={campaignId ?? ''} onClose={() => setInvitePanelOpen(false)} />
-    )}
     </>
   );
 }
