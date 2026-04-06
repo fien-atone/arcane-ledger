@@ -28,7 +28,6 @@ export const useSpeciesTypes = (campaignId?: string, search?: string) => {
   const { data, loading, error } = useQuery<any>(SPECIES_TYPES_QUERY, {
     variables: { campaignId, search: search?.trim() || null },
     skip: !campaignId,
-    fetchPolicy: 'cache-and-network',
   });
   return { data: data?.speciesTypes as SpeciesTypeEntry[] | undefined, isLoading: loading, isError: !!error, error };
 };

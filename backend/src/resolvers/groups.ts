@@ -44,7 +44,7 @@ export const groupResolvers = {
     ) => {
       const data = {
         name: input.name,
-        type: input.type || null,
+        type: input.type && input.type.trim() ? input.type : null,
         aliases: input.aliases ?? [],
         description: input.description ?? '',
         goals: input.goals ?? null,

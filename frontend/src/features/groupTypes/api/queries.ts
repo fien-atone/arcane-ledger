@@ -28,7 +28,6 @@ export const useGroupTypes = (campaignId?: string, search?: string) => {
   const { data, loading, error } = useQuery<any>(GROUP_TYPES_QUERY, {
     variables: { campaignId, search: search?.trim() || null },
     skip: !campaignId,
-    fetchPolicy: 'cache-and-network',
   });
   return { data: data?.groupTypes as GroupTypeEntry[] | undefined, isLoading: loading, isError: !!error, error };
 };

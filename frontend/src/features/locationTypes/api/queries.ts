@@ -65,7 +65,6 @@ export function useLocationTypes(campaignId?: string) {
   const { data, loading, error } = useQuery<any>(LOCATION_TYPES_QUERY, {
     variables: { campaignId },
     skip: !campaignId,
-    fetchPolicy: 'cache-and-network',
   });
   return { data: data?.locationTypes as LocationTypeEntry[] | undefined, isLoading: loading, isError: !!error, error };
 }

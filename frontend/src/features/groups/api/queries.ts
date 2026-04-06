@@ -66,7 +66,6 @@ function mapGroup(raw: any): Group {
 export const useGroups = (campaignId: string, opts?: { search?: string; type?: string }) => {
   const { data, loading, error } = useQuery<any>(GROUPS_QUERY, {
     variables: { campaignId, search: opts?.search?.trim() || null, type: opts?.type || null },
-    fetchPolicy: 'cache-and-network',
   });
   return { data: data?.groups?.map(mapGroup) as Group[] | undefined, isLoading: loading, isError: !!error, error };
 };
@@ -85,7 +84,7 @@ export const useSaveGroup = () => {
     mutate: (group: Group, opts?: { onSuccess?: () => void }) => {
       const input = {
         name: group.name,
-        type: group.type,
+        type: group.type || null,
         aliases: group.aliases,
         description: group.description,
         goals: group.goals,

@@ -164,7 +164,6 @@ export const useSearchUsers = (campaignId: string, query: string) => {
   const { data, loading, error } = useQuery<any>(SEARCH_USERS_QUERY, {
     variables: { campaignId, query },
     skip: !campaignId || query.length < 2,
-    fetchPolicy: 'network-only',
   });
   return {
     data: (data?.searchUsers ?? []) as { id: string; name: string; email: string }[],

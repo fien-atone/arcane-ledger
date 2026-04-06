@@ -34,7 +34,6 @@ export const useSpecies = (campaignId?: string) => {
   const { data, loading, error } = useQuery<any>(SPECIES_QUERY, {
     variables: { campaignId },
     skip: !campaignId,
-    fetchPolicy: 'cache-and-network',
   });
   return { data: data?.species as Species[] | undefined, isLoading: loading, isError: !!error, error };
 };

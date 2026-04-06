@@ -27,7 +27,6 @@ export function useAdminUsers(search?: string) {
   const client = useApolloClient();
   const { data, loading, error, refetch } = useQuery<any>(ADMIN_USERS, {
     variables: { search: search || undefined },
-    fetchPolicy: 'cache-and-network',
   });
   useSubscription(USERS_CHANGED_SUBSCRIPTION, {
     onData: () => {

@@ -33,7 +33,7 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
   const isEdit = !!group;
 
   const [name, setName] = useState('');
-  const [type, setType] = useState<string>('faction');
+  const [type, setType] = useState<string>('');
   const [aliases, setAliases] = useState('');
 
   const typeOptions = useMemo<SelectOption<string>[]>(
@@ -49,7 +49,7 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
       setAliases(fromArray(group.aliases));
     } else {
       setName('');
-      setType('faction');
+      setType('');
       setAliases('');
     }
   }, [open, group]);
@@ -105,7 +105,9 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
               <Select<string>
                 value={type}
                 options={typeOptions}
-                onChange={(v) => setType(v || 'faction')}
+                onChange={(v) => setType(v || '')}
+                nullable
+                placeholder="No type"
                 searchable
               />
             </div>
