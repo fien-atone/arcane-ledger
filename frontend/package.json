@@ -12,14 +12,10 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@3d-dice/dice-box": "^1.1.4",
     "@apollo/client": "^4.1.6",
-    "@dagrejs/dagre": "^3.0.0",
     "@tailwindcss/vite": "^4.2.2",
-    "@tanstack/react-query": "^5.91.3",
     "@tiptap/react": "^3.20.4",
     "@tiptap/starter-kit": "^3.20.4",
-    "@xyflow/react": "^12.10.1",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
     "d3-shape": "^3.2.0",
@@ -30,14 +26,11 @@
     "graphql-ws": "^6.0.8",
     "i18next": "^26.0.3",
     "i18next-browser-languagedetector": "^8.2.1",
-    "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-i18next": "^17.0.2",
-    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.1",
     "tailwindcss": "^4.2.2",
-    "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

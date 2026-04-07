@@ -59,17 +59,6 @@ This is the source of truth for the project's technology stack. Always check thi
 | Tech | Version | Notes |
 |---|---|---|
 | **D3** | 3.x | force, selection, shape, transition, zoom — used by social graph |
-| **@xyflow/react** | 12.10 | Flow diagrams (currently unused but installed) |
-| **@dagrejs/dagre** | 3.0 | Graph layout algorithm |
-
-### Other
-| Tech | Version | Notes |
-|---|---|---|
-| **react-markdown** | 10.1 | Markdown rendering |
-| **@3d-dice/dice-box** | 1.1 | 3D dice rolling visualization |
-| **lucide-react** | 0.577 | ⚠️ Installed but unused — Material Symbols is preferred |
-| **@tanstack/react-query** | 5.91 | ⚠️ Legacy — replaced by Apollo Client, should be removed |
-| **zod** | 4.3 | Schema validation (limited use so far) |
 
 ### Frontend dev tools
 | Tech | Version |
