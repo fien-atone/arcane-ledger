@@ -27,7 +27,7 @@ export function GlobalLoadingBar() {
   if (!visible) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] pointer-events-none">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[200] pointer-events-none">
       <div className="flex items-center gap-2 px-4 py-1.5 bg-surface-container/95 backdrop-blur-md border border-primary/30 rounded-full shadow-lg shadow-primary/10">
         <span className="material-symbols-outlined text-[14px] text-primary animate-spin">
           progress_activity
