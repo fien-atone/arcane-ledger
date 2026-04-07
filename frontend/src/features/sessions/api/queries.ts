@@ -15,9 +15,9 @@ const SESSIONS_QUERY = gql`
       brief
       summary
       createdAt
-      npcs { id name status species image }
-      locations { id name type }
-      quests { id title status }
+      npcs { id name status species image playerVisible playerVisibleFields }
+      locations { id name type playerVisible playerVisibleFields }
+      quests { id title status playerVisible playerVisibleFields }
       myNote { id content updatedAt }
     }
   }
@@ -34,9 +34,9 @@ const SAVE_SESSION = gql`
       brief
       summary
       createdAt
-      npcs { id name status species image }
-      locations { id name type }
-      quests { id title status }
+      npcs { id name status species image playerVisible playerVisibleFields }
+      locations { id name type playerVisible playerVisibleFields }
+      quests { id title status playerVisible playerVisibleFields }
       myNote { id content updatedAt }
     }
   }

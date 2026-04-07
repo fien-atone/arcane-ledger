@@ -865,6 +865,7 @@ export default function LocationDetailPage() {
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: locationTypes = [] } = useLocationTypes(campaignId ?? '');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
@@ -1255,7 +1256,7 @@ export default function LocationDetailPage() {
                               <span className="material-symbols-outlined text-[14px]">person_remove</span>
                             </button>
                           ))}
-                          {isGm && presence && (
+                          {isGm && partyEnabled && presence && (
                             <button
                               onClick={() => setPresenceVisibility.mutate({ npcId: npc.id, locationId: location.id, playerVisible: !presence.playerVisible })}
                               title={presence.playerVisible ? t('visible_click_to_hide') : t('hidden_click_to_show')}
@@ -1501,7 +1502,7 @@ export default function LocationDetailPage() {
                             arrow_forward
                           </span>
                         </Link>
-                        {isGm && (
+                        {isGm && partyEnabled && (
                           <button
                             onClick={() => setLocationVisibility.mutate({
                               campaignId: campaignId!,
@@ -1528,7 +1529,7 @@ export default function LocationDetailPage() {
             </div>
 
             {/* Player Visibility */}
-            {isGm && location && (
+            {isGm && partyEnabled && location && (
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <VisibilityPanel
                   playerVisible={location.playerVisible ?? false}

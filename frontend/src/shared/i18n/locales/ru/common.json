@@ -36,6 +36,8 @@
 
   "player_visibility": "Видимость для игроков",
   "visible_to_players": "Видно игрокам",
+  "visible_click_to_hide": "Видно игрокам — нажми, чтобы скрыть",
+  "hidden_click_to_show": "Скрыто от игроков — нажми, чтобы показать",
   "shared": "Общее",
 
   "section_not_enabled": "Раздел не включён",
@@ -61,6 +63,8 @@
     "sign_out": "Выйти",
     "whats_new": "Что нового",
     "collapse": "Свернуть",
+    "expand_sidebar": "Развернуть меню",
+    "collapse_sidebar": "Свернуть меню",
     "edit_sections": "Настроить разделы",
     "back": "Назад"
   },

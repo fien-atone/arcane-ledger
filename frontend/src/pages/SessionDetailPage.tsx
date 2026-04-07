@@ -3,9 +3,9 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSessions, useSaveSession, useDeleteSession, useSessionNote } from '@/features/sessions/api/queries';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
-import { useNpcs } from '@/features/npcs/api/queries';
-import { useLocations } from '@/features/locations/api';
-import { useQuests } from '@/features/quests/api';
+import { useNpcs, useSetNpcVisibility } from '@/features/npcs/api/queries';
+import { useLocations, useSetLocationVisibility } from '@/features/locations/api';
+import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
 import { LocationIcon, InlineRichField, RichContent, SectionDisabled, SectionBackground } from '@/shared/ui';
 import type { Session } from '@/entities/session';
@@ -79,6 +79,7 @@ export default function SessionDetailPage() {
   const { id: campaignId, sessionId } = useParams<{ id: string; sessionId: string }>();
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const { data: sessions, isLoading, isError } = useSessions(campaignId ?? '');
   const session = sessions?.find((s) => s.id === sessionId);
@@ -89,6 +90,9 @@ export default function SessionDetailPage() {
   const saveSession = useSaveSession(campaignId ?? '');
   const deleteSession = useDeleteSession(campaignId ?? '');
   const sessionNote = useSessionNote(campaignId ?? '');
+  const setNpcVisibility = useSetNpcVisibility();
+  const setLocationVisibility = useSetLocationVisibility();
+  const setQuestVisibility = useSetQuestVisibility();
   const navigate = useNavigate();
 
   const [npcSearch, setNpcSearch] = useState('');
@@ -415,6 +419,26 @@ export default function SessionDetailPage() {
                                 </div>
                                 <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                               </Link>
+                              {isGm && partyEnabled && (
+                                <button
+                                  onClick={() => setNpcVisibility.mutate({
+                                    campaignId: campaignId!,
+                                    id: npc.id,
+                                    playerVisible: !npc.playerVisible,
+                                    playerVisibleFields: npc.playerVisibleFields ?? [],
+                                  })}
+                                  title={npc.playerVisible ? t('common:visible_click_to_hide') : t('common:hidden_click_to_show')}
+                                  className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
+                                    npc.playerVisible
+                                      ? 'text-primary/60 hover:text-primary'
+                                      : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">
+                                    {npc.playerVisible ? 'visibility' : 'visibility_off'}
+                                  </span>
+                                </button>
+                              )}
                               {isGm && (confirmRemoveNpcId === npc.id ? (
                                 <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                                   <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>
@@ -510,6 +534,26 @@ export default function SessionDetailPage() {
                               <p className="text-sm font-sans text-on-surface group-hover:text-primary transition-colors truncate flex-1">{loc.name}</p>
                               <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                             </Link>
+                            {isGm && partyEnabled && (
+                              <button
+                                onClick={() => setLocationVisibility.mutate({
+                                  campaignId: campaignId!,
+                                  id: loc.id,
+                                  playerVisible: !loc.playerVisible,
+                                  playerVisibleFields: loc.playerVisibleFields ?? [],
+                                })}
+                                title={loc.playerVisible ? t('common:visible_click_to_hide') : t('common:hidden_click_to_show')}
+                                className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
+                                  loc.playerVisible
+                                    ? 'text-primary/60 hover:text-primary'
+                                    : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[14px]">
+                                  {loc.playerVisible ? 'visibility' : 'visibility_off'}
+                                </span>
+                              </button>
+                            )}
                             {isGm && (confirmRemoveLocId === loc.id ? (
                               <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                                 <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>
@@ -606,6 +650,26 @@ export default function SessionDetailPage() {
                               </div>
                               <span className="material-symbols-outlined text-[14px] text-on-surface-variant/20 group-hover:text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                             </Link>
+                            {isGm && partyEnabled && (
+                              <button
+                                onClick={() => setQuestVisibility.mutate({
+                                  campaignId: campaignId!,
+                                  id: quest.id,
+                                  playerVisible: !quest.playerVisible,
+                                  playerVisibleFields: quest.playerVisibleFields ?? [],
+                                })}
+                                title={quest.playerVisible ? t('common:visible_click_to_hide') : t('common:hidden_click_to_show')}
+                                className={`flex-shrink-0 px-2 border-l border-outline-variant/10 transition-colors ${
+                                  quest.playerVisible
+                                    ? 'text-primary/60 hover:text-primary'
+                                    : 'text-on-surface-variant/20 hover:text-on-surface-variant/40'
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[14px]">
+                                  {quest.playerVisible ? 'visibility' : 'visibility_off'}
+                                </span>
+                              </button>
+                            )}
                             {isGm && (confirmRemoveQuestId === quest.id ? (
                               <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
                                 <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>

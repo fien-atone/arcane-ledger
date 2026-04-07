@@ -19,6 +19,7 @@ export default function LocationListPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: locations, isLoading, isError } = useLocations(campaignId ?? '');
@@ -220,7 +221,7 @@ export default function LocationListPage() {
                 <span className="w-9 flex-shrink-0" />
                 <span className="flex-1 min-w-0">{t('column_name')}</span>
                 <span className="w-20 flex-shrink-0 hidden xl:block">{t('column_population')}</span>
-                {isGm && <span className="w-8 flex-shrink-0" />}
+                {isGm && partyEnabled && <span className="w-8 flex-shrink-0" />}
               </div>
               {filtered.map((loc) => {
                 const typeEntry = locationTypesEnabled ? typeMap.get(loc.type) : undefined;
@@ -269,7 +270,7 @@ export default function LocationListPage() {
                         {loc.settlementPopulation ? loc.settlementPopulation.toLocaleString() : '\u2014'}
                       </span>
                       {/* Visibility toggle */}
-                      {isGm && (
+                      {isGm && partyEnabled && (
                         <button
                           onClick={(e) => {
                             e.preventDefault();
