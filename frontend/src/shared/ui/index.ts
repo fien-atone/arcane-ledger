@@ -21,4 +21,5 @@ export { NotFoundState } from './NotFoundState';
 export { ToastContainer } from './ToastContainer';
 export { useToastStore, showToast } from './toastStore';
 export type { Toast, ToastKind } from './toastStore';
+export { GlobalLoadingBar } from './GlobalLoadingBar';
 export { VisibilityPanel } from './VisibilityPanel';

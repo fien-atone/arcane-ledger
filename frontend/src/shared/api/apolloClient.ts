@@ -1,10 +1,11 @@
-import { ApolloClient, InMemoryCache, createHttpLink, split, from } from '@apollo/client';
+import { ApolloClient, ApolloLink, InMemoryCache, createHttpLink, split, from } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
 import { useConnectionStore } from './connectionStatus';
+import { useLoadingStore } from './loadingStore';
 import { showToast } from '@/shared/ui/toastStore';
 
 const GRAPHQL_URL = import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:4000/graphql';
@@ -20,6 +21,28 @@ const authLink = setContext((_, { headers }) => {
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
   };
+});
+
+// Track in-flight requests for the global loading bar
+const loadingLink = new ApolloLink((operation, forward) => {
+  const { increment, decrement } = useLoadingStore.getState();
+  increment();
+  let decremented = false;
+  const decrementOnce = () => {
+    if (!decremented) {
+      decremented = true;
+      decrement();
+    }
+  };
+  const observable = forward(operation);
+  return new (observable.constructor as any)((observer: any) => {
+    const sub = observable.subscribe({
+      next: (value: any) => observer.next(value),
+      error: (err: any) => { decrementOnce(); observer.error(err); },
+      complete: () => { decrementOnce(); observer.complete(); },
+    });
+    return () => { decrementOnce(); sub.unsubscribe(); };
+  });
 });
 
 const errorLink = onError((errorResponse: any) => {
@@ -64,7 +87,7 @@ const splitLink = split(
     return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
   },
   wsLink,
-  from([errorLink, authLink.concat(httpLink)]),
+  from([loadingLink, errorLink, authLink.concat(httpLink)]),
 );
 
 export const apolloClient = new ApolloClient({
