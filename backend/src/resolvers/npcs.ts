@@ -1,6 +1,6 @@
 import type { Context } from '../context.js';
 import { GraphQLError } from 'graphql';
-import { toEnum, getCampaignRole, requireGM } from './utils.js';
+import { toEnum, getCampaignRole, requireGM, requireNonEmpty } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
 import { redactEntity, NPC_FIELDS } from './redact.js';
 
@@ -37,9 +37,10 @@ export const npcResolvers = {
       ctx: Context,
     ) => {
       await requireGM(ctx, campaignId);
+      const name = requireNonEmpty(input.name, 'Name');
       const { prisma } = ctx;
       const data: Record<string, unknown> = {
-        name: input.name,
+        name,
         aliases: input.aliases ?? [],
         status: toEnum(input.status, 'ALIVE'),
         gender: input.gender ? toEnum(input.gender, 'MALE') : null,

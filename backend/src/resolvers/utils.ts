@@ -41,6 +41,20 @@ export async function requireGM(ctx: Context, campaignId: string): Promise<void>
   }
 }
 
+/**
+ * Validate that a string field has non-empty content after trimming.
+ * Throws BAD_USER_INPUT with a clear message if empty/whitespace-only.
+ */
+export function requireNonEmpty(value: string | null | undefined, fieldName: string): string {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    throw new GraphQLError(`${fieldName} is required`, {
+      extensions: { code: 'BAD_USER_INPUT', field: fieldName.toLowerCase() },
+    });
+  }
+  return trimmed;
+}
+
 /** Throw UNAUTHENTICATED if the current user is not a member of the given campaign. */
 export async function requireCampaignMember(ctx: Context, campaignId: string): Promise<void> {
   if (!ctx.user) throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
