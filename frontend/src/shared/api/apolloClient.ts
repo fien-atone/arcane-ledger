@@ -5,6 +5,7 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
 import { useConnectionStore } from './connectionStatus';
+import { showToast } from '@/shared/ui/toastStore';
 
 const GRAPHQL_URL = import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:4000/graphql';
 const GRAPHQL_WS_URL = import.meta.env.VITE_GRAPHQL_WS_URL || 'ws://localhost:4000/graphql';
@@ -22,11 +23,28 @@ const authLink = setContext((_, { headers }) => {
 });
 
 const errorLink = onError((errorResponse: any) => {
-  // Only show error overlay for network failures (server unreachable)
-  // NOT for GraphQL errors (those are handled per-query)
   const networkError = errorResponse.networkError;
+  const graphQLErrors = errorResponse.graphQLErrors;
+  const operationKind = errorResponse.operation?.query?.definitions?.[0]?.operation;
+
+  // Network failures: show full-screen overlay
   if (networkError) {
     useConnectionStore.getState().setBackendDown(true);
+    return;
+  }
+
+  // GraphQL errors: show toast for mutations (so users see save/delete failures).
+  // Queries usually have inline error display via the page's isError state.
+  if (graphQLErrors && graphQLErrors.length > 0 && operationKind === 'mutation') {
+    for (const err of graphQLErrors) {
+      const code = err.extensions?.code;
+      // Skip auth errors — let route guards handle them
+      if (code === 'UNAUTHENTICATED') continue;
+      showToast({
+        kind: 'error',
+        message: err.message || 'Something went wrong',
+      });
+    }
   }
 });
 
