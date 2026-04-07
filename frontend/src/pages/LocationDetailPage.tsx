@@ -7,7 +7,7 @@ import { useNpcs, useSaveNpc, useAddNPCLocationPresence, useRemoveNPCLocationPre
 import { useSessions } from '@/features/sessions/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
-import { InlineRichField, ImageUpload, SectionDisabled, SectionBackground, VisibilityPanel } from '@/shared/ui';
+import { InlineRichField, ImageUpload, NotFoundState, SectionDisabled, SectionBackground, VisibilityPanel } from '@/shared/ui';
 import { useCampaign } from '@/features/campaigns/api/queries';
 import { useSetLocationVisibility } from '@/features/locations/api';
 import { LOCATION_VISIBILITY_FIELDS, LOCATION_BASIC_PRESET } from '@/shared/lib/visibilityFields';
@@ -909,11 +909,7 @@ export default function LocationDetailPage() {
   }
 
   if (isError || !location) {
-    return (
-      <main className="p-12">
-        <p className="text-tertiary text-sm">{t('not_found')}</p>
-      </main>
-    );
+    return <NotFoundState backTo={`/campaigns/${campaignId}/locations`} backLabel={t('title')} />;
   }
 
   // Parent location

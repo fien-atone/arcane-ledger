@@ -7,7 +7,7 @@ import { useNpcs, useSetNpcVisibility } from '@/features/npcs/api/queries';
 import { useLocations, useSetLocationVisibility } from '@/features/locations/api';
 import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { SessionEditDrawer } from '@/features/sessions/ui';
-import { LocationIcon, InlineRichField, RichContent, SectionDisabled, SectionBackground } from '@/shared/ui';
+import { LocationIcon, InlineRichField, NotFoundState, RichContent, SectionDisabled, SectionBackground } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { QuestStatus } from '@/entities/quest';
@@ -127,11 +127,7 @@ export default function SessionDetailPage() {
   }
 
   if (isError || !session) {
-    return (
-      <main className="p-12">
-        <p className="text-tertiary text-sm">{t('not_found')}</p>
-      </main>
-    );
+    return <NotFoundState backTo={`/campaigns/${campaignId}/sessions`} backLabel={t('title')} />;
   }
 
   // Prev / next navigation

@@ -7,7 +7,7 @@ import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries
 import { useGroups } from '@/features/groups/api';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, InlineRichField, SectionDisabled, SectionBackground } from '@/shared/ui';
+import { ImageUpload, InlineRichField, NotFoundState, SectionDisabled, SectionBackground } from '@/shared/ui';
 import { uploadFile } from '@/shared/api/uploadFile';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { useAuthStore } from '@/features/auth';
@@ -83,11 +83,7 @@ export default function CharacterDetailPage() {
   }
 
   if (isError || !character) {
-    return (
-      <main className="p-12">
-        <p className="text-tertiary text-sm">{t('not_found')}</p>
-      </main>
-    );
+    return <NotFoundState backTo={`/campaigns/${campaignId}/party`} backLabel={t('title')} />;
   }
 
   const matchedSpecies = speciesEnabled

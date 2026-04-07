@@ -7,7 +7,7 @@ import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries
 import { useNpcs, useAddNPCGroupMembership, useRemoveNPCGroupMembership, useSetNPCGroupMembershipVisibility } from '@/features/npcs/api/queries';
 import { useParty, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
 import { useGroupTypes } from '@/features/groupTypes';
-import { InlineRichField, SectionDisabled, SectionBackground, VisibilityPanel } from '@/shared/ui';
+import { InlineRichField, NotFoundState, SectionDisabled, SectionBackground, VisibilityPanel } from '@/shared/ui';
 import { GROUP_VISIBILITY_FIELDS, GROUP_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import type { NPC, NpcStatus } from '@/entities/npc';
 import type { Group } from '@/entities/group';
@@ -182,7 +182,7 @@ export default function GroupDetailPage() {
   }
 
   if (isError || !group) {
-    return <main className="p-12 text-on-surface-variant text-sm">{t('not_found')}</main>;
+    return <NotFoundState backTo={`/campaigns/${campaignId}/groups`} backLabel={t('title')} />;
   }
 
   return (
