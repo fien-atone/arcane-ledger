@@ -46,7 +46,7 @@ export const useSaveGroupType = (campaignId: string) => {
         },
         refetchQueries: ['GroupTypes'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -62,7 +62,7 @@ export const useDeleteGroupType = () => {
         variables: { id },
         refetchQueries: ['GroupTypes'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,

@@ -78,7 +78,7 @@ export function useSaveLocationType(campaignId: string) {
         variables: { campaignId, id: id || undefined, ...rest },
         refetchQueries: ['LocationTypes'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -94,7 +94,7 @@ export function useDeleteLocationType() {
         variables: { id },
         refetchQueries: ['LocationTypes', 'ContainmentRules'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -117,7 +117,7 @@ export function useSaveContainmentRule() {
         variables: { id: rule.id || undefined, parentTypeId: rule.parentTypeId, childTypeId: rule.childTypeId },
         refetchQueries: ['ContainmentRules'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -132,7 +132,7 @@ export function useDeleteContainmentRule() {
       execute({
         variables: { id },
         refetchQueries: [{ query: CONTAINMENT_RULES_QUERY }],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,

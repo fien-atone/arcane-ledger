@@ -94,7 +94,7 @@ export const useSaveGroup = () => {
       execute({
         variables: { campaignId: group.campaignId, id: group.id || undefined, input },
         refetchQueries: ['Groups'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -112,7 +112,7 @@ export const useDeleteGroup = () => {
       execute({
         variables: { campaignId, id: groupId },
         refetchQueries: ['Groups'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,

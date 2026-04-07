@@ -159,7 +159,7 @@ export const useSaveCampaign = () => {
           { query: CAMPAIGN_QUERY, variables: { id: campaign.id } },
         ],
         awaitRefetchQueries: true,
-      }).then(() => options?.onSuccess?.());
+      }).then(() => options?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
@@ -183,7 +183,7 @@ export const useCreateCampaign = () => {
       }).then((result) => {
         const created = (result.data as any)?.createCampaign;
         options?.onSuccess?.(created);
-      });
+      }).catch(() => {});
     },
     isPending: loading,
   };

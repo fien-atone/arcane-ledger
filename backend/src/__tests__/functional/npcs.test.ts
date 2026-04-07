@@ -71,6 +71,42 @@ afterAll(async () => {
 const NPC_FIELDS = `id campaignId name aliases status gender age species appearance personality description motivation flaws gmNotes`;
 
 describe('NPCs', () => {
+  it('rejects creating an NPC with empty name', async () => {
+    // Backend must validate that name is non-empty (GraphQL String! only
+    // forbids null, not empty string). Empty/whitespace names should be
+    // rejected with BAD_USER_INPUT error.
+    const res = await graphql(
+      request,
+      `mutation SaveNPC($campaignId: ID!, $input: NPCInput!) {
+        saveNPC(campaignId: $campaignId, input: $input) { id }
+      }`,
+      {
+        campaignId: CAMPAIGN_ID,
+        input: { name: '' },
+      },
+      gmToken,
+    );
+    expect(res.errors).toBeDefined();
+    expect(res.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
+    expect(res.errors?.[0]?.message).toMatch(/required/i);
+  });
+
+  it('rejects creating an NPC with whitespace-only name', async () => {
+    const res = await graphql(
+      request,
+      `mutation SaveNPC($campaignId: ID!, $input: NPCInput!) {
+        saveNPC(campaignId: $campaignId, input: $input) { id }
+      }`,
+      {
+        campaignId: CAMPAIGN_ID,
+        input: { name: '   ' },
+      },
+      gmToken,
+    );
+    expect(res.errors).toBeDefined();
+    expect(res.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
+  });
+
   it('creates an NPC with generated UUID and correct campaignId', async () => {
     // Create a new NPC via saveNPC mutation.
     // Verify: server generates UUID (not client), campaignId matches,

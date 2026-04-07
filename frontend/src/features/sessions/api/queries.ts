@@ -132,7 +132,7 @@ export const useSaveSession = (campaignId: string) => {
             questIds: !options?.only || options.only === 'questIds' ? session.questIds : undefined,
           },
         },
-      }).then(() => options?.onSuccess?.()),
+      }).then(() => options?.onSuccess?.()).catch(() => {}),
     isPending: loading,
   };
 };
@@ -146,7 +146,7 @@ export const useDeleteSession = (campaignId: string) => {
     mutate: (id: string, options?: { onSuccess?: () => void }) => {
       deleteSession({
         variables: { campaignId, id },
-      }).then(() => options?.onSuccess?.());
+      }).then(() => options?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
