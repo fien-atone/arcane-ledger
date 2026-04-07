@@ -1,5 +1,5 @@
-import { ApolloClient, ApolloLink, InMemoryCache, createHttpLink, split, from } from '@apollo/client';
-import { onError } from '@apollo/client/link/error';
+import { ApolloClient, ApolloLink, InMemoryCache, createHttpLink, split, from, CombinedGraphQLErrors } from '@apollo/client';
+import { ErrorLink } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -45,30 +45,29 @@ const loadingLink = new ApolloLink((operation, forward) => {
   });
 });
 
-const errorLink = onError((errorResponse: any) => {
-  const networkError = errorResponse.networkError;
-  const graphQLErrors = errorResponse.graphQLErrors;
-  const operationKind = errorResponse.operation?.query?.definitions?.[0]?.operation;
+const errorLink = new ErrorLink(({ error, operation }: any) => {
+  const operationKind = operation?.query?.definitions?.[0]?.operation;
 
-  // Network failures: show full-screen overlay
-  if (networkError) {
-    useConnectionStore.getState().setBackendDown(true);
+  // GraphQL errors come as CombinedGraphQLErrors in Apollo Client v4
+  if (CombinedGraphQLErrors.is(error)) {
+    // Show toast for mutations (so users see save/delete failures).
+    // Queries usually have inline error display via the page's isError state.
+    if (operationKind === 'mutation') {
+      for (const err of error.errors) {
+        const code = err.extensions?.code;
+        // Skip auth errors — let route guards handle them
+        if (code === 'UNAUTHENTICATED') continue;
+        showToast({
+          kind: 'error',
+          message: err.message || 'Something went wrong',
+        });
+      }
+    }
     return;
   }
 
-  // GraphQL errors: show toast for mutations (so users see save/delete failures).
-  // Queries usually have inline error display via the page's isError state.
-  if (graphQLErrors && graphQLErrors.length > 0 && operationKind === 'mutation') {
-    for (const err of graphQLErrors) {
-      const code = err.extensions?.code;
-      // Skip auth errors — let route guards handle them
-      if (code === 'UNAUTHENTICATED') continue;
-      showToast({
-        kind: 'error',
-        message: err.message || 'Something went wrong',
-      });
-    }
-  }
+  // Network failures: show full-screen overlay
+  useConnectionStore.getState().setBackendDown(true);
 });
 
 const wsLink = new GraphQLWsLink(
