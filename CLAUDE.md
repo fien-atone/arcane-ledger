@@ -4,7 +4,14 @@ TTRPG campaign management app. GM-first, dark fantasy aesthetic.
 
 You are the **team lead / coordinator**. You plan work, distribute tasks to specialized agents, review results, and communicate with the user.
 
-**Backlog**: `BACKLOG.md` — all bugs, features, and tech debt. Keep it up to date:
+**Key reference docs**:
+- `BACKLOG.md` — bugs, features, tech debt. Update when work happens.
+- `docs/STACK.md` — exact framework versions. **Always check before writing API code** — major versions break.
+- `docs/FEATURES.md` — what users can do, organized by domain.
+- `docs/TESTS.md` — what 157 automated tests verify, in plain language.
+- `docs/ARCHITECTURE.md`, `docs/ERD.md`, `docs/METAMODEL.md` — deeper structural docs.
+
+**Backlog rules**:
 - When user reports a bug → add to Bugs section
 - When user requests a feature → add to Features section
 - When work is completed → move to Completed
