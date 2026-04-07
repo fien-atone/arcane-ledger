@@ -1,36 +1,25 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLoadingStore } from '@/shared/api/loadingStore';
 
 /**
- * Top-of-screen loading bar (like GitHub/Vercel/YouTube).
- * Shows when any GraphQL request is in-flight for >150ms.
- * Smoothly animates to ~80% during loading, then snaps to 100% and fades out.
+ * Compact loading indicator pinned to the top-center of the screen.
+ * Appears when any GraphQL request is in-flight for >200ms (avoids flashing
+ * on fast requests). Sits next to where the campaign name pill lives.
  */
 export function GlobalLoadingBar() {
   const count = useLoadingStore((s) => s.count);
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (count > 0) {
-      // Delay showing the bar so quick requests don't flash it
-      const showTimer = setTimeout(() => {
-        setVisible(true);
-        setProgress(15);
-        // Gradual increment toward 80%
-        const interval = setInterval(() => {
-          setProgress((p) => (p < 80 ? p + (80 - p) * 0.1 : p));
-        }, 200);
-        return () => clearInterval(interval);
-      }, 150);
+      // Delay showing so quick requests don't flash
+      const showTimer = setTimeout(() => setVisible(true), 200);
       return () => clearTimeout(showTimer);
     } else if (visible) {
-      // Snap to 100% then fade out
-      setProgress(100);
-      const hideTimer = setTimeout(() => {
-        setVisible(false);
-        setProgress(0);
-      }, 300);
+      // Brief delay before hiding to avoid flicker between back-to-back requests
+      const hideTimer = setTimeout(() => setVisible(false), 150);
       return () => clearTimeout(hideTimer);
     }
   }, [count, visible]);
@@ -38,11 +27,15 @@ export function GlobalLoadingBar() {
   if (!visible) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[200] h-0.5 pointer-events-none">
-      <div
-        className="h-full bg-gradient-to-r from-primary via-primary to-primary/70 shadow-[0_0_8px_rgba(242,202,80,0.5)] transition-all duration-200 ease-out"
-        style={{ width: `${progress}%`, opacity: progress === 100 ? 0 : 1 }}
-      />
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] pointer-events-none">
+      <div className="flex items-center gap-2 px-4 py-1.5 bg-surface-container/95 backdrop-blur-md border border-primary/30 rounded-full shadow-lg shadow-primary/10">
+        <span className="material-symbols-outlined text-[14px] text-primary animate-spin">
+          progress_activity
+        </span>
+        <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+          {t('loading')}
+        </span>
+      </div>
     </div>
   );
 }
