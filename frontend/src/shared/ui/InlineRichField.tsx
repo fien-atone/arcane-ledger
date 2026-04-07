@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import DOMPurify from 'dompurify';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
@@ -134,7 +135,7 @@ export const InlineRichField = memo(function InlineRichField({ label, value, onS
         prose-blockquote:border-l-primary/40 prose-blockquote:text-on-surface-variant/70 prose-blockquote:italic
         prose-hr:border-outline-variant/20
         ${readOnly ? '' : 'cursor-text group/prose hover:prose-p:text-on-surface'} transition-colors`}
-      dangerouslySetInnerHTML={{ __html: value }}
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(value) }}
     />
   ) : readOnly ? (
     <p className="text-xs text-on-surface-variant/30 italic">{resolvedPlaceholder}</p>

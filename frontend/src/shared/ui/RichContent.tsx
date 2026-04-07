@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 /** Convert a plain-text string to minimal HTML if it doesn't already contain tags. */
 export function toHtml(value: string | undefined | null): string {
   if (!value) return '';
@@ -32,7 +34,7 @@ export function RichContent({ value, className }: Props) {
   return (
     <div
       className={`${PROSE_CLS} ${className ?? ''}`}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
     />
   );
 }
