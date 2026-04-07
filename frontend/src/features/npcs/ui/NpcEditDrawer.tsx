@@ -84,6 +84,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   }, [open, npc]);
 
   const handleSave = () => {
+    if (!name.trim()) return;
     const ts = now();
     const selectedSpecies = allSpecies?.find((s) => s.id === speciesId);
     const record: NPC = {
@@ -147,7 +148,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           {/* Name */}
           <div>
             <label className={labelCls}>
-              {t('field_name')}
+              {t('field_name')} <span className="text-primary">*</span>
             </label>
             <input
               type="text"
@@ -234,7 +235,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           </button>
           <button
             onClick={handleSave}
-            disabled={save.isPending}
+            disabled={!name.trim() || save.isPending}
             className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
             {save.isPending ? (
