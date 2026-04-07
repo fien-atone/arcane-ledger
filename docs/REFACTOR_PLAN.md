@@ -150,7 +150,7 @@ Sorted by pain/risk ratio. **Do not skip ahead** — the order matters because e
 
 | # | Page | Lines | Status | Notes |
 |---|---|---|---|---|
-| **1** | **NpcDetailPage** | 895 | 🚧 PILOT | Mid-complexity, clear sections, no map. Best test case. |
+| **1** | **NpcDetailPage** | 895 → 112 | ✅ done | Pilot shipped. 10 sections + 1 hook + 11 test files (25 tests). Test infra set up: Vitest + Testing Library + Apollo MockedProvider. Lessons: Apollo v4 MockedProvider drops `addTypename` prop; `MockedResponse` type lives at `MockLink.MockedResponse<any, any>`. |
 | 2 | LocationTypesPage | 717 | pending | Isolated domain, low regression risk |
 | 3 | SessionDetailPage | 645 | pending | Recently touched, we know the code |
 | 4 | PartyPage | 606 | pending | Simple structure, few mutations |
