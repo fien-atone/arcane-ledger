@@ -12,6 +12,7 @@ import { typeDefs } from './schema/index.js';
 import { resolvers } from './resolvers/index.js';
 import { authenticate } from './auth/middleware.js';
 import { uploadRouter } from './upload/router.js';
+import { createLoaders } from './loaders.js';
 import type { Context } from './context.js';
 
 export async function createApp() {
@@ -49,7 +50,7 @@ export async function createApp() {
       context: async (ctx) => {
         const token = ctx.connectionParams?.authorization as string | undefined;
         const user = token ? await authenticate(token, prisma) : null;
-        return { prisma, user, _roleCache: new Map() };
+        return { prisma, user, _roleCache: new Map(), loaders: createLoaders(prisma) };
       },
     },
     wsServer,
@@ -66,7 +67,7 @@ export async function createApp() {
       context: async ({ req }): Promise<Context> => {
         const token = req.headers.authorization?.replace('Bearer ', '');
         const user = token ? await authenticate(token, prisma) : null;
-        return { prisma, user, _roleCache: new Map() };
+        return { prisma, user, _roleCache: new Map(), loaders: createLoaders(prisma) };
       },
     }) as unknown as express.RequestHandler,
   );

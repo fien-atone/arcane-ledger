@@ -317,14 +317,10 @@ export const partyResolvers = {
 
   // ── Field resolvers ────────────────────────────────────────────────────────
 
-  CampaignInvitation: {
-    campaign: (invitation: { campaignId: string }, _: unknown, { prisma }: Context) =>
-      prisma.campaign.findUniqueOrThrow({ where: { id: invitation.campaignId } }),
-    user: (invitation: { userId: string }, _: unknown, { prisma }: Context) =>
-      prisma.user.findUniqueOrThrow({ where: { id: invitation.userId } }),
-    invitedBy: (invitation: { invitedById: string }, _: unknown, { prisma }: Context) =>
-      prisma.user.findUniqueOrThrow({ where: { id: invitation.invitedById } }),
-  },
+  // Note: CampaignInvitation field resolvers removed.
+  // The campaign/user/invitedBy fields are populated via Prisma `include` in
+  // myInvitations / campaignInvitations / partySlots queries, so GraphQL
+  // returns them directly from the parent object — avoiding N+1 queries.
 
   PartySlot: {
     member: (slot: { member: unknown }) => slot.member,
