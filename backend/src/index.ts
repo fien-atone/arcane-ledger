@@ -21,8 +21,12 @@ const httpServer = createServer(app);
 // Expose Prisma for upload router via app.locals
 app.locals.prisma = prisma;
 
-// Top-level CORS — covers /graphql, /api, /uploads
-app.use(cors());
+// CORS — restrict to known frontend origins
+const CORS_ORIGINS = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim())
+  : ['http://localhost:5173', 'http://localhost:3000'];
+const corsOptions = { origin: CORS_ORIGINS, credentials: true };
+app.use(cors(corsOptions));
 
 // Static file serving for uploaded images
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
@@ -55,7 +59,7 @@ await server.start();
 
 app.use(
   '/graphql',
-  cors<cors.CorsRequest>(),
+  cors<cors.CorsRequest>(corsOptions),
   express.json({ limit: '10mb' }),
   expressMiddleware(server, {
     context: async ({ req }): Promise<Context> => {
