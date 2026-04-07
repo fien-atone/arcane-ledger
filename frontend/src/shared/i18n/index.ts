@@ -13,7 +13,6 @@ import enParty from './locales/en/party.json';
 import enQuests from './locales/en/quests.json';
 import enGroups from './locales/en/groups.json';
 import enSpecies from './locales/en/species.json';
-import enFactions from './locales/en/factions.json';
 import enSocial from './locales/en/social.json';
 import enAdmin from './locales/en/admin.json';
 import enProfile from './locales/en/profile.json';
@@ -29,7 +28,6 @@ import ruParty from './locales/ru/party.json';
 import ruQuests from './locales/ru/quests.json';
 import ruGroups from './locales/ru/groups.json';
 import ruSpecies from './locales/ru/species.json';
-import ruFactions from './locales/ru/factions.json';
 import ruSocial from './locales/ru/social.json';
 import ruAdmin from './locales/ru/admin.json';
 import ruProfile from './locales/ru/profile.json';
@@ -51,7 +49,6 @@ i18n
         quests: enQuests,
         groups: enGroups,
         species: enSpecies,
-        factions: enFactions,
         social: enSocial,
         admin: enAdmin,
         profile: enProfile,
@@ -68,7 +65,6 @@ i18n
         quests: ruQuests,
         groups: ruGroups,
         species: ruSpecies,
-        factions: ruFactions,
         social: ruSocial,
         admin: ruAdmin,
         profile: ruProfile,
