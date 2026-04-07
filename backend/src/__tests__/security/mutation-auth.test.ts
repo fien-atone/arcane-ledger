@@ -6,10 +6,9 @@
  * 1. "Mutations that enforce authentication" -- verifies that unauthenticated requests
  *    are rejected and that authorized roles (GM, Player) are accepted.
  *
- * 2. "Mutations WITHOUT auth enforcement (security gaps)" -- documents mutations that
- *    currently accept unauthenticated requests. These are known security gaps that
- *    should be fixed. When auth is added to a mutation, its test should be moved
- *    from section 2 to section 1.
+ * 2. "Mutations now properly enforce GM authorization" -- verifies that
+ *    GM-only mutations reject unauthenticated requests, reject Player role
+ *    with FORBIDDEN, and still allow GM access.
  *
  * Uses nonexistent entity IDs for destructive mutations to avoid modifying seed data.
  *
@@ -23,6 +22,7 @@ import {
   loginAs,
   graphql,
   hasAuthError,
+  hasErrorCode,
   GM_EMAIL,
   GM_PASSWORD,
   PLAYER_EMAIL,
@@ -79,7 +79,9 @@ describe('Mutations that enforce authentication', () => {
   });
 
   describe('saveCharacter (create)', () => {
-    // saveCharacter requires authentication. Both GM and Player can create characters.
+    // saveCharacter now requires GM for ALL operations (create + update).
+    // Per the GM-first design, only the GM creates characters and assigns
+    // them to players; players cannot self-create characters.
     const mutation = `
       mutation SaveCharacter($campaignId: ID!, $name: String!) {
         saveCharacter(campaignId: $campaignId, name: $name) { id name }
@@ -94,22 +96,26 @@ describe('Mutations that enforce authentication', () => {
     });
 
     it('allows GM', async () => {
-      // GM can create characters (typically for NPC-like party members).
+      // GM can create characters (and later assign to players).
       const res = await graphql(request, mutation, variables, gmToken);
       expect(hasAuthError(res)).toBe(false);
       expect(res.data?.saveCharacter).toBeDefined();
     });
 
-    it('allows Player (creates own character)', async () => {
-      // Players can also create their own characters.
-      const res = await graphql(request, mutation, { ...variables, name: '__test_character_player__' }, playerToken);
-      expect(hasAuthError(res)).toBe(false);
-      expect(res.data?.saveCharacter).toBeDefined();
+    it('rejects Player role with FORBIDDEN', async () => {
+      // Players cannot create characters; only the GM can.
+      const res = await graphql(
+        request,
+        mutation,
+        { ...variables, name: '__test_character_player_blocked__' },
+        playerToken,
+      );
+      expect(hasErrorCode(res, 'FORBIDDEN')).toBe(true);
     });
   });
 
   describe('saveCharacter (update)', () => {
-    // saveCharacter with an existing ID requires authentication.
+    // saveCharacter with an existing ID requires GM role.
     const mutation = `
       mutation SaveCharacter($campaignId: ID!, $id: ID, $name: String!) {
         saveCharacter(campaignId: $campaignId, id: $id, name: $name) { id name }
@@ -125,6 +131,11 @@ describe('Mutations that enforce authentication', () => {
     it('allows GM', async () => {
       const res = await graphql(request, mutation, variables, gmToken);
       expect(hasAuthError(res)).toBe(false);
+    });
+
+    it('rejects Player role with FORBIDDEN', async () => {
+      const res = await graphql(request, mutation, variables, playerToken);
+      expect(hasErrorCode(res, 'FORBIDDEN')).toBe(true);
     });
   });
 
@@ -157,63 +168,61 @@ describe('Mutations that enforce authentication', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  SECURITY GAP: Mutations that currently have NO auth check.
-//  These tests document the current (broken) behavior and will need to be
-//  updated when auth enforcement is added to each mutation.
+//  GM-only mutations — these previously had NO auth enforcement. After the
+//  security hardening, each now requires a GM role on the target campaign.
+//  Tests verify: unauthenticated requests are rejected, Player role is
+//  rejected with FORBIDDEN, and GM access continues to work.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-interface NoAuthMutationTest {
+interface GmOnlyMutationTest {
   /** Human-readable name */
   name: string;
   /** GraphQL mutation string */
   mutation: string;
   /** Variables to send */
   variables: Record<string, unknown>;
-  /**
-   * If true, the mutation is expected to succeed without auth.
-   * If false, it will fail for a non-auth reason (e.g., entity not found).
-   * Either way, it should NOT produce an auth error -- that's the gap.
-   */
-  expectsSuccess?: boolean;
 }
 
 /**
- * Generate a test suite documenting that a mutation currently DOES NOT require authentication.
- * Creates two tests: one proving unauthenticated requests succeed (the security gap),
- * and one confirming the mutation also works with a GM token.
- * When auth enforcement is added to the mutation, the first test's expectation
- * should be flipped to `expect(hasAuthError(res)).toBe(true)`.
+ * Generate a test suite verifying that a mutation properly enforces GM-only
+ * authorization. Creates three tests:
+ *   1. unauthenticated request is rejected (auth error)
+ *   2. Player role is rejected with FORBIDDEN
+ *   3. GM request does not produce an auth error (still works)
  */
-function testNoAuthGap(opts: NoAuthMutationTest) {
-  describe(`[NO AUTH] ${opts.name}`, () => {
-    it('currently allows unauthenticated requests (SECURITY GAP)', async () => {
+function testGmOnly(opts: GmOnlyMutationTest) {
+  describe(opts.name, () => {
+    it('rejects unauthenticated requests', async () => {
       const res = await graphql(request, opts.mutation, opts.variables);
-      // This documents the gap: no auth error is returned
-      expect(hasAuthError(res)).toBe(false);
+      expect(hasAuthError(res)).toBe(true);
     });
 
-    it('works with GM token', async () => {
+    it('rejects Player role with FORBIDDEN', async () => {
+      const res = await graphql(request, opts.mutation, opts.variables, playerToken);
+      expect(hasErrorCode(res, 'FORBIDDEN')).toBe(true);
+    });
+
+    it('allows GM', async () => {
       const res = await graphql(request, opts.mutation, opts.variables, gmToken);
       expect(hasAuthError(res)).toBe(false);
     });
   });
 }
 
-describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
+describe('Mutations now properly enforce GM authorization', () => {
   // ── NPC ────────────────────────────────────────────────────────────────
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveNPC (create)',
     mutation: `
       mutation SaveNPC($campaignId: ID!, $input: NPCInput!) {
         saveNPC(campaignId: $campaignId, input: $input) { id name }
       }
     `,
-    variables: { campaignId: CAMPAIGN_ID, input: { name: '__test_npc_noauth__' } },
-    expectsSuccess: true,
+    variables: { campaignId: CAMPAIGN_ID, input: { name: '__test_npc_auth__' } },
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveNPC (update)',
     mutation: `
       mutation SaveNPC($campaignId: ID!, $id: ID, $input: NPCInput!) {
@@ -221,34 +230,34 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
       }
     `,
     variables: { campaignId: CAMPAIGN_ID, id: 'npc-kronheyv', input: { name: 'Lord-Admiral Edward Kronhev' } },
-    expectsSuccess: true,
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'deleteNPC',
     mutation: `
       mutation DeleteNPC($campaignId: ID!, $id: ID!) {
         deleteNPC(campaignId: $campaignId, id: $id)
       }
     `,
-    // Uses nonexistent ID so we don't destroy seed data, but no auth error is returned
+    // Uses nonexistent ID so GM-path doesn't destroy seed data. Auth/role
+    // checks fire before the lookup, so this still exercises the
+    // unauthenticated + Player rejection paths correctly.
     variables: { campaignId: CAMPAIGN_ID, id: 'nonexistent-npc-for-auth-test' },
   });
 
   // ── Location ──────────────────────────────────────────────────────────
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveLocation (create)',
     mutation: `
       mutation SaveLocation($campaignId: ID!, $input: LocationInput!) {
         saveLocation(campaignId: $campaignId, input: $input) { id name }
       }
     `,
-    variables: { campaignId: CAMPAIGN_ID, input: { name: '__test_loc_noauth__', type: 'tavern' } },
-    expectsSuccess: true,
+    variables: { campaignId: CAMPAIGN_ID, input: { name: '__test_loc_auth__', type: 'tavern' } },
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveLocation (update)',
     mutation: `
       mutation SaveLocation($campaignId: ID!, $id: ID, $input: LocationInput!) {
@@ -256,10 +265,9 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
       }
     `,
     variables: { campaignId: CAMPAIGN_ID, id: 'loc-fc-farchester', input: { name: 'Farchester', type: 'city' } },
-    expectsSuccess: true,
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'deleteLocation',
     mutation: `
       mutation DeleteLocation($campaignId: ID!, $id: ID!) {
@@ -271,18 +279,17 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
 
   // ── Session ───────────────────────────────────────────────────────────
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveSession (create)',
     mutation: `
       mutation SaveSession($campaignId: ID!, $input: SessionInput!) {
         saveSession(campaignId: $campaignId, input: $input) { id title }
       }
     `,
-    variables: { campaignId: CAMPAIGN_ID, input: { number: 9999, title: '__test_session_noauth__' } },
-    expectsSuccess: true,
+    variables: { campaignId: CAMPAIGN_ID, input: { number: 9999, title: '__test_session_auth__' } },
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveSession (update)',
     mutation: `
       mutation SaveSession($campaignId: ID!, $id: ID, $input: SessionInput!) {
@@ -290,10 +297,9 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
       }
     `,
     variables: { campaignId: CAMPAIGN_ID, id: 'ses-fc-1', input: { number: 1, title: 'Session 1 - 20.02.2026' } },
-    expectsSuccess: true,
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'deleteSession',
     mutation: `
       mutation DeleteSession($campaignId: ID!, $id: ID!) {
@@ -305,18 +311,17 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
 
   // ── Quest ─────────────────────────────────────────────────────────────
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveQuest (create)',
     mutation: `
       mutation SaveQuest($campaignId: ID!, $input: QuestInput!) {
         saveQuest(campaignId: $campaignId, input: $input) { id title }
       }
     `,
-    variables: { campaignId: CAMPAIGN_ID, input: { title: '__test_quest_noauth__' } },
-    expectsSuccess: true,
+    variables: { campaignId: CAMPAIGN_ID, input: { title: '__test_quest_auth__' } },
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveQuest (update)',
     mutation: `
       mutation SaveQuest($campaignId: ID!, $id: ID, $input: QuestInput!) {
@@ -324,10 +329,9 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
       }
     `,
     variables: { campaignId: CAMPAIGN_ID, id: 'q-fc-1', input: { title: 'Find Special Alcohol for Lord-Admiral' } },
-    expectsSuccess: true,
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'deleteQuest',
     mutation: `
       mutation DeleteQuest($campaignId: ID!, $id: ID!) {
@@ -339,18 +343,17 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
 
   // ── Group ─────────────────────────────────────────────────────────────
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveGroup (create)',
     mutation: `
       mutation SaveGroup($campaignId: ID!, $input: GroupInput!) {
         saveGroup(campaignId: $campaignId, input: $input) { id name }
       }
     `,
-    variables: { campaignId: CAMPAIGN_ID, input: { name: '__test_group_noauth__' } },
-    expectsSuccess: true,
+    variables: { campaignId: CAMPAIGN_ID, input: { name: '__test_group_auth__' } },
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveGroup (update)',
     mutation: `
       mutation SaveGroup($campaignId: ID!, $id: ID, $input: GroupInput!) {
@@ -358,10 +361,9 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
       }
     `,
     variables: { campaignId: CAMPAIGN_ID, id: 'group-fc-party', input: { name: 'The Farchester Party' } },
-    expectsSuccess: true,
   });
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'deleteGroup',
     mutation: `
       mutation DeleteGroup($campaignId: ID!, $id: ID!) {
@@ -371,9 +373,9 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
     variables: { campaignId: CAMPAIGN_ID, id: 'nonexistent-group-for-auth-test' },
   });
 
-  // ── Character (delete only — create/update DO check auth) ─────────────
+  // ── Character ─────────────────────────────────────────────────────────
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'deleteCharacter',
     mutation: `
       mutation DeleteCharacter($campaignId: ID!, $id: ID!) {
@@ -385,7 +387,7 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
 
   // ── Relation ──────────────────────────────────────────────────────────
 
-  testNoAuthGap({
+  testGmOnly({
     name: 'saveRelation (create)',
     mutation: `
       mutation SaveRelation($campaignId: ID!, $input: RelationInput!) {
@@ -402,16 +404,66 @@ describe('Mutations WITHOUT auth enforcement (security gaps)', () => {
         friendliness: 50,
       },
     },
-    expectsSuccess: true,
   });
 
-  testNoAuthGap({
-    name: 'deleteRelation',
-    mutation: `
+  // deleteRelation has a different shape: it looks up the relation by id
+  // (findUniqueOrThrow) BEFORE calling requireGM, because it needs the
+  // campaignId from the relation. Using a nonexistent id would throw
+  // "not found" before auth runs, so we create a real relation via GM first
+  // and then exercise the auth paths against it.
+  describe('deleteRelation', () => {
+    const mutation = `
       mutation DeleteRelation($id: ID!) {
         deleteRelation(id: $id)
       }
-    `,
-    variables: { id: 'nonexistent-relation-for-auth-test' },
+    `;
+    const createMutation = `
+      mutation SaveRelation($campaignId: ID!, $input: RelationInput!) {
+        saveRelation(campaignId: $campaignId, input: $input) { id }
+      }
+    `;
+
+    async function createRelation(): Promise<string> {
+      const res = await graphql(
+        request,
+        createMutation,
+        {
+          campaignId: CAMPAIGN_ID,
+          input: {
+            fromEntityType: 'npc',
+            fromEntityId: 'npc-kronheyv',
+            toEntityType: 'npc',
+            toEntityId: 'npc-stoungriv',
+            friendliness: 50,
+          },
+        },
+        gmToken,
+      );
+      const rel = res.data?.saveRelation as { id: string } | undefined;
+      if (!rel) throw new Error(`Failed to create relation: ${JSON.stringify(res.errors)}`);
+      return rel.id;
+    }
+
+    it('rejects unauthenticated requests', async () => {
+      const id = await createRelation();
+      const res = await graphql(request, mutation, { id });
+      expect(hasAuthError(res)).toBe(true);
+      // Clean up via GM
+      await graphql(request, mutation, { id }, gmToken);
+    });
+
+    it('rejects Player role with FORBIDDEN', async () => {
+      const id = await createRelation();
+      const res = await graphql(request, mutation, { id }, playerToken);
+      expect(hasErrorCode(res, 'FORBIDDEN')).toBe(true);
+      // Clean up via GM
+      await graphql(request, mutation, { id }, gmToken);
+    });
+
+    it('allows GM', async () => {
+      const id = await createRelation();
+      const res = await graphql(request, mutation, { id }, gmToken);
+      expect(hasAuthError(res)).toBe(false);
+    });
   });
 });

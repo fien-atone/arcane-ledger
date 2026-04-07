@@ -1,13 +1,12 @@
 /**
  * CORS Configuration Tests
  *
- * Documents the current CORS behavior of the backend. The server currently uses
- * open CORS (cors() with no options), allowing all origins. These tests serve as
- * a baseline: when CORS is tightened for production, update expectations to verify
- * that only allowed origins receive CORS headers and that malicious origins are blocked.
+ * Verifies that the backend restricts CORS to a known whitelist of frontend
+ * origins (localhost:5173 and localhost:3000 by default). Malicious origins
+ * must NOT receive an `Access-Control-Allow-Origin` header reflecting them.
  *
- * Tests cover: OPTIONS preflight from arbitrary origins, preflight from localhost,
- * and CORS headers on actual POST requests.
+ * Tests cover: OPTIONS preflight from a disallowed origin, preflight from
+ * each whitelisted localhost origin, and CORS headers on actual POST requests.
  *
  * Prerequisites: none (no authentication needed).
  */
@@ -30,28 +29,24 @@ afterAll(async () => {
 });
 
 describe('CORS', () => {
-  // NOTE: The backend currently uses open CORS (cors() with no options),
-  // so all origins are allowed. These tests document the CURRENT behavior.
-  // When CORS is tightened, update expectations accordingly.
-
-  it('responds to OPTIONS preflight from any origin (currently open CORS)', async () => {
-    // Send a CORS preflight from a potentially malicious origin.
-    // Verify: server responds with 204 and Access-Control-Allow-Origin: *
-    // (This is a security gap -- production should whitelist origins.)
+  it('blocks OPTIONS preflight from a disallowed origin', async () => {
+    // A malicious origin must NOT be reflected back in the
+    // Access-Control-Allow-Origin header. The cors middleware simply omits
+    // the header (and does not set it to the origin) when the origin is not
+    // in the whitelist.
     const res = await request
       .options('/graphql')
       .set('Origin', 'https://evil.example.com')
       .set('Access-Control-Request-Method', 'POST')
       .set('Access-Control-Request-Headers', 'content-type,authorization');
 
-    // With open CORS, the server reflects the origin back
-    expect(res.status).toBe(204);
-    expect(res.headers['access-control-allow-origin']).toBe('*');
+    const allowOrigin = res.headers['access-control-allow-origin'];
+    expect(allowOrigin).not.toBe('https://evil.example.com');
+    expect(allowOrigin).not.toBe('*');
   });
 
-  it('responds to OPTIONS preflight from localhost (currently open CORS)', async () => {
-    // Send a CORS preflight from the local development frontend origin.
-    // Verify: same open CORS behavior as any other origin.
+  it('allows OPTIONS preflight from http://localhost:5173', async () => {
+    // The Vite dev server origin must be accepted and reflected back.
     const res = await request
       .options('/graphql')
       .set('Origin', 'http://localhost:5173')
@@ -59,10 +54,22 @@ describe('CORS', () => {
       .set('Access-Control-Request-Headers', 'content-type,authorization');
 
     expect(res.status).toBe(204);
-    expect(res.headers['access-control-allow-origin']).toBe('*');
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:5173');
   });
 
-  it('includes CORS headers on actual POST requests', async () => {
+  it('allows OPTIONS preflight from http://localhost:3000', async () => {
+    // The alternate localhost dev origin must also be accepted.
+    const res = await request
+      .options('/graphql')
+      .set('Origin', 'http://localhost:3000')
+      .set('Access-Control-Request-Method', 'POST')
+      .set('Access-Control-Request-Headers', 'content-type,authorization');
+
+    expect(res.status).toBe(204);
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+  });
+
+  it('includes CORS headers on actual POST requests from allowed origin', async () => {
     // Verify that CORS headers are also present on real GraphQL POST requests,
     // not just on OPTIONS preflight. Uses a minimal introspection query.
     const res = await request
@@ -72,6 +79,20 @@ describe('CORS', () => {
       .send({ query: '{ __typename }' });
 
     expect(res.status).toBe(200);
-    expect(res.headers['access-control-allow-origin']).toBe('*');
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:5173');
+  });
+
+  it('does not reflect a disallowed origin on POST requests', async () => {
+    // Even on a successful POST, the server must not reflect an untrusted
+    // origin back in the CORS headers.
+    const res = await request
+      .post('/graphql')
+      .set('Origin', 'https://evil.example.com')
+      .set('Content-Type', 'application/json')
+      .send({ query: '{ __typename }' });
+
+    const allowOrigin = res.headers['access-control-allow-origin'];
+    expect(allowOrigin).not.toBe('https://evil.example.com');
+    expect(allowOrigin).not.toBe('*');
   });
 });
