@@ -17,4 +17,5 @@ export { EmptyState } from './EmptyState';
 export { DatePicker } from './DatePicker';
 export { SectionBackground } from './SectionBackground';
 export { SectionDisabled } from './SectionDisabled';
+export { NotFoundState } from './NotFoundState';
 export { VisibilityPanel } from './VisibilityPanel';

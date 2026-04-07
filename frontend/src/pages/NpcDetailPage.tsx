@@ -10,7 +10,7 @@ import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { useSpecies } from '@/features/species/api';
 import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, InlineRichField, LocationIcon, SectionBackground, SectionDisabled, VisibilityPanel } from '@/shared/ui';
+import { ImageUpload, InlineRichField, LocationIcon, NotFoundState, SectionBackground, SectionDisabled, VisibilityPanel } from '@/shared/ui';
 import { useCampaign } from '@/features/campaigns/api/queries';
 import { useSetNpcVisibility } from '@/features/npcs/api/queries';
 import { NPC_VISIBILITY_FIELDS, NPC_BASIC_PRESET } from '@/shared/lib/visibilityFields';
@@ -143,11 +143,7 @@ export default function NpcDetailPage() {
   }
 
   if (isError || !npc) {
-    return (
-      <main className="p-12">
-        <p className="text-tertiary text-sm">{t('not_found')}</p>
-      </main>
-    );
+    return <NotFoundState backTo={`/campaigns/${campaignId}/npcs`} backLabel={t('title')} />;
   }
 
   const st = STATUS_STYLES[npc.status];

@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuest, useSaveQuest, useDeleteQuest, useSetQuestVisibility } from '@/features/quests/api/queries';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { QuestEditDrawer } from '@/features/quests/ui';
-import { InlineRichField, SectionDisabled, SectionBackground, VisibilityPanel } from '@/shared/ui';
+import { InlineRichField, NotFoundState, SectionDisabled, SectionBackground, VisibilityPanel } from '@/shared/ui';
 import { QUEST_VISIBILITY_FIELDS, QUEST_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Quest, QuestStatus } from '@/entities/quest';
@@ -55,11 +55,7 @@ export default function QuestDetailPage() {
   }
 
   if (isError || !quest) {
-    return (
-      <main className="p-12">
-        <p className="text-tertiary text-sm">{t('not_found')}</p>
-      </main>
-    );
+    return <NotFoundState backTo={`/campaigns/${campaignId}/quests`} backLabel={t('title')} />;
   }
 
   const st = { ...STATUS_STYLE[quest.status], label: t(`status_${quest.status}`) };
