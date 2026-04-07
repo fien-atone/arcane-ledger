@@ -1,5 +1,6 @@
 import type { Context } from '../context.js';
-import { toEnum, getCampaignRole } from './utils.js';
+import { GraphQLError } from 'graphql';
+import { toEnum, getCampaignRole, requireGM } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
 import { redactEntity, NPC_FIELDS } from './redact.js';
 
@@ -33,8 +34,10 @@ export const npcResolvers = {
     saveNPC: async (
       _: unknown,
       { campaignId, id, input }: { campaignId: string; id?: string; input: { name: string; aliases?: string[]; status?: string; gender?: string; age?: number; species?: string; speciesId?: string; appearance?: string; personality?: string; description?: string; motivation?: string; flaws?: string; gmNotes?: string; image?: string } },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       const data: Record<string, unknown> = {
         name: input.name,
         aliases: input.aliases ?? [],
@@ -62,7 +65,9 @@ export const npcResolvers = {
       return result;
     },
 
-    deleteNPC: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteNPC: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       await prisma.nPC.delete({ where: { id } });
       publishCampaignEvent(campaignId, 'NPC', id, 'DELETED');
       return true;
@@ -71,8 +76,11 @@ export const npcResolvers = {
     addNPCLocationPresence: async (
       _: unknown,
       { npcId, locationId, note }: { npcId: string; locationId: string; note?: string },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      const { prisma } = ctx;
+      const npcForAuth = await prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      await requireGM(ctx, npcForAuth.campaignId);
       await prisma.nPCLocationPresence.upsert({
         where: { npcId_locationId: { npcId, locationId } },
         update: { note: note ?? null },
@@ -86,8 +94,11 @@ export const npcResolvers = {
     removeNPCLocationPresence: async (
       _: unknown,
       { npcId, locationId }: { npcId: string; locationId: string },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      const { prisma } = ctx;
+      const npcForAuth = await prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      await requireGM(ctx, npcForAuth.campaignId);
       await prisma.nPCLocationPresence.delete({
         where: { npcId_locationId: { npcId, locationId } },
       });
@@ -99,8 +110,11 @@ export const npcResolvers = {
     addNPCGroupMembership: async (
       _: unknown,
       { npcId, groupId, relation, subfaction }: { npcId: string; groupId: string; relation?: string; subfaction?: string },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      const { prisma } = ctx;
+      const npcForAuth = await prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      await requireGM(ctx, npcForAuth.campaignId);
       await prisma.nPCGroupMembership.upsert({
         where: { npcId_groupId: { npcId, groupId } },
         update: { relation: relation ?? null, subfaction: subfaction ?? null },
@@ -114,8 +128,11 @@ export const npcResolvers = {
     removeNPCGroupMembership: async (
       _: unknown,
       { npcId, groupId }: { npcId: string; groupId: string },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      const { prisma } = ctx;
+      const npcForAuth = await prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
+      await requireGM(ctx, npcForAuth.campaignId);
       await prisma.nPCGroupMembership.delete({
         where: { npcId_groupId: { npcId, groupId } },
       });
@@ -131,7 +148,7 @@ export const npcResolvers = {
     ) => {
       const npc = await ctx.prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
       const role = await getCampaignRole(ctx, npc.campaignId);
-      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      if (role !== 'GM') throw new GraphQLError('Only the GM can change visibility', { extensions: { code: 'FORBIDDEN' } });
       await ctx.prisma.nPCGroupMembership.update({
         where: { npcId_groupId: { npcId, groupId } },
         data: { playerVisible },
@@ -159,7 +176,7 @@ export const npcResolvers = {
     ) => {
       const npc = await ctx.prisma.nPC.findUniqueOrThrow({ where: { id: npcId } });
       const role = await getCampaignRole(ctx, npc.campaignId);
-      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      if (role !== 'GM') throw new GraphQLError('Only the GM can change visibility', { extensions: { code: 'FORBIDDEN' } });
       await ctx.prisma.nPCLocationPresence.update({
         where: { npcId_locationId: { npcId, locationId } },
         data: { playerVisible },
@@ -186,7 +203,7 @@ export const npcResolvers = {
       ctx: Context,
     ) => {
       const role = await getCampaignRole(ctx, campaignId);
-      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      if (role !== 'GM') throw new GraphQLError('Only the GM can change visibility', { extensions: { code: 'FORBIDDEN' } });
       const result = await ctx.prisma.nPC.update({
         where: { id },
         data: {

@@ -1,5 +1,6 @@
 import type { Context } from '../context.js';
-import { toEnum } from './utils.js';
+import { toEnum, requireGM } from './utils.js';
+import { GraphQLError } from 'graphql';
 import { publishCampaignEvent } from '../publish.js';
 
 export const campaignResolvers = {
@@ -41,8 +42,10 @@ export const campaignResolvers = {
       return { ...campaign, myRole: 'GM' };
     },
 
-    updateCampaign: async (_: unknown, args: { id: string; title?: string; description?: string; archivedAt?: string }, { prisma, user }: Context) => {
-      if (!user) throw new Error('Not authenticated');
+    updateCampaign: async (_: unknown, args: { id: string; title?: string; description?: string; archivedAt?: string }, ctx: Context) => {
+      const { prisma, user } = ctx;
+      if (!user) throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      await requireGM(ctx, args.id);
       const campaign = await prisma.campaign.update({
         where: { id: args.id },
         data: {
@@ -51,24 +54,18 @@ export const campaignResolvers = {
           ...(args.archivedAt !== undefined && { archivedAt: args.archivedAt ? new Date(args.archivedAt) : null }),
         },
       });
-      const member = await prisma.campaignMember.findUnique({
-        where: { campaignId_userId: { campaignId: args.id, userId: user.id } },
-      });
       publishCampaignEvent(args.id, 'CAMPAIGN', args.id, 'UPDATED');
-      return { ...campaign, myRole: member?.role ?? 'PLAYER' };
+      return { ...campaign, myRole: 'GM' };
     },
 
     updateCampaignSections: async (
       _: unknown,
       { campaignId, sections }: { campaignId: string; sections: string[] },
-      { prisma, user }: Context,
+      ctx: Context,
     ) => {
-      if (!user) throw new Error('Not authenticated');
-
-      const member = await prisma.campaignMember.findUnique({
-        where: { campaignId_userId: { campaignId, userId: user.id } },
-      });
-      if (!member || member.role !== 'GM') throw new Error('Only the GM can change sections');
+      const { prisma, user } = ctx;
+      if (!user) throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      await requireGM(ctx, campaignId);
 
       const VALID = ['SESSIONS', 'NPCS', 'LOCATIONS', 'LOCATION_TYPES', 'GROUPS', 'GROUP_TYPES', 'QUESTS', 'PARTY', 'SOCIAL_GRAPH', 'SPECIES', 'SPECIES_TYPES'];
       const filtered = sections.filter((s) => VALID.includes(s));
@@ -79,15 +76,17 @@ export const campaignResolvers = {
       });
 
       publishCampaignEvent(campaignId, 'CAMPAIGN', campaignId, 'UPDATED');
-      return { ...campaign, myRole: member.role };
+      return { ...campaign, myRole: 'GM' };
     },
 
     saveCharacter: async (
       _: unknown,
       args: { campaignId: string; id?: string; userId?: string | null; name: string; gender?: string; age?: number; species?: string; speciesId?: string; class?: string; appearance?: string; background?: string; personality?: string; motivation?: string; bonds?: string; flaws?: string; gmNotes?: string; image?: string },
-      { prisma, user }: Context,
+      ctx: Context,
     ) => {
-      if (!user) throw new Error('Not authenticated');
+      const { prisma, user } = ctx;
+      if (!user) throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      await requireGM(ctx, args.campaignId);
 
       const data: Record<string, unknown> = {
         name: args.name,
@@ -114,21 +113,17 @@ export const campaignResolvers = {
         return result;
       }
 
-      // On create: use provided userId if given, otherwise null (unassigned)
-      const member = await prisma.campaignMember.findUnique({
-        where: { campaignId_userId: { campaignId: args.campaignId, userId: user.id } },
-      });
-      const isGM = member?.role === 'GM';
-      const assignedUserId = isGM
-        ? (args.userId || null)  // GM can assign or leave unassigned
-        : user.id;              // Non-GM always owns their character
+      // On create: GM can assign or leave unassigned (requireGM already verified)
+      const assignedUserId = args.userId || null;
 
       const result = await prisma.playerCharacter.create({ data: { ...data, campaignId: args.campaignId, userId: assignedUserId } as Parameters<typeof prisma.playerCharacter.create>[0]['data'] });
       publishCampaignEvent(args.campaignId, 'CHARACTER', result.id, 'CREATED');
       return result;
     },
 
-    deleteCharacter: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteCharacter: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       await prisma.playerCharacter.delete({ where: { id } });
       publishCampaignEvent(campaignId, 'CHARACTER', id, 'DELETED');
       return true;
@@ -137,8 +132,11 @@ export const campaignResolvers = {
     addCharacterGroupMembership: async (
       _: unknown,
       { characterId, groupId, relation, subfaction }: { characterId: string; groupId: string; relation?: string; subfaction?: string },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      const { prisma } = ctx;
+      const charForAuth = await prisma.playerCharacter.findUniqueOrThrow({ where: { id: characterId } });
+      await requireGM(ctx, charForAuth.campaignId);
       await prisma.characterGroupMembership.upsert({
         where: { characterId_groupId: { characterId, groupId } },
         update: { relation: relation ?? null, subfaction: subfaction ?? null },
@@ -152,8 +150,11 @@ export const campaignResolvers = {
     removeCharacterGroupMembership: async (
       _: unknown,
       { characterId, groupId }: { characterId: string; groupId: string },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      const { prisma } = ctx;
+      const charForAuth = await prisma.playerCharacter.findUniqueOrThrow({ where: { id: characterId } });
+      await requireGM(ctx, charForAuth.campaignId);
       await prisma.characterGroupMembership.delete({
         where: { characterId_groupId: { characterId, groupId } },
       });

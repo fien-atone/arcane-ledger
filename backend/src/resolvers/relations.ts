@@ -1,4 +1,5 @@
 import type { Context } from '../context.js';
+import { requireGM } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
 
 export const relationResolvers = {
@@ -19,8 +20,10 @@ export const relationResolvers = {
     saveRelation: async (
       _: unknown,
       { campaignId, id, input }: { campaignId: string; id?: string; input: { fromEntityType: string; fromEntityId: string; toEntityType: string; toEntityId: string; friendliness: number; note?: string } },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       const data = {
         fromEntityType: input.fromEntityType,
         fromEntityId: input.fromEntityId,
@@ -54,8 +57,10 @@ export const relationResolvers = {
       return result;
     },
 
-    deleteRelation: async (_: unknown, { id }: { id: string }, { prisma }: Context) => {
+    deleteRelation: async (_: unknown, { id }: { id: string }, ctx: Context) => {
+      const { prisma } = ctx;
       const entity = await prisma.relation.findUniqueOrThrow({ where: { id } });
+      await requireGM(ctx, entity.campaignId);
       await prisma.relation.delete({ where: { id } });
       publishCampaignEvent(entity.campaignId, 'RELATION', id, 'DELETED');
       return true;

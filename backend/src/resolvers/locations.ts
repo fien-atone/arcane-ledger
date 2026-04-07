@@ -1,5 +1,6 @@
 import type { Context } from '../context.js';
-import { getCampaignRole } from './utils.js';
+import { GraphQLError } from 'graphql';
+import { getCampaignRole, requireGM } from './utils.js';
 import { publishCampaignEvent } from '../publish.js';
 import { redactEntity, LOCATION_FIELDS } from './redact.js';
 
@@ -33,8 +34,10 @@ export const locationResolvers = {
     saveLocation: async (
       _: unknown,
       { campaignId, id, input }: { campaignId: string; id?: string; input: { name: string; type: string; settlementPopulation?: number; biome?: string; parentLocationId?: string; description?: string; image?: string; gmNotes?: string; mapMarkers?: string } },
-      { prisma }: Context,
+      ctx: Context,
     ) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       const data: Record<string, unknown> = {
         name: input.name,
         type: input.type || null,
@@ -57,7 +60,9 @@ export const locationResolvers = {
       return result;
     },
 
-    deleteLocation: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, { prisma }: Context) => {
+    deleteLocation: async (_: unknown, { campaignId, id }: { campaignId: string; id: string }, ctx: Context) => {
+      await requireGM(ctx, campaignId);
+      const { prisma } = ctx;
       await prisma.location.delete({ where: { id } });
       publishCampaignEvent(campaignId, 'LOCATION', id, 'DELETED');
       return true;
@@ -69,7 +74,7 @@ export const locationResolvers = {
       ctx: Context,
     ) => {
       const role = await getCampaignRole(ctx, campaignId);
-      if (role !== 'GM') throw new Error('Only the GM can change visibility');
+      if (role !== 'GM') throw new GraphQLError('Only the GM can change visibility', { extensions: { code: 'FORBIDDEN' } });
       const result = await ctx.prisma.location.update({
         where: { id },
         data: {
