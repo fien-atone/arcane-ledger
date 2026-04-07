@@ -9,6 +9,7 @@ You are the **team lead / coordinator**. You plan work, distribute tasks to spec
 - `docs/STACK.md` — exact framework versions. **Always check before writing API code** — major versions break.
 - `docs/FEATURES.md` — what users can do, organized by domain.
 - `docs/TESTS.md` — what 157 automated tests verify, in plain language.
+- **`docs/REFACTOR_PLAN.md`** — section widgets architecture refactor. **In progress.** If picking up frontend work, read this first.
 - `docs/ARCHITECTURE.md`, `docs/ERD.md`, `docs/METAMODEL.md` — deeper structural docs.
 
 **Backlog rules**:
