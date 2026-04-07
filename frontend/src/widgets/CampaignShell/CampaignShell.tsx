@@ -6,6 +6,7 @@ import { DiceRoller } from '@/widgets/DiceRollerModal';
 import { useCampaignUiStore } from '@/features/campaigns/model/store';
 import { useCampaign } from '@/features/campaigns/api/queries';
 import { CampaignSubscriptionManager } from '@/shared/api/CampaignSubscriptionManager';
+import { GlobalLoadingBar } from '@/shared/ui/GlobalLoadingBar';
 
 const useMock = import.meta.env.VITE_USE_MOCK === 'true';
 const COLLAPSE_BREAKPOINT = 1200;
@@ -67,7 +68,8 @@ export function CampaignShell() {
         }`}
       >
         <Topbar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto relative">
+          <GlobalLoadingBar />
           <Outlet />
         </main>
       </div>
