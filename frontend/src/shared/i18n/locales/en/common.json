@@ -16,6 +16,15 @@
   "not_found_subtitle": "This entry doesn't exist or has been removed. It may have been deleted by the GM.",
   "no_access_title": "Out of reach",
   "no_access_subtitle": "You don't have permission to view this. The GM may have hidden it from players.",
+
+  "errors": {
+    "generic": "Something went wrong",
+    "field_required": "{{field}} is required",
+    "field_name": "Name",
+    "field_title": "Title",
+    "field_email": "Email",
+    "field_password": "Password"
+  },
   "search_placeholder": "Search by name or email...",
   "name": "Name",
   "all": "All",

@@ -49,7 +49,11 @@ export function requireNonEmpty(value: string | null | undefined, fieldName: str
   const trimmed = value?.trim() ?? '';
   if (!trimmed) {
     throw new GraphQLError(`${fieldName} is required`, {
-      extensions: { code: 'BAD_USER_INPUT', field: fieldName.toLowerCase() },
+      extensions: {
+        code: 'BAD_USER_INPUT',
+        messageKey: 'errors.field_required',
+        field: fieldName.toLowerCase(),
+      },
     });
   }
   return trimmed;

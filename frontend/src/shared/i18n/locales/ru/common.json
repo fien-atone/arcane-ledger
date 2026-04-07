@@ -16,6 +16,15 @@
   "not_found_subtitle": "Этой записи не существует или она была удалена. Возможно, Мастер удалил её.",
   "no_access_title": "Недоступно",
   "no_access_subtitle": "У тебя нет доступа к этой записи. Возможно, Мастер скрыл её от игроков.",
+
+  "errors": {
+    "generic": "Что-то пошло не так",
+    "field_required": "Поле «{{field}}» обязательно",
+    "field_name": "Имя",
+    "field_title": "Название",
+    "field_email": "Email",
+    "field_password": "Пароль"
+  },
   "search_placeholder": "Поиск по имени или email...",
   "name": "Название",
   "all": "Все",

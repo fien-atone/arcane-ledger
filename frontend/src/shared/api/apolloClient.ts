@@ -7,6 +7,7 @@ import { createClient } from 'graphql-ws';
 import { useConnectionStore } from './connectionStatus';
 import { useLoadingStore } from './loadingStore';
 import { showToast } from '@/shared/ui/toastStore';
+import i18n from '@/shared/i18n';
 
 const GRAPHQL_URL = import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:4000/graphql';
 const GRAPHQL_WS_URL = import.meta.env.VITE_GRAPHQL_WS_URL || 'ws://localhost:4000/graphql';
@@ -57,10 +58,20 @@ const errorLink = new ErrorLink(({ error, operation }: any) => {
         const code = err.extensions?.code;
         // Skip auth errors — let route guards handle them
         if (code === 'UNAUTHENTICATED') continue;
-        showToast({
-          kind: 'error',
-          message: err.message || 'Something went wrong',
-        });
+
+        // Try to translate via messageKey from backend extensions.
+        // Falls back to the raw English message if no key is provided.
+        const messageKey = err.extensions?.messageKey as string | undefined;
+        const field = err.extensions?.field as string | undefined;
+        let message: string;
+        if (messageKey) {
+          const fieldLabel = field ? i18n.t(`errors.field_${field}`, { defaultValue: field }) : '';
+          message = i18n.t(messageKey, { field: fieldLabel, defaultValue: err.message });
+        } else {
+          message = err.message || i18n.t('errors.generic');
+        }
+
+        showToast({ kind: 'error', message });
       }
     }
     return;
