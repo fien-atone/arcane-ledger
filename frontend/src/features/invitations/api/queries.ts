@@ -184,7 +184,7 @@ export const useInvitePlayer = () => {
       execute({
         variables: vars,
         refetchQueries: ['CampaignInvitations', 'PartySlots', 'SearchUsers'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
@@ -200,7 +200,7 @@ export const useCancelInvitation = () => {
       execute({
         variables: { id },
         refetchQueries: ['CampaignInvitations', 'PartySlots', 'SearchUsers'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
@@ -216,7 +216,7 @@ export const useRespondToInvitation = () => {
       execute({
         variables: vars,
         refetchQueries: ['MyInvitations', 'Campaigns'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
@@ -232,7 +232,7 @@ export const useAssignCharacterToPlayer = () => {
       execute({
         variables: vars,
         refetchQueries: ['PartySlots', 'Party'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
@@ -248,7 +248,7 @@ export const useRemoveCampaignMember = () => {
       execute({
         variables: vars,
         refetchQueries: ['PartySlots', 'Party', 'SearchUsers'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };

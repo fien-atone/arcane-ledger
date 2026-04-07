@@ -129,7 +129,7 @@ export const useSaveQuest = (campaignId: string) => {
             notes: quest.notes,
           },
         },
-      }).then(() => options?.onSuccess?.());
+      }).then(() => options?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
@@ -163,7 +163,7 @@ export const useDeleteQuest = (campaignId: string) => {
     mutate: (id: string, options?: { onSuccess?: () => void }) => {
       deleteQuest({
         variables: { campaignId, id },
-      }).then(() => options?.onSuccess?.());
+      }).then(() => options?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };

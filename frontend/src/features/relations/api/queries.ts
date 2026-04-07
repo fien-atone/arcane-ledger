@@ -78,7 +78,7 @@ export const useSaveRelation = (campaignId: string) => {
       execute({
         variables: { campaignId, id: id || undefined, input },
         refetchQueries: ['RelationsForEntity', 'RelationsForCampaign'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -93,7 +93,7 @@ export const useDeleteRelation = (_campaignId: string) => {
       execute({
         variables: { id },
         refetchQueries: ['RelationsForEntity', 'RelationsForCampaign'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,

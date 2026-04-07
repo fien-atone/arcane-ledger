@@ -162,7 +162,7 @@ export const useSaveNpc = () => {
       execute({
         variables: { campaignId: npc.campaignId, id: npc.id || undefined, input },
         refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId: npc.campaignId } }],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -180,7 +180,7 @@ export const useAddNPCGroupMembership = () => {
       execute({
         variables: vars,
         refetchQueries: ['Npcs', 'Groups'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -198,7 +198,7 @@ export const useRemoveNPCGroupMembership = () => {
       execute({
         variables: vars,
         refetchQueries: ['Npcs', 'Groups'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -216,7 +216,7 @@ export const useAddNPCLocationPresence = () => {
       execute({
         variables: vars,
         refetchQueries: ['Npcs'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
     isError: !!error,
@@ -233,7 +233,7 @@ export const useRemoveNPCLocationPresence = () => {
       execute({
         variables: vars,
         refetchQueries: ['Npcs'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
     isError: !!error,
@@ -289,7 +289,7 @@ export const useDeleteNpc = () => {
       execute({
         variables: { campaignId, id: npcId },
         refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId } }],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,

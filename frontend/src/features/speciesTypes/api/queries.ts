@@ -40,7 +40,7 @@ export const useSaveSpeciesType = (campaignId: string) => {
         variables: { campaignId, id: entry.id || undefined, name: entry.name, icon: entry.icon, description: entry.description },
         refetchQueries: ['SpeciesTypes'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -56,7 +56,7 @@ export const useDeleteSpeciesType = () => {
         variables: { id },
         refetchQueries: ['SpeciesTypes'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,

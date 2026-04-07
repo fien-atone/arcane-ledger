@@ -56,7 +56,7 @@ export const useSaveSpecies = (campaignId: string) => {
         variables: { campaignId, id: id || undefined, ...rest },
         refetchQueries: ['Species'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -72,7 +72,7 @@ export const useDeleteSpecies = () => {
         variables: { id },
         refetchQueries: ['Species'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,

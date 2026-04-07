@@ -97,7 +97,7 @@ export const useSaveLocation = (campaignId: string) => {
       }).then((result) => {
         const saved = (result.data as any)?.saveLocation;
         opts?.onSuccess?.(saved ? { ...loc, ...saved } : loc);
-      });
+      }).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -131,7 +131,7 @@ export const useDeleteLocation = (campaignId: string) => {
       execute({
         variables: { campaignId, id: locationId },
         refetchQueries: [{ query: LOCATIONS_QUERY, variables: { campaignId } }],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
     isError: !!error,

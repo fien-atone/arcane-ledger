@@ -167,7 +167,7 @@ export const useSaveCharacter = () => {
           gmNotes: character.gmNotes,
         },
         refetchQueries: [{ query: PARTY_QUERY, variables: { campaignId: character.campaignId } }, 'PartySlots'],
-      }).then(() => options?.onSuccess?.());
+      }).then(() => options?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
@@ -183,7 +183,7 @@ export const useAddCharacterGroupMembership = () => {
       execute({
         variables: vars,
         refetchQueries: ['Party', 'Groups'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -201,7 +201,7 @@ export const useRemoveCharacterGroupMembership = () => {
       execute({
         variables: vars,
         refetchQueries: ['Party', 'Groups'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -219,7 +219,7 @@ export const useDeleteCharacter = () => {
       execute({
         variables: { campaignId, id: charId },
         refetchQueries: ['Party', 'PartySlots'],
-      }).then(() => opts?.onSuccess?.());
+      }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,
   };
