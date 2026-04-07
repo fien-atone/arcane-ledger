@@ -35,10 +35,12 @@ _Nothing currently in progress._
 | F-9 | 🟢 | Dice roller: persist roll history per session | — |
 | F-10 | 🟢 | OAuth login (Google/Discord) | — |
 | F-11 | 🟡 | All search/filter must go through server (debounced GraphQL queries, no client-side filtering) | — |
-| F-12 | 🟡 | Subtle loading indicator on all server data fetches — small non-intrusive spinner/bar so user knows data is live | — |
 | F-15 | 🟡 | Timelines: visual timeline view for campaign events, session history, NPC encounters, quest progression | — |
-| F-16 | 🟡 | Visibility controls conditional on Party module — show player visibility toggles (VisibilityPanel, eye icons) only when the Party section is enabled for the campaign. No party = no players = no need for visibility management | — |
 | F-17 | 🟢 | Social GM groups — a group of GMs can see each other's campaigns, coordinate session schedules across multiple games, shared calendar view. For communities running multiple parallel campaigns | — |
+| F-18 | 🟡 | Rate limiting on login mutation — protect against brute-force password attacks. Use express-rate-limit or graphql-rate-limit. Reasonable limits: 5 attempts per email per 15 minutes | — |
+| F-19 | 🟡 | Audit log for all mutations — record who/what/when for every create/update/delete across all entities (not just admin). Enables: forensics, undo of accidental deletes, "recently changed" view, accountability in shared GM groups. Store as separate AuditLog table with entity type, entity id, action, user id, timestamp, and JSON snapshot of the change | — |
+| F-20 | 🟢 | Password requirements: minimum 8 characters, mix of letters and numbers. Currently only enforced as 4 characters in self-service password change | — |
+| F-21 | 🟢 | Email format validation on backend (currently any string accepted as email). Use Zod or simple regex check before user creation/update | — |
 
 ---
 
@@ -52,8 +54,9 @@ _Nothing currently in progress._
 | T-4 | 🟢 | Add error boundaries and proper GraphQL error handling in UI | — |
 | T-5 | 🟢 | Containment rules: seed data not migrated to Postgres yet | — |
 | T-6 | 🟢 | Group types: seed data not migrated to Postgres yet | — |
-| T-7 | 🔴 | Backend authorization audit: all mutations hidden from players on frontend must also enforce GM-only on backend (prevent GraphQL injection). Verify every mutation checks role before executing. | — |
-| T-8 | 🟡 | Input sanitization audit: verify all user-submitted fields (rich text, names, descriptions) are sanitized against XSS/HTML injection before storage and rendering. Prisma parameterizes SQL, but stored HTML rendered via `dangerouslySetInnerHTML` (RichContent/TipTap) needs sanitization layer. | — |
+| T-8 | 🟡 | Input validation: add Zod schemas for all GraphQL mutations (max length, format checks, enum validation) — currently only requireNonEmpty exists for one field | — |
+| T-9 | 🟡 | GraphQL Code Generator: replace all 27 `useQuery<any>` with generated types from schema | — |
+| T-10 | 🟡 | Refactor LocationDetailPage (1623 lines) into 5+ section components | — |
 
 ---
 
@@ -85,6 +88,21 @@ _Nothing currently in progress._
 | ✅ | Campaign invitations: invite users to campaign as player | 0.3.0 |
 | ✅ | i18n: English and Russian language support | 0.3.0 |
 | ✅ | Responsive UI card panels across all pages | 0.3.0 |
+| ✅ | Backend authorization audit (T-7): GM role checks on all mutations + 61 tests | 0.3.1 |
+| ✅ | XSS sanitization (T-8): DOMPurify on all dangerouslySetInnerHTML | 0.3.1 |
+| ✅ | Hardcoded secrets removed from docker-compose, .env support | 0.3.1 |
+| ✅ | JWT_SECRET required at startup (no insecure fallback) | 0.3.1 |
+| ✅ | CORS restricted to known frontend origins | 0.3.1 |
+| ✅ | N+1 query fixes: invitations, location children (DataLoader) | 0.3.1 |
+| ✅ | Global GraphQL error toast notifications | 0.3.1 |
+| ✅ | Global loading indicator (top-center pill) | 0.3.1 |
+| ✅ | Friendly NotFoundState component for missing entities | 0.3.1 |
+| ✅ | Backend test infrastructure: 146 tests (security + functional) | 0.3.1 |
+| ✅ | Frontend E2E test infrastructure: 11 Playwright tests | 0.3.1 |
+| ✅ | Test database isolation: refuses to run against production DB | 0.3.1 |
+| ✅ | Admin endpoint security: 15 tests covering privilege escalation, SQL injection | 0.3.1 |
+| ✅ | Visibility controls gated on Party module (F-16) | 0.3.1 |
+| ✅ | Visibility toggles on session detail page for linked entities | 0.3.1 |
 | ✅ | Quests CRUD, social relations editing, BG3-style bars | 0.2.3 |
 | ✅ | Dashboard overhaul, campaign list, session badges | 0.2.2 |
 | ✅ | Sessions, LocationIcon, unified UI patterns | 0.2.1 |
