@@ -148,16 +148,62 @@ These will reduce ~800 lines of boilerplate across the codebase. Extract them as
 
 Sorted by pain/risk ratio. **Do not skip ahead** — the order matters because each page teaches us something for the next.
 
+Pages are grouped into three families because they decompose differently:
+- **Detail pages**: many sections per entity — apply NpcDetailPage pattern
+- **List pages**: filter bar + list + optional preview — different decomposition
+- **Top-level pages**: cross-domain orchestrators (campaigns, admin, profile)
+
+### Tier 1 — Detail pages (established pattern from pilot)
+
 | # | Page | Lines | Status | Notes |
 |---|---|---|---|---|
 | **1** | **NpcDetailPage** | 895 → 112 | ✅ done | Pilot shipped. 10 sections + 1 hook + 11 test files (25 tests). Test infra set up: Vitest + Testing Library + Apollo MockedProvider. Lessons: Apollo v4 MockedProvider drops `addTypename` prop; `MockedResponse` type lives at `MockLink.MockedResponse<any, any>`. |
-| 2 | LocationTypesPage | 717 | pending | Isolated domain, low regression risk |
-| 3 | SessionDetailPage | 645 | pending | Recently touched, we know the code |
-| 4 | PartyPage | 606 | pending | Simple structure, few mutations |
-| 5 | CampaignDashboardPage | 588 | pending | Naturally widget-shaped (it's a dashboard) |
-| 6 | SocialGraphPage | 498 | pending | D3 complexity already isolated |
-| 7 | GroupDetailPage | 457 | pending | Similar to NpcDetailPage, easy by this point |
-| **8** | **LocationDetailPage** | **1623** | **last** | Largest and most dangerous. Save for when we have a proven pattern. |
+| 2 | SessionDetailPage | 705 | pending | Recently touched, we know the code. Sections: header, navigation, brief, notes, NPCs, locations, quests. |
+| 3 | GroupDetailPage | 457 | pending | Similar shape to NpcDetailPage. Sections: header, description, goals, symbols, members, social relations. |
+| 4 | CharacterDetailPage | 433 | pending | Mini-NPC shape. Sections: hero, identity, backstory, motivation, bonds, flaws, group memberships. |
+| 5 | QuestDetailPage | 325 | pending | Smaller but still benefits. Sections: header, description, reward, giver, sessions, GM notes, visibility. |
+| **6** | **LocationDetailPage** | **1620** | **last in tier** | Largest and most dangerous. Save for when we have a proven pattern. Sections: header, map, children, NPCs present, sessions, quests, containment, visibility. |
+
+### Tier 2 — List pages (different pattern)
+
+List pages decompose into: `hooks/useXxxList.ts` (data + filters state) + `sections/XxxFilterBar.tsx` + `sections/XxxList.tsx` + optional `sections/XxxPreview.tsx` for pages with a right-side preview panel.
+
+| # | Page | Lines | Status | Notes |
+|---|---|---|---|---|
+| 7 | LocationTypesPage | 717 | pending | Biggest list-like page. Has graph/tree visualisation + type forms. |
+| 8 | PartyPage | 606 | pending | Three lists: members, pending invitations, unassigned characters. Already has sections to extract. |
+| 9 | LocationListPage | 313 | pending | Filters by type, parent grouping. Has preview panel. |
+| 10 | SpeciesTypesPage | 262 | pending | Type CRUD, small list. |
+| 11 | NpcListPage | 255 | pending | Filters by status. Has preview panel. |
+| 12 | GroupTypesPage | 253 | pending | Type CRUD. |
+| 13 | GroupListPage | 214 | pending | Filters by type. Has preview panel. |
+| 14 | QuestListPage | 204 | pending | Filters by status. |
+| 15 | SessionListPage | 195 | pending | Simple date-sorted list. Borderline — could leave. |
+| 16 | SpeciesPage | 187 | pending | Species list with preview. Borderline. |
+
+### Tier 3 — Top-level pages (cross-domain, no single feature owner)
+
+These don't live in a single `features/<domain>/`. Sections go into `widgets/<page-name>/` or a dedicated `pages/<page>/sections/` folder.
+
+| # | Page | Lines | Status | Notes |
+|---|---|---|---|---|
+| 17 | CampaignDashboardPage | 588 | pending | Widget-shaped by nature. Sections: next session, recent sessions, calendar, party, recent NPCs, section toggle. |
+| 18 | SocialGraphPage | 498 | pending | Mostly D3 logic already isolated. Mostly orchestration. |
+| 19 | CampaignsPage | 381 | pending | List + calendar widget + create drawer. |
+| 20 | LandingPage | 267 | pending | Marketing copy. Sections: nav, hero, stats, features, roadmap, contact, CTA. |
+| 21 | AdminUsersPage | 262 | pending | Table + create/edit drawer. Admin-only. |
+| 22 | ProfilePage | 261 | pending | Form with profile info + language + password change. |
+
+### Not refactoring (too small, no benefit)
+
+| Page | Lines | Why skipped |
+|---|---|---|
+| SpeciesDetailPage | 171 | Small, simple |
+| LoginPage | 144 | Already thin |
+| NpcDetailPage | 112 | ✅ done |
+| ChangelogPage | 97 | Thin |
+
+**Total to refactor: 21 pages remaining.**
 
 ---
 
