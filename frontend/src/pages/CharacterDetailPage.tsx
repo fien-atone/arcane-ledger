@@ -1,77 +1,47 @@
-import { useState, useCallback } from 'react';
+/**
+ * CharacterDetailPage — thin orchestrator.
+ *
+ * Reads route params, loads the character via useCharacterDetail, and
+ * composes the section widgets. All data fetching, state, and business
+ * logic live in the hook + section components under features/characters/.
+ */
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useParty, useSaveCharacter, useDeleteCharacter, useAddCharacterGroupMembership, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
-import { CharacterEditDrawer } from '@/features/characters/ui';
-import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
-import { useGroups } from '@/features/groups/api';
-import { useSpecies } from '@/features/species/api';
-import { SocialRelationsSection } from '@/features/relations/ui';
-import { ImageUpload, InlineRichField, NotFoundState, SectionDisabled, SectionBackground } from '@/shared/ui';
-import { uploadFile } from '@/shared/api/uploadFile';
-import { resolveImageUrl } from '@/shared/api/imageUrl';
-import { useAuthStore } from '@/features/auth';
-import type { PlayerCharacter } from '@/entities/character';
+import { useCharacterDetail } from '@/features/characters/hooks/useCharacterDetail';
+import {
+  CharacterHeroSection,
+  CharacterAppearanceSection,
+  CharacterBackgroundSection,
+  CharacterGmNotesSection,
+  CharacterGroupMembershipsSection,
+  CharacterRelationsSection,
+} from '@/features/characters/sections';
+import { NotFoundState, SectionBackground, SectionDisabled } from '@/shared/ui';
 
 export default function CharacterDetailPage() {
   const { t } = useTranslation('party');
   const { id: campaignId, charId } = useParams<{ id: string; charId: string }>();
-  const { data: campaign } = useCampaign(campaignId ?? '');
-  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
-  const currentUserId = useAuthStore((s) => s.user?.id);
-  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
-  const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
-  const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
-  const { data: characters, isLoading, isError, refetch } = useParty(campaignId ?? '');
-  const character = characters?.find((c) => c.id === charId);
-  const isOwner = !!character?.userId && character.userId === currentUserId;
-  const canViewAll = isGm || isOwner; // GM and owner see everything; other players see limited fields
-  const { data: allSpecies } = useSpecies(campaignId ?? '');
-  const { data: groups } = useGroups(campaignId ?? '');
-  const saveCharacter = useSaveCharacter();
-  const deleteCharacter = useDeleteCharacter();
-  const navigate = useNavigate();
-  const addGroupMembership = useAddCharacterGroupMembership();
-  const removeGroupMembership = useRemoveCharacterGroupMembership();
-  const [imgVersion, setImgVersion] = useState(0);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [lightbox, setLightbox] = useState(false);
-  const [addGroupOpen, setAddGroupOpen] = useState(false);
-  const [addGroupSearch, setAddGroupSearch] = useState('');
-  const [addGroupRole, setAddGroupRole] = useState('');
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [confirmRemoveGroupId, setConfirmRemoveGroupId] = useState<string | null>(null);
+  const cId = campaignId ?? '';
+  const chId = charId ?? '';
 
-  const saveField = useCallback((field: keyof PlayerCharacter, html: string) => {
-    if (!character) return;
-    if (html.trim() === (String(character[field] ?? '')).trim()) return;
-    saveCharacter.mutate({
-      ...character,
-      [field]: html.trim() || undefined,
-      updatedAt: new Date().toISOString(),
-    } as PlayerCharacter);
-  }, [character, saveCharacter]);
+  const detail = useCharacterDetail(cId, chId);
+  const {
+    character,
+    isLoading,
+    isError,
+    isGm,
+    canViewAll,
+    partyEnabled,
+    groupsEnabled,
+    speciesEnabled,
+    imgVersion,
+    campaignTitle,
+    saveField,
+    handleImageUpload,
+    handleDelete,
+  } = detail;
 
-  const handleImageUpload = async (file: File) => {
-    if (import.meta.env.VITE_USE_MOCK !== 'false') {
-      const reader = new FileReader();
-      reader.onload = (ev) => saveCharacter.mutate({ ...character!, image: ev.target?.result as string, updatedAt: new Date().toISOString() });
-      reader.readAsDataURL(file);
-      return;
-    }
-    try {
-      await uploadFile(campaignId!, 'character', character!.id, file);
-      setImgVersion((v) => v + 1);
-      refetch();
-    } catch (err) {
-      console.error('Upload failed:', err);
-    }
-  };
-
-  if (!partyEnabled) {
-    return <SectionDisabled campaignId={campaignId ?? ''} />;
-  }
+  if (!partyEnabled) return <SectionDisabled campaignId={cId} />;
 
   if (isLoading && !character) {
     return (
@@ -83,351 +53,73 @@ export default function CharacterDetailPage() {
   }
 
   if (isError || !character) {
-    return <NotFoundState backTo={`/campaigns/${campaignId}/party`} backLabel={t('title')} />;
+    return <NotFoundState backTo={`/campaigns/${cId}/party`} backLabel={t('title')} />;
   }
-
-  const matchedSpecies = speciesEnabled
-    ? allSpecies?.find((s) => s.id === character.speciesId || s.name.toLowerCase() === character.species?.toLowerCase())
-    : undefined;
-  const displaySpecies = speciesEnabled ? (matchedSpecies?.name ?? character.species) : undefined;
-  const displayGender = character.gender
-    ? t(`gender_${character.gender}`)
-    : undefined;
-
-  const demoBadge = [displaySpecies, displayGender, character.class, character.age != null ? `${t('field_age')} ${character.age}` : null]
-    .filter(Boolean).join(' · ');
 
   return (
     <>
-    <SectionBackground />
-    <main className="flex-1 min-h-screen relative z-10">
-      {/* Campaign name */}
-      <div className="flex justify-center pt-0 pb-8">
-        <Link
-          to={`/campaigns/${campaignId}`}
-          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
-        >
-          <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? t('common:campaign')}
-        </Link>
-      </div>
+      <SectionBackground />
+      <main className="flex-1 min-h-screen relative z-10">
+        <div className="flex justify-center pt-0 pb-8">
+          <Link
+            to={`/campaigns/${cId}`}
+            className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[16px]">shield</span>
+            {campaignTitle ?? t('common:campaign')}
+          </Link>
+        </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
-        {/* ── Header card: portrait + identity (full width) ── */}
-        <section className="relative flex flex-col sm:flex-row gap-8 items-start mb-8 bg-surface-container border border-outline-variant/20 rounded-sm p-6 md:p-8">
-          <div className="relative group flex-shrink-0">
-            <div className="absolute inset-0 bg-primary/20 -translate-x-2 translate-y-2 rounded-sm group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-            <ImageUpload
-              image={resolveImageUrl(character.image, imgVersion)}
-              name={character.name}
-              className="relative w-36 sm:w-48 h-48 sm:h-64"
-              onUpload={handleImageUpload}
-              onView={character.image ? () => setLightbox(true) : undefined}
-              hideControls={!isGm}
-            />
-          </div>
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pb-20">
+          <CharacterHeroSection
+            campaignId={cId}
+            character={character}
+            isGm={isGm}
+            speciesEnabled={speciesEnabled}
+            imgVersion={imgVersion}
+            onUploadImage={handleImageUpload}
+            onDelete={handleDelete}
+          />
 
-          <div className="flex-1 min-w-0 pt-4 space-y-4">
-            {demoBadge && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-sm text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20">
-                <span className="material-symbols-outlined text-[13px]">person</span>
-                {demoBadge}
-              </span>
-            )}
-            <h1 className="font-headline text-3xl sm:text-5xl lg:text-6xl font-bold text-on-surface leading-tight">
-              {character.name}
-            </h1>
-          </div>
-
-          {isGm && (
-            <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
-              {confirmDelete ? (
-                <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[9px] text-on-surface-variant">{t('detail.confirm_delete')}</span>
-                  <button onClick={() => deleteCharacter.mutate({ campaignId: campaignId!, charId: character.id }, { onSuccess: () => navigate(`/campaigns/${campaignId}/party`) })}
-                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('detail.confirm_yes')}</button>
-                  <button onClick={() => setConfirmDelete(false)}
-                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('detail.confirm_no')}</button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmDelete(true)}
-                  className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
-                  <span className="material-symbols-outlined text-sm">delete</span>
-                </button>
-              )}
-              <button
-                onClick={() => setDetailsOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:bg-primary/5 transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">edit</span>
-                {t('detail.edit')}
-              </button>
-            </div>
-          )}
-        </section>
-
-        {/* ── Two-column layout ── */}
-        <div className="flex flex-col md:flex-row gap-8 min-w-0">
-
-          {/* ── Left column ─────────────────────────────────────── */}
-          <div className="flex-1 min-w-0 space-y-8">
-
-            <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-              <InlineRichField label={t('detail.section_appearance')} value={character.appearance}
-                onSave={(html) => saveField('appearance', html)}
-                placeholder={t('detail.placeholder_appearance')} readOnly={!isGm} />
+          <div className="flex flex-col md:flex-row gap-8 min-w-0">
+            {/* Left column */}
+            <div className="flex-1 min-w-0 space-y-8">
+              <CharacterAppearanceSection
+                character={character}
+                isGm={isGm}
+                onSaveField={saveField}
+              />
+              <CharacterBackgroundSection
+                character={character}
+                isGm={isGm}
+                canViewAll={canViewAll}
+                onSaveField={saveField}
+              />
+              <CharacterGmNotesSection
+                character={character}
+                isGm={isGm}
+                onSaveField={saveField}
+              />
             </div>
 
-            {canViewAll && (
-              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label={t('detail.section_backstory')} value={character.background}
-                  onSave={(html) => saveField('background', html)}
-                  placeholder={t('detail.placeholder_backstory')}
-                  readOnly={!isGm} />
-              </div>
-            )}
-
-            {canViewAll && (<>
-              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label={t('detail.section_personality')} value={character.personality}
-                  onSave={(html) => saveField('personality', html)}
-                  placeholder={t('detail.placeholder_personality')} readOnly={!isGm} />
-              </div>
-              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label={t('detail.section_motivation')} value={character.motivation}
-                  onSave={(html) => saveField('motivation', html)}
-                  placeholder={t('detail.placeholder_motivation')} readOnly={!isGm} />
-              </div>
-              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label={t('detail.section_bonds')} value={character.bonds}
-                  onSave={(html) => saveField('bonds', html)}
-                  placeholder={t('detail.placeholder_bonds')} readOnly={!isGm} />
-              </div>
-              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label={t('detail.section_flaws')} value={character.flaws}
-                  onSave={(html) => saveField('flaws', html)}
-                  placeholder={t('detail.placeholder_flaws')} readOnly={!isGm} />
-              </div>
-            </>)}
-
-            {isGm && (
-              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <InlineRichField label={t('detail.section_gm_notes')} value={character.gmNotes} isGmNotes
-                  onSave={(html) => saveField('gmNotes', html)} />
-              </div>
-            )}
-
-          </div>
-
-          {/* ── Right column ────────────────────────────────────── */}
-          <div className="md:w-[40%] lg:w-[35%] min-w-0 space-y-8">
-
-            {/* Group Memberships */}
-            {canViewAll && groupsEnabled && (() => {
-              const memberGroupIds = new Set((character.groupMemberships ?? []).map((m) => m.groupId));
-              const availableGroups = (groups ?? [])
-                .filter((g) => !memberGroupIds.has(g.id))
-                .filter((g) => !addGroupSearch.trim() || g.name.toLowerCase().includes(addGroupSearch.toLowerCase()))
-                .sort((a, b) => a.name.localeCompare(b.name));
-
-              const groupNameById = (id: string) => groups?.find((g) => g.id === id)?.name ?? id;
-
-              const handleAddGroup = () => {
-                if (!selectedGroupId) return;
-                addGroupMembership.mutate(
-                  { characterId: character.id, groupId: selectedGroupId, relation: addGroupRole.trim() || undefined },
-                  { onSuccess: () => { setAddGroupOpen(false); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); } },
-                );
-              };
-
-              const handleRemoveGroup = (groupId: string) => {
-                removeGroupMembership.mutate({ characterId: character.id, groupId });
-                setConfirmRemoveGroupId(null);
-              };
-
-              return (
-                <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-                      {t('detail.section_group_memberships')}
-                    </h2>
-                    <div className="h-px flex-1 bg-outline-variant/20" />
-                    {isGm && (
-                    <button
-                      onClick={() => { setAddGroupOpen((v) => !v); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); }}
-                      className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[13px]">group_add</span>
-                      {t('detail.add')}
-                    </button>
-                    )}
-                  </div>
-
-                  {addGroupOpen && (
-                    <div className="border border-outline-variant/20 bg-surface-container-low">
-                      <div className="relative">
-                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
-                        <input
-                          autoFocus
-                          type="text"
-                          value={addGroupSearch}
-                          onChange={(e) => setAddGroupSearch(e.target.value)}
-                          placeholder={t('detail.search_groups')}
-                          className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
-                        />
-                      </div>
-                      <div className="max-h-48 overflow-y-auto">
-                        {availableGroups.length === 0 ? (
-                          <p className="text-[10px] text-on-surface-variant/40 italic px-4 py-3">
-                            {(groups ?? []).length === 0 ? t('detail.no_groups_in_campaign') : t('detail.no_groups_found')}
-                          </p>
-                        ) : availableGroups.map((g) => (
-                          <button
-                            key={g.id}
-                            onClick={() => setSelectedGroupId(selectedGroupId === g.id ? null : g.id)}
-                            className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors ${
-                              selectedGroupId === g.id ? 'bg-primary/8 border-l-2 border-primary' : 'hover:bg-surface-container'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[13px] text-primary">groups</span>
-                            <span className={`text-xs ${selectedGroupId === g.id ? 'text-primary font-medium' : 'text-on-surface'}`}>{g.name}</span>
-                            {selectedGroupId === g.id && (
-                              <span className="material-symbols-outlined text-primary text-[14px] ml-auto" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                      {selectedGroupId && (
-                        <div className="px-4 py-3 border-t border-outline-variant/20 space-y-3">
-                          <div>
-                            <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1">
-                              {t('detail.role_label')} <span className="normal-case tracking-normal text-on-surface-variant/40">{t('detail.role_optional')}</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={addGroupRole}
-                              onChange={(e) => setAddGroupRole(e.target.value)}
-                              onKeyDown={(e) => { if (e.key === 'Enter') handleAddGroup(); }}
-                              placeholder={t('detail.role_placeholder')}
-                              className="w-full bg-surface-container border border-outline-variant/20 focus:border-primary rounded-sm py-1.5 px-2 text-xs text-on-surface focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30"
-                            />
-                          </div>
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => { setAddGroupOpen(false); setSelectedGroupId(null); }}
-                              className="px-3 py-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
-                            >
-                              {t('detail.cancel')}
-                            </button>
-                            <button
-                              onClick={handleAddGroup}
-                              disabled={addGroupMembership.isPending}
-                              className="flex items-center gap-1 px-4 py-1.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-[10px] font-label uppercase tracking-widest rounded-sm disabled:opacity-40 transition-opacity"
-                            >
-                              <span className="material-symbols-outlined text-[13px]">group_add</span>
-                              {t('detail.add')}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {(character.groupMemberships ?? []).length === 0 && !addGroupOpen ? (
-                    <p className="text-xs text-on-surface-variant/40 italic">{t('detail.no_group_memberships')}</p>
-                  ) : (character.groupMemberships ?? []).length > 0 ? (
-                    <div className="flex flex-wrap gap-4">
-                      {(character.groupMemberships ?? []).map((m) => (
-                        <div key={m.groupId} className="group/card flex items-center bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 transition-all">
-                          <Link
-                            to={`/campaigns/${campaignId}/groups/${m.groupId}`}
-                            className="group flex items-center px-4 py-3"
-                          >
-                            <span className="material-symbols-outlined text-primary mr-3">groups</span>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
-                                {m.subfaction ?? groupNameById(m.groupId)}
-                              </span>
-                              {m.relation && (
-                                <span className="text-[10px] text-on-surface-variant uppercase tracking-tighter">
-                                  {m.relation}
-                                </span>
-                              )}
-                            </div>
-                            <span className="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity ml-3">
-                              arrow_forward
-                            </span>
-                          </Link>
-                          {isGm && (confirmRemoveGroupId === m.groupId ? (
-                            <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
-                              <span className="text-[10px] text-on-surface-variant whitespace-nowrap">{t('detail.confirm_remove')}</span>
-                              <button
-                                onClick={() => handleRemoveGroup(m.groupId)}
-                                className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
-                              >
-                                {t('detail.confirm_yes')}
-                              </button>
-                              <button
-                                onClick={() => setConfirmRemoveGroupId(null)}
-                                className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-                              >
-                                {t('detail.confirm_no')}
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setConfirmRemoveGroupId(m.groupId)}
-                              title={t('detail.remove_from_group')}
-                              className="px-2 py-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
-                            >
-                              <span className="material-symbols-outlined text-[14px]">close</span>
-                            </button>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </section>
-              );
-            })()}
-
-            {isGm && (
-              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <SocialRelationsSection campaignId={campaignId ?? ''} entityId={charId ?? ''} />
-              </div>
-            )}
-
+            {/* Right column */}
+            <div className="md:w-[40%] lg:w-[35%] min-w-0 space-y-8">
+              <CharacterGroupMembershipsSection
+                campaignId={cId}
+                character={character}
+                isGm={isGm}
+                canViewAll={canViewAll}
+                enabled={groupsEnabled}
+              />
+              <CharacterRelationsSection
+                campaignId={cId}
+                characterId={chId}
+                isGm={isGm}
+              />
+            </div>
           </div>
         </div>
-      </div>
-
-    </main>
-
-    <CharacterEditDrawer
-      open={detailsOpen}
-      onClose={() => setDetailsOpen(false)}
-      campaignId={campaignId ?? ''}
-      character={character}
-    />
-
-    {lightbox && character.image && (
-      <div
-        className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out"
-        onClick={() => setLightbox(false)}
-      >
-        <img
-          src={resolveImageUrl(character.image, imgVersion)}
-          alt={character.name}
-          className="max-w-full max-h-full object-contain drop-shadow-2xl"
-        />
-        <button
-          onClick={() => setLightbox(false)}
-          className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors"
-        >
-          <span className="material-symbols-outlined text-3xl">close</span>
-        </button>
-      </div>
-    )}
+      </main>
     </>
   );
 }
