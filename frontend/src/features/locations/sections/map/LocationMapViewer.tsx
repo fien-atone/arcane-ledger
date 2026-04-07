@@ -11,6 +11,7 @@
  * The internal logic is intentionally untouched by the section-widget refactor.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Location, MapMarker } from '@/entities/location';
@@ -279,7 +280,8 @@ export function LocationMapViewer({
     panning ? 'grabbing' : addLocMode ? 'crosshair' : 'grab';
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-black">
+    <>{createPortal(
+      <div className="fixed inset-0 z-[100] flex flex-col bg-black">
       {/* Header */}
       <div className="flex-shrink-0 bg-surface-container-low border-b border-outline-variant/20 px-6 py-3 flex justify-between items-center">
         {/* Left */}
@@ -655,6 +657,8 @@ export function LocationMapViewer({
       </div>
 
       </div>{/* end body row */}
-    </div>
+    </div>,
+    document.body,
+    )}</>
   );
 }
