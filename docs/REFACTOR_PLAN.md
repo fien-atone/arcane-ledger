@@ -226,6 +226,57 @@ For each page in the order above:
 
 ---
 
+## Phase 2: Redundancy audit (AFTER all pages refactored)
+
+Once every page in the priority list has been decomposed into sections + hooks, do a cross-feature audit to find and eliminate redundancy. The per-page refactor is deliberately "naive" — each page gets its own sections without trying to share code yet. Once we see the whole picture, patterns become visible.
+
+### What to look for
+
+1. **Near-duplicate section widgets across domains**
+   - Example already observed: `SessionNpcsSection`, `SessionLocationsSection`, `SessionQuestsSection` are three ~150-line files with identical shape (list + picker + remove confirm + visibility toggle). Likely candidate: a generic `<LinkedEntityListSection>` taking entity type + data hooks as props.
+   - Similar pattern suspected across `NpcGroupMembershipsSection` / `NpcLocationsSection` / `NpcQuestsSection`.
+
+2. **Duplicate EditDrawer boilerplate** (11 files, already noted in the original plan)
+   - Candidate: `<FormDrawer<T>>` with field config + onSave.
+
+3. **Duplicate inline-confirm patterns**
+   - `confirmRemove*` state + yes/no buttons appear in every list section.
+   - Candidate: `<InlineConfirm onConfirm onCancel>` or a `useInlineConfirm()` hook.
+
+4. **Section header card-panel pattern**
+   - `<div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">` wraps every section's content.
+   - Candidate: `<SectionPanel title count action>` shared component.
+
+5. **Custom hooks with the same shape**
+   - `useXxxDetail` hooks may share a common structure (load root entity + role + section flags + handlers). Could we have a `useEntityDetail<T>` generic factory?
+
+6. **Section-internal state that should be shared**
+   - If three different sections all track `searchOpen` + `searchQuery` + `selectedId`, that's a pattern, not a coincidence.
+
+### Process
+
+1. Create a fresh branch `refactor/redundancy-audit`
+2. List all sections across all features, grouped by shape
+3. Identify top 5-10 abstractions to extract (prioritize by occurrences)
+4. Extract one at a time, apply to all call sites, run tests, commit
+5. Update `shared/ui/` or `shared/hooks/` with the new abstractions
+6. Document each abstraction in this file
+
+### Success criteria
+
+- Total frontend LoC should decrease by 20-40% from the post-decomposition baseline
+- Test count stays the same or grows (no lost coverage)
+- No regression in visual output or behavior
+- Each abstraction has at least 3 real usages (don't extract for 2)
+
+### Do NOT start this phase until:
+
+- All pages in the priority list are decomposed
+- All section widgets have tests
+- User has verified at least 80% of decomposed pages work correctly in the browser
+
+---
+
 ## Frontend test infrastructure (set up with the pilot)
 
 Currently the frontend only has Playwright E2E tests (11 tests). We need a faster, finer-grained tier.
