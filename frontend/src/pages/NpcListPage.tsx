@@ -42,6 +42,7 @@ export default function NpcListPage() {
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const socialGraphEnabled = useSectionEnabled(campaignId ?? '', 'social_graph');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const setNpcVisibility = useSetNpcVisibility();
@@ -182,7 +183,7 @@ export default function NpcListPage() {
               <span className="w-28 flex-shrink-0 hidden lg:block">{t('column_species')}</span>
               <span className="w-14 flex-shrink-0 hidden xl:block">{t('column_age')}</span>
               <span className="w-24 flex-shrink-0">{t('column_status')}</span>
-              {isGm && <span className="w-8 flex-shrink-0" />}
+              {isGm && partyEnabled && <span className="w-8 flex-shrink-0" />}
             </div>
             {filtered.map((npc) => {
               const st = STATUS_STYLES[npc.status];
@@ -211,7 +212,7 @@ export default function NpcListPage() {
                       <span className={`w-1 h-1 rounded-full ${st.dot}`} />
                       {t(`status_${npc.status}`)}
                     </span>
-                    {isGm && (
+                    {isGm && partyEnabled && (
                       <button
                         onClick={(e) => {
                           e.preventDefault();

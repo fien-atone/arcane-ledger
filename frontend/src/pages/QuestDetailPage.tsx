@@ -23,6 +23,7 @@ export default function QuestDetailPage() {
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
   const npcsEnabled = useSectionEnabled(campaignId ?? '', 'npcs');
   const sessionsEnabled = useSectionEnabled(campaignId ?? '', 'sessions');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: quest, isLoading, isError } = useQuest(campaignId ?? '', questId ?? '');
@@ -283,7 +284,7 @@ export default function QuestDetailPage() {
             )}
 
             {/* Player Visibility */}
-            {isGm && quest && (
+            {isGm && partyEnabled && quest && (
               <VisibilityPanel
                 playerVisible={quest.playerVisible ?? false}
                 playerVisibleFields={quest.playerVisibleFields ?? []}

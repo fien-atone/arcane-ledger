@@ -22,6 +22,7 @@ export default function QuestListPage() {
   const { t } = useTranslation('quests');
   const { id: campaignId } = useParams<{ id: string }>();
   const questsEnabled = useSectionEnabled(campaignId ?? '', 'quests');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const { data: quests, isLoading, isError } = useQuests(campaignId ?? '');
@@ -140,7 +141,7 @@ export default function QuestListPage() {
                 <span className="w-10 flex-shrink-0" />
                 <span className="flex-1 min-w-0">{t('column_title')}</span>
                 <span className="w-24 flex-shrink-0">{t('column_status')}</span>
-                {isGm && <span className="w-8 flex-shrink-0" />}
+                {isGm && partyEnabled && <span className="w-8 flex-shrink-0" />}
               </div>
               {filtered.map((quest) => {
                 const st = { ...STATUS_STYLE[quest.status], label: t(`status_${quest.status}`) };
@@ -164,7 +165,7 @@ export default function QuestListPage() {
                         <span className={`w-1 h-1 rounded-full ${st.dot}`} />
                         {st.label}
                       </span>
-                      {isGm && (
+                      {isGm && partyEnabled && (
                         <button
                           onClick={(e) => {
                             e.preventDefault();

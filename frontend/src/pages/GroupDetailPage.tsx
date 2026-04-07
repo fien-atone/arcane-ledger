@@ -356,7 +356,7 @@ export default function GroupDetailPage() {
                             <span className="material-symbols-outlined text-[16px]">person_remove</span>
                           </button>
                         ))}
-                        {isGm && membership && (
+                        {isGm && partyEnabled && membership && (
                           <button
                             onClick={() => setMembershipVisibility.mutate({ npcId: npc.id, groupId: groupId!, playerVisible: !membership.playerVisible })}
                             title={membership.playerVisible ? t('visible_to_players') : t('hidden_from_players')}
@@ -415,7 +415,7 @@ export default function GroupDetailPage() {
             </div>
 
             {/* Player Visibility */}
-            {isGm && group && (
+            {isGm && partyEnabled && group && (
               <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
                 <VisibilityPanel
                   playerVisible={group.playerVisible ?? false}

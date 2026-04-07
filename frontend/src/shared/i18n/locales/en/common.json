@@ -36,6 +36,8 @@
 
   "player_visibility": "Player Visibility",
   "visible_to_players": "Visible to players",
+  "visible_click_to_hide": "Visible to players — click to hide",
+  "hidden_click_to_show": "Hidden from players — click to show",
   "shared": "Shared",
 
   "section_not_enabled": "Section not enabled",
@@ -61,6 +63,8 @@
     "sign_out": "Sign out",
     "whats_new": "What's New",
     "collapse": "Collapse",
+    "expand_sidebar": "Expand sidebar",
+    "collapse_sidebar": "Collapse sidebar",
     "edit_sections": "Edit Sections",
     "back": "Back"
   },

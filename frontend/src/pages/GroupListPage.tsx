@@ -20,6 +20,7 @@ export default function GroupListPage() {
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const groupsEnabled = useSectionEnabled(campaignId ?? '', 'groups');
   const groupTypesEnabled = useSectionEnabled(campaignId ?? '', 'group_types');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: groupTypes } = useGroupTypes(campaignId);
 
   const setGroupVisibility = useSetGroupVisibility();
@@ -143,7 +144,7 @@ export default function GroupListPage() {
                 <span className="w-9 flex-shrink-0" />
                 <span className="flex-1 min-w-0">{t('column_name')}</span>
                 {groupTypesEnabled && <span className="w-28 flex-shrink-0 hidden lg:block">{t('column_type')}</span>}
-                {isGm && <span className="w-8 flex-shrink-0" />}
+                {isGm && partyEnabled && <span className="w-8 flex-shrink-0" />}
               </div>
               {filtered.map((g) => {
                 const tc = resolveType(g.type, groupTypes);
@@ -170,7 +171,7 @@ export default function GroupListPage() {
                           {tc.name}
                         </span>
                       )}
-                      {isGm && (
+                      {isGm && partyEnabled && (
                         <button
                           onClick={(e) => {
                             e.preventDefault();

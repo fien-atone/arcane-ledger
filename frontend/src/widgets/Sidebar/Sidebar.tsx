@@ -350,12 +350,12 @@ export function Sidebar() {
         <button
           onClick={toggleSidebar}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-on-surface-variant opacity-80 hover:bg-surface-container hover:text-on-surface transition-all duration-300"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? t('nav.expand_sidebar') : t('nav.collapse_sidebar')}
         >
           <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
             {collapsed ? 'chevron_right' : 'chevron_left'}
           </span>
-          {!collapsed && <span className="whitespace-nowrap">Collapse</span>}
+          {!collapsed && <span className="whitespace-nowrap">{t('nav.collapse')}</span>}
         </button>
       </div>
 

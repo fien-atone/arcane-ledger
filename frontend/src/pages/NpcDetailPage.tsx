@@ -62,6 +62,7 @@ export default function NpcDetailPage() {
   const locationsEnabled = useSectionEnabled(campaignId ?? '', 'locations');
   const locationTypesEnabled = useSectionEnabled(campaignId ?? '', 'location_types');
   const speciesEnabled = useSectionEnabled(campaignId ?? '', 'species');
+  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
   const { data: campaign } = useCampaign(campaignId ?? '');
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const saveNpc = useSaveNpc();
@@ -470,7 +471,7 @@ export default function NpcDetailPage() {
                               <span className="material-symbols-outlined text-[14px]">close</span>
                             </button>
                           ))}
-                          {isGm && (
+                          {isGm && partyEnabled && (
                             <button
                               onClick={() => setGroupMembershipVisibility.mutate({ npcId: npc.id, groupId: m.groupId, playerVisible: !(m.playerVisible ?? true) })}
                               title={m.playerVisible === false ? t('hidden_click_to_show') : t('visible_click_to_hide')}
@@ -619,7 +620,7 @@ export default function NpcDetailPage() {
                                   <span className="material-symbols-outlined text-[14px]">close</span>
                                 </button>
                               ))}
-                              {isGm && (
+                              {isGm && partyEnabled && (
                                 <button
                                   onClick={() => setLocationPresenceVisibility.mutate({ npcId: npc.id, locationId: loc.id, playerVisible: !(presence?.playerVisible ?? true) })}
                                   title={presence?.playerVisible === false ? t('hidden_click_to_show') : t('visible_click_to_hide')}
@@ -720,7 +721,7 @@ export default function NpcDetailPage() {
                             arrow_forward
                           </span>
                         </Link>
-                        {isGm && (
+                        {isGm && partyEnabled && (
                           <button
                             onClick={() => setQuestVisibility.mutate({
                               campaignId: campaignId!,
@@ -831,7 +832,7 @@ export default function NpcDetailPage() {
             {isGm && <SocialRelationsSection campaignId={campaignId ?? ''} entityId={npcId ?? ''} />}
 
             {/* Player Visibility */}
-            {isGm && npc && (
+            {isGm && partyEnabled && npc && (
               <VisibilityPanel
                 playerVisible={npc.playerVisible ?? false}
                 playerVisibleFields={npc.playerVisibleFields ?? []}
