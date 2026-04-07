@@ -95,7 +95,8 @@ export const locationResolvers = {
       if (role === 'PLAYER' && !(loc.playerVisibleFields ?? []).includes('children')) {
         return [];
       }
-      const children = await ctx.prisma.location.findMany({ where: { parentLocationId: loc.id } });
+      // Use DataLoader to batch sibling .children() calls into one query
+      const children = await ctx.loaders.locationChildren.load(loc.id);
       // For players, filter out hidden child locations
       if (role === 'PLAYER') {
         return children.filter((c) => c.playerVisible);
