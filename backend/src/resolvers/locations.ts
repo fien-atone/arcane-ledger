@@ -55,7 +55,7 @@ export const locationResolvers = {
         publishCampaignEvent(campaignId, 'LOCATION', result.id, 'UPDATED');
         return result;
       }
-      const result = await prisma.location.create({ data: { ...data, campaignId } });
+      const result = await prisma.location.create({ data: { ...data, campaignId } as any });
       publishCampaignEvent(campaignId, 'LOCATION', result.id, 'CREATED');
       return result;
     },

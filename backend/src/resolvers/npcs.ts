@@ -60,7 +60,7 @@ export const npcResolvers = {
         publishCampaignEvent(campaignId, 'NPC', result.id, 'UPDATED');
         return result;
       }
-      const result = await prisma.nPC.create({ data: { ...data, campaignId } });
+      const result = await prisma.nPC.create({ data: { ...data, campaignId } as any });
       publishCampaignEvent(campaignId, 'NPC', result.id, 'CREATED');
       return result;
     },
