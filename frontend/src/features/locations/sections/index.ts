@@ -9,3 +9,5 @@ export { LocationParentSection } from './LocationParentSection';
 export { LocationMiniMapSection } from './LocationMiniMapSection';
 export { LocationChildrenSection } from './LocationChildrenSection';
 export { LocationVisibilitySection } from './LocationVisibilitySection';
+export { LocationListHeroSection } from './LocationListHeroSection';
+export { LocationListSection } from './LocationListSection';
