@@ -1,606 +1,151 @@
-import { useState } from 'react';
+/**
+ * PartyPage — thin orchestrator (Tier 2 list/admin page).
+ *
+ * Reads the campaign id, loads the party data via usePartyPage, and composes
+ * the party section widgets:
+ *
+ *   - PartyHeroSection                    — header card with invite/add CTAs
+ *   - PartyMyCharacterSection             — "my character" card for players
+ *   - PartyPendingInvitationsSection      — pending invitations with cancel
+ *   - PartyMembersSection                 — member rows with kick/assign/unlink
+ *   - PartyUnassignedCharactersSection    — characters not linked to any player
+ *   - PartyEmptyStateSection              — shown when everything is empty
+ *
+ * The CharacterEditDrawer is rendered at the page level because its open state
+ * is shared between the hero CTA, the empty-state CTA, and the per-member
+ * "create character" button.
+ */
 import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
-import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
-import { useParty } from '@/features/characters/api/queries';
+import { SectionBackground, SectionDisabled } from '@/shared/ui';
 import { CharacterEditDrawer } from '@/features/characters/ui';
+import { usePartyPage } from '@/features/characters/hooks/usePartyPage';
 import {
-  usePartySlots,
-  useCampaignInvitations,
-  useCancelInvitation,
-  useAssignCharacterToPlayer,
-  useRemoveCampaignMember,
-} from '@/features/invitations/api/queries';
-import { InvitePanel } from '@/features/invitations/ui/InvitePanel';
-import { resolveImageUrl } from '@/shared/api/imageUrl';
-import { EmptyState, SectionDisabled, SectionBackground, Select } from '@/shared/ui';
-import type { PlayerCharacter } from '@/entities/character';
-import { useAuthStore } from '@/features/auth';
-import type { PartySlot } from '@/entities/partySlot';
-
-// ── Inline confirm helper ─────────────────────────────────────────
-
-function useInlineConfirm() {
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  return {
-    confirmingId,
-    startConfirm: (id: string) => setConfirmingId(id),
-    cancel: () => setConfirmingId(null),
-    isConfirming: (id: string) => confirmingId === id,
-  };
-}
-
-// ── Section header ────────────────────────────────────────────────
-
-function SectionHeader({ title, count }: { title: string; count?: number }) {
-  return (
-    <div className="flex items-center gap-4 mb-4">
-      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">{title}</h3>
-      <div className="h-px flex-1 bg-outline-variant/20" />
-      {count != null && <span className="text-[10px] text-on-surface-variant/30">{count}</span>}
-    </div>
-  );
-}
-
-// ── Party member card ─────────────────────────────────────────────
-
-function MemberCard({
-  slot,
-  campaignId,
-  unassignedCharacters,
-  isGm,
-  onCreateCharacter,
-}: {
-  slot: PartySlot;
-  campaignId: string;
-  unassignedCharacters: PlayerCharacter[];
-  isGm: boolean;
-  onCreateCharacter: (forUserId: string) => void;
-}) {
-  const { t } = useTranslation('party');
-  const member = slot.member!;
-  const char = slot.character;
-  const assign = useAssignCharacterToPlayer();
-  const kick = useRemoveCampaignMember();
-  const unlinkConfirm = useInlineConfirm();
-  const kickConfirm = useInlineConfirm();
-  const [assigning, setAssigning] = useState(false);
-
-  const charInitials = char?.name?.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '';
-  const resolvedCharImage = char ? resolveImageUrl(char.image) : undefined;
-
-  return (
-    <div className="border border-outline-variant/10 bg-surface-container-low rounded-sm">
-      <div className="grid grid-cols-[1fr_auto_1fr]">
-        {/* Player column */}
-        <div className="p-4 flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-bold text-on-surface-variant/60">
-              {member.user.name?.charAt(0)?.toUpperCase() || '?'}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-on-surface truncate">{member.user.name}</p>
-            <p className="text-[10px] text-on-surface-variant/50 truncate">{member.user.email}</p>
-          </div>
-          {isGm && (
-            <div className="flex-shrink-0">
-              {kickConfirm.isConfirming('kick') ? (
-                <div className="flex items-center gap-1">
-                  <span className="text-[9px] text-on-surface-variant/50">{t('kick_confirm')}</span>
-                  <button
-                    onClick={() => {
-                      kick.mutate({ campaignId, userId: member.user.id });
-                      kickConfirm.cancel();
-                    }}
-                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
-                  >
-                    {t('confirm_yes')}
-                  </button>
-                  <button
-                    onClick={() => kickConfirm.cancel()}
-                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
-                  >
-                    {t('confirm_no')}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => kickConfirm.startConfirm('kick')}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant/40 hover:text-tertiary hover:border-tertiary/30 border border-transparent rounded-sm transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[14px]">person_remove</span>
-                  {t('kick')}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Center divider */}
-        <div className="w-10 flex items-center justify-center border-x border-outline-variant/10">
-          {char && isGm ? (
-            unlinkConfirm.isConfirming('unlink') ? (
-              <div className="flex flex-col items-center gap-0.5">
-                <button
-                  onClick={() => { assign.mutate({ characterId: char.id, userId: null }); unlinkConfirm.cancel(); }}
-                  className="text-[9px] text-tertiary hover:text-tertiary/80"
-                >{t('confirm_yes')}</button>
-                <button
-                  onClick={() => unlinkConfirm.cancel()}
-                  className="text-[9px] text-on-surface-variant/40"
-                >{t('confirm_no')}</button>
-              </div>
-            ) : (
-              <button
-                onClick={() => unlinkConfirm.startConfirm('unlink')}
-                className="p-1 text-on-surface-variant/20 hover:text-tertiary transition-colors"
-                title={t('unlink_character')}
-              >
-                <span className="material-symbols-outlined text-[16px]">link_off</span>
-              </button>
-            )
-          ) : (
-            <span className="material-symbols-outlined text-[14px] text-on-surface-variant/10">
-              {char ? 'link' : 'more_horiz'}
-            </span>
-          )}
-        </div>
-
-        {/* Character column */}
-        <div className="p-4 flex items-center gap-3 min-w-0">
-          {char ? (
-            <>
-              <div className="w-10 h-10 rounded-sm border border-outline-variant/20 overflow-hidden bg-surface-container-highest flex-shrink-0">
-                {resolvedCharImage ? (
-                  <img src={resolvedCharImage} alt={char.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-on-surface-variant/50">{charInitials}</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-on-surface truncate">{char.name}</p>
-                <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
-                  {[char.species, char.class].filter(Boolean).join(' \u00b7 ') || '\u2014'}
-                </p>
-              </div>
-              <Link
-                to={`/campaigns/${campaignId}/characters/${char.id}`}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant/40 hover:text-primary hover:border-primary/30 border border-transparent rounded-sm transition-colors flex-shrink-0"
-              >
-                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                {t('view')}
-              </Link>
-            </>
-          ) : (
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-10 h-10 rounded-sm border border-dashed border-outline-variant/20 bg-surface-container-highest/50 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-[16px] text-on-surface-variant/20">person_off</span>
-              </div>
-              <span className="text-xs text-on-surface-variant/40 italic flex-1">{t('no_character')}</span>
-              {isGm && (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {assigning ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-48 relative z-10">
-                        <Select
-                          value=""
-                          nullable={false}
-                          onChange={(v) => {
-                            if (v) {
-                              assign.mutate({ characterId: v, userId: member.user.id });
-                              setAssigning(false);
-                            }
-                          }}
-                          placeholder={t('select_character')}
-                          options={unassignedCharacters.map((c) => ({
-                            value: c.id,
-                            label: c.name,
-                          }))}
-                        />
-                      </div>
-                      <button
-                        onClick={() => setAssigning(false)}
-                        className="p-1 text-on-surface-variant/40 hover:text-on-surface transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">close</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {unassignedCharacters.length > 0 && (
-                        <button
-                          onClick={() => setAssigning(true)}
-                          className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-secondary border border-secondary/30 rounded-sm hover:bg-secondary/10 transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">link</span>
-                          {t('assign')}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => onCreateCharacter(member.user.id)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-primary border border-primary/30 rounded-sm hover:bg-primary/10 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[14px]">add</span>
-                        {t('create')}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Unassigned character card ─────────────────────────────────────
-
-function UnassignedCharacterCard({
-  char,
-  campaignId,
-  membersWithoutCharacter,
-  isGm,
-}: {
-  char: PlayerCharacter;
-  campaignId: string;
-  membersWithoutCharacter: { userId: string; userName: string }[];
-  isGm: boolean;
-}) {
-  const { t } = useTranslation('party');
-  const assign = useAssignCharacterToPlayer();
-  const [assigning, setAssigning] = useState(false);
-  const initials = char.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-  const resolvedImage = resolveImageUrl(char.image);
-
-  return (
-    <div className="flex items-center gap-3 p-4 border border-outline-variant/10 bg-surface-container-low rounded-sm">
-      <div className="w-10 h-10 rounded-sm border border-outline-variant/20 overflow-hidden bg-surface-container-highest flex-shrink-0">
-        {resolvedImage ? (
-          <img src={resolvedImage} alt={char.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-[9px] font-bold text-on-surface-variant/50">{initials}</span>
-          </div>
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-on-surface truncate">{char.name}</p>
-        <p className="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-0.5">
-          {[char.species, char.class].filter(Boolean).join(' \u00b7 ') || '\u2014'}
-        </p>
-      </div>
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        {isGm && membersWithoutCharacter.length > 0 && (
-          <>
-            {assigning ? (
-              <div className="flex items-center gap-2">
-                <div className="w-48 relative z-10">
-                  <Select
-                    value=""
-                    nullable={false}
-                    onChange={(v) => {
-                      if (v) {
-                        assign.mutate({ characterId: char.id, userId: v });
-                        setAssigning(false);
-                      }
-                    }}
-                    placeholder={t('select_player')}
-                    options={membersWithoutCharacter.map((m) => ({
-                      value: m.userId,
-                      label: m.userName,
-                    }))}
-                  />
-                </div>
-                <button
-                  onClick={() => setAssigning(false)}
-                  className="p-1 text-on-surface-variant/40 hover:text-on-surface transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setAssigning(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-label uppercase tracking-widest text-secondary border border-secondary/30 rounded-sm hover:bg-secondary/10 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[14px]">person_add</span>
-                {t('assign')}
-              </button>
-            )}
-          </>
-        )}
-        <Link
-          to={`/campaigns/${campaignId}/characters/${char.id}`}
-          className="p-1.5 text-on-surface-variant/40 hover:text-primary transition-colors"
-          title={t('view_character')}
-        >
-          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-// ── Main page ─────────────────────────────────────────────────────
+  PartyHeroSection,
+  PartyEmptyStateSection,
+  PartyMyCharacterSection,
+  PartyMembersSection,
+  PartyPendingInvitationsSection,
+  PartyUnassignedCharactersSection,
+} from '@/features/characters/sections';
 
 export default function PartyPage() {
   const { t } = useTranslation('party');
   const { id: campaignId } = useParams<{ id: string }>();
-  const partyEnabled = useSectionEnabled(campaignId ?? '', 'party');
-  const { data: campaign } = useCampaign(campaignId ?? '');
-  const { data: slots, isLoading, isError } = usePartySlots(campaignId ?? '');
-  const { data: invitations } = useCampaignInvitations(campaignId ?? '');
-  const { data: characters } = useParty(campaignId ?? '');
-  const cancelInvitation = useCancelInvitation();
+  const cId = campaignId ?? '';
 
-  const [invitePanelOpen, setInvitePanelOpen] = useState(false);
-  const [addCharOpen, setAddCharOpen] = useState(false);
-  const [createForUserId, setCreateForUserId] = useState<string | null>(null);
-
-  const cancelConfirm = useInlineConfirm();
-
-  const isGm = campaign?.myRole?.toLowerCase() === 'gm';
-
-  const currentUserId = useAuthStore((s) => s.user?.id);
-
-  // Derived data
-  const memberSlots = (slots ?? []).filter((s) => s.member);
-  const mySlot = !isGm ? memberSlots.find((s) => s.member!.user.id === currentUserId) : undefined;
-  const otherSlots = mySlot ? memberSlots.filter((s) => s !== mySlot) : memberSlots;
-  const invitationSlots = (invitations ?? []).filter((inv) => inv.status === 'pending');
-  const unassignedCharacters = (characters ?? []).filter((c) => !c.userId);
-  const membersWithoutCharacter = memberSlots
-    .filter((s) => !s.character)
-    .map((s) => ({
-      userId: s.member!.user.id,
-      userName: s.member!.user.name,
-    }));
-
-  const isEmpty = memberSlots.length === 0 && invitationSlots.length === 0 && unassignedCharacters.length === 0;
+  const page = usePartyPage(cId);
+  const {
+    campaignTitle,
+    partyEnabled,
+    isGm,
+    isLoading,
+    isError,
+    mySlot,
+    otherSlots,
+    invitationSlots,
+    unassignedCharacters,
+    membersWithoutCharacter,
+    isEmpty,
+    invitePanelOpen,
+    setInvitePanelOpen,
+    addCharOpen,
+    createForUserId,
+    openAddCharacter,
+    closeAddCharacter,
+  } = page;
 
   if (!partyEnabled) {
-    return <SectionDisabled campaignId={campaignId ?? ''} />;
+    return <SectionDisabled campaignId={cId} />;
   }
 
   return (
     <>
-    <SectionBackground />
-    <main className="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
-      {/* Campaign name */}
-      <div className="flex justify-center pt-0 pb-8">
-        <Link
-          to={`/campaigns/${campaignId}`}
-          className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
-        >
-          <span className="material-symbols-outlined text-[16px]">shield</span>
-          {campaign?.title ?? t('common:campaign')}
-        </Link>
-      </div>
-
-      {/* Content — single max-width container */}
-      <div className="px-4 sm:px-8 max-w-5xl mx-auto w-full pb-20">
-        {/* Header card */}
-        <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">{t('title')}</h1>
-              <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
-            </div>
-            {isGm && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setInvitePanelOpen(!invitePanelOpen)}
-                  className="flex items-center gap-2 px-5 py-2.5 text-secondary border border-secondary/30 rounded-sm text-xs font-label uppercase tracking-widest hover:bg-secondary/10 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">person_add</span>
-                  {t('invite_player')}
-                </button>
-                <button
-                  onClick={() => setAddCharOpen(true)}
-                  className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/10 hover:opacity-90 transition-opacity"
-                >
-                  <span className="material-symbols-outlined text-[18px]">add</span>
-                  <span className="font-label text-xs uppercase tracking-widest">{t('add_character')}</span>
-                </button>
-              </div>
-            )}
-          </div>
-          {invitePanelOpen && isGm && (
-            <div className="mt-4">
-              <InvitePanel campaignId={campaignId ?? ''} onClose={() => setInvitePanelOpen(false)} />
-            </div>
-          )}
+      <SectionBackground />
+      <main className="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
+        {/* Campaign name */}
+        <div className="flex justify-center pt-0 pb-8">
+          <Link
+            to={`/campaigns/${cId}`}
+            className="flex items-center gap-2 px-5 py-2 bg-surface-container border border-outline-variant/20 rounded-sm shadow-lg text-sm font-label uppercase tracking-[0.2em] text-on-surface-variant/60 hover:text-primary hover:border-primary/30 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[16px]">shield</span>
+            {campaignTitle ?? t('common:campaign')}
+          </Link>
         </div>
 
-        {isLoading && (
-          <div className="flex items-center gap-3 p-12 text-on-surface-variant">
-            <span className="material-symbols-outlined animate-spin">progress_activity</span>{t('loading')}
-          </div>
-        )}
-        {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
+        {/* Content — single max-width container */}
+        <div className="px-4 sm:px-8 max-w-5xl mx-auto w-full pb-20">
+          <PartyHeroSection
+            campaignId={cId}
+            isGm={isGm}
+            invitePanelOpen={invitePanelOpen}
+            onToggleInvitePanel={() => setInvitePanelOpen(!invitePanelOpen)}
+            onCloseInvitePanel={() => setInvitePanelOpen(false)}
+            onAddCharacter={() => openAddCharacter()}
+          />
 
-        {!isLoading && !isError && (
-          <>
-            {/* Empty state */}
-            {isEmpty && (
-              <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                <div className="flex flex-col items-center justify-center py-8">
-                  <EmptyState
-                    icon="groups"
-                    title={t('empty_title')}
-                    subtitle={t('empty_subtitle')}
-                  />
-                  {isGm && (
-                    <div className="flex items-center gap-3 mt-4">
-                      <button
-                        onClick={() => setInvitePanelOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 text-secondary border border-secondary/30 rounded-sm text-xs font-label uppercase tracking-widest hover:bg-secondary/10 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">person_add</span>
-                        {t('invite_player')}
-                      </button>
-                      <button
-                        onClick={() => setAddCharOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-sm text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">add</span>
-                        {t('create_character')}
-                      </button>
-                    </div>
+          {isLoading && (
+            <div className="flex items-center gap-3 p-12 text-on-surface-variant">
+              <span className="material-symbols-outlined animate-spin">
+                progress_activity
+              </span>
+              {t('loading')}
+            </div>
+          )}
+          {isError && <p className="text-tertiary text-sm p-12">{t('error')}</p>}
+
+          {!isLoading && !isError && (
+            <>
+              {isEmpty && (
+                <PartyEmptyStateSection
+                  isGm={isGm}
+                  onInvitePlayer={() => setInvitePanelOpen(true)}
+                  onCreateCharacter={() => openAddCharacter()}
+                />
+              )}
+
+              {!isEmpty && (
+                <div className="space-y-8">
+                  {mySlot?.character && (
+                    <PartyMyCharacterSection
+                      campaignId={cId}
+                      character={mySlot.character}
+                    />
                   )}
+
+                  <PartyPendingInvitationsSection
+                    invitations={invitationSlots}
+                    isGm={isGm}
+                  />
+
+                  <PartyMembersSection
+                    slots={otherSlots}
+                    campaignId={cId}
+                    unassignedCharacters={unassignedCharacters}
+                    isGm={isGm}
+                    onCreateCharacter={(forUserId) => openAddCharacter(forUserId)}
+                  />
+
+                  <PartyUnassignedCharactersSection
+                    characters={unassignedCharacters}
+                    campaignId={cId}
+                    membersWithoutCharacter={membersWithoutCharacter}
+                    isGm={isGm}
+                  />
                 </div>
-              </div>
-            )}
+              )}
+            </>
+          )}
+        </div>
+      </main>
 
-            {!isEmpty && (
-              <div className="space-y-8">
-                {/* My Character — shown separately for players */}
-                {mySlot && mySlot.character && (
-                  <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                    <SectionHeader title={t('section_my_character')} />
-                    <Link
-                      to={`/campaigns/${campaignId}/characters/${mySlot.character.id}`}
-                      className="border border-primary/20 bg-surface-container-low rounded-sm p-4 flex items-center gap-4 hover:border-primary/40 transition-colors group"
-                    >
-                      <div className="w-14 h-14 rounded-sm border border-primary/20 overflow-hidden bg-surface-container-highest flex-shrink-0">
-                        {resolveImageUrl(mySlot.character.image) ? (
-                          <img src={resolveImageUrl(mySlot.character.image)} alt={mySlot.character.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-sm font-bold text-primary/40">{mySlot.character.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-lg font-headline font-bold text-primary truncate group-hover:text-primary/80 transition-colors">{mySlot.character.name}</p>
-                        <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/50 mt-0.5">
-                          {[mySlot.character.species, mySlot.character.class].filter(Boolean).join(' \u00b7 ') || '\u2014'}
-                        </p>
-                      </div>
-                      <span className="material-symbols-outlined text-primary/40 text-[18px]">arrow_forward</span>
-                    </Link>
-                  </div>
-                )}
-
-                {/* Pending Invitations */}
-                {invitationSlots.length > 0 && (
-                  <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                    <SectionHeader title={t('section_pending_invitations')} count={invitationSlots.length} />
-                    <div className="space-y-2">
-                      {invitationSlots.map((inv) => (
-                        <div
-                          key={inv.id}
-                          className="flex items-center gap-3 p-4 border border-outline-variant/10 bg-surface-container-low rounded-sm"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant/40">hourglass_top</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-on-surface font-medium truncate">{inv.user.name}</p>
-                            <p className="text-[10px] text-on-surface-variant/50 truncate">{inv.user.email}</p>
-                          </div>
-                          <span className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-secondary bg-secondary/10 border border-secondary/20 rounded-full">
-                            {t('status_pending')}
-                          </span>
-                          {isGm && (
-                            <div className="flex-shrink-0">
-                              {cancelConfirm.isConfirming(inv.id) ? (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-[9px] text-on-surface-variant/50">{t('cancel_confirm')}</span>
-                                  <button
-                                    onClick={() => {
-                                      cancelInvitation.mutate(inv.id);
-                                      cancelConfirm.cancel();
-                                    }}
-                                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-tertiary border border-tertiary/30 rounded-sm hover:bg-tertiary/10"
-                                  >
-                                    {t('confirm_yes')}
-                                  </button>
-                                  <button
-                                    onClick={() => cancelConfirm.cancel()}
-                                    className="px-2 py-1 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
-                                  >
-                                    {t('confirm_no')}
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => cancelConfirm.startConfirm(inv.id)}
-                                  className="p-1.5 text-on-surface-variant/30 hover:text-tertiary transition-colors"
-                                  title={t('cancel_invitation')}
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">close</span>
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Party Members */}
-                {otherSlots.length > 0 && (
-                  <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                    <SectionHeader title={t('section_party_members')} count={otherSlots.length} />
-                    {/* Column headers */}
-                    <div className="grid grid-cols-[1fr_auto_1fr] mb-2 px-1">
-                      <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">{t('column_player')}</span>
-                      <div className="w-[52px]" />
-                      <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">{t('column_character')}</span>
-                    </div>
-                    <div className="space-y-3">
-                      {otherSlots.map((slot) => (
-                        <MemberCard
-                          key={slot.member!.id}
-                          slot={slot}
-                          campaignId={campaignId ?? ''}
-                          unassignedCharacters={unassignedCharacters}
-                          isGm={isGm}
-                          onCreateCharacter={(forUserId) => { setCreateForUserId(forUserId); setAddCharOpen(true); }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Unassigned Characters */}
-                {unassignedCharacters.length > 0 && (
-                  <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-                    <SectionHeader title={t('section_unassigned_characters')} count={unassignedCharacters.length} />
-                    <div className="space-y-2">
-                      {unassignedCharacters.map((char) => (
-                        <UnassignedCharacterCard
-                          key={char.id}
-                          char={char}
-                          campaignId={campaignId ?? ''}
-                          membersWithoutCharacter={membersWithoutCharacter}
-                          isGm={isGm}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>{/* end max-w-5xl container */}
-
-    </main>
-
-    <CharacterEditDrawer
-      open={addCharOpen}
-      onClose={() => { setAddCharOpen(false); setCreateForUserId(null); }}
-      campaignId={campaignId ?? ''}
-      forUserId={createForUserId ?? undefined}
-    />
+      <CharacterEditDrawer
+        open={addCharOpen}
+        onClose={closeAddCharacter}
+        campaignId={cId}
+        forUserId={createForUserId ?? undefined}
+      />
     </>
   );
 }
