@@ -207,6 +207,7 @@ export function LocationTypeDetailSection({
   const [addChildOfSearch, setAddChildOfSearch] = useState('');
   const [addingContain, setAddingContain] = useState(false);
   const [addContainSearch, setAddContainSearch] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const labelCls =
     'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
@@ -227,6 +228,7 @@ export function LocationTypeDetailSection({
     setShowIconPicker(false);
     setAddingChildOf(false);
     setAddingContain(false);
+    setConfirmDelete(false);
   }, [entry.id, entry.name, entry.icon, entry.category]);
 
   const others = allTypes.filter((t) => t.id !== entry.id);
@@ -261,13 +263,31 @@ export function LocationTypeDetailSection({
       {/* Top bar */}
       <div className="flex-shrink-0 flex items-center justify-end gap-2 px-6 py-3.5 border-b border-outline-variant/10">
         {!entry.builtin && (
-          <button
-            onClick={() => { deleteType.mutate(entry.id); onDeleted(); }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-rose-400 text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-rose-500/10 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[13px]">delete</span>
-            {t('types_delete')}
-          </button>
+          confirmDelete ? (
+            <div className="inline-flex items-center gap-1 px-2 py-1 border border-rose-400/40 bg-rose-500/10 rounded-sm">
+              <span className="text-[10px] text-on-surface-variant mr-1">{t('confirm_delete')}</span>
+              <button
+                onClick={() => { deleteType.mutate(entry.id); setConfirmDelete(false); onDeleted(); }}
+                className="px-2 py-0.5 text-[9px] font-label uppercase tracking-wider text-rose-400 hover:text-on-surface transition-colors"
+              >
+                {t('common:yes')}
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="px-2 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
+              >
+                {t('common:no')}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-rose-400 text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-rose-500/10 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[13px]">delete</span>
+              {t('types_delete')}
+            </button>
+          )
         )}
         <button
           onClick={() => saveType.mutate({ ...entry, name: editName.trim(), icon: editIcon.trim() || entry.icon, category: editCat })}
