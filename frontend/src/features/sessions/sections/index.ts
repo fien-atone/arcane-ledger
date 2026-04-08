@@ -6,3 +6,5 @@ export { SessionMyNotesSection } from './SessionMyNotesSection';
 export { SessionNpcsSection } from './SessionNpcsSection';
 export { SessionLocationsSection } from './SessionLocationsSection';
 export { SessionQuestsSection } from './SessionQuestsSection';
+export { SessionListHeroSection } from './SessionListHeroSection';
+export { SessionListSection } from './SessionListSection';
