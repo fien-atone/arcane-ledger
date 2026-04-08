@@ -98,7 +98,9 @@ export const referenceDataResolvers = {
 
     deleteContainmentRule: async (_: unknown, { id }: { id: string }, ctx: Context) => {
       const { prisma } = ctx;
-      const rule = await prisma.locationTypeContainmentRule.findUniqueOrThrow({ where: { id }, include: { parentType: true } });
+      const rule = await prisma.locationTypeContainmentRule.findUnique({ where: { id }, include: { parentType: true } });
+      // Idempotent: already gone — return success instead of throwing
+      if (!rule) return true;
       await requireGM(ctx, rule.parentType.campaignId);
       await prisma.locationTypeContainmentRule.delete({ where: { id } });
       return true;

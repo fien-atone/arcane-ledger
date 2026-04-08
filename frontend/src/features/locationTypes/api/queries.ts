@@ -72,13 +72,18 @@ export function useLocationTypes(campaignId?: string) {
 export function useSaveLocationType(campaignId: string) {
   const [execute, { loading, error }] = useMutation(SAVE_LOCATION_TYPE);
   return {
-    mutate: (entry: LocationTypeEntry, opts?: { onSuccess?: () => void }) => {
+    mutate: (entry: LocationTypeEntry, opts?: { onSuccess?: (savedId: string) => void }) => {
       const { id, createdAt, builtin, ...rest } = entry;
       execute({
         variables: { campaignId, id: id || undefined, ...rest },
         refetchQueries: ['LocationTypes'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.()).catch(() => {});
+      })
+        .then((result) => {
+          const savedId = (result.data as any)?.saveLocationType?.id as string | undefined;
+          if (savedId) opts?.onSuccess?.(savedId);
+        })
+        .catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
@@ -131,7 +136,8 @@ export function useDeleteContainmentRule() {
     mutate: (id: string, opts?: { onSuccess?: () => void }) => {
       execute({
         variables: { id },
-        refetchQueries: [{ query: CONTAINMENT_RULES_QUERY }],
+        refetchQueries: ['ContainmentRules'],
+        awaitRefetchQueries: true,
       }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
