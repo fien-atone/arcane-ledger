@@ -34,7 +34,7 @@ _Nothing currently in progress._
 | F-8 | 🟢 | Export: PDF character sheets, session summaries | — |
 | F-9 | 🟢 | Dice roller: persist roll history per session | — |
 | F-10 | 🟢 | OAuth login (Google/Discord) | — |
-| F-11 | 🟡 | All search/filter must go through server (debounced GraphQL queries, no client-side filtering) | — |
+| F-11 | 🟡 | All search/filter must go through server (debounced GraphQL queries, no client-side filtering). **Do this AFTER frontend section-widgets refactor finishes** — every list page will have a uniform `useXxxListPage` hook by then, so a single pass can convert all of them to server-side search with `keepPreviousData`/`cache-and-network` to prevent the loading flicker that originally pushed us toward client-side filtering. Currently client-side: GroupTypesPage. | — |
 | F-15 | 🟡 | Timelines: visual timeline view for campaign events, session history, NPC encounters, quest progression | — |
 | F-17 | 🟢 | Social GM groups — a group of GMs can see each other's campaigns, coordinate session schedules across multiple games, shared calendar view. For communities running multiple parallel campaigns | — |
 | F-18 | 🟡 | Rate limiting on login mutation — protect against brute-force password attacks. Use express-rate-limit or graphql-rate-limit. Reasonable limits: 5 attempts per email per 15 minutes | — |

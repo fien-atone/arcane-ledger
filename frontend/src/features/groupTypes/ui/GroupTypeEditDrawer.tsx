@@ -14,11 +14,12 @@ const labelCls =
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSaved?: (id: string) => void;
   campaignId: string;
   groupType?: GroupTypeEntry;
 }
 
-export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Props) {
+export function GroupTypeEditDrawer({ open, onClose, onSaved, campaignId, groupType }: Props) {
   const { t } = useTranslation('groups');
   const save = useSaveGroupType(campaignId);
   const isNew = !groupType;
@@ -43,7 +44,12 @@ export function GroupTypeEditDrawer({ open, onClose, campaignId, groupType }: Pr
       description: groupType?.description,
       createdAt: groupType?.createdAt ?? new Date().toISOString(),
     };
-    save.mutate(record, { onSuccess: onClose });
+    save.mutate(record, {
+      onSuccess: (savedId) => {
+        onClose();
+        onSaved?.(savedId);
+      },
+    });
   };
 
   if (!open) return null;
