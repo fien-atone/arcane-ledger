@@ -172,11 +172,11 @@ List pages decompose into: `hooks/useXxxList.ts` (data + filters state) + `secti
 
 | # | Page | Lines | Status | Notes |
 |---|---|---|---|---|
-| 7 | LocationTypesPage | 717 → 118 | ✅ done | 4 sections + 1 hook + 12 tests. Also fixed: containment rule delete idempotency (backend), inline confirm on × button, auto-select created type. |
-| 8 | PartyPage | 606 → 151 | ✅ done | 6 sections + 1 hook + 24 tests. List-page pattern: hook pulls shared state upward, sections receive props (trade-off from Rule 1). |
-| 9 | LocationListPage | 313 | pending | Filters by type, parent grouping. Has preview panel. |
-| 10 | SpeciesTypesPage | 262 | pending | Type CRUD, small list. |
-| 11 | NpcListPage | 255 | pending | Filters by status. Has preview panel. |
+| 7 | LocationTypesPage | 717 → 118 | ✅ done | 4 sections + 1 hook + 12 tests. Fixes: containment rule delete idempotency (backend), inline confirm on ×, auto-select created type. |
+| 8 | PartyPage | 606 → 151 | ✅ done | 6 sections + 1 hook + 24 tests. List-page pattern: hook owns shared state, sections receive props. |
+| 9 | LocationListPage | 313 → 111 | ✅ done | 2 sections + 1 hook + 15 tests. URL-backed search/type filters. |
+| 10 | SpeciesTypesPage | 262 → 137 | ✅ done | 3 sections + drawer + 1 hook + 11 tests. Bonus: idempotent delete fix for all 3 type-delete mutations. |
+| 11 | NpcListPage | 255 → 107 | ✅ done | 2 sections + 1 hook + 11 tests. URL-backed search/status filters. |
 | 12 | GroupTypesPage | 253 | pending | Type CRUD. |
 | 13 | GroupListPage | 214 | pending | Filters by type. Has preview panel. |
 | 14 | QuestListPage | 204 | pending | Filters by status. |
@@ -205,8 +205,8 @@ These don't live in a single `features/<domain>/`. Sections go into `widgets/<pa
 | NpcDetailPage | 112 | ✅ done |
 | ChangelogPage | 97 | Thin |
 
-**Progress: 8/22 pages done (6 Tier 1 + 2 Tier 2). 14 remaining.**
-**Frontend test count: 131 → 167 (+36 from Tier 2 so far).**
+**Progress: 11/22 pages done (6 Tier 1 + 5 Tier 2). 11 remaining.**
+**Frontend test count: 131 → 205 (+74 across all refactors).**
 
 ---
 
