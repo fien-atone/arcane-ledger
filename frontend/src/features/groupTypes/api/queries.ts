@@ -33,9 +33,9 @@ export const useGroupTypes = (campaignId?: string, search?: string) => {
 };
 
 export const useSaveGroupType = (campaignId: string) => {
-  const [execute, { loading, error }] = useMutation(SAVE_GROUP_TYPE);
+  const [execute, { loading, error }] = useMutation<any>(SAVE_GROUP_TYPE);
   return {
-    mutate: (entry: GroupTypeEntry, opts?: { onSuccess?: () => void }) => {
+    mutate: (entry: GroupTypeEntry, opts?: { onSuccess?: (savedId: string) => void }) => {
       execute({
         variables: {
           campaignId,
@@ -46,7 +46,12 @@ export const useSaveGroupType = (campaignId: string) => {
         },
         refetchQueries: ['GroupTypes'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.()).catch(() => {});
+      })
+        .then((res) => {
+          const savedId: string = res?.data?.saveGroupType?.id ?? entry.id ?? '';
+          opts?.onSuccess?.(savedId);
+        })
+        .catch(() => {});
     },
     isLoading: loading,
     isPending: loading,
