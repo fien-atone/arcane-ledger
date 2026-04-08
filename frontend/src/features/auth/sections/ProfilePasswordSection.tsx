@@ -48,10 +48,10 @@ export function ProfilePasswordSection() {
         setConfirmPassword('');
         setMsg({ type: 'success', text: t('password_changed') });
       }
-    } catch (err: any) {
+    } catch {
       setMsg({
         type: 'error',
-        text: err?.message || t('password_change_failed'),
+        text: t('password_change_failed'),
       });
     }
   };

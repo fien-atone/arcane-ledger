@@ -40,10 +40,10 @@ export function ProfileInfoSection() {
         updateUser({ name: data.updateProfile.name });
         setMsg({ type: 'success', text: t('profile_updated') });
       }
-    } catch (err: any) {
+    } catch {
       setMsg({
         type: 'error',
-        text: err?.message || t('profile_update_failed'),
+        text: t('profile_update_failed'),
       });
     }
   };
