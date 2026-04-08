@@ -5,3 +5,5 @@ export { QuestGiverSection } from './QuestGiverSection';
 export { QuestRewardSection } from './QuestRewardSection';
 export { QuestSessionsSection } from './QuestSessionsSection';
 export { QuestVisibilitySection } from './QuestVisibilitySection';
+export { QuestListHeroSection } from './QuestListHeroSection';
+export { QuestListSection } from './QuestListSection';
