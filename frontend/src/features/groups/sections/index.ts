@@ -5,3 +5,5 @@ export { GroupSymbolsSection } from './GroupSymbolsSection';
 export { GroupGmNotesSection } from './GroupGmNotesSection';
 export { GroupMembersSection } from './GroupMembersSection';
 export { GroupVisibilitySection } from './GroupVisibilitySection';
+export { GroupListHeroSection } from './GroupListHeroSection';
+export { GroupListSection } from './GroupListSection';
