@@ -157,12 +157,14 @@ Pages are grouped into three families because they decompose differently:
 
 | # | Page | Lines | Status | Notes |
 |---|---|---|---|---|
-| **1** | **NpcDetailPage** | 895 → 112 | ✅ done | Pilot shipped. 10 sections + 1 hook + 11 test files (25 tests). Test infra set up: Vitest + Testing Library + Apollo MockedProvider. Lessons: Apollo v4 MockedProvider drops `addTypename` prop; `MockedResponse` type lives at `MockLink.MockedResponse<any, any>`. |
-| 2 | SessionDetailPage | 705 | pending | Recently touched, we know the code. Sections: header, navigation, brief, notes, NPCs, locations, quests. |
-| 3 | GroupDetailPage | 457 | pending | Similar shape to NpcDetailPage. Sections: header, description, goals, symbols, members, social relations. |
-| 4 | CharacterDetailPage | 433 | pending | Mini-NPC shape. Sections: hero, identity, backstory, motivation, bonds, flaws, group memberships. |
-| 5 | QuestDetailPage | 325 | pending | Smaller but still benefits. Sections: header, description, reward, giver, sessions, GM notes, visibility. |
-| **6** | **LocationDetailPage** | **1620** | **last in tier** | Largest and most dangerous. Save for when we have a proven pattern. Sections: header, map, children, NPCs present, sessions, quests, containment, visibility. |
+| 1 | NpcDetailPage | 895 → 112 | ✅ done | Pilot. 10 sections + 1 hook + 25 tests. Test infra set up: Vitest + Testing Library + Apollo MockedProvider. Lessons: Apollo v4 MockedProvider drops `addTypename` prop; `MockedResponse` type lives at `MockLink.MockedResponse<any, any>`. |
+| 2 | SessionDetailPage | 705 → 123 | ✅ done | 8 sections + 1 hook + 28 tests. |
+| 3 | GroupDetailPage | 457 → 102 | ✅ done | 7 sections + 1 hook + 19 tests. |
+| 4 | CharacterDetailPage | 433 → 121 | ✅ done | 6 sections + 1 hook + 15 tests. Preserved canViewAll (isGm || isOwner) logic. |
+| 5 | QuestDetailPage | 325 → 108 | ✅ done | 7 sections + 1 hook + 20 tests. |
+| 6 | LocationDetailPage | 1620 → 162 | ✅ done | 11 sections + 1 hook + 24 tests + map/ subfolder with MapViewer/MiniMapPreview/LocationPlaceholder moved verbatim. Post-merge fix: MapViewer now uses createPortal to document.body to escape main overflow. |
+
+**Tier 1 totals: 6/6 pages, 4435 → 728 lines (84% reduction), 131 new tests.**
 
 ### Tier 2 — List pages (different pattern)
 
@@ -170,8 +172,8 @@ List pages decompose into: `hooks/useXxxList.ts` (data + filters state) + `secti
 
 | # | Page | Lines | Status | Notes |
 |---|---|---|---|---|
-| 7 | LocationTypesPage | 717 | pending | Biggest list-like page. Has graph/tree visualisation + type forms. |
-| 8 | PartyPage | 606 | pending | Three lists: members, pending invitations, unassigned characters. Already has sections to extract. |
+| 7 | LocationTypesPage | 717 → 118 | ✅ done | 4 sections + 1 hook + 12 tests. Also fixed: containment rule delete idempotency (backend), inline confirm on × button, auto-select created type. |
+| 8 | PartyPage | 606 → 151 | ✅ done | 6 sections + 1 hook + 24 tests. List-page pattern: hook pulls shared state upward, sections receive props (trade-off from Rule 1). |
 | 9 | LocationListPage | 313 | pending | Filters by type, parent grouping. Has preview panel. |
 | 10 | SpeciesTypesPage | 262 | pending | Type CRUD, small list. |
 | 11 | NpcListPage | 255 | pending | Filters by status. Has preview panel. |
@@ -203,7 +205,8 @@ These don't live in a single `features/<domain>/`. Sections go into `widgets/<pa
 | NpcDetailPage | 112 | ✅ done |
 | ChangelogPage | 97 | Thin |
 
-**Total to refactor: 21 pages remaining.**
+**Progress: 8/22 pages done (6 Tier 1 + 2 Tier 2). 14 remaining.**
+**Frontend test count: 131 → 167 (+36 from Tier 2 so far).**
 
 ---
 
