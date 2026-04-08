@@ -179,9 +179,11 @@ List pages decompose into: `hooks/useXxxList.ts` (data + filters state) + `secti
 | 11 | NpcListPage | 255 → 107 | ✅ done | 2 sections + 1 hook + 11 tests. URL-backed search/status filters. |
 | 12 | GroupTypesPage | 253 → 137 | ✅ done | 3 sections + 1 hook + 12 tests. Switched to client-side search to fix list flicker (server-side will be done in F-11 sweep after refactor). |
 | 13 | GroupListPage | 214 → 108 | ✅ done | 2 sections + 1 hook + 11 tests. Client-side search/type filter. |
-| 14 | QuestListPage | 204 | pending | Filters by status. |
-| 15 | SessionListPage | 195 | pending | Simple date-sorted list. Borderline — could leave. |
-| 16 | SpeciesPage | 187 | pending | Species list with preview. Borderline. |
+| 14 | QuestListPage | 204 → 97 | ✅ done | 2 sections + 1 hook + 11 tests. Client-side search/status filter. |
+| 15 | SessionListPage | 195 → 94 | ✅ done | 2 sections + 1 hook + 7 tests. Client-side search. |
+| 16 | SpeciesPage | 187 → 102 | ✅ done | 2 sections + 1 hook + 11 tests. Client-side search/type filter. |
+
+**Tier 2 totals: 10/10 pages, 3206 → 1162 lines (64% reduction), 125 new tests.**
 
 ### Tier 3 — Top-level pages (cross-domain, no single feature owner)
 
@@ -190,11 +192,11 @@ These don't live in a single `features/<domain>/`. Sections go into `widgets/<pa
 | # | Page | Lines | Status | Notes |
 |---|---|---|---|---|
 | 17 | CampaignDashboardPage | 588 | pending | Widget-shaped by nature. Sections: next session, recent sessions, calendar, party, recent NPCs, section toggle. |
-| 18 | SocialGraphPage | 498 | pending | Mostly D3 logic already isolated. Mostly orchestration. |
-| 19 | CampaignsPage | 381 | pending | List + calendar widget + create drawer. |
-| 20 | LandingPage | 267 | pending | Marketing copy. Sections: nav, hero, stats, features, roadmap, contact, CTA. |
-| 21 | AdminUsersPage | 262 | pending | Table + create/edit drawer. Admin-only. |
-| 22 | ProfilePage | 261 | pending | Form with profile info + language + password change. |
+| 18 | CampaignsPage | 381 | pending | List + calendar widget + create drawer. |
+| 19 | LandingPage | 267 | pending | Marketing copy. Sections: nav, hero, stats, features, roadmap, contact, CTA. |
+| 20 | AdminUsersPage | 262 | pending | Table + create/edit drawer. Admin-only. |
+| 21 | ProfilePage | 261 | pending | Form with profile info + language + password change. |
+| 22 | SocialGraphPage | 498 | pending | **Last** — D3 logic already isolated, lower priority per user request. |
 
 ### Not refactoring (too small, no benefit)
 
@@ -205,8 +207,8 @@ These don't live in a single `features/<domain>/`. Sections go into `widgets/<pa
 | NpcDetailPage | 112 | ✅ done |
 | ChangelogPage | 97 | Thin |
 
-**Progress: 13/22 pages done (6 Tier 1 + 7 Tier 2). 9 remaining.**
-**Frontend test count: 131 → 228 (+97 across all refactors).**
+**Progress: 16/22 pages done (6 Tier 1 + 10 Tier 2). 6 Tier 3 remaining.**
+**Frontend test count: 131 → 257 (+126 across all refactors).**
 
 ---
 
