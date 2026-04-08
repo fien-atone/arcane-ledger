@@ -191,12 +191,14 @@ These don't live in a single `features/<domain>/`. Sections go into `widgets/<pa
 
 | # | Page | Lines | Status | Notes |
 |---|---|---|---|---|
-| 17 | CampaignDashboardPage | 588 | pending | Widget-shaped by nature. Sections: next session, recent sessions, calendar, party, recent NPCs, section toggle. |
-| 18 | CampaignsPage | 381 | pending | List + calendar widget + create drawer. |
-| 19 | LandingPage | 267 | pending | Marketing copy. Sections: nav, hero, stats, features, roadmap, contact, CTA. |
-| 20 | AdminUsersPage | 262 | pending | Table + create/edit drawer. Admin-only. |
-| 21 | ProfilePage | 261 | pending | Form with profile info + language + password change. |
-| 22 | SocialGraphPage | 498 | pending | **Last** — D3 logic already isolated, lower priority per user request. |
+| 17 | CampaignDashboardPage | 588 → 124 | ✅ done | 6 widget sections + 1 hook + 6 tests. Inline title/description editing preserved. |
+| 18 | CampaignsPage | 381 → 79 | ✅ done | 4 sections + 1 hook + 6 tests. Cross-campaign calendar separate from dashboard calendar. |
+| 19 | LandingPage | 267 → 37 | ✅ done | 7 presentational sections under widgets/landing + 14 smoke tests. Post-merge fix: absolutely-centered nav links to avoid shift on language toggle. |
+| 20 | AdminUsersPage | 262 → 58 | ✅ done | 2 sections + 1 hook + 8 tests. Debounced search, inline delete confirm. |
+| 21 | ProfilePage | 261 → 44 | ✅ done | 4 sections + 10 tests (no shared hook — each form is independent). Fix: always use translated error messages. |
+| 22 | SocialGraphPage | 498 → 82 | ✅ done | 2 sections + view wrapper + 1 hook + 7 tests. D3 primitives in features/social-graph/ui/ left untouched. |
+
+**Tier 3 totals: 6/6 pages, 2257 → 424 lines (81% reduction), 51 new tests.**
 
 ### Not refactoring (too small, no benefit)
 
