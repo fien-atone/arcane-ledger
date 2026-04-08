@@ -33,14 +33,19 @@ export const useSpeciesTypes = (campaignId?: string, search?: string) => {
 };
 
 export const useSaveSpeciesType = (campaignId: string) => {
-  const [execute, { loading, error }] = useMutation(SAVE_SPECIES_TYPE);
+  const [execute, { loading, error }] = useMutation<any>(SAVE_SPECIES_TYPE);
   return {
-    mutate: (entry: SpeciesTypeEntry, opts?: { onSuccess?: () => void }) => {
+    mutate: (entry: SpeciesTypeEntry, opts?: { onSuccess?: (savedId: string) => void }) => {
       execute({
         variables: { campaignId, id: entry.id || undefined, name: entry.name, icon: entry.icon, description: entry.description },
         refetchQueries: ['SpeciesTypes'],
         awaitRefetchQueries: true,
-      }).then(() => opts?.onSuccess?.()).catch(() => {});
+      })
+        .then((res) => {
+          const savedId: string = res?.data?.saveSpeciesType?.id ?? entry.id ?? '';
+          opts?.onSuccess?.(savedId);
+        })
+        .catch(() => {});
     },
     isLoading: loading,
     isPending: loading,

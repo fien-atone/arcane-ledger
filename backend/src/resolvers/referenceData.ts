@@ -60,7 +60,8 @@ export const referenceDataResolvers = {
 
     deleteLocationType: async (_: unknown, { id }: { id: string }, ctx: Context) => {
       const { prisma } = ctx;
-      const entity = await prisma.locationType.findUniqueOrThrow({ where: { id } });
+      const entity = await prisma.locationType.findUnique({ where: { id } });
+      if (!entity) return true; // idempotent: already gone
       await requireGM(ctx, entity.campaignId);
       await prisma.locationType.delete({ where: { id } });
       publishCampaignEvent(entity.campaignId, 'LOCATION_TYPE', id, 'DELETED');
@@ -131,7 +132,8 @@ export const referenceDataResolvers = {
 
     deleteGroupType: async (_: unknown, { id }: { id: string }, ctx: Context) => {
       const { prisma } = ctx;
-      const entity = await prisma.groupType.findUniqueOrThrow({ where: { id } });
+      const entity = await prisma.groupType.findUnique({ where: { id } });
+      if (!entity) return true; // idempotent: already gone
       await requireGM(ctx, entity.campaignId);
       await prisma.groupType.delete({ where: { id } });
       publishCampaignEvent(entity.campaignId, 'GROUP_TYPE', id, 'DELETED');
@@ -158,7 +160,8 @@ export const referenceDataResolvers = {
 
     deleteSpeciesType: async (_: unknown, { id }: { id: string }, ctx: Context) => {
       const { prisma } = ctx;
-      const entity = await prisma.speciesType.findUniqueOrThrow({ where: { id } });
+      const entity = await prisma.speciesType.findUnique({ where: { id } });
+      if (!entity) return true; // idempotent: already gone
       await requireGM(ctx, entity.campaignId);
       await prisma.speciesType.delete({ where: { id } });
       publishCampaignEvent(entity.campaignId, 'SPECIES_TYPE', id, 'DELETED');
