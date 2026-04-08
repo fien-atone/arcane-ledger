@@ -4,3 +4,7 @@ export { DashboardRecentSessionsSection } from './DashboardRecentSessionsSection
 export { DashboardActiveQuestsSection } from './DashboardActiveQuestsSection';
 export { DashboardCalendarSection } from './DashboardCalendarSection';
 export { DashboardPartySection } from './DashboardPartySection';
+export { CampaignsHeroSection } from './CampaignsHeroSection';
+export { CampaignsActiveListSection } from './CampaignsActiveListSection';
+export { CampaignsArchivedListSection } from './CampaignsArchivedListSection';
+export { CampaignsCalendarSection } from './CampaignsCalendarSection';
