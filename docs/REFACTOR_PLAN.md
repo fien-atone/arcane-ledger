@@ -233,54 +233,103 @@ For each page in the order above:
 
 ---
 
-## Phase 2: Redundancy audit (AFTER all pages refactored)
+## Phase 2: Redundancy audit — IN PROGRESS
 
-Once every page in the priority list has been decomposed into sections + hooks, do a cross-feature audit to find and eliminate redundancy. The per-page refactor is deliberately "naive" — each page gets its own sections without trying to share code yet. Once we see the whole picture, patterns become visible.
+Tier 1–3 decomposition finished 2026-04-08 (22/22 pages). Phase 2 extracts cross-feature abstractions *after* we can see the whole picture.
 
-### What to look for
+**Guiding principle (learned from `shared/ui/Select.tsx` near-miss and ProfilePage error-display regression):** purely presentational abstractions succeed (EmptyState, ImageUpload). Abstractions that know about domain data accumulate optional props until they rot. → Prefer **hooks over components** for data-aware extractions. Prefer **compound components** over config objects for UI with variants.
 
-1. **Near-duplicate section widgets across domains**
-   - Example already observed: `SessionNpcsSection`, `SessionLocationsSection`, `SessionQuestsSection` are three ~150-line files with identical shape (list + picker + remove confirm + visibility toggle). Likely candidate: a generic `<LinkedEntityListSection>` taking entity type + data hooks as props.
-   - Similar pattern suspected across `NpcGroupMembershipsSection` / `NpcLocationsSection` / `NpcQuestsSection`.
+### Inventory (2026-04-08 audit)
 
-2. **Duplicate EditDrawer boilerplate** (11 files, already noted in the original plan)
-   - Candidate: `<FormDrawer<T>>` with field config + onSave.
+| Pattern | Occurrences | Risk | Action |
+|---|---|---|---|
+| Card-panel wrapper (`bg-surface-container border ... rounded-sm p-6` + gold header) | 83 sections | Low (pure UI) | **Extract → `<SectionPanel>`** |
+| Inline Yes/No confirm (`confirmRemove*` state + yes/no buttons) | 19 sections | Low (pure UI) | **Extract → `useInlineConfirm()` + `<InlineConfirm>`** |
+| `LABEL_CLS` / `INPUT_CLS` / `toArray`/`fromArray` duplication | 15 files | Low | **Extract → `shared/ui/form.ts` constants** |
+| EditDrawer boilerplate (overlay + form + save mutation) | 11 drawers, 1969 lines | Medium (data-aware) | **Extract compound `<FormDrawer>` — NOT config object** |
+| Linked-entity list sections (picker + remove + visibility toggle) | 8 full + 5 read-only | **High (data-aware, already diverging)** | **Extract hook only (`useLinkedEntityList`). Keep JSX per-section.** Re-evaluate component after 3 migrations |
+| `useXxxListPage` hooks (11 hooks, 1854 lines) | 11 | Medium | **Defer until after F-11** (server-side search sweep will rewrite half these hooks anyway) |
+| `useXxxDetail` hooks (6 hooks, 620 lines) | 6 | Low gain, high generic-gymnastics cost | **Skip.** Hooks are lean, domains diverge enough |
 
-3. **Duplicate inline-confirm patterns**
-   - `confirmRemove*` state + yes/no buttons appear in every list section.
-   - Candidate: `<InlineConfirm onConfirm onCancel>` or a `useInlineConfirm()` hook.
+### Step list
 
-4. **Section header card-panel pattern**
-   - `<div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">` wraps every section's content.
-   - Candidate: `<SectionPanel title count action>` shared component.
+One abstraction = one branch = one PR. Run full build + tests before each merge. User verifies in browser before merge.
 
-5. **Custom hooks with the same shape**
-   - `useXxxDetail` hooks may share a common structure (load root entity + role + section flags + handlers). Could we have a `useEntityDetail<T>` generic factory?
+| # | Branch | Abstraction | Call sites to migrate | Status |
+|---|---|---|---|---|
+| 1 | `refactor/section-panel` | `<SectionPanel title action>` in `shared/ui/` | 83 sections | pending |
+| 2 | `refactor/inline-confirm` | `useInlineConfirm()` hook + `<InlineConfirm>` in `shared/ui/` | 19 sections | pending |
+| 3 | `refactor/form-constants` | `LABEL_CLS` / `INPUT_CLS` / `toArray` / `fromArray` in `shared/ui/form.ts` | 15 files | pending |
+| 4 | `refactor/form-drawer` | Compound `<FormDrawer>` + `<FormDrawer.Field>` in `shared/ui/` | 11 drawers | pending |
+| 5 | `refactor/linked-entity-hook` | `useLinkedEntityList()` hook (JSX stays per-section) | 8 linked sections | pending |
+| 6 | (deferred) | `useEntityListPage<T>` | 11 list hooks | blocked by F-11 |
+| ~~7~~ | — | ~~`useEntityDetail<T>` generic~~ | — | dropped (low gain) |
 
-6. **Section-internal state that should be shared**
-   - If three different sections all track `searchOpen` + `searchQuery` + `selectedId`, that's a pattern, not a coincidence.
+### Hard rules for Phase 2
 
-### Process
-
-1. Create a fresh branch `refactor/redundancy-audit`
-2. List all sections across all features, grouped by shape
-3. Identify top 5-10 abstractions to extract (prioritize by occurrences)
-4. Extract one at a time, apply to all call sites, run tests, commit
-5. Update `shared/ui/` or `shared/hooks/` with the new abstractions
-6. Document each abstraction in this file
+1. **Rule of three minimum.** No abstraction with fewer than 3 real call sites.
+2. **200-line limit per abstraction.** If it grows past that, it's solving the wrong problem — revert and reconsider.
+3. **Compound components over config objects** for any abstraction with 2+ variants.
+4. **Hooks over components** when the thing knows about domain data. Component-level generalisation is the higher-risk tier.
+5. **If last 20% of call sites need 5+ optional flags to fit**, exclude them. Leave them as bespoke sections.
+6. **One branch = one PR = user verifies before merge.** Same workflow as Tier 1–3.
+7. **Snapshot tests for SectionPanel and FormDrawer** — protect against "one className typo breaks 83 files" regressions.
 
 ### Success criteria
 
-- Total frontend LoC should decrease by 20-40% from the post-decomposition baseline
-- Test count stays the same or grows (no lost coverage)
-- No regression in visual output or behavior
-- Each abstraction has at least 3 real usages (don't extract for 2)
+- Total frontend LoC decreases by ≥15% from current baseline (post-Tier-3)
+- Test count stays the same or grows
+- No visual regression
+- No user-reported behavior change
+
+### How to verify each step (human language)
+
+App URL: **http://localhost:5173** — login as `gm@arcaneledger.app` / `user`. Pick any campaign you have with seed data.
+
+Each step is a visual or interaction test. If the thing looks the same and still works — it passes. No "unit tests", just poke the app.
+
+**Step 1 — SectionPanel**
+- Open an NPC detail page. Look at the section headers ("Identity", "Appearance", "Relations" etc.) — gold uppercase title, thin divider line, card background.
+- Same check on a Session detail page and a Location detail page.
+- Check: the gold headers look identical to before. Nothing shifted, nothing misaligned.
+
+**Step 2 — InlineConfirm**
+- Open an NPC detail page → Groups section → click the × next to any group.
+- Check: inline "Remove?" with Yes/No appears (no browser popup). Click No → it disappears. Click × again → click Yes → the group is removed.
+- Same check on: Session detail → remove linked NPC, Location detail → remove linked NPC, Character detail → remove group membership.
+
+**Step 3 — Form constants**
+- Open any Edit drawer (NPC, Location, Session…). Type into a text field.
+- Check: labels, inputs, spacing look identical to before. Text is readable.
+- Nothing else to test — this step only moves shared strings.
+
+**Step 4 — FormDrawer**
+- This one touches 11 drawers, so allocate 10 min for a thorough pass:
+  - **NPC**: create new NPC → fill name, save → appears in list. Open existing NPC → edit → save → changes stick.
+  - **Location**: same — create + edit.
+  - **Session**: same — create + edit (check date picker still works).
+  - **Group / Character / Quest / Species / GroupType / SpeciesType**: create + edit one of each.
+  - **Admin → Users**: create a user, edit its email, delete confirmation still shows.
+  - **Campaigns page**: "New Campaign" drawer opens, can create a campaign.
+- Check for each: drawer opens from the right, closes on backdrop click, Cancel button works, Save button works, form fields retain values.
+
+**Step 5 — LinkedEntityList hook**
+- On an NPC detail page:
+  - Groups section: add a group → it appears. Remove it → it's gone.
+  - Locations section: same (add/remove).
+  - Relations section: same.
+- On a Session detail page:
+  - NPCs / Locations / Quests sections: same add/remove flow for each.
+- On a Group detail page: members add/remove.
+- Key thing to check: if you're a GM and Party module is on → the "visibility" toggle (eye icon) still works on each linked item. Click it, refresh, check state persisted.
+
+**If anything looks wrong** — report exactly which page + which section + what happened. I'll fix before merge.
 
 ### Do NOT start this phase until:
 
-- All pages in the priority list are decomposed
-- All section widgets have tests
-- User has verified at least 80% of decomposed pages work correctly in the browser
+- ~~All pages in the priority list are decomposed~~ ✅ done 2026-04-08
+- ~~All section widgets have tests~~ ✅ 307 frontend tests
+- ~~User has verified the decomposed pages work correctly in the browser~~ ✅ all 22 pages verified during Tier 1–3
 
 ---
 
