@@ -60,6 +60,7 @@ export interface UseLocationTypesPageResult {
   startNew: () => void;
   selectType: (id: string) => void;
   cancelNew: () => void;
+  finishCreate: (savedId: string) => void;
   clearSelection: () => void;
 }
 
@@ -108,6 +109,12 @@ export function useLocationTypesPage(campaignId: string): UseLocationTypesPageRe
   };
 
   const cancelNew = () => setShowNew(false);
+  /** Called after a new type is successfully saved — closes the form
+   *  and selects the newly created type so the user lands on its edit card. */
+  const finishCreate = (savedId: string) => {
+    setShowNew(false);
+    setSelectedTypeId(savedId);
+  };
   const clearSelection = () => setSelectedTypeId(null);
 
   return {
@@ -130,6 +137,7 @@ export function useLocationTypesPage(campaignId: string): UseLocationTypesPageRe
     startNew,
     selectType,
     cancelNew,
+    finishCreate,
     clearSelection,
   };
 }

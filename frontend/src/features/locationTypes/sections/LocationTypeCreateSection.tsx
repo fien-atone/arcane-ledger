@@ -64,7 +64,7 @@ export function LocationTypeCreateSection({ campaignId, onCreated, onCancel }: P
         isSettlement: false,
         createdAt: new Date().toISOString(),
       },
-      { onSuccess: () => onCreated('') },
+      { onSuccess: (id: string) => onCreated(id) },
     );
   };
 

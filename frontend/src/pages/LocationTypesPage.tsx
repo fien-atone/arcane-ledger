@@ -43,6 +43,7 @@ export default function LocationTypesPage() {
     startNew,
     selectType,
     cancelNew,
+    finishCreate,
     clearSelection,
   } = page;
 
@@ -91,7 +92,7 @@ export default function LocationTypesPage() {
                 {showNew ? (
                   <LocationTypeCreateSection
                     campaignId={cId}
-                    onCreated={cancelNew}
+                    onCreated={finishCreate}
                     onCancel={cancelNew}
                   />
                 ) : selected ? (
