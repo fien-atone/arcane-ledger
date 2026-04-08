@@ -131,7 +131,8 @@ export function useDeleteContainmentRule() {
     mutate: (id: string, opts?: { onSuccess?: () => void }) => {
       execute({
         variables: { id },
-        refetchQueries: [{ query: CONTAINMENT_RULES_QUERY }],
+        refetchQueries: ['ContainmentRules'],
+        awaitRefetchQueries: true,
       }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,

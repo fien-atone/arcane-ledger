@@ -66,6 +66,8 @@ interface RelationSectionProps {
     remove: string;
     filter: string;
     noMore: string;
+    confirmYes: string;
+    confirmNo: string;
   };
 }
 
@@ -74,6 +76,7 @@ function RelationSection({
   onRemove, onAdd, adding, addSearch, setAdding, setAddSearch,
   labels,
 }: RelationSectionProps) {
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const inactive = allOthers.filter(
     (t) => !activeItems.some((a) => a.id === t.id) &&
       t.name.toLowerCase().includes(addSearch.toLowerCase()),
@@ -92,21 +95,41 @@ function RelationSection({
         {activeItems.length === 0 && !adding && (
           <span className="text-xs text-on-surface-variant/40 italic">{labels.none}</span>
         )}
-        {activeItems.map((t) => (
-          <span key={t.id} className="inline-flex items-stretch h-8">
-            <span className="flex items-center gap-1.5 pl-2.5 pr-2 text-[10px] font-label uppercase tracking-widest rounded-l-sm border border-r-0 border-outline-variant/30 bg-surface-container text-on-surface-variant">
-              <span className={`material-symbols-outlined text-[14px] flex-shrink-0 ${CATEGORY_ICON_COLOR[t.category]}`} style={{ fontVariationSettings: "'FILL' 1" }}>{t.icon}</span>
-              {t.name}
+        {activeItems.map((t) => {
+          const isConfirming = confirmRemoveId === t.id;
+          return (
+            <span key={t.id} className="inline-flex items-stretch h-8">
+              <span className="flex items-center gap-1.5 pl-2.5 pr-2 text-[10px] font-label uppercase tracking-widest rounded-l-sm border border-r-0 border-outline-variant/30 bg-surface-container text-on-surface-variant">
+                <span className={`material-symbols-outlined text-[14px] flex-shrink-0 ${CATEGORY_ICON_COLOR[t.category]}`} style={{ fontVariationSettings: "'FILL' 1" }}>{t.icon}</span>
+                {t.name}
+              </span>
+              {isConfirming ? (
+                <>
+                  <button
+                    onClick={() => { onRemove(t.id); setConfirmRemoveId(null); }}
+                    className="flex items-center px-2 border border-l-0 border-rose-400/40 bg-rose-500/10 text-rose-400 text-[9px] font-label uppercase tracking-wider hover:bg-rose-500/20 transition-colors"
+                  >
+                    {labels.confirmYes}
+                  </button>
+                  <button
+                    onClick={() => setConfirmRemoveId(null)}
+                    className="flex items-center px-2 rounded-r-sm border border-l-0 border-outline-variant/30 bg-surface-container text-on-surface-variant/60 text-[9px] font-label uppercase tracking-wider hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    {labels.confirmNo}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setConfirmRemoveId(t.id)}
+                  className="flex items-center px-1.5 rounded-r-sm border border-l-0 border-outline-variant/30 bg-surface-container text-on-surface-variant/40 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-500/5 transition-colors"
+                  title={labels.remove}
+                >
+                  <span className="material-symbols-outlined text-[14px]">close</span>
+                </button>
+              )}
             </span>
-            <button
-              onClick={() => onRemove(t.id)}
-              className="flex items-center px-1.5 rounded-r-sm border border-l-0 border-outline-variant/30 bg-surface-container text-on-surface-variant/40 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-500/5 transition-colors"
-              title={labels.remove}
-            >
-              <span className="material-symbols-outlined text-[14px]">close</span>
-            </button>
-          </span>
-        ))}
+          );
+        })}
         <button
           onClick={() => { setAdding(!adding); setAddSearch(''); }}
           className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-label uppercase tracking-widest rounded-sm border transition-colors ${
@@ -344,6 +367,8 @@ export function LocationTypeDetailSection({
             remove: t('types_remove'),
             filter: t('types_filter_placeholder'),
             noMore: t('types_no_more_to_add'),
+            confirmYes: t('common:yes'),
+            confirmNo: t('common:no'),
           }}
         />
 
@@ -365,6 +390,8 @@ export function LocationTypeDetailSection({
             remove: t('types_remove'),
             filter: t('types_filter_placeholder'),
             noMore: t('types_no_more_to_add'),
+            confirmYes: t('common:yes'),
+            confirmNo: t('common:no'),
           }}
         />
 
