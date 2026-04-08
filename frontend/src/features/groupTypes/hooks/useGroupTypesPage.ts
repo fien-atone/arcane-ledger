@@ -3,24 +3,21 @@
  *
  * Loads:
  * - The campaign (for the back-link title + role check)
- * - The filtered list of group types (driven by debounced search)
+ * - The full list of group types (loaded once, filtered client-side)
  *
  * Owns page-level UI state:
  * - selectedTypeId — which type is currently shown in the right panel
  * - showNew — reserved for future "create new in right panel" flows
- * - search — left-list search filter
- *
- * Derives:
- * - types (already server-filtered via useGroupTypes(search))
- * - selected (currently-shown GroupTypeEntry, defaults to first entry)
+ * - search — left-list search filter (client-side only — group type lists
+ *   are small and server-side search caused the list to flicker as the
+ *   loading state nuked the data on every keystroke)
  *
  * Section widgets receive minimal props and do not re-fetch the type list
  * themselves.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useGroupTypes } from '@/features/groupTypes/api';
-import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 export interface UseGroupTypesPageResult {
@@ -47,14 +44,20 @@ export function useGroupTypesPage(campaignId: string): UseGroupTypesPageResult {
   const groupTypesEnabled = useSectionEnabled(campaignId, 'group_types');
 
   const [search, setSearch] = useState('');
-  const debouncedSearch = useDebouncedValue(search);
-  const { data: types, isLoading } = useGroupTypes(campaignId, debouncedSearch);
+  // Load the full list once, no server-side search — group type lists are small
+  // and refetching on every keystroke caused the list to flicker.
+  const { data: types, isLoading } = useGroupTypes(campaignId);
 
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
 
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
-  const allTypes = types ?? [];
+  const allTypes = useMemo(() => {
+    const list = types ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((t) => t.name.toLowerCase().includes(q));
+  }, [types, search]);
 
   const selected =
     allTypes.find((t) => t.id === selectedTypeId) ?? allTypes[0] ?? null;
