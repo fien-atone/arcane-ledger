@@ -177,8 +177,8 @@ List pages decompose into: `hooks/useXxxList.ts` (data + filters state) + `secti
 | 9 | LocationListPage | 313 → 111 | ✅ done | 2 sections + 1 hook + 15 tests. URL-backed search/type filters. |
 | 10 | SpeciesTypesPage | 262 → 137 | ✅ done | 3 sections + drawer + 1 hook + 11 tests. Bonus: idempotent delete fix for all 3 type-delete mutations. |
 | 11 | NpcListPage | 255 → 107 | ✅ done | 2 sections + 1 hook + 11 tests. URL-backed search/status filters. |
-| 12 | GroupTypesPage | 253 | pending | Type CRUD. |
-| 13 | GroupListPage | 214 | pending | Filters by type. Has preview panel. |
+| 12 | GroupTypesPage | 253 → 137 | ✅ done | 3 sections + 1 hook + 12 tests. Switched to client-side search to fix list flicker (server-side will be done in F-11 sweep after refactor). |
+| 13 | GroupListPage | 214 → 108 | ✅ done | 2 sections + 1 hook + 11 tests. Client-side search/type filter. |
 | 14 | QuestListPage | 204 | pending | Filters by status. |
 | 15 | SessionListPage | 195 | pending | Simple date-sorted list. Borderline — could leave. |
 | 16 | SpeciesPage | 187 | pending | Species list with preview. Borderline. |
@@ -205,8 +205,8 @@ These don't live in a single `features/<domain>/`. Sections go into `widgets/<pa
 | NpcDetailPage | 112 | ✅ done |
 | ChangelogPage | 97 | Thin |
 
-**Progress: 11/22 pages done (6 Tier 1 + 5 Tier 2). 11 remaining.**
-**Frontend test count: 131 → 205 (+74 across all refactors).**
+**Progress: 13/22 pages done (6 Tier 1 + 7 Tier 2). 9 remaining.**
+**Frontend test count: 131 → 228 (+97 across all refactors).**
 
 ---
 
