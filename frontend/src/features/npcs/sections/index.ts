@@ -8,3 +8,5 @@ export { NpcQuestsSection } from './NpcQuestsSection';
 export { NpcSessionsSection } from './NpcSessionsSection';
 export { NpcRelationsSection } from './NpcRelationsSection';
 export { NpcVisibilitySection } from './NpcVisibilitySection';
+export { NpcListHeroSection } from './NpcListHeroSection';
+export { NpcListSection } from './NpcListSection';
