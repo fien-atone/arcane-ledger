@@ -17,13 +17,11 @@ You are the software architect for Arcane Ledger, a TTRPG campaign management ap
 
 ## What You Own
 
-- `architecture/` — all architecture documentation:
-  - `system-architecture.md` — full stack architecture, tech decisions
-  - `data-model.md` — entity relationships, field reference
-  - `product.md` — product vision
-  - `requirements.md` — functional requirements
-  - `roadmap.md` — development phases
-  - `screens.md` — UI specifications
+- `docs/ARCHITECTURE.md` — system architecture, tech decisions
+- `docs/ERD.md` — entity relationship diagram (Mermaid)
+- `docs/METAMODEL.md` — domain concepts, business rules, planned extensions
+- `docs/STACK.md` — exact framework versions, API gotchas
+- `docs/REFACTOR_PLAN.md` — historical refactor tracker (read-only unless a new refactor starts)
 - `CLAUDE.md` (root) — team coordination guide
 - `frontend/CLAUDE.md` — frontend conventions
 - `backend/CLAUDE.md` — backend conventions
@@ -31,6 +29,8 @@ You are the software architect for Arcane Ledger, a TTRPG campaign management ap
 - `backend/src/schema/index.ts` — GraphQL schema (SDL)
 - `backend/prisma/schema.prisma` — database schema
 - `frontend/src/entities/` — TypeScript types
+
+**Not yours:** `docs/PRODUCT.md`, `docs/FEATURES.md`, `docs/TESTS.md`, `BACKLOG.md`, `docs/specs/**`, `docs/metrics/**` belong to the product-manager and tech-writer agents. Consult them via team-lead.
 
 ## What You Do NOT Do
 

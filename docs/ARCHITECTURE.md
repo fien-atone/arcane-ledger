@@ -1,356 +1,277 @@
-# Arcane Ledger — Solution Architecture
+# Arcane Ledger — System Architecture
 
-> GM-first TTRPG campaign management app. Currently local-only (localStorage mock). Backend planned — the data layer is designed to switch without touching component code.
+**Last updated**: 2026-04-10
+
+A web app for managing tabletop RPG campaigns. GM-first: the Game Master sees
+everything, players see what the GM chooses to share.
 
 **Related docs:**
-- [METAMODEL.md](METAMODEL.md) — domain concepts, business rules, planned extensions
+- [STACK.md](STACK.md) — exact framework versions and API gotchas
 - [ERD.md](ERD.md) — entity relationship diagram (Mermaid)
+- [METAMODEL.md](METAMODEL.md) — domain concepts and business rules
+- [FEATURES.md](FEATURES.md) — what users can do, organized by domain
+- [PRODUCT.md](PRODUCT.md) — product vision, personas, positioning
 
 ---
 
 ## High-Level Overview
 
 ```
-Browser
-└── React SPA (Vite, /arcane-ledger/ base path)
-    ├── Public pages  (/, /changelog, /login)
-    └── Protected app (/campaigns/*)
-        ├── Zustand  — auth state, UI state (sidebar collapse)
-        ├── TanStack Query — async data cache + mutations
-        └── Repository layer
-            ├── [current]  LocalStorage mock — all data in browser
-            └── [planned]  REST API via realClient (fetch-based)
+┌─────────────────────────────────────────────┐
+│                   Client                    │
+│  React 19 · Apollo Client 4 · Tailwind v4   │
+│  Vite 8 · TipTap 3                          │
+└──────────────┬──────────────────────────────┘
+               │ GraphQL (HTTP + WebSocket)
+┌──────────────▼──────────────────────────────┐
+│                   Server                    │
+│  Node.js 22 · Apollo Server 4 · JWT Auth    │
+└──────────────┬──────────────────────────────┘
+               │ Prisma ORM
+┌──────────────▼──────────────────────────────┐
+│                 Database                    │
+│          PostgreSQL 17 (Docker)             │
+└─────────────────────────────────────────────┘
 ```
 
-**Current phase:** all data lives in localStorage. The repository layer is designed to flip to a real API via `VITE_USE_MOCK=false` + `VITE_API_URL` with zero component changes.
+All versions above are approximate — see [STACK.md](STACK.md) for the exact pinned versions.
 
 ---
 
-## Directory Structure
+## Data Flow
+
+```
+UI Component
+  → Apollo hook (useQuery / useMutation)
+    → gql query over HTTP or WS
+      → Apollo Server resolver
+        → Prisma → PostgreSQL
+      ← data
+    ← normalized cache
+  ← re-render
+```
+
+Mock mode (`VITE_USE_MOCK=true`) falls back to localStorage repositories for a
+few detail hooks. This is a legacy path retained for offline demos; the
+primary and tested path is the real backend.
+
+---
+
+## Frontend
+
+### Feature-Sliced Design (FSD)
 
 ```
 frontend/src/
-├── app/
-│   ├── router.tsx          — route definitions (lazy-loaded pages)
-│   ├── providers.tsx       — QueryClient setup
-│   ├── App.tsx             — root component
-│   └── AppLayout.tsx       — Topbar + Outlet wrapper
+├── app/                   # Router, ApolloProvider, layout shells
+├── pages/                 # One file per route — thin orchestrators composing sections
+├── widgets/               # Cross-cutting UI: Sidebar, Topbar, DiceRoller, landing sections
 │
-├── pages/                  — one file per route (composed, can be fat)
-│
-├── widgets/                — self-contained UI blocks
-│   ├── Sidebar/            — campaign navigation
-│   ├── Topbar/             — top header bar
-│   ├── CampaignShell/      — layout wrapper for /campaigns/:id/*
-│   ├── DiceRollerModal/    — floating dice roller
-│   └── Changelog/          — "What's New" drawer
-│
-├── features/               — domain feature slices
+├── features/              # Domain slices, each self-contained:
 │   └── <domain>/
-│       ├── api/queries.ts  — TanStack Query hooks
-│       ├── model/store.ts  — Zustand store (if needed)
-│       └── ui/             — React components for this feature
+│       ├── api/queries.ts # Apollo hooks (queries, mutations, subscriptions)
+│       ├── hooks/         # Page-level and detail-level custom hooks
+│       ├── sections/      # Section widgets — the building blocks of pages
+│       ├── ui/            # Drawers, edit forms
+│       └── model/         # Zustand stores (auth only)
 │
 ├── shared/
-│   ├── ui/                 — reusable presentational components
-│   ├── api/
-│   │   ├── repositories/   — data access layer (localStorage CRUD)
-│   │   └── mockData/       — seed data per entity
-│   └── changelog/          — CHANGELOG entries (typed array)
+│   ├── ui/                # Reusable presentational components (Select, DatePicker,
+│   │                      # SectionPanel, FormDrawer, InlineConfirm, form.ts, etc.)
+│   ├── hooks/             # Reusable hooks (useDebouncedSearch, useInlineConfirm,
+│   │                      # useLinkedEntityList)
+│   ├── api/               # apolloClient.ts, subscription wiring
+│   └── changelog/         # Version entries
 │
-└── entities/               — TypeScript types/interfaces per domain
+└── entities/              # TypeScript type definitions
 ```
 
----
+### Page composition — Section Widgets
 
-## Routing
+Pages do not contain business logic or rendering detail. Each page is a **thin orchestrator**:
 
-Base path: `/arcane-ledger/`
+1. Read route params
+2. Load the root entity via a custom hook (`useNpcDetail`, `useLocationListPage`, …)
+3. Compose section widgets that each fetch their own data and own their own state
 
-### Public (no auth required)
-| Path | Page |
-|---|---|
-| `/` | LandingPage |
-| `/changelog` | ChangelogPage |
-| `/login` | LoginPage |
+This architecture was established in the Tier 1–3 refactor (22 pages decomposed; see [REFACTOR_PLAN.md](REFACTOR_PLAN.md) for history). The 22 decomposed pages shrunk from 9898 LoC to 2314 LoC total.
 
-### Protected (requires `useAuthStore` user)
-| Path | Page |
-|---|---|
-| `/campaigns` | CampaignsPage |
-| `/campaigns/:id` | CampaignDashboardPage |
-| `/campaigns/:id/npcs` | NpcListPage |
-| `/campaigns/:id/npcs/:npcId` | NpcDetailPage |
-| `/campaigns/:id/locations` | LocationListPage |
-| `/campaigns/:id/locations/:locationId` | LocationDetailPage |
-| `/campaigns/:id/sessions` | SessionListPage |
-| `/campaigns/:id/sessions/:sessionId` | SessionDetailPage |
-| `/campaigns/:id/groups` | GroupListPage |
-| `/campaigns/:id/groups/:groupId` | GroupDetailPage |
-| `/campaigns/:id/quests` | QuestListPage |
-| `/campaigns/:id/quests/:questId` | QuestDetailPage |
-| `/campaigns/:id/party` | PartyPage |
-| `/campaigns/:id/characters/:charId` | CharacterDetailPage |
-| `/campaigns/:id/species` | SpeciesPage |
-| `/campaigns/:id/species/:speciesId` | SpeciesDetailPage |
-| `/campaigns/:id/group-types` | GroupTypesPage |
-| `/campaigns/:id/materials` | MaterialsPage |
+Rules for section widgets live in [frontend/CLAUDE.md](../frontend/CLAUDE.md).
 
-All pages are **lazy-loaded** via `React.lazy()` with a `<Suspense>` fallback.
+### Shared primitives (Phase 2 redundancy audit)
 
-`ProtectedRoute` wraps the authenticated section — redirects to `/login` if no user in store.
+After the decomposition, a redundancy audit extracted these shared primitives in `shared/ui/` and `shared/hooks/`:
 
----
-
-## State Management
-
-Two complementary tools, different responsibilities:
-
-### Zustand — synchronous / local UI state
-
-| Store | Key | Purpose |
+| Primitive | Kind | Replaces |
 |---|---|---|
-| `useAuthStore` | `arcane-auth` (localStorage) | Current user, login/logout, campaign role |
-| `useCampaignUiStore` | in-memory | Sidebar collapsed state, edit mode |
-
-Auth persists across page refreshes. UI state resets on refresh.
-
-### TanStack Query — async / server state
-
-```
-QueryClient
-  staleTime: 5 min
-  retry: 1
-```
-
-All entity data flows through TanStack Query:
-- `useQuery` for reads (list + detail)
-- `useMutation` for writes → `invalidateQueries` on success
-
-**Query key conventions:**
-```
-['campaigns']                     — all campaigns
-['campaigns', campaignId]         — single campaign
-['npcs', campaignId]              — NPC list
-['npcs', campaignId, npcId]       — single NPC
-['locations', campaignId]         — etc.
-```
+| `SectionPanel` | compound-free component | 83+ hand-rolled card-panel wrappers |
+| `InlineConfirm` + `useInlineConfirm` | hook + tiny component | 19 hand-rolled "Yes/No" dialogs |
+| `LABEL_CLS`, `INPUT_CLS`, `toArray`, `fromArray` in `form.ts` | constants + helpers | 15 copy-pasted drawer top-of-file definitions |
+| `FormDrawer` + `Header/Body/Footer` subcomponents | compound component | 11 drawer outer-chrome duplications |
+| `useLinkedEntityList` | hook | linked-entity picker state across 8 sections |
+| `useDebouncedSearch` | hook | debounced search input for server-side filtering (F-11) |
 
 ---
 
-## Data Layer
+## Backend
 
-### Repository pattern
-
-Every entity has a repository at `shared/api/repositories/<entity>Repository.ts`:
+### Structure
 
 ```
-list(campaignId?)   → Entity[]
-getById(id)         → Entity
-save(entity)        → Entity   (upsert)
-delete(id)          → void
+backend/
+├── prisma/
+│   ├── schema.prisma       # Source of truth — all models, relations, enums
+│   └── migrations/         # Auto-generated SQL migrations
+└── src/
+    ├── index.ts            # Entry: Express + Apollo Server + WebSocket
+    ├── context.ts          # { prisma, user } context
+    ├── schema/
+    │   └── index.ts        # GraphQL SDL (types, queries, mutations, subscriptions)
+    ├── resolvers/          # Domain-split resolvers (npcs.ts, locations.ts, …)
+    ├── auth/
+    │   └── middleware.ts   # JWT sign/verify/authenticate
+    ├── seed.ts             # Full Drakkenheim seed (~1675 lines, 9 users, 52 NPCs, etc.)
+    └── __tests__/          # Vitest tests (security/, functional/)
 ```
 
-### localStorage storage
+### GraphQL Schema Design
 
-All repositories use a shared `createLocalStore()` helper:
+- **Queries** — read operations, one per entity type + list variants.
+- **Mutations** — upsert pattern: `id` arg provided → update, else create. Returns full entity.
+- **Subscriptions** — real-time updates via WebSocket. One channel per campaign with targeted invalidation.
+- **Field resolvers** — lazy load relations. `DataLoader` is used where N+1 was observed (invitations, location children).
 
-```
-Storage key:  ttrpg_<entity>   (e.g. ttrpg_npcs)
-Version key:  ttrpg_<entity>_version
+### Database Schema
 
-On version mismatch:
-  1. Load existing localStorage data
-  2. Separate user-created records from seed IDs
-  3. Merge: [...seedData, ...userCreated]
-  4. Write merged + new version
-```
-
-Current store version: `8` (bump when seed data changes incompatibly).
-
-Seed data lives in `shared/api/mockData/`.
-
-### Mock vs Real API toggle
+Key relationships:
 
 ```
-VITE_USE_MOCK !== 'false'  →  use localStorage repositories  (current)
-VITE_USE_MOCK === 'false'  →  use realClient (fetch-based HTTP)  (planned)
+User ←→ CampaignMember ←→ Campaign
+Campaign → Session, NPC, Quest, Group, Location, Relation, PlayerCharacter
+Campaign → LocationType, GroupType, Species, SpeciesType   (per-campaign, not global)
+NPC → NPCLocationPresence → Location
+NPC → NPCGroupMembership → Group
+NPC → Quest (as giver)
+Session → SessionNPC / SessionLocation / SessionQuest (junction tables)
+Session → SessionNote (per-user session notes)
+Location → Location (self-referencing hierarchy via parentLocationId)
+Location → LocationTypeContainmentRule (validated hierarchy)
+Relation (polymorphic: npc/character/group ↔ npc/character/group)
 ```
 
-`realClient` reads `VITE_API_URL` for base URL and makes standard `GET/POST/PUT/DELETE` fetch calls expecting JSON responses. All repository method signatures stay the same — the switch is transparent to TanStack Query hooks and all components above.
+All reference tables (`LocationType`, `GroupType`, `Species`, `SpeciesType`) are **per-campaign**, not global. The architect docs before 2026-03-30 described them as global — that is out of date.
 
-**Migration path to backend:**
-1. Stand up REST API matching repository method signatures
-2. Set `VITE_USE_MOCK=false` and `VITE_API_URL=https://api.example.com`
-3. Handle auth tokens in `realClient` (add `Authorization` header from auth store)
-4. Replace Zustand auth persistence with server-issued sessions/JWT
+See [ERD.md](ERD.md) for the complete Mermaid diagram.
 
 ---
 
-## Domain Entities
+## Auth Model
 
-All types live in `src/entities/`.
+```
+User → CampaignMember (role: GM | PLAYER) → Campaign
+User.role (system-wide: USER | ADMIN)
+```
 
-| Entity | Key Fields |
-|---|---|
-| `CampaignSummary` | id, title, description, coverGradient, myRole, sessionCount, memberCount |
-| `PlayerCharacter` | id, campaignId, userId, name, gender, age, species, speciesId, class, background, personality, motivation, bonds, flaws, gmNotes, image |
-| `NPC` | id, campaignId, name, status, gender, species, speciesId, groupMemberships, locationPresences, gmNotes, image |
-| `Location` | id, campaignId, parentId, name, type (region/settlement/district/building/dungeon), gmNotes, map (image + markers) |
-| `Session` | id, campaignId, number, title, datetime, brief, summary, nextSessionNotes, locationIds |
-| `Quest` | id, campaignId, title, description, giverId, reward, status (active/completed/failed/unknown/unavailable) |
-| `Group` | id, campaignId, name, type, description, goals, partyRelation, gmNotes, image |
-| `Species` | id, name, pluralName, type, size, description, traits, image |
-| `Relation` | id, campaignId, fromEntity, toEntity, friendliness (-100 to +100), note |
-| `GroupTypeEntry` | id, name, icon, description |
+- JWT access token stored in `sessionStorage` under key `auth_token`
+- Apollo Client adds `Authorization: Bearer <token>` via `setContext` link
+- Server extracts user from JWT in the context middleware
+- `User.role` is a **system-wide** role (`USER` / `ADMIN`). `ADMIN` users can manage other users and see the admin panel.
+- `CampaignMember.role` is a **per-campaign** role (`GM` / `PLAYER`). One user can be GM in one campaign and Player in another.
+- All mutations enforce `GM` role checks via `requireGM` helper (backend test suite verifies this on every mutation — see [TESTS.md](TESTS.md)).
 
 ---
 
-## Feature Slice Structure
+## Visibility System
 
-Each feature follows the same layout:
+One of the central features. Implemented in 0.3.0.
 
-```
-features/<domain>/
-├── api/
-│   └── queries.ts    — useQuery + useMutation hooks
-├── model/
-│   └── store.ts      — Zustand store (optional)
-└── ui/
-    ├── <Entity>EditDrawer.tsx   — create/edit form in a right-side drawer
-    └── index.ts                 — barrel export
-```
-
-### Current features
-
-| Feature | Has Drawer | Has Store |
-|---|---|---|
-| auth | — | ✓ |
-| campaigns | CampaignCreateDrawer | ✓ (UI state) |
-| characters | CharacterEditDrawer | — |
-| npcs | NpcEditDrawer | — |
-| locations | LocationEditDrawer | — |
-| groups | GroupEditDrawer | — |
-| groupTypes | GroupTypeEditDrawer | — |
-| species | SpeciesEditDrawer | — |
-| sessions | — | — |
-| quests | — | — |
-| relations | — (inline section) | — |
-| factions | — | — |
+- Every domain entity (NPC, Location, Quest, Group, Session) has `playerVisible: boolean` and `playerVisibleFields: string[]`.
+- GM toggles visibility per-entity or per-field.
+- Field-level visibility: "players know this NPC exists but not their motivation".
+- Party module acts as a gate: visibility controls are only exposed when the Party section is enabled for the campaign.
+- Resolvers filter `playerVisibleFields` on the server side, so sensitive data never reaches the player client.
 
 ---
 
-## Widgets
+## Real-Time Updates
 
-### CampaignShell
-Layout wrapper for all campaign inner pages:
-```
-CampaignShell
-├── <Sidebar />          fixed left, collapsible (64px / 256px)
-├── <DiceRoller />       floating FAB bottom-right (z-50)
-└── <Outlet />           page content, margin-left adapts to sidebar width
-```
+GraphQL Subscriptions via WebSocket (`graphql-ws`). Implemented in 0.3.0.
 
-### Sidebar
-Navigation tree grouped into sections:
-- **World**: Locations, NPCs, Species, Groups, Group Types
-- **Adventure**: Sessions, Party, Quests
-- **GM Screen**: Materials
-- Footer: All Campaigns, What's New (changelog unread dot), Logout
-
-### DiceRoller
-- Supports d4, d6, d8, d10, d12, d20, d100
-- Roll history with formula display
-- Critical hit (nat 20) / critical miss (nat 1) states
-- Modifier input
-- All local state, no persistence
-
----
-
-## Authentication
-
-Currently mock auth — no real backend:
-
-```
-Credentials:
-  user / user  →  logs in as GM (displayed as "Game Master")
-
-Storage: localStorage key 'arcane-auth' (Zustand persist)
-Survives: page refresh
-Clears on: logout()
-```
-
-`getCampaignRole(campaignId)` returns `'gm' | 'player'` — currently always `'gm'` for mock users.
-
-**Planned (with backend):** replace Zustand persist with server-issued JWT/session cookie. The `useAuthStore` interface stays the same — only the login/logout implementation changes to call the API.
-
----
-
-## Shared UI Components
-
-All in `shared/ui/`, exported from `shared/ui/index.ts`.
-
-| Component | Purpose |
-|---|---|
-| `BackLink` | `chevron_left` navigation link |
-| `GmNotesSection` | GM notes block (`variant: 'card' \| 'sidebar'`) |
-| `SectionLabel` | `text-[10px]` uppercase overline label |
-| `LoadingSpinner` | Animated spinner with text |
-| `Select<T>` | Custom dropdown (dark-theme-safe, replaces `<select>`) |
-| `ImageUpload` | Portrait/image upload with base64 storage + lightbox |
-| `D20Icon` | SVG d20 icon (replaces `casino` Material Symbol everywhere) |
-| `Footer` | Public page footer with links |
+- Per-campaign subscription channels: when anything changes in a campaign, all connected clients refetch relevant queries.
+- Granular invalidation: `CampaignSubscriptionManager` maps subscription events to specific queries to refetch.
+- Used for: real-time NPC edits, session updates, quest status changes, member join/leave.
 
 ---
 
 ## Design System
 
-Tailwind CSS v4 with `@theme` custom tokens in `index.css`.
+| Aspect | Value |
+|---|---|
+| Primary color | Gold `#f2ca50` |
+| Secondary color | Teal `#7bd6d1` |
+| Tertiary color | Violet `#d0c8ff` |
+| Headlines font | Noto Serif (`font-headline`) |
+| Body font | Inter (`font-sans`) |
+| Border radius | `rounded-sm` (0.125rem) everywhere |
+| Icons | Material Symbols Outlined |
+| Rich text | TipTap 3, inline editing via `InlineRichField` |
+| Theme | Dark theme exclusively |
 
-**Color roles (Material Design 3 inspired):**
-- `primary` — aged gold (`#f2ca50`) — main accent, interactive elements
-- `secondary` — teal (`#7bd6d1`) — secondary actions
-- `tertiary` — violet (`#d0c8ff`) — tertiary highlights
-- `surface-*` — dark grey hierarchy (`#0d0e12` → `#343439`)
-- `on-surface` / `on-surface-variant` — text colors
-
-**Typography:**
-- `font-headline` — Noto Serif (display text, titles)
-- `font-sans` / `font-label` / `font-body` — Inter (UI text, labels, buttons)
-
-**Shape:** Sharp corners throughout. `rounded-sm` (0.125rem) on interactive elements.
-
-**Z-index scale (extended beyond Tailwind default):**
-```
-z-50  — DiceRoller FAB, dropdown menus
-z-60  — Drawer backdrop
-z-70  — Drawer panel
-```
+Full design system details in [frontend/CLAUDE.md](../frontend/CLAUDE.md).
 
 ---
 
-## Versioning & Changelog
-
-- Current version: **v0.1.9**
-- Entries: `shared/changelog/entries.ts` (typed `ChangelogEntry[]`, newest first)
-- Public page: `/changelog`
-- In-app: sidebar "What's New" → `ChangelogDrawer`
-- Unread detection: `getHasUnread()` compares latest version vs last-seen in localStorage
-
-When releasing a new version: bump the version string in the top entry, add a new entry object at the top of the array.
-
----
-
-## Key Technical Decisions
+## Key Architectural Decisions
 
 | Decision | Rationale |
 |---|---|
-| localStorage mock (current) | Zero infrastructure for early development; real backend planned |
-| Repository abstraction | Backend switch happens in one layer — components and queries are untouched |
-| Mock/real toggle via env var | `VITE_USE_MOCK=false` flips the entire data layer to REST API |
-| TanStack Query over plain useState | Cache, deduplication, loading/error states for free |
-| Zustand over Redux | Minimal boilerplate, good for small auth + UI state |
-| Tailwind v4 | No config file, `@theme` in CSS, better IDE experience |
-| Custom `Select` over `<select>` | Native `<select>` ignores dark-theme option styles on macOS |
-| TipTap v3 | WYSIWYG inline editing; `BubbleMenu` from `@tiptap/react/menus` |
-| FSD architecture | Clear ownership per feature slice; scales without cross-cutting dependencies |
+| Apollo Client over TanStack Query | Normalized cache, subscriptions, single GraphQL ecosystem |
+| Prisma over raw SQL / Drizzle | Type safety, auto-migrations, schema-as-code, Prisma Studio |
+| PostgreSQL over MongoDB | Relational data with many cross-references |
+| Feature-Sliced Design | Clear domain boundaries, scalable, onboarding-friendly |
+| Section widgets pattern | Prevents god-components, enables isolated testing, clear ownership |
+| JWT in sessionStorage (not cookies) | SPA-first, no CSRF concerns, simple |
+| `CATEGORY_HEX_COLOR` inline styles | Tailwind v4 cascade overrides class-based colors on hover |
+| Server-side search (F-11) | Scales to large campaigns, debounced 300ms with Apollo v4 `previousData` keep-alive to prevent flicker |
+| UUID for all IDs | Standard, URL-safe, no collision risk, never generated client-side for persisted entities |
+| Enums UPPERCASE in GraphQL/Prisma, lowercase in TypeScript | Prisma convention vs frontend readability (see T-3 in BACKLOG — still fragile) |
+| Mock mode retained | Offline dev demo, no backend dependency for UI-only work |
+
+---
+
+## Testing Strategy
+
+See [TESTS.md](TESTS.md) for the full test inventory.
+
+| Tier | Runner | Count | Scope |
+|---|---|---|---|
+| Backend functional & security | Vitest + supertest | 169 | Resolvers, auth, visibility, rate limits, N+1 regression |
+| Frontend component & hook | Vitest + Testing Library + Apollo MockedProvider | 367 | Sections, hooks, shared primitives |
+| Frontend E2E | Playwright | 11 | Login, i18n, role visibility, XSS |
+
+Backend tests run against a dedicated `arcane_ledger_test` database that refuses to execute if the target DB URL doesn't include `_test`.
+
+---
+
+## Infrastructure
+
+### Local Development
+
+```bash
+docker compose up postgres -d       # PostgreSQL in Docker
+cd backend && npx tsx src/index.ts  # API on :4000
+cd frontend && npm run dev          # UI on :5173
+```
+
+Default login: `gm@arcaneledger.app` / `user` (see seed).
+
+### Production (planned)
+
+```
+VPS / Cloud (Hetzner / DigitalOcean / Railway)
+├── nginx (reverse proxy + static frontend)
+├── Node.js backend (Docker container)
+└── PostgreSQL (managed or Docker)
+```
+
+Frontend is currently configured for GitHub Pages deployment (basename `/arcane-ledger`).

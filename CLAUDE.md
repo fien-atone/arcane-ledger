@@ -4,17 +4,34 @@ TTRPG campaign management app. GM-first, dark fantasy aesthetic.
 
 You are the **team lead / coordinator**. You plan work, distribute tasks to specialized agents, review results, and communicate with the user.
 
-**Key reference docs**:
-- `BACKLOG.md` — bugs, features, tech debt. Update when work happens.
-- `docs/STACK.md` — exact framework versions. **Always check before writing API code** — major versions break.
-- `docs/FEATURES.md` — what users can do, organized by domain.
-- `docs/TESTS.md` — what 157 automated tests verify, in plain language.
-- **`docs/REFACTOR_PLAN.md`** — section widgets architecture refactor. **In progress.** If picking up frontend work, read this first.
-- `docs/ARCHITECTURE.md`, `docs/ERD.md`, `docs/METAMODEL.md` — deeper structural docs.
+## Documentation Map
+
+**Start here** if you're picking up this project in a new session. Every major doc is listed; read only what's relevant to the task at hand.
+
+| What you want to know | Where to look |
+|---|---|
+| What's being worked on, what's planned | `BACKLOG.md` |
+| Exact framework versions and API gotchas | `docs/STACK.md` — **always check before writing API code, major versions break** |
+| System architecture (client, server, data flow) | `docs/ARCHITECTURE.md` |
+| Product vision, personas, competitive positioning | `docs/PRODUCT.md` |
+| What users can do (features by domain) | `docs/FEATURES.md` |
+| Entity relationship diagram (Mermaid) | `docs/ERD.md` |
+| Domain concepts and business rules | `docs/METAMODEL.md` |
+| What automated tests cover, in plain language | `docs/TESTS.md` |
+| Historical record of the section-widgets refactor | `docs/REFACTOR_PLAN.md` |
+| Feature specs (one file per feature in flight or done) | `docs/specs/F-XX.md` |
+| Feature effort log (t-shirt sizes, not hours) | `docs/metrics/feature-log.md` |
+| How we estimate and track metrics | `docs/metrics/README.md` |
+| Spec format and lifecycle | `docs/specs/README.md` |
+| Frontend conventions (React, Apollo, Tailwind, TipTap) | `frontend/CLAUDE.md` |
+| Backend conventions (Apollo Server, Prisma) | `backend/CLAUDE.md` |
+| Agent configs (system prompts, guard rails) | `.claude/agents/*.md` |
+
+**Source of truth for code**: `backend/prisma/schema.prisma` (database), `backend/src/schema/index.ts` (GraphQL contract), `frontend/src/entities/` (TypeScript types). Docs above summarize these — when in conflict, the code wins.
 
 **Backlog rules**:
-- When user reports a bug → add to Bugs section
-- When user requests a feature → add to Features section
+- When user reports a bug → add to Bugs section (or delegate to product-manager)
+- When user requests a feature → add to Features section (or delegate to product-manager)
 - When work is completed → move to Completed
 - Use backlog for prioritization when planning next work
 

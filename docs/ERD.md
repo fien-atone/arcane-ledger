@@ -375,9 +375,9 @@ Edges  — Relation (directed, weighted by friendliness -100..+100)
 
 ## Implementation Notes
 
-- **Relation** is polymorphic — `fromEntityType` / `toEntityType` discriminate between `npc`, `character`, `group`. In a relational DB: polymorphic FK or a union of nullable FKs.
-- **NPCGroupMembership** and **NPCLocationPresence** are embedded arrays on the NPC document in the current localStorage mock. The ERD shows them as logical join entities for clarity.
-- **SessionLocation** is `Session.locationIds: string[]` embedded on Session — shown as a join entity for ERD readability.
-- **Species** and **GroupTypeEntry** are global (not campaign-scoped).
-- **MapMarker** is embedded in `Location.mapMarkers[]` in the current implementation.
-- **LocationConnection** has no surrogate PK in the current implementation — it is embedded or keyed by `(locationAId, locationBId)`.
+- **Relation** is polymorphic — `fromEntityType` / `toEntityType` discriminate between `npc`, `character`, `group`. In the Prisma schema this is a union of nullable FKs.
+- **NPCGroupMembership** and **NPCLocationPresence** are real join tables in Postgres (not embedded arrays). Earlier iterations of the ERD described them as embedded — that was the old localStorage mock, not the current backend.
+- **SessionNPC**, **SessionLocation**, **SessionQuest** are real join tables with composite `@@id([sessionId, xId])` keys.
+- **All reference tables are per-campaign**, not global. `LocationType`, `GroupType`, `Species`, `SpeciesType` each carry `campaignId` and are scoped to their campaign.
+- **MapMarker** is stored as a `Json` column on `Location.mapMarkers` and parsed in the GraphQL field resolver.
+- **LocationConnection** is keyed by `(locationAId, locationBId)`.

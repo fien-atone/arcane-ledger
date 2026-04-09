@@ -1,7 +1,7 @@
 # Test Coverage — Arcane Ledger
 
-**Last updated**: 2026-04-07  
-**Total**: 146 backend tests + 11 frontend E2E tests = **157 tests**
+**Last updated**: 2026-04-10
+**Total**: 169 backend + 367 frontend Vitest + 11 frontend E2E = **547 tests**
 
 This document explains what each test verifies in plain language. Use it to:
 - Understand what's protected by automated tests
@@ -16,6 +16,11 @@ cd backend && npm test                      # one-shot
 cd backend && npm run test:watch            # watch mode
 cd backend && npm run test:setup-db         # create + seed test DB if missing
 
+# Frontend Vitest (component + hook tests)
+cd frontend && npm test                     # one-shot
+cd frontend && npm test -- --watch          # watch mode
+cd frontend && npm test -- <filter>         # run tests matching a pattern
+
 # Frontend E2E tests (requires running app + backend)
 cd frontend && npm run test:e2e             # headless
 cd frontend && npm run test:e2e:ui          # interactive
@@ -23,7 +28,19 @@ cd frontend && npm run test:e2e:ui          # interactive
 
 ---
 
-## Backend tests (146)
+## Test tiers
+
+| Tier | Runner | Scope | Count |
+|---|---|---|---|
+| Backend functional + security | Vitest + supertest + real PostgreSQL (`arcane_ledger_test`) | Resolvers, auth, visibility, mutation authorization, rate limiting, N+1 regression, GraphQL schema behavior | 169 |
+| Frontend component + hook | Vitest + `@testing-library/react` + `@apollo/client/testing` MockedProvider + jsdom | Section widgets, page-level hooks, shared primitives (SectionPanel, InlineConfirm, FormDrawer, useLinkedEntityList, useDebouncedSearch), colocated next to the code they cover | 367 |
+| Frontend E2E | Playwright (Chromium only) | Full user flows: login, i18n switching, role-based visibility, XSS sanitization | 11 |
+
+Frontend component tests are colocated: `NpcHeroSection.tsx` has `NpcHeroSection.test.tsx` next to it. Test infrastructure (`renderWithProviders`, `renderHookWithProviders`) lives in `frontend/src/test/helpers.tsx`.
+
+---
+
+## Backend tests (169)
 
 Tests live in `backend/src/__tests__/`. They run against a real PostgreSQL database (`arcane_ledger_test`), seeded with the same data as production. Each test creates its own data and cleans up after itself.
 
