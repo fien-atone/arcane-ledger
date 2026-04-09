@@ -60,9 +60,13 @@ interface Props {
   campaignId: string;
   isGm: boolean;
   partyEnabled: boolean;
+  /** True only on the very first load (no previousData). Server-side
+   *  refetches triggered by search/status changes use Apollo `previousData`
+   *  to keep the list visible and do NOT set this flag. */
   isLoading: boolean;
   isError: boolean;
-  filtered: NPC[];
+  /** Server-filtered NPC list. */
+  npcs: NPC[];
   resolveSpeciesName: (npc: NPC) => string | undefined;
   onToggleVisibility: (npc: NPC) => void;
 }
@@ -73,7 +77,7 @@ export function NpcListSection({
   partyEnabled,
   isLoading,
   isError,
-  filtered,
+  npcs,
   resolveSpeciesName,
   onToggleVisibility,
 }: Props) {
@@ -94,7 +98,7 @@ export function NpcListSection({
     return <p className="text-tertiary text-sm p-12">{t('error')}</p>;
   }
 
-  if (filtered.length === 0) {
+  if (npcs.length === 0) {
     return (
       <EmptyState
         icon="person_off"
@@ -119,7 +123,7 @@ export function NpcListSection({
         <span className="w-24 flex-shrink-0">{t('column_status')}</span>
         {isGm && partyEnabled && <span className="w-8 flex-shrink-0" />}
       </div>
-      {filtered.map((npc) => {
+      {npcs.map((npc) => {
         const st = STATUS_STYLES[npc.status];
         const species = resolveSpeciesName(npc);
         return (

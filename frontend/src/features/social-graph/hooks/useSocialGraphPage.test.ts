@@ -36,8 +36,8 @@ const CAMPAIGN_QUERY = gql`
 `;
 
 const NPCS_QUERY = gql`
-  query Npcs($campaignId: ID!) {
-    npcs(campaignId: $campaignId) {
+  query Npcs($campaignId: ID!, $search: String, $status: String) {
+    npcs(campaignId: $campaignId, search: $search, status: $status) {
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
       playerVisible playerVisibleFields
@@ -153,7 +153,7 @@ const baseNpc = {
 };
 
 const npcsMock = {
-  request: { query: NPCS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: NPCS_QUERY, variables: { campaignId: 'camp-1', search: null, status: null } },
   result: {
     data: {
       npcs: [

@@ -9,11 +9,11 @@ import { renderWithProviders } from '@/test/helpers';
 import type { StatusFilterOption } from '../hooks/useNpcListPage';
 
 const statusFilters: StatusFilterOption[] = [
-  { value: 'all', label: 'status_all', count: 4 },
-  { value: 'alive', label: 'status_alive', count: 2 },
-  { value: 'dead', label: 'status_dead', count: 1 },
-  { value: 'missing', label: 'status_missing', count: 1 },
-  { value: 'unknown', label: 'status_unknown', count: 0 },
+  { value: 'all', label: 'status_all' },
+  { value: 'alive', label: 'status_alive' },
+  { value: 'dead', label: 'status_dead' },
+  { value: 'missing', label: 'status_missing' },
+  { value: 'unknown', label: 'status_unknown' },
 ];
 
 function baseProps(
@@ -28,8 +28,7 @@ function baseProps(
     statusFilter: 'all' as const,
     onStatusFilterChange: vi.fn(),
     statusFilters,
-    filteredCount: 4,
-    totalCount: 4,
+    shownCount: 4,
     onAdd: vi.fn(),
     ...overrides,
   };

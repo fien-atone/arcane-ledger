@@ -36,7 +36,6 @@ export default function NpcListPage() {
     isLoading,
     isError,
     npcs,
-    filtered,
     statusFilters,
     search,
     setSearch,
@@ -79,8 +78,7 @@ export default function NpcListPage() {
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
             statusFilters={statusFilters}
-            filteredCount={filtered.length}
-            totalCount={npcs?.length ?? 0}
+            shownCount={npcs?.length ?? 0}
             onAdd={openAdd}
           />
 
@@ -90,7 +88,7 @@ export default function NpcListPage() {
             partyEnabled={partyEnabled}
             isLoading={isLoading}
             isError={isError}
-            filtered={filtered}
+            npcs={npcs ?? []}
             resolveSpeciesName={resolveSpeciesName}
             onToggleVisibility={toggleVisibility}
           />

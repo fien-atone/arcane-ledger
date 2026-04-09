@@ -23,8 +23,13 @@ interface Props {
   statusFilter: StatusFilter;
   onStatusFilterChange: (v: StatusFilter) => void;
   statusFilters: StatusFilterOption[];
-  filteredCount: number;
-  totalCount: number;
+  /**
+   * Number of NPCs in the currently displayed (server-filtered) list.
+   * With server-side filtering we can no longer show an "X of Y" ratio
+   * without a second aggregation query, so we display just the current
+   * count. See F-11 notes in useNpcListPage.
+   */
+  shownCount: number;
   onAdd: () => void;
 }
 
@@ -37,8 +42,7 @@ export function NpcListHeroSection({
   statusFilter,
   onStatusFilterChange,
   statusFilters,
-  filteredCount,
-  totalCount,
+  shownCount,
   onAdd,
 }: Props) {
   const { t } = useTranslation('npcs');
@@ -100,7 +104,7 @@ export function NpcListHeroSection({
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {statusFilters.map(({ value, label, count }) => (
+          {statusFilters.map(({ value, label }) => (
             <button
               key={value}
               onClick={() => onStatusFilterChange(value)}
@@ -110,22 +114,12 @@ export function NpcListHeroSection({
                   : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
               }`}
             >
-              {label}{' '}
-              <span
-                className={
-                  statusFilter === value
-                    ? 'text-on-primary/70'
-                    : 'text-on-surface-variant/40'
-                }
-              >
-                {count}
-              </span>
+              {label}
             </button>
           ))}
         </div>
         <span className="ml-auto text-[10px] text-on-surface-variant/40">
-          <span className="text-on-surface font-bold">{filteredCount}</span> of{' '}
-          <span className="text-primary font-bold">{totalCount}</span>
+          <span className="text-primary font-bold">{shownCount}</span>
         </span>
       </div>
     </SectionPanel>

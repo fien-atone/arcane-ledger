@@ -5,8 +5,8 @@ import type { NPC } from '@/entities/npc';
 // ── Queries ──────────────────────────────────────────────────────────────────
 
 const NPCS_QUERY = gql`
-  query Npcs($campaignId: ID!) {
-    npcs(campaignId: $campaignId) {
+  query Npcs($campaignId: ID!, $search: String, $status: String) {
+    npcs(campaignId: $campaignId, search: $search, status: $status) {
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
       playerVisible playerVisibleFields
@@ -125,11 +125,50 @@ function mapNpc(raw: any): NPC {
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
-export const useNpcs = (campaignId: string) => {
-  const { data, loading, error } = useQuery<any>(NPCS_QUERY, {
-    variables: { campaignId },
+/**
+ * Loads the NPC list for a campaign. Supports server-side filtering by
+ * `search` (name substring, case-insensitive — NOT aliases) and `status`
+ * (case-insensitive, normalized to UPPERCASE by the resolver).
+ *
+ * Flicker-free strategy (F-11 pilot):
+ *  - `notifyOnNetworkStatusChange: true` makes Apollo emit a non-terminal
+ *    loading state when variables change (not just the initial fetch).
+ *  - We return `data ?? previousData` so the caller keeps rendering the
+ *    previous result set while the new query is in flight. Apollo v4 exposes
+ *    `previousData` natively on the query result. Combined with the
+ *    `GlobalLoadingBar` (already wired to the Apollo request counter), the
+ *    user sees the existing list plus a top progress indicator, never a
+ *    blank state.
+ *  - `isLoading` still reports `true` on the very first load (no previous
+ *    data to fall back on) so pages can show their initial skeleton.
+ */
+export const useNpcs = (
+  campaignId: string,
+  opts?: { search?: string; status?: string },
+) => {
+  const { data, previousData, loading, error } = useQuery<any>(NPCS_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+      status: opts?.status || null,
+    },
+    // Apollo client's default fetchPolicy is 'no-cache' (see apolloClient.ts),
+    // but `previousData` is tracked on the observable regardless of cache
+    // policy — so the flicker-free behavior works even without the cache.
+    notifyOnNetworkStatusChange: true,
   });
-  return { data: data?.npcs?.map(mapNpc) as NPC[] | undefined, isLoading: loading, isError: !!error, error };
+  const effective = data ?? previousData;
+  // Only treat it as "loading" on the very first load — when we already
+  // have previousData to show, keep isLoading false so the list stays
+  // visible and the GlobalLoadingBar is the only moving UI.
+  const isInitialLoad = loading && !previousData;
+  return {
+    data: effective?.npcs?.map(mapNpc) as NPC[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
+    isError: !!error,
+    error,
+  };
 };
 
 export const useNpc = (campaignId: string, npcId: string) => {
@@ -161,7 +200,7 @@ export const useSaveNpc = () => {
       };
       execute({
         variables: { campaignId: npc.campaignId, id: npc.id || undefined, input },
-        refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId: npc.campaignId } }],
+        refetchQueries: ['Npcs'],
       }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,
@@ -288,7 +327,7 @@ export const useDeleteNpc = () => {
     ) => {
       execute({
         variables: { campaignId, id: npcId },
-        refetchQueries: [{ query: NPCS_QUERY, variables: { campaignId } }],
+        refetchQueries: ['Npcs'],
       }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isLoading: loading,

@@ -13,8 +13,8 @@ import { GroupMembersSection } from './GroupMembersSection';
 import { renderWithProviders } from '@/test/helpers';
 
 const NPCS_QUERY = gql`
-  query Npcs($campaignId: ID!) {
-    npcs(campaignId: $campaignId) {
+  query Npcs($campaignId: ID!, $search: String, $status: String) {
+    npcs(campaignId: $campaignId, search: $search, status: $status) {
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
       playerVisible playerVisibleFields
@@ -53,7 +53,7 @@ const PARTY_QUERY = gql`
 `;
 
 const npcsMock = (npcs: any[]) => ({
-  request: { query: NPCS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: NPCS_QUERY, variables: { campaignId: 'camp-1', search: null, status: null } },
   result: { data: { npcs } },
 });
 
