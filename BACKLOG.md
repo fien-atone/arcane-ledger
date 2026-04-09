@@ -57,7 +57,6 @@ _Nothing currently in progress._
 | T-3 | 🟢 | Unify enum casing: frontend lowercase ↔ backend UPPERCASE mapping is fragile. 15+ `.toLowerCase()`/`.toUpperCase()` calls in query hooks. Fix: pick one casing, convert at the boundary in the backend resolver only. | — |
 | T-4 | 🟢 | Add error boundaries in UI — currently there's no React `ErrorBoundary` anywhere. A rendering error in one section takes down the whole page. Add a top-level boundary at each route + per-section boundaries for isolated failures. GraphQL error handling itself is already covered by the global toast. | — |
 | T-1 | ⏭ | Remove mock repositories and `mockData` after full backend migration. **Status:** still present (`frontend/src/shared/api/repositories/` + `mockData/`), still referenced by 3 detail hooks (NpcDetail, LocationDetail, CharacterDetail) via `VITE_USE_MOCK` fallbacks. Low urgency — mock mode works as an offline demo. Remove only when confident no one relies on it. | — |
-| T-11 | 🟡 | Documentation consolidation + drift audit. Merge legacy `architecture/` folder (7 files, last touched in `e9d5109`, likely stale) into `docs/`. Audit all existing `docs/*.md` against current code state; update anything stale; delete obsolete content. Update `README.md` links, `.claude/agents/architect.md` ownership list, add Documentation Map section to root `CLAUDE.md`. Owned by tech-writer. | — |
 | T-5 | ❌ | Containment rules: seed data not migrated to Postgres yet. **Rejected** — `seed.ts` creates 20+ containment rules via `containmentRules` array at line 232. Closing. | — |
 | T-6 | ❌ | Group types: seed data not migrated to Postgres yet. **Rejected** — `seed.ts` creates all group types (seed.ts:183). Closing. | — |
 | T-10 | ❌ | Refactor LocationDetailPage (1623 lines) into 5+ section components. **Rejected** — already done in Tier 1 (LocationDetailPage is now 162 lines). Closing. | — |
@@ -68,6 +67,8 @@ _Nothing currently in progress._
 
 | # | Description | Version |
 |---|---|---|
+| ✅ | T-11: Documentation consolidation. Deleted legacy `architecture/` folder (7 files). Rewrote stale `docs/ARCHITECTURE.md`, created `docs/PRODUCT.md`, drift-fixed `docs/ERD.md` + `docs/METAMODEL.md` (per-campaign reference tables), updated `docs/TESTS.md` counts (157 → 547), updated `docs/FEATURES.md` with post-0.3.1 changes. Added Documentation Map to root `CLAUDE.md`. | — |
+| ✅ | Team infrastructure: product-manager, qa-engineer, tech-writer agents with guard rails in `.claude/agents/`. Metrics journal (`docs/metrics/`) with t-shirt size estimation strategy. Per-feature specs template (`docs/specs/`). | — |
 | ✅ | F-11: Server-side search/filter across 9 list pages (NPCs, Locations, Sessions, Quests, Groups, Species, GroupTypes, LocationTypes, SpeciesTypes) with debounced input and Apollo v4 previousData keep-alive to prevent flicker. Admin Users aligned on shared useDebouncedSearch. Original GroupTypes flicker regression closed. See F-22 for chip-count restoration follow-up. | — |
 | ✅ | Phase 2 redundancy audit: SectionPanel, InlineConfirm, form constants, FormDrawer (compound), useLinkedEntityList extracted and migrated across 112 files. −433 LoC, +48 tests. | — |
 | ✅ | Frontend section widgets refactor: 22 pages decomposed into thin orchestrators + section widgets (Tier 1–3). 9898 → 2314 LoC in pages (−77%), +176 colocated tests. | — |
