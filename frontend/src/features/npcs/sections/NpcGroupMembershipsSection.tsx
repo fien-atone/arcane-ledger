@@ -13,8 +13,9 @@ import {
   useRemoveNPCGroupMembership,
   useSetNPCGroupMembershipVisibility,
 } from '@/features/npcs/api/queries';
-import { InlineConfirm, useInlineConfirm } from '@/shared/ui';
-import type { NPC } from '@/entities/npc';
+import { InlineConfirm } from '@/shared/ui';
+import { useLinkedEntityList } from '@/shared/hooks';
+import type { NPC, NPCGroupMembership } from '@/entities/npc';
 
 interface Props {
   campaignId: string;
@@ -31,32 +32,39 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
   const removeGroupMembership = useRemoveNPCGroupMembership();
   const setGroupMembershipVisibility = useSetNPCGroupMembershipVisibility();
 
-  const [addGroupOpen, setAddGroupOpen] = useState(false);
-  const [addGroupSearch, setAddGroupSearch] = useState('');
   const [addGroupRole, setAddGroupRole] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const confirmRemove = useInlineConfirm<string>();
+
+  const picker = useLinkedEntityList<NPCGroupMembership, NonNullable<typeof groups>[number]>({
+    linked: npc.groupMemberships,
+    candidates: groups ?? [],
+    getCandidateId: (g) => g.id,
+    getCandidateSearchText: (g) => g.name,
+    getLinkedId: (m) => m.groupId,
+  });
 
   if (!enabled) return null;
 
   const groupNameById = (id: string) => groups?.find((g) => g.id === id)?.name ?? id;
-  const memberGroupIds = new Set(npc.groupMemberships.map((m) => m.groupId));
-  const availableGroups = (groups ?? [])
-    .filter((g) => !memberGroupIds.has(g.id))
-    .filter((g) => !addGroupSearch.trim() || g.name.toLowerCase().includes(addGroupSearch.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const availableGroups = [...picker.availableFiltered].sort((a, b) => a.name.localeCompare(b.name));
+
+  const resetPicker = () => {
+    picker.closePicker();
+    setAddGroupRole('');
+    setSelectedGroupId(null);
+  };
 
   const handleAddGroup = () => {
     if (!selectedGroupId) return;
     addGroupMembership.mutate(
       { npcId: npc.id, groupId: selectedGroupId, relation: addGroupRole.trim() || undefined },
-      { onSuccess: () => { setAddGroupOpen(false); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); } },
+      { onSuccess: resetPicker },
     );
   };
 
   const handleRemoveGroup = (groupId: string) => {
     removeGroupMembership.mutate({ npcId: npc.id, groupId });
-    confirmRemove.cancel();
+    picker.cancelRemove();
   };
 
   return (
@@ -68,7 +76,15 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
         <div className="h-px flex-1 bg-outline-variant/20" />
         {isGm && (
           <button
-            onClick={() => { setAddGroupOpen((v) => !v); setAddGroupSearch(''); setAddGroupRole(''); setSelectedGroupId(null); }}
+            onClick={() => {
+              if (picker.pickerOpen) {
+                resetPicker();
+              } else {
+                setAddGroupRole('');
+                setSelectedGroupId(null);
+                picker.openPicker();
+              }
+            }}
             className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
           >
             <span className="material-symbols-outlined text-[13px]">group_add</span>
@@ -77,15 +93,15 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
         )}
       </div>
 
-      {addGroupOpen && (
+      {picker.pickerOpen && (
         <div className="border border-outline-variant/20 bg-surface-container-low">
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
             <input
               autoFocus
               type="text"
-              value={addGroupSearch}
-              onChange={(e) => setAddGroupSearch(e.target.value)}
+              value={picker.search}
+              onChange={(e) => picker.setSearch(e.target.value)}
               placeholder={t('search_groups')}
               className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
             />
@@ -128,7 +144,7 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
               </div>
               <div className="flex items-center justify-end gap-2">
                 <button
-                  onClick={() => { setAddGroupOpen(false); setSelectedGroupId(null); }}
+                  onClick={resetPicker}
                   className="px-3 py-1 text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
                 >
                   {t('cancel')}
@@ -147,7 +163,7 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
         </div>
       )}
 
-      {npc.groupMemberships.length === 0 && !addGroupOpen ? (
+      {npc.groupMemberships.length === 0 && !picker.pickerOpen ? (
         <p className="text-xs text-on-surface-variant/40 italic">{t('no_group_memberships')}</p>
       ) : npc.groupMemberships.length > 0 ? (
         <div className="grid grid-cols-1 gap-2">
@@ -169,15 +185,15 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
                   )}
                 </div>
               </Link>
-              {isGm && (confirmRemove.isAsking(m.groupId) ? (
+              {isGm && (picker.isAskingRemove(m.groupId) ? (
                 <InlineConfirm
                   label={t('confirm_remove')}
                   onYes={() => handleRemoveGroup(m.groupId)}
-                  onNo={confirmRemove.cancel}
+                  onNo={picker.cancelRemove}
                 />
               ) : (
                 <button
-                  onClick={() => confirmRemove.ask(m.groupId)}
+                  onClick={() => picker.askRemove(m.groupId)}
                   title={t('remove_from_group')}
                   className="px-2 py-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                 >

@@ -8,12 +8,12 @@
  * Status pill mapping is local to this section because no other section
  * shares the same colour-on-surface combinations.
  */
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { useSaveSession } from '@/features/sessions/api/queries';
-import { SectionPanel, InlineConfirm, useInlineConfirm } from '@/shared/ui';
+import { SectionPanel, InlineConfirm } from '@/shared/ui';
+import { useLinkedEntityList } from '@/shared/hooks';
 import type { Session } from '@/entities/session';
 import type { QuestStatus } from '@/entities/quest';
 
@@ -38,26 +38,24 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
   const saveSession = useSaveSession(campaignId);
   const setQuestVisibility = useSetQuestVisibility();
 
-  const [questSearch, setQuestSearch] = useState('');
-  const [questSearchOpen, setQuestSearchOpen] = useState(false);
-  const confirmRemove = useInlineConfirm<string>();
-
   const questIds = session.questIds ?? [];
   const linked = [...(session.quests ?? [])].sort((a, b) => a.title.localeCompare(b.title));
 
-  const available = (allQuests ?? [])
-    .filter((q) => !questIds.includes(q.id))
-    .filter((q) => !questSearch.trim() || q.title.toLowerCase().includes(questSearch.toLowerCase()))
-    .sort((a, b) => a.title.localeCompare(b.title));
+  const picker = useLinkedEntityList({
+    linked,
+    candidates: allQuests ?? [],
+    getCandidateId: (q) => q.id,
+    getCandidateSearchText: (q) => q.title,
+  });
+  const available = [...picker.availableFiltered].sort((a, b) => a.title.localeCompare(b.title));
 
   const addQuest = async (id: string) => {
     await saveSession.mutate({ ...session, questIds: [...questIds, id] }, { only: 'questIds' });
-    setQuestSearchOpen(false);
-    setQuestSearch('');
+    picker.closePicker();
   };
   const removeQuest = async (id: string) => {
     await saveSession.mutate({ ...session, questIds: questIds.filter((x) => x !== id) }, { only: 'questIds' });
-    confirmRemove.cancel();
+    picker.cancelRemove();
   };
 
   return (
@@ -65,7 +63,7 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
       title={t('section_quests')}
       action={isGm ? (
         <button
-          onClick={() => { setQuestSearchOpen((v) => !v); setQuestSearch(''); }}
+          onClick={() => (picker.pickerOpen ? picker.closePicker() : picker.openPicker())}
           className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
         >
           <span className="material-symbols-outlined text-[13px]">add_task</span>
@@ -73,12 +71,12 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
         </button>
       ) : undefined}
     >
-      {isGm && questSearchOpen && (
+      {isGm && picker.pickerOpen && (
         <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
             <input autoFocus type="text" placeholder={t('search_quests')}
-              value={questSearch} onChange={(e) => setQuestSearch(e.target.value)}
+              value={picker.search} onChange={(e) => picker.setSearch(e.target.value)}
               className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
             />
           </div>
@@ -96,7 +94,7 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
         </div>
       )}
 
-      {linked.length === 0 && !questSearchOpen ? (
+      {linked.length === 0 && !picker.pickerOpen ? (
         <p className="text-xs text-on-surface-variant/40 italic">{t('no_quests_linked')}</p>
       ) : linked.length > 0 ? (
         <div className="space-y-2">
@@ -131,14 +129,14 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
                     </span>
                   </button>
                 )}
-                {isGm && (confirmRemove.isAsking(quest.id) ? (
+                {isGm && (picker.isAskingRemove(quest.id) ? (
                   <InlineConfirm
                     label={t('confirm_remove')}
                     onYes={() => removeQuest(quest.id)}
-                    onNo={confirmRemove.cancel}
+                    onNo={picker.cancelRemove}
                   />
                 ) : (
-                  <button onClick={() => confirmRemove.ask(quest.id)} title={t('remove_from_session')}
+                  <button onClick={() => picker.askRemove(quest.id)} title={t('remove_from_session')}
                     className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                     <span className="material-symbols-outlined text-[14px]">close</span>
                   </button>

@@ -15,8 +15,10 @@ import {
   useSetNPCGroupMembershipVisibility,
 } from '@/features/npcs/api/queries';
 import { useParty, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
-import { SectionPanel, InlineConfirm, useInlineConfirm } from '@/shared/ui';
+import { SectionPanel, InlineConfirm } from '@/shared/ui';
+import { useLinkedEntityList } from '@/shared/hooks';
 import type { NPC, NpcStatus } from '@/entities/npc';
+import type { PlayerCharacter } from '@/entities/character';
 
 const STATUS_DOT: Record<NpcStatus, string> = {
   alive:   'bg-secondary',
@@ -40,10 +42,6 @@ export function GroupMembersSection({ campaignId, groupId, isGm, partyEnabled }:
   const setMembershipVisibility = useSetNPCGroupMembershipVisibility();
   const removeCharMembership = useRemoveCharacterGroupMembership();
 
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
-  const confirmRemoveNpc = useInlineConfirm<string>();
-  const confirmRemoveChar = useInlineConfirm<string>();
-
   const members = (allNpcs ?? [])
     .filter((n) => n.groupMemberships.some((m) => m.groupId === groupId))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -57,6 +55,23 @@ export function GroupMembersSection({ campaignId, groupId, isGm, partyEnabled }:
         .filter((c) => (c.groupMemberships ?? []).some((m) => m.groupId === groupId))
         .sort((a, b) => a.name.localeCompare(b.name))
     : [];
+
+  // NPC picker+remove. The add UI lives in a slide-out panel (AddMemberPanel)
+  // so we repurpose `pickerOpen` to drive that panel and let the panel own
+  // its own search input.
+  const npcList = useLinkedEntityList<NPC, NPC>({
+    linked: members,
+    candidates: allNpcs ?? [],
+    getCandidateId: (n) => n.id,
+    getCandidateSearchText: (n) => n.name,
+  });
+  // Character removal only (no picker for characters in this section).
+  const charList = useLinkedEntityList<PlayerCharacter, PlayerCharacter>({
+    linked: charMembers,
+    candidates: [],
+    getCandidateId: (c) => c.id,
+    getCandidateSearchText: (c) => c.name,
+  });
 
   const handleRemoveMember = (npc: NPC) => {
     removeMembership.mutate({ npcId: npc.id, groupId });
@@ -72,7 +87,7 @@ export function GroupMembersSection({ campaignId, groupId, isGm, partyEnabled }:
               <span className="text-xs font-bold text-on-surface-variant/40">{members.length + charMembers.length}</span>
             )}
             {isGm && (
-              <button onClick={() => setAddMemberOpen(true)}
+              <button onClick={() => npcList.openPicker()}
                 className="flex items-center gap-1 px-3 py-1 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
                 <span className="material-symbols-outlined text-[13px]">person_add</span>
                 {t('add')}
@@ -105,14 +120,14 @@ export function GroupMembersSection({ campaignId, groupId, isGm, partyEnabled }:
                       </p>
                     </div>
                   </Link>
-                  {isGm && (confirmRemoveNpc.isAsking(npc.id) ? (
+                  {isGm && (npcList.isAskingRemove(npc.id) ? (
                     <InlineConfirm
                       label={t('confirm_remove')}
-                      onYes={() => { handleRemoveMember(npc); confirmRemoveNpc.cancel(); }}
-                      onNo={confirmRemoveNpc.cancel}
+                      onYes={() => { handleRemoveMember(npc); npcList.cancelRemove(); }}
+                      onNo={npcList.cancelRemove}
                     />
                   ) : (
-                    <button onClick={() => confirmRemoveNpc.ask(npc.id)} title={t('remove_from_group')}
+                    <button onClick={() => npcList.askRemove(npc.id)} title={t('remove_from_group')}
                       className="flex-shrink-0 opacity-0 group-hover/card:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all">
                       <span className="material-symbols-outlined text-[16px]">person_remove</span>
                     </button>
@@ -154,14 +169,14 @@ export function GroupMembersSection({ campaignId, groupId, isGm, partyEnabled }:
                       </p>
                     </div>
                   </Link>
-                  {isGm && (confirmRemoveChar.isAsking(char.id) ? (
+                  {isGm && (charList.isAskingRemove(char.id) ? (
                     <InlineConfirm
                       label={t('confirm_remove')}
-                      onYes={() => { removeCharMembership.mutate({ characterId: char.id, groupId }); confirmRemoveChar.cancel(); }}
-                      onNo={confirmRemoveChar.cancel}
+                      onYes={() => { removeCharMembership.mutate({ characterId: char.id, groupId }); charList.cancelRemove(); }}
+                      onNo={charList.cancelRemove}
                     />
                   ) : (
-                    <button onClick={() => confirmRemoveChar.ask(char.id)} title={t('remove_from_group')}
+                    <button onClick={() => charList.askRemove(char.id)} title={t('remove_from_group')}
                       className="flex-shrink-0 opacity-0 group-hover/card:opacity-100 px-2 py-1 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-all">
                       <span className="material-symbols-outlined text-[16px]">person_remove</span>
                     </button>
@@ -173,8 +188,8 @@ export function GroupMembersSection({ campaignId, groupId, isGm, partyEnabled }:
         )}
       </SectionPanel>
 
-      {addMemberOpen && (
-        <AddMemberPanel onClose={() => setAddMemberOpen(false)} groupId={groupId} nonMembers={nonMembers} />
+      {npcList.pickerOpen && (
+        <AddMemberPanel onClose={() => npcList.closePicker()} groupId={groupId} nonMembers={nonMembers} />
       )}
     </>
   );

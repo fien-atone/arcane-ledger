@@ -7,12 +7,12 @@
  * Fetches its own location list. The `locationTypesEnabled` flag toggles
  * generic vs. type-specific icons via the shared `LocationIcon` widget.
  */
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLocations, useSetLocationVisibility } from '@/features/locations/api';
 import { useSaveSession } from '@/features/sessions/api/queries';
-import { LocationIcon, SectionPanel, InlineConfirm, useInlineConfirm } from '@/shared/ui';
+import { LocationIcon, SectionPanel, InlineConfirm } from '@/shared/ui';
+import { useLinkedEntityList } from '@/shared/hooks';
 import type { Session } from '@/entities/session';
 
 interface Props {
@@ -35,26 +35,24 @@ export function SessionLocationsSection({
   const saveSession = useSaveSession(campaignId);
   const setLocationVisibility = useSetLocationVisibility();
 
-  const [locSearch, setLocSearch] = useState('');
-  const [locSearchOpen, setLocSearchOpen] = useState(false);
-  const confirmRemove = useInlineConfirm<string>();
-
   const locationIds = session.locationIds ?? [];
   const linked = [...(session.locations ?? [])].sort((a, b) => a.name.localeCompare(b.name));
 
-  const available = (allLocations ?? [])
-    .filter((l) => !locationIds.includes(l.id))
-    .filter((l) => !locSearch.trim() || l.name.toLowerCase().includes(locSearch.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const picker = useLinkedEntityList({
+    linked,
+    candidates: allLocations ?? [],
+    getCandidateId: (l) => l.id,
+    getCandidateSearchText: (l) => l.name,
+  });
+  const available = [...picker.availableFiltered].sort((a, b) => a.name.localeCompare(b.name));
 
   const addLoc = async (id: string) => {
     await saveSession.mutate({ ...session, locationIds: [...locationIds, id] }, { only: 'locationIds' });
-    setLocSearchOpen(false);
-    setLocSearch('');
+    picker.closePicker();
   };
   const removeLoc = async (id: string) => {
     await saveSession.mutate({ ...session, locationIds: locationIds.filter((x) => x !== id) }, { only: 'locationIds' });
-    confirmRemove.cancel();
+    picker.cancelRemove();
   };
 
   return (
@@ -62,7 +60,7 @@ export function SessionLocationsSection({
       title={t('section_locations')}
       action={isGm ? (
         <button
-          onClick={() => { setLocSearchOpen((v) => !v); setLocSearch(''); }}
+          onClick={() => (picker.pickerOpen ? picker.closePicker() : picker.openPicker())}
           className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
         >
           <span className="material-symbols-outlined text-[13px]">add_location</span>
@@ -70,12 +68,12 @@ export function SessionLocationsSection({
         </button>
       ) : undefined}
     >
-      {isGm && locSearchOpen && (
+      {isGm && picker.pickerOpen && (
         <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
             <input autoFocus type="text" placeholder={t('search_locations')}
-              value={locSearch} onChange={(e) => setLocSearch(e.target.value)}
+              value={picker.search} onChange={(e) => picker.setSearch(e.target.value)}
               className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
             />
           </div>
@@ -93,7 +91,7 @@ export function SessionLocationsSection({
         </div>
       )}
 
-      {linked.length === 0 && !locSearchOpen ? (
+      {linked.length === 0 && !picker.pickerOpen ? (
         <p className="text-xs text-on-surface-variant/40 italic">{t('no_locations_tagged')}</p>
       ) : linked.length > 0 ? (
         <div className="space-y-2">
@@ -126,14 +124,14 @@ export function SessionLocationsSection({
                     </span>
                   </button>
                 )}
-                {isGm && (confirmRemove.isAsking(loc.id) ? (
+                {isGm && (picker.isAskingRemove(loc.id) ? (
                   <InlineConfirm
                     label={t('confirm_remove')}
                     onYes={() => removeLoc(loc.id)}
-                    onNo={confirmRemove.cancel}
+                    onNo={picker.cancelRemove}
                   />
                 ) : (
-                  <button onClick={() => confirmRemove.ask(loc.id)} title={t('remove_from_session')}
+                  <button onClick={() => picker.askRemove(loc.id)} title={t('remove_from_session')}
                     className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                     <span className="material-symbols-outlined text-[14px]">close</span>
                   </button>
