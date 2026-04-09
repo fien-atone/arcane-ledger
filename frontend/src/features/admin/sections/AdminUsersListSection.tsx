@@ -8,7 +8,7 @@
  */
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
-import { SectionPanel } from '@/shared/ui';
+import { SectionPanel, LABEL_CLS } from '@/shared/ui';
 import type { User } from '@/entities/user';
 
 interface Props {
@@ -23,9 +23,6 @@ interface Props {
   onCancelDelete: () => void;
   onConfirmDelete: (id: string) => void;
 }
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 export function AdminUsersListSection({
   users,
@@ -61,7 +58,7 @@ export function AdminUsersListSection({
     >
       {/* Search */}
       <div className="mb-6">
-        <label className={labelCls}>{t('search_label')}</label>
+        <label className={LABEL_CLS}>{t('search_label')}</label>
         <div className="relative max-w-sm">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-lg">
             search

@@ -5,18 +5,13 @@ import { useLocationTypes, useContainmentRules } from '@/features/locationTypes'
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
+import { LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 import type { Location, LocationType } from '@/entities/location';
 import { CATEGORY_ICON_COLOR, CATEGORY_LABEL } from '@/entities/locationType';
 
 function biomeLabel(value: string): string {
   return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
-
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 interface Props {
   open: boolean;
@@ -136,14 +131,14 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
 
           {/* Name */}
           <div>
-            <label className={labelCls}>{t('field_name')} <span className="text-primary">*</span></label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+            <label className={LABEL_CLS}>{t('field_name')} <span className="text-primary">*</span></label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={INPUT_CLS} />
           </div>
 
           {/* Location Type */}
           {locationTypesEnabled && (
             <div>
-              <label className={labelCls}>{t('field_type')}</label>
+              <label className={LABEL_CLS}>{t('field_type')}</label>
               <Select
                 value={type}
                 options={locationTypeOptions}
@@ -157,7 +152,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           {/* Parent location — hidden when creating from map (auto-assigned) */}
           {locationTypesEnabled && !initialParentId && parentOptions.length > 0 && (
             <div>
-              <label className={labelCls}>{t('field_part_of')}</label>
+              <label className={LABEL_CLS}>{t('field_part_of')}</label>
               <Select
                 value={parentLocationId}
                 options={parentOptions}
@@ -170,14 +165,14 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           {/* Population — only for settlement types */}
           {locationTypesEnabled && selectedTypeEntry?.isSettlement && (
             <div>
-              <label className={labelCls}>{t('field_population')}</label>
+              <label className={LABEL_CLS}>{t('field_population')}</label>
               <input
                 type="number"
                 min={0}
                 value={settlementPopulation}
                 onChange={(e) => setSettlementPopulation(e.target.value)}
                 placeholder={t('placeholder_population')}
-                className={inputCls}
+                className={INPUT_CLS}
               />
             </div>
           )}
@@ -185,7 +180,7 @@ export function LocationEditDrawer({ open, onClose, campaignId, location, initia
           {/* Biome / terrain sub-type */}
           {locationTypesEnabled && biomeOptions.length > 0 && (
             <div>
-              <label className={labelCls}>{t('field_terrain')}</label>
+              <label className={LABEL_CLS}>{t('field_terrain')}</label>
               <Select
                 value={biome}
                 options={biomeOptions}

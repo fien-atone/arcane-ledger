@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSaveQuest } from '@/features/quests/api/queries';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
-import { Select } from '@/shared/ui';
+import { Select, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Quest } from '@/entities/quest';
 
@@ -13,11 +13,6 @@ interface Props {
   campaignId: string;
   quest?: Quest;
 }
-
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
   const { t } = useTranslation('quests');
@@ -81,19 +76,19 @@ export function QuestEditDrawer({ open, onClose, campaignId, quest }: Props) {
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
           <div>
-            <label className={labelCls}>{t('field_title')} <span className="text-primary">*</span></label>
+            <label className={LABEL_CLS}>{t('field_title')} <span className="text-primary">*</span></label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('placeholder_title')}
-              className={inputCls}
+              className={INPUT_CLS}
               autoFocus
             />
           </div>
 
           {npcsEnabled && (
           <div>
-            <label className={labelCls}>{t('field_quest_giver')}</label>
+            <label className={LABEL_CLS}>{t('field_quest_giver')}</label>
             <Select<string>
               value={giverId}
               options={npcOptions}

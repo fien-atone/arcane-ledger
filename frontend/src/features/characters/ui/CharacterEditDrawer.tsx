@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSaveCharacter } from '@/features/characters/api/queries';
 import { useSpecies } from '@/features/species/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
-import { Select } from '@/shared/ui';
+import { Select, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 import type { PlayerCharacter, CharacterGender } from '@/entities/character';
 
 interface Props {
@@ -16,13 +16,6 @@ interface Props {
 }
 
 const now = () => new Date().toISOString();
-
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 export function CharacterEditDrawer({ open, onClose, campaignId, character, forUserId }: Props) {
   const { t } = useTranslation('party');
@@ -101,16 +94,16 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character, forU
 
           {/* Name */}
           <div>
-            <label className={labelCls}>{t('field_name')} <span className="text-primary">*</span></label>
+            <label className={LABEL_CLS}>{t('field_name')} <span className="text-primary">*</span></label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-              placeholder={t('placeholder_name')} className={inputCls} autoFocus={isNew} />
+              placeholder={t('placeholder_name')} className={INPUT_CLS} autoFocus={isNew} />
           </div>
 
           {/* Species / Class */}
           <div className={`grid gap-3 ${speciesEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
             {speciesEnabled && (
             <div>
-              <label className={labelCls}>{t('field_species')}</label>
+              <label className={LABEL_CLS}>{t('field_species')}</label>
               <Select
                 value={speciesId}
                 onChange={(v) => setSpeciesId(v)}
@@ -122,16 +115,16 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character, forU
             </div>
             )}
             <div>
-              <label className={labelCls}>{t('field_class')}</label>
+              <label className={LABEL_CLS}>{t('field_class')}</label>
               <input type="text" value={cls} onChange={(e) => setCls(e.target.value)}
-                placeholder={t('placeholder_class')} className={inputCls} />
+                placeholder={t('placeholder_class')} className={INPUT_CLS} />
             </div>
           </div>
 
           {/* Gender / Age */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>{t('field_gender')}</label>
+              <label className={LABEL_CLS}>{t('field_gender')}</label>
               <Select<CharacterGender>
                 value={gender}
                 onChange={(v) => setGender(v)}
@@ -144,9 +137,9 @@ export function CharacterEditDrawer({ open, onClose, campaignId, character, forU
               />
             </div>
             <div>
-              <label className={labelCls}>{t('field_age')}</label>
+              <label className={LABEL_CLS}>{t('field_age')}</label>
               <input type="number" min={0} value={age} onChange={(e) => setAge(e.target.value)}
-                placeholder={t('placeholder_age_none')} className={inputCls} />
+                placeholder={t('placeholder_age_none')} className={INPUT_CLS} />
             </div>
           </div>
 
