@@ -33,6 +33,8 @@ audit/
 
 # Project-specific ignores
 .claude/
+!.claude/agents/
+!.claude/agents/**
 .obsidian/
 examples/
 stitch/
