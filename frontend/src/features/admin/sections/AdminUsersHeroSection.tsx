@@ -5,6 +5,7 @@
  * Presentation-only; the drawer open state lives in useAdminUsersPage.
  */
 import { useTranslation } from 'react-i18next';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   onCreate: () => void;
@@ -14,7 +15,7 @@ export function AdminUsersHeroSection({ onCreate }: Props) {
   const { t } = useTranslation('admin');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+    <SectionPanel className="mb-8">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
           <span
@@ -40,6 +41,6 @@ export function AdminUsersHeroSection({ onCreate }: Props) {
           {t('create_user')}
         </button>
       </div>
-    </div>
+    </SectionPanel>
   );
 }

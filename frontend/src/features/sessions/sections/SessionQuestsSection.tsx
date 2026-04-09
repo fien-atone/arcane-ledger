@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { useSaveSession } from '@/features/sessions/api/queries';
+import { SectionPanel } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 import type { QuestStatus } from '@/entities/quest';
 
@@ -60,23 +61,18 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
   };
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-          {t('section_quests')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-        {isGm && (
-          <button
-            onClick={() => { setQuestSearchOpen((v) => !v); setQuestSearch(''); }}
-            className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-          >
-            <span className="material-symbols-outlined text-[13px]">add_task</span>
-            {t('add')}
-          </button>
-        )}
-      </div>
-
+    <SectionPanel
+      title={t('section_quests')}
+      action={isGm ? (
+        <button
+          onClick={() => { setQuestSearchOpen((v) => !v); setQuestSearch(''); }}
+          className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+        >
+          <span className="material-symbols-outlined text-[13px]">add_task</span>
+          {t('add')}
+        </button>
+      ) : undefined}
+    >
       {isGm && questSearchOpen && (
         <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
           <div className="relative">
@@ -152,6 +148,6 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
           ))}
         </div>
       ) : null}
-    </div>
+    </SectionPanel>
   );
 }

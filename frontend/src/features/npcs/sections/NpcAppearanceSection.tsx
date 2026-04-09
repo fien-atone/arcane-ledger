@@ -7,7 +7,7 @@
  * of the left column.
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionPanel } from '@/shared/ui';
 import type { NPC } from '@/entities/npc';
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 export function NpcAppearanceSection({ npc, isGm, onSaveField }: Props) {
   const { t } = useTranslation('npcs');
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <InlineRichField
         label={t('section_appearance')}
         value={npc.appearance}
@@ -27,7 +27,7 @@ export function NpcAppearanceSection({ npc, isGm, onSaveField }: Props) {
         placeholder={t('placeholder_appearance')}
         readOnly={!isGm}
       />
-    </div>
+    </SectionPanel>
   );
 }
 
@@ -35,13 +35,13 @@ export function NpcGmNotesPanel({ npc, isGm, onSaveField }: Props) {
   const { t } = useTranslation('npcs');
   if (!isGm) return null;
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <InlineRichField
         label={t('section_gm_notes')}
         value={npc.gmNotes}
         onSave={(html) => onSaveField('gmNotes', html)}
         isGmNotes
       />
-    </div>
+    </SectionPanel>
   );
 }

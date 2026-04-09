@@ -5,7 +5,7 @@
  * CharacterGmNotesSection patterns).
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionPanel } from '@/shared/ui';
 import type { Quest } from '@/entities/quest';
 
 interface Props {
@@ -19,13 +19,13 @@ export function QuestGmNotesSection({ quest, isGm, onSaveField }: Props) {
   if (!isGm) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <InlineRichField
         label={t('section_gm_notes')}
         value={quest.notes}
         onSave={(html) => onSaveField('notes', html)}
         isGmNotes
       />
-    </div>
+    </SectionPanel>
   );
 }

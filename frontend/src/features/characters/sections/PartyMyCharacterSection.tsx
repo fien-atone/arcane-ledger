@@ -8,22 +8,12 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
+import { SectionPanel } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
 
 interface Props {
   campaignId: string;
   character: PlayerCharacter;
-}
-
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <div className="flex items-center gap-4 mb-4">
-      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-        {title}
-      </h3>
-      <div className="h-px flex-1 bg-outline-variant/20" />
-    </div>
-  );
 }
 
 export function PartyMyCharacterSection({ campaignId, character }: Props) {
@@ -39,8 +29,7 @@ export function PartyMyCharacterSection({ campaignId, character }: Props) {
     [character.species, character.class].filter(Boolean).join(' \u00b7 ') || '\u2014';
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <SectionHeader title={t('section_my_character')} />
+    <SectionPanel size="sm" title={t('section_my_character')}>
       <Link
         to={`/campaigns/${campaignId}/characters/${character.id}`}
         className="border border-primary/20 bg-surface-container-low rounded-sm p-4 flex items-center gap-4 hover:border-primary/40 transition-colors group"
@@ -70,6 +59,6 @@ export function PartyMyCharacterSection({ campaignId, character }: Props) {
           arrow_forward
         </span>
       </Link>
-    </div>
+    </SectionPanel>
   );
 }

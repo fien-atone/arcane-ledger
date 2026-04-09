@@ -16,6 +16,7 @@ export { IconPicker } from './IconPicker';
 export { EmptyState } from './EmptyState';
 export { DatePicker } from './DatePicker';
 export { SectionBackground } from './SectionBackground';
+export { SectionPanel } from './SectionPanel';
 export { SectionDisabled } from './SectionDisabled';
 export { NotFoundState } from './NotFoundState';
 export { ToastContainer } from './ToastContainer';

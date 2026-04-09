@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SectionPanel > matches snapshot for the canonical title + action shape 1`] = `
+<div
+  class="bg-surface-container border border-outline-variant/20 rounded-sm p-6"
+>
+  <div
+    class="flex items-center gap-4 mb-4"
+  >
+    <h2
+      class="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary"
+    >
+      Members
+    </h2>
+    <div
+      class="h-px flex-1 bg-outline-variant/20"
+    />
+    <button>
+      Add
+    </button>
+  </div>
+  <p>
+    body
+  </p>
+</div>
+`;

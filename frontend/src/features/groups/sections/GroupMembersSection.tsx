@@ -15,6 +15,7 @@ import {
   useSetNPCGroupMembershipVisibility,
 } from '@/features/npcs/api/queries';
 import { useParty, useRemoveCharacterGroupMembership } from '@/features/characters/api/queries';
+import { SectionPanel } from '@/shared/ui';
 import type { NPC, NpcStatus } from '@/entities/npc';
 
 const STATUS_DOT: Record<NpcStatus, string> = {
@@ -63,21 +64,23 @@ export function GroupMembersSection({ campaignId, groupId, isGm, partyEnabled }:
 
   return (
     <>
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">{t('section_members')}</h2>
-          <div className="h-px flex-1 bg-outline-variant/20" />
-          {(members.length + charMembers.length) > 0 && (
-            <span className="text-xs font-bold text-on-surface-variant/40">{members.length + charMembers.length}</span>
-          )}
-          {isGm && (
-            <button onClick={() => setAddMemberOpen(true)}
-              className="flex items-center gap-1 px-3 py-1 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
-              <span className="material-symbols-outlined text-[13px]">person_add</span>
-              {t('add')}
-            </button>
-          )}
-        </div>
+      <SectionPanel
+        title={t('section_members')}
+        action={
+          <>
+            {(members.length + charMembers.length) > 0 && (
+              <span className="text-xs font-bold text-on-surface-variant/40">{members.length + charMembers.length}</span>
+            )}
+            {isGm && (
+              <button onClick={() => setAddMemberOpen(true)}
+                className="flex items-center gap-1 px-3 py-1 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all">
+                <span className="material-symbols-outlined text-[13px]">person_add</span>
+                {t('add')}
+              </button>
+            )}
+          </>
+        }
+      >
         {members.length === 0 && charMembers.length === 0 ? (
           <p className="text-sm text-on-surface-variant/40 italic">{t('no_members')}</p>
         ) : (
@@ -172,7 +175,7 @@ export function GroupMembersSection({ campaignId, groupId, isGm, partyEnabled }:
             })}
           </div>
         )}
-      </div>
+      </SectionPanel>
 
       {addMemberOpen && (
         <AddMemberPanel onClose={() => setAddMemberOpen(false)} groupId={groupId} nonMembers={nonMembers} />

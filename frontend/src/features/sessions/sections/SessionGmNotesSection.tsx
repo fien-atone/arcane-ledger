@@ -6,7 +6,7 @@
  * `SessionMyNotesSection` instead. Returns null for non-GM viewers.
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionPanel } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 interface Props {
@@ -20,7 +20,7 @@ export function SessionGmNotesSection({ session, isGm, onSaveNote }: Props) {
   if (!isGm) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <section>
         <InlineRichField
           label={t('section_gm_notes')}
@@ -30,6 +30,6 @@ export function SessionGmNotesSection({ session, isGm, onSaveNote }: Props) {
           isGmNotes={true}
         />
       </section>
-    </div>
+    </SectionPanel>
   );
 }

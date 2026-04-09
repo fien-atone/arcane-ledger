@@ -5,7 +5,7 @@
  * For GMs, offers inline shortcuts to invite a player or create a character.
  */
 import { useTranslation } from 'react-i18next';
-import { EmptyState } from '@/shared/ui';
+import { EmptyState, SectionPanel } from '@/shared/ui';
 
 interface Props {
   isGm: boolean;
@@ -21,7 +21,7 @@ export function PartyEmptyStateSection({
   const { t } = useTranslation('party');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <div className="flex flex-col items-center justify-center py-8">
         <EmptyState
           icon="groups"
@@ -47,6 +47,6 @@ export function PartyEmptyStateSection({
           </div>
         )}
       </div>
-    </div>
+    </SectionPanel>
   );
 }

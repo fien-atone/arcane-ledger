@@ -8,6 +8,7 @@
  */
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
+import { SectionPanel } from '@/shared/ui';
 import type { User } from '@/entities/user';
 
 interface Props {
@@ -51,18 +52,13 @@ export function AdminUsersListSection({
   }
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      {/* Section header */}
-      <div className="flex items-center gap-4 mb-4">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-          {t('users_section')}
-        </h3>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-        {users && users.length > 0 && (
-          <span className="text-[10px] text-on-surface-variant/30">{users.length}</span>
-        )}
-      </div>
-
+    <SectionPanel
+      size="sm"
+      title={t('users_section')}
+      action={users && users.length > 0 ? (
+        <span className="text-[10px] text-on-surface-variant/30">{users.length}</span>
+      ) : undefined}
+    >
       {/* Search */}
       <div className="mb-6">
         <label className={labelCls}>{t('search_label')}</label>
@@ -207,6 +203,6 @@ export function AdminUsersListSection({
           })}
         </div>
       )}
-    </div>
+    </SectionPanel>
   );
 }

@@ -9,6 +9,7 @@
  * props from useSpeciesListPage.
  */
 import { useTranslation } from 'react-i18next';
+import { SectionPanel } from '@/shared/ui';
 import type { TypeFilterOption } from '../hooks/useSpeciesListPage';
 
 interface Props {
@@ -37,7 +38,7 @@ export function SpeciesListHeroSection({
   const { t } = useTranslation('species');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+    <SectionPanel className="mb-8">
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
@@ -104,6 +105,6 @@ export function SpeciesListHeroSection({
           <span className="text-primary font-bold">{totalCount}</span>
         </span>
       </div>
-    </div>
+    </SectionPanel>
   );
 }

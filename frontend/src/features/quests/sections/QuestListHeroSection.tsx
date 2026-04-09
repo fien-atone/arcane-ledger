@@ -8,6 +8,7 @@
  * Presentational: all state is passed in as props from useQuestListPage.
  */
 import { useTranslation } from 'react-i18next';
+import { SectionPanel } from '@/shared/ui';
 import type {
   StatusFilterOption,
   StatusFilterValue,
@@ -39,7 +40,7 @@ export function QuestListHeroSection({
   const { t } = useTranslation('quests');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+    <SectionPanel className="mb-8">
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="font-headline text-3xl sm:text-5xl font-bold text-on-surface tracking-tight">
@@ -105,6 +106,6 @@ export function QuestListHeroSection({
           <span className="text-primary font-bold">{totalCount}</span>
         </span>
       </div>
-    </div>
+    </SectionPanel>
   );
 }

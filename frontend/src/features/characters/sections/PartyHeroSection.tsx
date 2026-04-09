@@ -7,6 +7,7 @@
  */
 import { useTranslation } from 'react-i18next';
 import { InvitePanel } from '@/features/invitations/ui/InvitePanel';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   campaignId: string;
@@ -28,7 +29,7 @@ export function PartyHeroSection({
   const { t } = useTranslation('party');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+    <SectionPanel className="mb-8">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
@@ -62,6 +63,6 @@ export function PartyHeroSection({
           <InvitePanel campaignId={campaignId} onClose={onCloseInvitePanel} />
         </div>
       )}
-    </div>
+    </SectionPanel>
   );
 }

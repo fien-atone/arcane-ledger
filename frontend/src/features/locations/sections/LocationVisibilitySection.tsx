@@ -7,7 +7,7 @@
  * as the original page so the visual layout is unchanged.
  */
 import { useTranslation } from 'react-i18next';
-import { VisibilityPanel } from '@/shared/ui';
+import { VisibilityPanel, SectionPanel } from '@/shared/ui';
 import { useSetLocationVisibility } from '@/features/locations/api';
 import { LOCATION_VISIBILITY_FIELDS, LOCATION_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import type { Location } from '@/entities/location';
@@ -26,7 +26,7 @@ export function LocationVisibilitySection({ campaignId, location, isGm, partyEna
   if (!isGm || !partyEnabled) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <VisibilityPanel
         playerVisible={location.playerVisible ?? false}
         playerVisibleFields={location.playerVisibleFields ?? []}
@@ -62,6 +62,6 @@ export function LocationVisibilitySection({ campaignId, location, isGm, partyEna
         }
         isPending={setLocationVisibility.isPending}
       />
-    </div>
+    </SectionPanel>
   );
 }

@@ -18,6 +18,7 @@ import {
   useSetNPCLocationPresenceVisibility,
 } from '@/features/npcs/api/queries';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
+import { SectionPanel } from '@/shared/ui';
 import type { Location } from '@/entities/location';
 import type { NPC } from '@/entities/npc';
 
@@ -68,24 +69,19 @@ export function LocationNpcsSection({ campaignId, location, isGm, enabled, party
   };
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel
+      title={t('section_npcs_here')}
+      action={isGm ? (
+        <button
+          onClick={() => { setAddNpcOpen((v) => !v); setAddNpcSearch(''); }}
+          className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+        >
+          <span className="material-symbols-outlined text-[13px]">person_add</span>
+          {t('sessions:add')}
+        </button>
+      ) : undefined}
+    >
       <section className="space-y-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-            {t('section_npcs_here')}
-          </h2>
-          <div className="h-px flex-1 bg-outline-variant/20" />
-          {isGm && (
-            <button
-              onClick={() => { setAddNpcOpen((v) => !v); setAddNpcSearch(''); }}
-              className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-            >
-              <span className="material-symbols-outlined text-[13px]">person_add</span>
-              {t('sessions:add')}
-            </button>
-          )}
-        </div>
-
         {/* NPC picker */}
         {addNpcOpen && (() => {
           const candidates = (allNpcs ?? []).filter(
@@ -263,6 +259,6 @@ export function LocationNpcsSection({ campaignId, location, isGm, enabled, party
           </div>
         ) : null}
       </section>
-    </div>
+    </SectionPanel>
   );
 }

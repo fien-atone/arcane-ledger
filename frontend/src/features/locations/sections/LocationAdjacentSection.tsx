@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocations } from '@/features/locations/api';
 import { useLocationTypes } from '@/features/locationTypes';
 import { CATEGORY_HEX_COLOR } from '@/entities/locationType';
+import { SectionPanel } from '@/shared/ui';
 import type { Location } from '@/entities/location';
 
 interface Props {
@@ -33,14 +34,8 @@ export function LocationAdjacentSection({ campaignId, location, locationTypesEna
   if (adjacentLocations.length === 0) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <section className="space-y-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-            {t('adjacent_reachable')}
-          </h2>
-          <div className="h-px flex-1 bg-outline-variant/20" />
-        </div>
+    <SectionPanel title={t('adjacent_reachable')}>
+      <section>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {adjacentLocations.map((adj) => {
             const te = locationTypesEnabled ? typeMap.get(adj.type) : undefined;
@@ -74,6 +69,6 @@ export function LocationAdjacentSection({ campaignId, location, locationTypesEna
           })}
         </div>
       </section>
-    </div>
+    </SectionPanel>
   );
 }

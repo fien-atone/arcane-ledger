@@ -6,6 +6,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useSessions } from '@/features/sessions/api/queries';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   campaignId: string;
@@ -32,19 +33,17 @@ export function DashboardRecentSessionsSection({ campaignId }: Props) {
   const lastSessions = sorted.filter((s) => s.id !== nextSession?.id).slice(0, 5);
 
   return (
-    <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-5">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-          {t('dashboard.recent_sessions')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
+    <SectionPanel
+      title={t('dashboard.recent_sessions')}
+      action={
         <Link
           to={`/campaigns/${campaignId}/sessions`}
           className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
         >
           {t('dashboard.all_sessions')}
         </Link>
-      </div>
+      }
+    >
       {lastSessions.length > 0 ? (
         <div className="space-y-2">
           {lastSessions.map((session) => (
@@ -76,6 +75,6 @@ export function DashboardRecentSessionsSection({ campaignId }: Props) {
       ) : (
         <p className="text-xs text-on-surface-variant/40 italic">{t('dashboard.no_sessions_recorded')}</p>
       )}
-    </section>
+    </SectionPanel>
   );
 }

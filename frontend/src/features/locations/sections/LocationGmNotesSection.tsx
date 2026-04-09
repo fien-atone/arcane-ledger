@@ -4,7 +4,7 @@
  * Returns null for non-GM viewers, matching the original page behavior.
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionPanel } from '@/shared/ui';
 import type { Location } from '@/entities/location';
 
 interface Props {
@@ -18,13 +18,13 @@ export function LocationGmNotesSection({ location, isGm, onSaveField }: Props) {
   if (!isGm) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <InlineRichField
         label={t('section_gm_notes')}
         value={location.gmNotes}
         onSave={(html) => onSaveField('gmNotes', html)}
         isGmNotes
       />
-    </div>
+    </SectionPanel>
   );
 }

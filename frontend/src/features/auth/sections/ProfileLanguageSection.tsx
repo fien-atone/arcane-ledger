@@ -5,7 +5,7 @@
  * i18next directly. No server persistence — language is a client pref.
  */
 import { useTranslation } from 'react-i18next';
-import { Select } from '@/shared/ui';
+import { Select, SectionPanel } from '@/shared/ui';
 
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
@@ -19,13 +19,7 @@ export function ProfileLanguageSection() {
   const { t, i18n } = useTranslation('profile');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
-      <div className="flex items-center gap-4 mb-4">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-          {t('language')}
-        </h3>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-      </div>
+    <SectionPanel size="sm" title={t('language')} className="mb-8">
       <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6">
         <label className={labelCls}>{t('language_label')}</label>
         <div className="max-w-xs">
@@ -36,6 +30,6 @@ export function ProfileLanguageSection() {
           />
         </div>
       </div>
-    </div>
+    </SectionPanel>
   );
 }

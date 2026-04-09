@@ -4,6 +4,7 @@
  * CTA. Presentation-only; the drawer open state lives in the page hook.
  */
 import { useTranslation } from 'react-i18next';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   onCreate: () => void;
@@ -13,7 +14,7 @@ export function CampaignsHeroSection({ onCreate }: Props) {
   const { t } = useTranslation('campaigns');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+    <SectionPanel className="mb-8">
       <div className="flex items-baseline justify-between">
         <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
           {t('my_campaigns')}
@@ -26,6 +27,6 @@ export function CampaignsHeroSection({ onCreate }: Props) {
           {t('create_campaign')}
         </button>
       </div>
-    </div>
+    </SectionPanel>
   );
 }

@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useChangePassword } from '@/features/auth/api/queries';
+import { SectionPanel } from '@/shared/ui';
 
 const labelCls =
   'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
@@ -57,14 +58,7 @@ export function ProfilePasswordSection() {
   };
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
-      <div className="flex items-center gap-4 mb-4">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-          {t('change_password')}
-        </h3>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-      </div>
-
+    <SectionPanel size="sm" title={t('change_password')} className="mb-8">
       <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6 space-y-5">
         <div>
           <label className={labelCls}>{t('current_password_label')}</label>
@@ -126,6 +120,6 @@ export function ProfilePasswordSection() {
           </button>
         </div>
       </div>
-    </div>
+    </SectionPanel>
   );
 }
