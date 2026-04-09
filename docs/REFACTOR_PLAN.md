@@ -259,9 +259,9 @@ One abstraction = one branch = one PR. Run full build + tests before each merge.
 |---|---|---|---|---|
 | 1 | `refactor/section-panel` | `<SectionPanel title action>` in `shared/ui/` | 62 migrated, 8 excluded (bespoke heroes) | ✅ done — −108 LoC, +7 tests |
 | 2 | `refactor/inline-confirm` | `useInlineConfirm()` hook + `<InlineConfirm>` in `shared/ui/` | 16 migrated, 4 excluded | ✅ done — −92 LoC in sections, +13 tests |
-| 3 | `refactor/form-constants` | `LABEL_CLS` / `INPUT_CLS` / `toArray` / `fromArray` in `shared/ui/form.ts` | 15 files | pending |
-| 4 | `refactor/form-drawer` | Compound `<FormDrawer>` + `<FormDrawer.Field>` in `shared/ui/` | 11 drawers | pending |
-| 5 | `refactor/linked-entity-hook` | `useLinkedEntityList()` hook (JSX stays per-section) | 8 linked sections | pending |
+| 3 | `refactor/form-constants` | `LABEL_CLS` / `INPUT_CLS` / `toArray` / `fromArray` in `shared/ui/form.ts` | 15 migrated, 2 excluded | ✅ done — −80 LoC |
+| 4 | `refactor/form-drawer` | Compound `<FormDrawer>` + Header/Body/Footer subcomponents | 11 drawers, 1 excluded (ManageSectionsDrawer) | ✅ done — −182 LoC, +17 tests |
+| 5 | `refactor/linked-entity-hook` | `useLinkedEntityList()` hook (JSX stays per-section) | 8 linked sections | ✅ done — +11 tests, unified picker state |
 | 6 | (deferred) | `useEntityListPage<T>` | 11 list hooks | blocked by F-11 |
 | ~~7~~ | — | ~~`useEntityDetail<T>` generic~~ | — | dropped (low gain) |
 

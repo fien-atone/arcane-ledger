@@ -13,8 +13,9 @@ import {
   useRemoveNPCLocationPresence,
   useSetNPCLocationPresenceVisibility,
 } from '@/features/npcs/api/queries';
-import { LocationIcon, InlineConfirm, useInlineConfirm } from '@/shared/ui';
-import type { NPC } from '@/entities/npc';
+import { LocationIcon, InlineConfirm } from '@/shared/ui';
+import { useLinkedEntityList } from '@/shared/hooks';
+import type { NPC, NPCLocationPresence } from '@/entities/npc';
 
 interface Props {
   campaignId: string;
@@ -32,34 +33,35 @@ export function NpcLocationsSection({ campaignId, npc, isGm, enabled, partyEnabl
   const removeLocationPresence = useRemoveNPCLocationPresence();
   const setLocationPresenceVisibility = useSetNPCLocationPresenceVisibility();
 
-  const [addLocSearch, setAddLocSearch] = useState('');
-  const [addLocOpen, setAddLocOpen] = useState(false);
-  const confirmRemove = useInlineConfirm<string>();
   const [editingNoteForLocId, setEditingNoteForLocId] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
 
+  const presences = npc.locationPresences ?? [];
+  const picker = useLinkedEntityList<NPCLocationPresence, NonNullable<typeof allLocations>[number]>({
+    linked: presences,
+    candidates: allLocations ?? [],
+    getCandidateId: (l) => l.id,
+    getCandidateSearchText: (l) => l.name,
+    getLinkedId: (p) => p.locationId,
+  });
+
   if (!enabled) return null;
 
-  const presences = npc.locationPresences ?? [];
   const linkedLocations = presences
     .map((p) => allLocations?.find((l) => l.id === p.locationId))
     .filter(Boolean)
     .sort((a, b) => a!.name.localeCompare(b!.name)) as NonNullable<typeof allLocations>[number][];
 
-  const availableToAdd = (allLocations ?? [])
-    .filter((l) => !presences.some((p) => p.locationId === l.id))
-    .filter((l) => !addLocSearch.trim() || l.name.toLowerCase().includes(addLocSearch.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const availableToAdd = [...picker.availableFiltered].sort((a, b) => a.name.localeCompare(b.name));
 
   const handleAddLocation = (locId: string) => {
     addLocationPresence.mutate({ npcId: npc.id, locationId: locId });
-    setAddLocOpen(false);
-    setAddLocSearch('');
+    picker.closePicker();
   };
 
   const handleRemoveLocation = (locId: string) => {
     removeLocationPresence.mutate({ npcId: npc.id, locationId: locId });
-    confirmRemove.cancel();
+    picker.cancelRemove();
   };
 
   const handleSaveNote = (locId: string, note: string) => {
@@ -76,7 +78,7 @@ export function NpcLocationsSection({ campaignId, npc, isGm, enabled, partyEnabl
         <div className="h-px flex-1 bg-outline-variant/20" />
         {isGm && (
           <button
-            onClick={() => { setAddLocOpen((v) => !v); setAddLocSearch(''); }}
+            onClick={() => (picker.pickerOpen ? picker.closePicker() : picker.openPicker())}
             className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
           >
             <span className="material-symbols-outlined text-[13px]">add_location</span>
@@ -85,15 +87,15 @@ export function NpcLocationsSection({ campaignId, npc, isGm, enabled, partyEnabl
         )}
       </div>
 
-      {addLocOpen && (
+      {picker.pickerOpen && (
         <div className="border border-outline-variant/20 bg-surface-container-low">
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[14px]">search</span>
             <input
               autoFocus
               type="text"
-              value={addLocSearch}
-              onChange={(e) => setAddLocSearch(e.target.value)}
+              value={picker.search}
+              onChange={(e) => picker.setSearch(e.target.value)}
               placeholder={t('search_locations')}
               className="w-full pl-8 pr-3 py-2 bg-transparent border-b border-outline-variant/20 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none"
             />
@@ -115,7 +117,7 @@ export function NpcLocationsSection({ campaignId, npc, isGm, enabled, partyEnabl
         </div>
       )}
 
-      {linkedLocations.length === 0 && !addLocOpen ? (
+      {linkedLocations.length === 0 && !picker.pickerOpen ? (
         <p className="text-xs text-on-surface-variant/40 italic">{t('no_locations_linked')}</p>
       ) : linkedLocations.length > 0 ? (
         <div className="space-y-2">
@@ -139,15 +141,15 @@ export function NpcLocationsSection({ campaignId, npc, isGm, enabled, partyEnabl
                       arrow_forward
                     </span>
                   </Link>
-                  {isGm && (confirmRemove.isAsking(loc.id) ? (
+                  {isGm && (picker.isAskingRemove(loc.id) ? (
                     <InlineConfirm
                       label={t('confirm_remove')}
                       onYes={() => handleRemoveLocation(loc.id)}
-                      onNo={confirmRemove.cancel}
+                      onNo={picker.cancelRemove}
                     />
                   ) : (
                     <button
-                      onClick={() => confirmRemove.ask(loc.id)}
+                      onClick={() => picker.askRemove(loc.id)}
                       title={t('confirm_remove')}
                       className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                     >
