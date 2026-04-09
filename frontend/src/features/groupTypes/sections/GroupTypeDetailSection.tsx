@@ -7,9 +7,9 @@
  * the onEdit callback. Delete uses an inline yes/no confirm and reports
  * successful deletion via onDeleted so the page can clear selection.
  */
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import { useSaveGroupType, useDeleteGroupType } from '@/features/groupTypes/api';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
@@ -22,7 +22,7 @@ interface Props {
 
 export function GroupTypeDetailSection({ campaignId, entry, onEdit, onDeleted }: Props) {
   const { t } = useTranslation('groups');
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmDelete = useInlineConfirm<string>();
   const save = useSaveGroupType(campaignId);
   const deleteType = useDeleteGroupType();
 
@@ -35,7 +35,7 @@ export function GroupTypeDetailSection({ campaignId, entry, onEdit, onDeleted }:
 
   const handleDelete = () => {
     deleteType.mutate(entry.id, { onSuccess: () => onDeleted() });
-    setConfirmDelete(false);
+    confirmDelete.cancel();
   };
 
   return (
@@ -43,25 +43,16 @@ export function GroupTypeDetailSection({ campaignId, entry, onEdit, onDeleted }:
       <div className="px-8 md:px-12 py-8 flex flex-col gap-8">
         {/* Action buttons */}
         <div className="flex items-center justify-end gap-2">
-          {confirmDelete ? (
-            <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-              <span className="text-[10px] text-on-surface-variant">{t('types_delete_confirm')}</span>
-              <button
-                onClick={handleDelete}
-                className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
-              >
-                {t('confirm_yes')}
-              </button>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="px-2 py-0.5 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-              >
-                {t('confirm_no')}
-              </button>
-            </div>
+          {confirmDelete.isAsking(entry.id) ? (
+            <InlineConfirm
+              variant="hero"
+              label={t('types_delete_confirm')}
+              onYes={handleDelete}
+              onNo={confirmDelete.cancel}
+            />
           ) : (
             <button
-              onClick={() => setConfirmDelete(true)}
+              onClick={() => confirmDelete.ask(entry.id)}
               className="inline-flex items-center gap-1.5 px-3 py-2 border border-outline-variant/20 text-on-surface-variant text-[10px] font-label uppercase tracking-widest rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
             >
               <span className="material-symbols-outlined text-[14px]">delete</span>

@@ -18,7 +18,7 @@ import {
   useSetNPCLocationPresenceVisibility,
 } from '@/features/npcs/api/queries';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
-import { SectionPanel } from '@/shared/ui';
+import { SectionPanel, InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import type { Location } from '@/entities/location';
 import type { NPC } from '@/entities/npc';
 
@@ -40,7 +40,7 @@ export function LocationNpcsSection({ campaignId, location, isGm, enabled, party
 
   const [addNpcOpen, setAddNpcOpen] = useState(false);
   const [addNpcSearch, setAddNpcSearch] = useState('');
-  const [confirmRemoveNpcId, setConfirmRemoveNpcId] = useState<string | null>(null);
+  const confirmRemove = useInlineConfirm<string>();
   const [editingNoteForNpcId, setEditingNoteForNpcId] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
 
@@ -168,26 +168,16 @@ export function LocationNpcsSection({ campaignId, location, isGm, enabled, party
                         arrow_forward
                       </span>
                     </Link>
-                    {isGm && (confirmRemoveNpcId === npc.id ? (
-                      <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                        <span className="text-[10px] text-on-surface-variant whitespace-nowrap">{t('confirm_delete')}</span>
-                        <button
-                          onClick={() => { handleRemoveNpc(npc); setConfirmRemoveNpcId(null); }}
-                          disabled={saveNpc.isPending}
-                          className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors disabled:opacity-40"
-                        >
-                          {t('confirm_yes')}
-                        </button>
-                        <button
-                          onClick={() => setConfirmRemoveNpcId(null)}
-                          className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-                        >
-                          {t('confirm_no')}
-                        </button>
-                      </div>
+                    {isGm && (confirmRemove.isAsking(npc.id) ? (
+                      <InlineConfirm
+                        label={t('confirm_delete')}
+                        onYes={() => { handleRemoveNpc(npc); confirmRemove.cancel(); }}
+                        onNo={confirmRemove.cancel}
+                        yesDisabled={saveNpc.isPending}
+                      />
                     ) : (
                       <button
-                        onClick={() => setConfirmRemoveNpcId(npc.id)}
+                        onClick={() => confirmRemove.ask(npc.id)}
                         title={t('remove_from_location')}
                         className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                       >

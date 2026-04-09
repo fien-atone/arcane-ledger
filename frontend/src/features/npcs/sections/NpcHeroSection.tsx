@@ -4,7 +4,7 @@
  */
 import { memo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ImageUpload } from '@/shared/ui';
+import { ImageUpload, InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { NpcEditDrawer } from '@/features/npcs/ui';
 import { NpcIdentityPills, NpcAliasList } from './NpcIdentitySection';
@@ -43,7 +43,7 @@ const NpcPortrait = memo(function NpcPortrait({ image, name }: { image?: string 
 export function NpcHeroSection({ campaignId, npc, isGm, speciesEnabled, imgVersion, onUploadImage, onDelete }: Props) {
   const { t } = useTranslation('npcs');
   const [editOpen, setEditOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmDelete = useInlineConfirm<string>();
   const [lightbox, setLightbox] = useState(false);
 
   const handleViewImage = useCallback(() => setLightbox(true), []);
@@ -70,16 +70,15 @@ export function NpcHeroSection({ campaignId, npc, isGm, speciesEnabled, imgVersi
           <NpcIdentityPills campaignId={campaignId} npc={npc} speciesEnabled={speciesEnabled} />
           {isGm && (
             <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
-              {confirmDelete ? (
-                <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                  <span className="text-[9px] text-on-surface-variant">{t('confirm_delete')}</span>
-                  <button onClick={onDelete}
-                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
-                  <button onClick={() => setConfirmDelete(false)}
-                    className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
-                </div>
+              {confirmDelete.isAsking(npc.id) ? (
+                <InlineConfirm
+                  variant="hero"
+                  label={t('confirm_delete')}
+                  onYes={onDelete}
+                  onNo={confirmDelete.cancel}
+                />
               ) : (
-                <button onClick={() => setConfirmDelete(true)}
+                <button onClick={() => confirmDelete.ask(npc.id)}
                   className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
                   <span className="material-symbols-outlined text-sm">delete</span>
                 </button>

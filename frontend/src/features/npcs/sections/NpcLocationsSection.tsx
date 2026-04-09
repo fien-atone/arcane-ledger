@@ -13,7 +13,7 @@ import {
   useRemoveNPCLocationPresence,
   useSetNPCLocationPresenceVisibility,
 } from '@/features/npcs/api/queries';
-import { LocationIcon } from '@/shared/ui';
+import { LocationIcon, InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import type { NPC } from '@/entities/npc';
 
 interface Props {
@@ -34,7 +34,7 @@ export function NpcLocationsSection({ campaignId, npc, isGm, enabled, partyEnabl
 
   const [addLocSearch, setAddLocSearch] = useState('');
   const [addLocOpen, setAddLocOpen] = useState(false);
-  const [confirmRemoveLocId, setConfirmRemoveLocId] = useState<string | null>(null);
+  const confirmRemove = useInlineConfirm<string>();
   const [editingNoteForLocId, setEditingNoteForLocId] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
 
@@ -59,7 +59,7 @@ export function NpcLocationsSection({ campaignId, npc, isGm, enabled, partyEnabl
 
   const handleRemoveLocation = (locId: string) => {
     removeLocationPresence.mutate({ npcId: npc.id, locationId: locId });
-    setConfirmRemoveLocId(null);
+    confirmRemove.cancel();
   };
 
   const handleSaveNote = (locId: string, note: string) => {
@@ -139,25 +139,15 @@ export function NpcLocationsSection({ campaignId, npc, isGm, enabled, partyEnabl
                       arrow_forward
                     </span>
                   </Link>
-                  {isGm && (confirmRemoveLocId === loc.id ? (
-                    <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                      <span className="text-[10px] text-on-surface-variant whitespace-nowrap">{t('confirm_remove')}</span>
-                      <button
-                        onClick={() => handleRemoveLocation(loc.id)}
-                        className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
-                      >
-                        {t('confirm_yes')}
-                      </button>
-                      <button
-                        onClick={() => setConfirmRemoveLocId(null)}
-                        className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-                      >
-                        {t('confirm_no')}
-                      </button>
-                    </div>
+                  {isGm && (confirmRemove.isAsking(loc.id) ? (
+                    <InlineConfirm
+                      label={t('confirm_remove')}
+                      onYes={() => handleRemoveLocation(loc.id)}
+                      onNo={confirmRemove.cancel}
+                    />
                   ) : (
                     <button
-                      onClick={() => setConfirmRemoveLocId(loc.id)}
+                      onClick={() => confirmRemove.ask(loc.id)}
                       title={t('confirm_remove')}
                       className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                     >

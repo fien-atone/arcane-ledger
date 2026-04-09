@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useNpcs, useSetNpcVisibility } from '@/features/npcs/api/queries';
 import { useSaveSession } from '@/features/sessions/api/queries';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
-import { SectionPanel } from '@/shared/ui';
+import { SectionPanel, InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 interface Props {
@@ -33,7 +33,7 @@ export function SessionNpcsSection({ campaignId, session, isGm, partyEnabled }: 
 
   const [npcSearch, setNpcSearch] = useState('');
   const [npcSearchOpen, setNpcSearchOpen] = useState(false);
-  const [confirmRemoveNpcId, setConfirmRemoveNpcId] = useState<string | null>(null);
+  const confirmRemove = useInlineConfirm<string>();
 
   const npcIds = session.npcIds ?? [];
   const linked = [...(session.npcs ?? [])].sort((a, b) => a.name.localeCompare(b.name));
@@ -50,7 +50,7 @@ export function SessionNpcsSection({ campaignId, session, isGm, partyEnabled }: 
   };
   const removeNpc = async (id: string) => {
     await saveSession.mutate({ ...session, npcIds: npcIds.filter((x) => x !== id) }, { only: 'npcIds' });
-    setConfirmRemoveNpcId(null);
+    confirmRemove.cancel();
   };
 
   return (
@@ -135,14 +135,14 @@ export function SessionNpcsSection({ campaignId, session, isGm, partyEnabled }: 
                       </span>
                     </button>
                   )}
-                  {isGm && (confirmRemoveNpcId === npc.id ? (
-                    <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                      <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>
-                      <button onClick={() => removeNpc(npc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
-                      <button onClick={() => setConfirmRemoveNpcId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
-                    </div>
+                  {isGm && (confirmRemove.isAsking(npc.id) ? (
+                    <InlineConfirm
+                      label={t('confirm_remove')}
+                      onYes={() => removeNpc(npc.id)}
+                      onNo={confirmRemove.cancel}
+                    />
                   ) : (
-                    <button onClick={() => setConfirmRemoveNpcId(npc.id)} title={t('remove_from_session')}
+                    <button onClick={() => confirmRemove.ask(npc.id)} title={t('remove_from_session')}
                       className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                       <span className="material-symbols-outlined text-[14px]">person_remove</span>
                     </button>

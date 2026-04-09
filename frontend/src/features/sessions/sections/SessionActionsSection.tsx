@@ -11,6 +11,7 @@
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 interface Props {
@@ -67,7 +68,7 @@ function downloadIcs(title: string, datetime: string, description?: string) {
 export function SessionActionsSection({ session, isGm, campaignTitle, onEdit, onDelete }: Props) {
   const { t } = useTranslation('sessions');
   const [calMenuOpen, setCalMenuOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmDelete = useInlineConfirm<string>();
 
   const calTitle = `${campaignTitle ? campaignTitle + ' — ' : ''}Session #${session.number}`;
 
@@ -108,25 +109,16 @@ export function SessionActionsSection({ session, isGm, campaignTitle, onEdit, on
       )}
       {isGm && (
         <>
-          {confirmDelete ? (
-            <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-              <span className="text-[9px] text-on-surface-variant">{t('confirm_delete')}</span>
-              <button
-                onClick={onDelete}
-                className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
-              >
-                {t('confirm_yes')}
-              </button>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-              >
-                {t('confirm_no')}
-              </button>
-            </div>
+          {confirmDelete.isAsking(session.id) ? (
+            <InlineConfirm
+              variant="hero"
+              label={t('confirm_delete')}
+              onYes={onDelete}
+              onNo={confirmDelete.cancel}
+            />
           ) : (
             <button
-              onClick={() => setConfirmDelete(true)}
+              onClick={() => confirmDelete.ask(session.id)}
               className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors"
             >
               <span className="material-symbols-outlined text-sm">delete</span>

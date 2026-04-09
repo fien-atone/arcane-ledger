@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGroupTypes } from '@/features/groupTypes';
 import { GroupEditDrawer } from '@/features/groups/ui';
+import { InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import type { Group } from '@/entities/group';
 
 interface Props {
@@ -22,7 +23,7 @@ export function GroupHeroSection({ campaignId, group, isGm, groupTypesEnabled, o
   const { t } = useTranslation('groups');
   const { data: groupTypes } = useGroupTypes(campaignId);
   const [editOpen, setEditOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmDelete = useInlineConfirm<string>();
 
   const tc = groupTypes?.find((gt) => gt.id === group.type) ?? { name: group.type ?? '', icon: 'category' };
 
@@ -54,16 +55,15 @@ export function GroupHeroSection({ campaignId, group, isGm, groupTypesEnabled, o
 
         {isGm && (
           <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
-            {confirmDelete ? (
-              <div className="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm">
-                <span className="text-[9px] text-on-surface-variant">{t('confirm_delete')}</span>
-                <button onClick={onDelete}
-                  className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
-                <button onClick={() => setConfirmDelete(false)}
-                  className="px-1.5 py-0.5 text-[9px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
-              </div>
+            {confirmDelete.isAsking(group.id) ? (
+              <InlineConfirm
+                variant="hero"
+                label={t('confirm_delete')}
+                onYes={onDelete}
+                onNo={confirmDelete.cancel}
+              />
             ) : (
-              <button onClick={() => setConfirmDelete(true)}
+              <button onClick={() => confirmDelete.ask(group.id)}
                 className="p-2 border border-outline-variant/30 text-on-surface-variant/40 rounded-sm hover:text-error hover:border-error/30 hover:bg-error/5 transition-colors">
                 <span className="material-symbols-outlined text-sm">delete</span>
               </button>

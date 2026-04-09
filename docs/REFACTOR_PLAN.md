@@ -257,7 +257,7 @@ One abstraction = one branch = one PR. Run full build + tests before each merge.
 
 | # | Branch | Abstraction | Call sites to migrate | Status |
 |---|---|---|---|---|
-| 1 | `refactor/section-panel` | `<SectionPanel title action>` in `shared/ui/` | 83 sections | pending |
+| 1 | `refactor/section-panel` | `<SectionPanel title action>` in `shared/ui/` | 62 migrated, 8 excluded (bespoke heroes) | ✅ done — −108 LoC, +7 tests |
 | 2 | `refactor/inline-confirm` | `useInlineConfirm()` hook + `<InlineConfirm>` in `shared/ui/` | 19 sections | pending |
 | 3 | `refactor/form-constants` | `LABEL_CLS` / `INPUT_CLS` / `toArray` / `fromArray` in `shared/ui/form.ts` | 15 files | pending |
 | 4 | `refactor/form-drawer` | Compound `<FormDrawer>` + `<FormDrawer.Field>` in `shared/ui/` | 11 drawers | pending |
