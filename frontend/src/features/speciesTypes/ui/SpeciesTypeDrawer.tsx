@@ -8,7 +8,7 @@
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { IconPicker, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
+import { IconPicker, LABEL_CLS, INPUT_CLS, FormDrawer } from '@/shared/ui';
 import { useSaveSpeciesType } from '@/features/speciesTypes/api';
 import type { SpeciesTypeEntry } from '@/entities/speciesType';
 
@@ -42,8 +42,6 @@ export function SpeciesTypeDrawer({ open, onClose, onSaved, campaignId, entry }:
     }
   }
 
-  if (!open) return null;
-
   const handleSave = () => {
     if (!name.trim()) return;
     save.mutate(
@@ -64,21 +62,12 @@ export function SpeciesTypeDrawer({ open, onClose, onSaved, campaignId, entry }:
   };
 
   return (
-    <>
-      <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-70 w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
-        <div className="flex items-center justify-between px-8 py-5 border-b border-outline-variant/10 flex-shrink-0">
-          <h2 className="text-lg font-headline font-bold text-on-surface">
-            {isNew ? t('types_drawer_new_title') : t('types_drawer_edit_title')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors"
-          >
-            <span className="material-symbols-outlined text-xl">close</span>
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
+    <FormDrawer open={open} onClose={onClose}>
+      <FormDrawer.Header
+        title={isNew ? t('types_drawer_new_title') : t('types_drawer_edit_title')}
+        onClose={onClose}
+      />
+      <FormDrawer.Body>
           <div>
             <label className={LABEL_CLS}>
               {t('types_field_name')} <span className="text-primary">*</span>
@@ -95,23 +84,15 @@ export function SpeciesTypeDrawer({ open, onClose, onSaved, campaignId, entry }:
             <label className={LABEL_CLS}>{t('types_field_icon')}</label>
             <IconPicker value={icon} onChange={setIcon} />
           </div>
-        </div>
-        <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container-lowest">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:border-primary/50 transition-colors"
-          >
-            {t('types_cancel')}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!name.trim() || save.isPending}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-          >
-            {isNew ? t('types_create') : t('types_save')}
-          </button>
-        </div>
-      </div>
-    </>
+      </FormDrawer.Body>
+      <FormDrawer.Footer
+        onCancel={onClose}
+        onSave={handleSave}
+        saving={save.isPending}
+        saveDisabled={!name.trim()}
+        cancelLabel={t('types_cancel')}
+        saveLabel={isNew ? t('types_create') : t('types_save')}
+      />
+    </FormDrawer>
   );
 }

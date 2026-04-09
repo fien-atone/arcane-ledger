@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCreateCampaign } from '../api/queries';
-import { RichTextEditor, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
+import { RichTextEditor, LABEL_CLS, INPUT_CLS, FormDrawer } from '@/shared/ui';
 import type { CampaignSummary } from '@/entities/campaign';
 
 interface Props {
@@ -16,8 +16,6 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
   const create = useCreateCampaign();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-
-  if (!open) return null;
 
   const handleSave = () => {
     if (!title.trim()) return;
@@ -42,23 +40,13 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
   };
 
   return (
-    <>
-      <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-70 w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-outline-variant/10 flex-shrink-0">
-          <div>
-            <h2 className="font-headline text-lg font-bold text-on-surface">{t('create_drawer.title')}</h2>
-            <p className="text-xs text-on-surface-variant/50 mt-0.5">{t('create_drawer.subtitle')}</p>
-          </div>
-          <button onClick={onClose} className="p-1 text-on-surface-variant/50 hover:text-on-surface transition-colors">
-            <span className="material-symbols-outlined text-xl">close</span>
-          </button>
-        </div>
-
-        {/* Form */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
+    <FormDrawer open={open} onClose={onClose}>
+      <FormDrawer.Header
+        title={t('create_drawer.title')}
+        subtitle={t('create_drawer.subtitle')}
+        onClose={onClose}
+      />
+      <FormDrawer.Body>
           <div>
             <label className={LABEL_CLS}>{t('create_drawer.title_label')} <span className="text-primary">*</span></label>
             <input
@@ -80,28 +68,15 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
               minHeight="6rem"
             />
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container-lowest">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant/30 text-primary text-xs font-label uppercase tracking-widest rounded-sm hover:border-primary/50 transition-colors"
-          >
-            {t('create_drawer.cancel')}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!title.trim() || create.isPending}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-          >
-            {create.isPending
-              ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-              : <span className="material-symbols-outlined text-sm">add</span>}
-            {t('create_drawer.create')}
-          </button>
-        </div>
-      </div>
-    </>
+      </FormDrawer.Body>
+      <FormDrawer.Footer
+        onCancel={onClose}
+        onSave={handleSave}
+        saving={create.isPending}
+        saveDisabled={!title.trim()}
+        cancelLabel={t('create_drawer.cancel')}
+        saveLabel={t('create_drawer.create')}
+      />
+    </FormDrawer>
   );
 }
