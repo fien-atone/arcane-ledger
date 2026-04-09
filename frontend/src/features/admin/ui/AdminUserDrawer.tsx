@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCreateUser, useUpdateUser } from '@/features/admin/api/queries';
-import { Select, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
+import { Select, LABEL_CLS, INPUT_CLS, FormDrawer } from '@/shared/ui';
 import type { User } from '@/entities/user';
 
 interface Props {
@@ -72,36 +72,14 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
     }
   };
 
-  if (!open) return null;
-
   return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-
-      {/* Drawer */}
-      <div className="fixed inset-y-0 right-0 z-70 w-full max-w-lg flex flex-col bg-surface shadow-2xl border-l border-outline-variant/20">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10 flex-shrink-0">
-          <div>
-            <h2 className="font-headline text-xl font-bold text-on-surface">
-              {isEdit ? t('edit_user_title') : t('create_user_title')}
-            </h2>
-            <p className="text-[11px] text-on-surface-variant uppercase tracking-widest mt-0.5">
-              {isEdit ? user.name : t('add_user_subtitle')}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-on-surface-variant hover:text-on-surface transition-colors"
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        {/* Form body */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
+    <FormDrawer open={open} onClose={onClose}>
+      <FormDrawer.Header
+        title={isEdit ? t('edit_user_title') : t('create_user_title')}
+        subtitle={isEdit ? user.name : t('add_user_subtitle')}
+        onClose={onClose}
+      />
+      <FormDrawer.Body>
           {/* Name */}
           <div>
             <label className={LABEL_CLS}>
@@ -155,30 +133,15 @@ export function AdminUserDrawer({ open, onClose, user }: Props) {
               onChange={(v) => setRole(v || 'USER')}
             />
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container-lowest">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 text-xs font-label uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
-          >
-            {t('cancel')}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!canSave || isPending}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary text-xs font-label uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-          >
-            {isPending ? (
-              <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-            ) : (
-              <span className="material-symbols-outlined text-sm">save</span>
-            )}
-            {isEdit ? t('save_changes') : t('create_user')}
-          </button>
-        </div>
-      </div>
-    </>
+      </FormDrawer.Body>
+      <FormDrawer.Footer
+        onCancel={onClose}
+        onSave={handleSave}
+        saving={isPending}
+        saveDisabled={!canSave}
+        cancelLabel={t('cancel')}
+        saveLabel={isEdit ? t('save_changes') : t('create_user')}
+      />
+    </FormDrawer>
   );
 }

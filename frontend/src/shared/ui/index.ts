@@ -28,3 +28,4 @@ export { InlineConfirm } from './InlineConfirm';
 export { useInlineConfirm } from './useInlineConfirm';
 export type { InlineConfirmState } from './useInlineConfirm';
 export { LABEL_CLS, INPUT_CLS, toArray, fromArray } from './form';
+export { FormDrawer } from './FormDrawer';
