@@ -8,13 +8,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useChangePassword } from '@/features/auth/api/queries';
-import { SectionPanel } from '@/shared/ui';
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
-
-const inputCls =
-  'w-full bg-surface-container border border-outline-variant/20 text-on-surface text-sm rounded-sm py-2.5 px-3 focus:border-primary focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
+import { SectionPanel, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 
 export function ProfilePasswordSection() {
   const { t } = useTranslation('profile');
@@ -61,34 +55,34 @@ export function ProfilePasswordSection() {
     <SectionPanel size="sm" title={t('change_password')} className="mb-8">
       <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6 space-y-5">
         <div>
-          <label className={labelCls}>{t('current_password_label')}</label>
+          <label className={LABEL_CLS}>{t('current_password_label')}</label>
           <input
             type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className={inputCls}
+            className={INPUT_CLS}
             placeholder={t('current_password_placeholder')}
           />
         </div>
 
         <div>
-          <label className={labelCls}>{t('new_password_label')}</label>
+          <label className={LABEL_CLS}>{t('new_password_label')}</label>
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className={inputCls}
+            className={INPUT_CLS}
             placeholder={t('new_password_placeholder')}
           />
         </div>
 
         <div>
-          <label className={labelCls}>{t('confirm_password_label')}</label>
+          <label className={LABEL_CLS}>{t('confirm_password_label')}</label>
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className={inputCls}
+            className={INPUT_CLS}
             placeholder={t('confirm_password_placeholder')}
           />
         </div>

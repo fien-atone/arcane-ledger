@@ -170,7 +170,7 @@ export function DiceRoller() {
         <button
           onClick={() => setOpen(true)}
           title={t('dice_roller.title')}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-xl shadow-primary/25 flex items-center justify-center active:scale-95 transition-all group cursor-pointer"
+          className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-xl shadow-primary/25 flex items-center justify-center active:scale-95 transition-all group cursor-pointer"
         >
           <div className="w-8 h-8 transition-transform duration-700 group-hover:rotate-[360deg]">
             <DieFace die={20} size={32} />

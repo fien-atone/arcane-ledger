@@ -1,15 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSaveGroupType } from '../api';
-import { IconPicker } from '@/shared/ui';
+import { IconPicker, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 import type { GroupTypeEntry } from '@/entities/groupType';
-
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 interface Props {
   open: boolean;
@@ -81,20 +74,20 @@ export function GroupTypeEditDrawer({ open, onClose, onSaved, campaignId, groupT
 
           {/* Name */}
           <div>
-            <label className={labelCls}>{t('types_field_name')} <span className="text-primary">*</span></label>
+            <label className={LABEL_CLS}>{t('types_field_name')} <span className="text-primary">*</span></label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Faction"
-              className={inputCls}
+              className={INPUT_CLS}
               autoFocus
             />
           </div>
 
           {/* Icon picker */}
           <div>
-            <label className={labelCls}>{t('types_field_icon')} <span className="text-primary">*</span></label>
+            <label className={LABEL_CLS}>{t('types_field_icon')} <span className="text-primary">*</span></label>
             <IconPicker value={icon} onChange={setIcon} />
           </div>
 

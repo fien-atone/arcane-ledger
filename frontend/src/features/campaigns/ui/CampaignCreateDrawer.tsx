@@ -2,13 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCreateCampaign } from '../api/queries';
-import { RichTextEditor } from '@/shared/ui';
+import { RichTextEditor, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 import type { CampaignSummary } from '@/entities/campaign';
-
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 interface Props {
   open: boolean;
@@ -65,19 +60,19 @@ export function CampaignCreateDrawer({ open, onClose }: Props) {
         {/* Form */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
           <div>
-            <label className={labelCls}>{t('create_drawer.title_label')} <span className="text-primary">*</span></label>
+            <label className={LABEL_CLS}>{t('create_drawer.title_label')} <span className="text-primary">*</span></label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('create_drawer.title_placeholder')}
-              className={inputCls}
+              className={INPUT_CLS}
               autoFocus
             />
           </div>
 
           <div>
-            <label className={labelCls}>{t('create_drawer.description_label')}</label>
+            <label className={LABEL_CLS}>{t('create_drawer.description_label')}</label>
             <RichTextEditor
               value={description}
               onChange={setDescription}

@@ -5,10 +5,7 @@
  * i18next directly. No server persistence — language is a client pref.
  */
 import { useTranslation } from 'react-i18next';
-import { Select, SectionPanel } from '@/shared/ui';
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
+import { Select, SectionPanel, LABEL_CLS } from '@/shared/ui';
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -21,7 +18,7 @@ export function ProfileLanguageSection() {
   return (
     <SectionPanel size="sm" title={t('language')} className="mb-8">
       <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6">
-        <label className={labelCls}>{t('language_label')}</label>
+        <label className={LABEL_CLS}>{t('language_label')}</label>
         <div className="max-w-xs">
           <Select
             value={i18n.language.startsWith('ru') ? 'ru' : 'en'}

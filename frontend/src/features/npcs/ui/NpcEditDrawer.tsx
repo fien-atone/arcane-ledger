@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSaveNpc } from '@/features/npcs/api';
 import { useSpecies } from '@/features/species/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
-import { Select } from '@/shared/ui';
+import { Select, LABEL_CLS, INPUT_CLS, toArray, fromArray } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { NPC, NpcGender, NpcStatus } from '@/entities/npc';
 
@@ -23,22 +23,6 @@ const GENDER_KEYS: { value: NpcGender; labelKey: string }[] = [
 ];
 
 const now = () => new Date().toISOString();
-
-function toArray(raw: string): string[] {
-  return raw.split(',').map((s) => s.trim()).filter(Boolean);
-}
-function fromArray(arr: string[]): string {
-  return arr.join(', ');
-}
-
-// ── Shared input classes ──────────────────────────────────────────────────────
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
   const { t } = useTranslation('npcs');
@@ -147,7 +131,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
 
           {/* Name */}
           <div>
-            <label className={labelCls}>
+            <label className={LABEL_CLS}>
               {t('field_name')} <span className="text-primary">*</span>
             </label>
             <input
@@ -155,13 +139,13 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t('placeholder_name')}
-              className={inputCls}
+              className={INPUT_CLS}
             />
           </div>
 
           {/* Aliases */}
           <div>
-            <label className={labelCls}>
+            <label className={LABEL_CLS}>
               {t('field_aliases')}
               <span className="normal-case tracking-normal text-on-surface-variant/40 ml-2 font-normal text-[10px]">
                 {t('field_aliases_hint')}
@@ -172,14 +156,14 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
               value={aliases}
               onChange={(e) => setAliases(e.target.value)}
               placeholder={t('placeholder_aliases')}
-              className={inputCls}
+              className={INPUT_CLS}
             />
           </div>
 
           {/* Status / Gender / Age row */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className={labelCls}>{t('field_status')}</label>
+              <label className={LABEL_CLS}>{t('field_status')}</label>
               <Select
                 value={status}
                 options={statusOptions}
@@ -188,7 +172,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
               />
             </div>
             <div>
-              <label className={labelCls}>{t('field_gender')}</label>
+              <label className={LABEL_CLS}>{t('field_gender')}</label>
               <Select<NpcGender | ''>
                 value={gender}
                 options={genderOptions}
@@ -197,14 +181,14 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
               />
             </div>
             <div>
-              <label className={labelCls}>{t('field_age')}</label>
+              <label className={LABEL_CLS}>{t('field_age')}</label>
               <input
                 type="number"
                 min={0}
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
                 placeholder={t('placeholder_age_none')}
-                className={inputCls}
+                className={INPUT_CLS}
               />
             </div>
           </div>
@@ -212,7 +196,7 @@ export function NpcEditDrawer({ open, onClose, campaignId, npc }: Props) {
           {/* Species */}
           {speciesEnabled && (
           <div>
-            <label className={labelCls}>{t('field_species')}</label>
+            <label className={LABEL_CLS}>{t('field_species')}</label>
             <Select
               value={speciesId}
               options={speciesOptions}

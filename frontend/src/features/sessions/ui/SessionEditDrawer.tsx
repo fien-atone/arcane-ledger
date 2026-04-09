@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSessions, useSaveSession } from '@/features/sessions/api/queries';
-import { DatePicker } from '@/shared/ui';
+import { DatePicker, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 interface Props {
@@ -10,12 +10,6 @@ interface Props {
   campaignId: string;
   session?: Session;
 }
-
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 function parseIso(iso: string): { date: string; time: string } {
   if (!iso) return { date: '', time: '' };
@@ -117,45 +111,45 @@ export function SessionEditDrawer({ open, onClose, campaignId, session }: Props)
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
           <div>
-            <label className={labelCls}>{t('field_title')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_title_optional')}</span></label>
+            <label className={LABEL_CLS}>{t('field_title')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_title_optional')}</span></label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('placeholder_title', { number })}
-              className={inputCls}
+              className={INPUT_CLS}
               autoFocus
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>
+              <label className={LABEL_CLS}>
                 {t('field_date')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_date_optional')}</span>
               </label>
               <DatePicker value={date} onChange={setDate} />
             </div>
             <div>
-              <label className={labelCls}>
+              <label className={LABEL_CLS}>
                 {t('field_start_time')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_start_time_optional')}</span>
               </label>
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className={`${inputCls} h-[42px] [color-scheme:dark]`}
+                className={`${INPUT_CLS} h-[42px] [color-scheme:dark]`}
               />
             </div>
           </div>
 
           {isEdit && (
             <div>
-              <label className={labelCls}>{t('field_session_number')}</label>
+              <label className={LABEL_CLS}>{t('field_session_number')}</label>
               <input
                 type="number"
                 min={1}
                 value={number}
                 onChange={(e) => setNumber(Number(e.target.value) || 1)}
-                className={inputCls}
+                className={INPUT_CLS}
               />
             </div>
           )}

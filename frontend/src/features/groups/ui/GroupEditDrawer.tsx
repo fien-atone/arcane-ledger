@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSaveGroup } from '@/features/groups/api';
 import { useGroupTypes } from '@/features/groupTypes';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
-import { Select } from '@/shared/ui';
+import { Select, LABEL_CLS, INPUT_CLS, toArray, fromArray } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui/Select';
 import type { Group } from '@/entities/group';
 
@@ -13,19 +13,6 @@ interface Props {
   campaignId: string;
   group?: Group;
 }
-
-function toArray(raw: string): string[] {
-  return raw.split(',').map((s) => s.trim()).filter(Boolean);
-}
-function fromArray(arr: string[]): string {
-  return arr.join(', ');
-}
-
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
   const { t } = useTranslation('groups');
@@ -96,14 +83,14 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
           <div>
-            <label className={labelCls}>{t('field_name')} <span className="text-primary">*</span></label>
+            <label className={LABEL_CLS}>{t('field_name')} <span className="text-primary">*</span></label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-              placeholder={t('placeholder_name')} className={inputCls} autoFocus />
+              placeholder={t('placeholder_name')} className={INPUT_CLS} autoFocus />
           </div>
 
           {typesEnabled && (
             <div>
-              <label className={labelCls}>{t('field_type')}</label>
+              <label className={LABEL_CLS}>{t('field_type')}</label>
               <Select<string>
                 value={type}
                 options={typeOptions}
@@ -116,9 +103,9 @@ export function GroupEditDrawer({ open, onClose, campaignId, group }: Props) {
           )}
 
           <div>
-            <label className={labelCls}>{t('field_aliases')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_aliases_hint')}</span></label>
+            <label className={LABEL_CLS}>{t('field_aliases')} <span className="text-on-surface-variant/30 normal-case tracking-normal">{t('field_aliases_hint')}</span></label>
             <input type="text" value={aliases} onChange={(e) => setAliases(e.target.value)}
-              placeholder={t('placeholder_aliases')} className={inputCls} />
+              placeholder={t('placeholder_aliases')} className={INPUT_CLS} />
           </div>
         </div>
 

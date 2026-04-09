@@ -5,6 +5,7 @@ import { useSpeciesTypes } from '@/features/speciesTypes/api';
 import { useSectionEnabled } from '@/features/campaigns/api/queries';
 import { Select } from '@/shared/ui/Select';
 import type { SelectOption } from '@/shared/ui/Select';
+import { LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 import type { Species, SpeciesSize } from '@/entities/species';
 
 const SIZE_KEYS: { value: SpeciesSize; labelKey: string }[] = [
@@ -15,12 +16,6 @@ const SIZE_KEYS: { value: SpeciesSize; labelKey: string }[] = [
   { value: 'huge',       labelKey: 'size_huge' },
   { value: 'gargantuan', labelKey: 'size_gargantuan' },
 ];
-
-const inputCls =
-  'w-full bg-surface-container-low border border-outline-variant/25 hover:border-outline-variant/50 focus:border-primary rounded-sm py-2.5 px-3 text-on-surface text-sm focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
 
 interface Props {
   open: boolean;
@@ -112,24 +107,24 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
           {/* Name + Plural */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>{t('field_name')} <span className="text-primary">*</span></label>
+              <label className={LABEL_CLS}>{t('field_name')} <span className="text-primary">*</span></label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t('placeholder_name')}
-                className={inputCls}
+                className={INPUT_CLS}
                 autoFocus
               />
             </div>
             <div>
-              <label className={labelCls}>{t('field_plural')}</label>
+              <label className={LABEL_CLS}>{t('field_plural')}</label>
               <input
                 type="text"
                 value={pluralName}
                 onChange={(e) => setPluralName(e.target.value)}
                 placeholder={t('placeholder_plural')}
-                className={inputCls}
+                className={INPUT_CLS}
               />
             </div>
           </div>
@@ -138,7 +133,7 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
           <div className={`grid gap-4 ${typesEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
             {typesEnabled && (
               <div>
-                <label className={labelCls}>{t('field_type')}</label>
+                <label className={LABEL_CLS}>{t('field_type')}</label>
                 <Select<string>
                   value={type}
                   options={typeOptions}
@@ -148,7 +143,7 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
               </div>
             )}
             <div>
-              <label className={labelCls}>{t('field_size')}</label>
+              <label className={LABEL_CLS}>{t('field_size')}</label>
               <Select
                 value={size}
                 options={sizeOptions}
@@ -160,13 +155,13 @@ export function SpeciesEditDrawer({ open, onClose, campaignId, species }: Props)
 
           {/* Traits */}
           <div>
-            <label className={labelCls}>{t('field_traits')}</label>
+            <label className={LABEL_CLS}>{t('field_traits')}</label>
             <input
               type="text"
               value={traitsRaw}
               onChange={(e) => setTraitsRaw(e.target.value)}
               placeholder={t('placeholder_traits')}
-              className={inputCls}
+              className={INPUT_CLS}
             />
             <p className="text-[10px] text-on-surface-variant/40 mt-1.5">
               {t('field_traits_hint')}

@@ -8,13 +8,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
 import { useUpdateProfile } from '@/features/auth/api/queries';
-import { SectionPanel } from '@/shared/ui';
-
-const labelCls =
-  'block text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-1.5';
-
-const inputCls =
-  'w-full bg-surface-container border border-outline-variant/20 text-on-surface text-sm rounded-sm py-2.5 px-3 focus:border-primary focus:ring-0 focus:outline-none transition-colors placeholder:text-on-surface-variant/30';
+import { SectionPanel, LABEL_CLS, INPUT_CLS } from '@/shared/ui';
 
 const inputDisabledCls =
   'w-full bg-surface-container-low border border-outline-variant/10 text-on-surface-variant/50 text-sm rounded-sm py-2.5 px-3 cursor-not-allowed';
@@ -53,18 +47,18 @@ export function ProfileInfoSection() {
     <SectionPanel size="sm" title={t('profile_information')} className="mb-8">
       <div className="bg-surface-container-low border border-outline-variant/10 rounded-sm p-6 space-y-5">
         <div>
-          <label className={labelCls}>{t('name_label')}</label>
+          <label className={LABEL_CLS}>{t('name_label')}</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={inputCls}
+            className={INPUT_CLS}
             placeholder={t('name_placeholder')}
           />
         </div>
 
         <div>
-          <label className={labelCls}>{t('email_label')}</label>
+          <label className={LABEL_CLS}>{t('email_label')}</label>
           <input
             type="text"
             value={user?.email || ''}
