@@ -24,3 +24,6 @@ export { useToastStore, showToast } from './toastStore';
 export type { Toast, ToastKind } from './toastStore';
 export { GlobalLoadingBar } from './GlobalLoadingBar';
 export { VisibilityPanel } from './VisibilityPanel';
+export { InlineConfirm } from './InlineConfirm';
+export { useInlineConfirm } from './useInlineConfirm';
+export type { InlineConfirmState } from './useInlineConfirm';

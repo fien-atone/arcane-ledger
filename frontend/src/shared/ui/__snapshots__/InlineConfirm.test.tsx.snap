@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`InlineConfirm > matches snapshot for hero variant 1`] = `
+<div
+  class="flex items-center gap-1 px-2 py-1.5 border border-error/30 bg-error/5 rounded-sm"
+>
+  <span
+    class="text-[9px] text-on-surface-variant"
+  >
+    Delete?
+  </span>
+  <button
+    class="font-label uppercase tracking-wider transition-colors disabled:opacity-40 px-1.5 py-0.5 text-[9px] text-error hover:text-on-surface"
+    type="button"
+  >
+    Yes
+  </button>
+  <button
+    class="font-label uppercase tracking-wider transition-colors disabled:opacity-40 px-1.5 py-0.5 text-[9px] text-on-surface-variant hover:text-on-surface"
+    type="button"
+  >
+    No
+  </button>
+</div>
+`;
+
+exports[`InlineConfirm > matches snapshot for row variant 1`] = `
+<div
+  class="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5"
+>
+  <span
+    class="text-[10px] text-on-surface-variant whitespace-nowrap"
+  >
+    Remove?
+  </span>
+  <button
+    class="font-label uppercase tracking-wider transition-colors disabled:opacity-40 px-2 py-1 text-[10px] text-error hover:text-on-surface"
+    type="button"
+  >
+    Yes
+  </button>
+  <button
+    class="font-label uppercase tracking-wider transition-colors disabled:opacity-40 px-2 py-1 text-[10px] text-on-surface-variant hover:text-on-surface"
+    type="button"
+  >
+    No
+  </button>
+</div>
+`;

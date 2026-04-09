@@ -6,9 +6,9 @@
  * description. Name/icon editing is handled via the drawer opened through
  * the onEdit callback. Delete uses an inline yes/no confirm.
  */
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import { useSaveSpeciesType, useDeleteSpeciesType } from '@/features/speciesTypes/api';
 import type { SpeciesTypeEntry } from '@/entities/speciesType';
 
@@ -21,7 +21,7 @@ interface Props {
 
 export function SpeciesTypeDetailSection({ campaignId, entry, onEdit, onDeleted }: Props) {
   const { t } = useTranslation('species');
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmDelete = useInlineConfirm<string>();
   const save = useSaveSpeciesType(campaignId);
   const deleteType = useDeleteSpeciesType();
 
@@ -34,32 +34,23 @@ export function SpeciesTypeDetailSection({ campaignId, entry, onEdit, onDeleted 
 
   const handleDelete = () => {
     deleteType.mutate(entry.id, { onSuccess: () => onDeleted() });
-    setConfirmDelete(false);
+    confirmDelete.cancel();
   };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Top bar */}
       <div className="flex-shrink-0 flex items-center justify-end gap-2 px-6 py-3.5 border-b border-outline-variant/10">
-        {confirmDelete ? (
-          <div className="flex items-center gap-2 px-3 py-2 border border-error/30 bg-error/5 rounded-sm">
-            <span className="text-[10px] text-on-surface-variant">{t('types_delete_confirm')}</span>
-            <button
-              onClick={handleDelete}
-              className="px-2 py-0.5 text-[10px] font-label uppercase text-error"
-            >
-              {t('confirm_yes')}
-            </button>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              className="px-2 py-0.5 text-[10px] font-label uppercase text-on-surface-variant"
-            >
-              {t('confirm_no')}
-            </button>
-          </div>
+        {confirmDelete.isAsking(entry.id) ? (
+          <InlineConfirm
+            variant="hero"
+            label={t('types_delete_confirm')}
+            onYes={handleDelete}
+            onNo={confirmDelete.cancel}
+          />
         ) : (
           <button
-            onClick={() => setConfirmDelete(true)}
+            onClick={() => confirmDelete.ask(entry.id)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant/20 text-rose-400 text-[10px] font-label uppercase tracking-widest rounded-sm hover:bg-rose-500/10 transition-colors"
           >
             <span className="material-symbols-outlined text-[13px]">delete</span>

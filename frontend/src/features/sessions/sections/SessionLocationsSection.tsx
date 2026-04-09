@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLocations, useSetLocationVisibility } from '@/features/locations/api';
 import { useSaveSession } from '@/features/sessions/api/queries';
-import { LocationIcon, SectionPanel } from '@/shared/ui';
+import { LocationIcon, SectionPanel, InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 interface Props {
@@ -37,7 +37,7 @@ export function SessionLocationsSection({
 
   const [locSearch, setLocSearch] = useState('');
   const [locSearchOpen, setLocSearchOpen] = useState(false);
-  const [confirmRemoveLocId, setConfirmRemoveLocId] = useState<string | null>(null);
+  const confirmRemove = useInlineConfirm<string>();
 
   const locationIds = session.locationIds ?? [];
   const linked = [...(session.locations ?? [])].sort((a, b) => a.name.localeCompare(b.name));
@@ -54,7 +54,7 @@ export function SessionLocationsSection({
   };
   const removeLoc = async (id: string) => {
     await saveSession.mutate({ ...session, locationIds: locationIds.filter((x) => x !== id) }, { only: 'locationIds' });
-    setConfirmRemoveLocId(null);
+    confirmRemove.cancel();
   };
 
   return (
@@ -126,14 +126,14 @@ export function SessionLocationsSection({
                     </span>
                   </button>
                 )}
-                {isGm && (confirmRemoveLocId === loc.id ? (
-                  <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                    <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>
-                    <button onClick={() => removeLoc(loc.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
-                    <button onClick={() => setConfirmRemoveLocId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
-                  </div>
+                {isGm && (confirmRemove.isAsking(loc.id) ? (
+                  <InlineConfirm
+                    label={t('confirm_remove')}
+                    onYes={() => removeLoc(loc.id)}
+                    onNo={confirmRemove.cancel}
+                  />
                 ) : (
-                  <button onClick={() => setConfirmRemoveLocId(loc.id)} title={t('remove_from_session')}
+                  <button onClick={() => confirmRemove.ask(loc.id)} title={t('remove_from_session')}
                     className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                     <span className="material-symbols-outlined text-[14px]">close</span>
                   </button>

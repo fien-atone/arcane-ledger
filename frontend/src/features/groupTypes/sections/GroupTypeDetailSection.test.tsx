@@ -58,10 +58,11 @@ describe('GroupTypeDetailSection', () => {
     // Icon-only delete button — query by the delete material icon text
     fireEvent.click(screen.getByText('delete'));
     expect(screen.getByText('types_delete_confirm')).toBeInTheDocument();
-    expect(screen.getByText('confirm_yes')).toBeInTheDocument();
-    expect(screen.getByText('confirm_no')).toBeInTheDocument();
+    // InlineConfirm renders 'yes'/'no' keys via the common namespace.
+    expect(screen.getByRole('button', { name: 'yes' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'no' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('confirm_no'));
+    fireEvent.click(screen.getByRole('button', { name: 'no' }));
     expect(screen.queryByText('types_delete_confirm')).not.toBeInTheDocument();
   });
 });

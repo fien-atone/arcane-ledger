@@ -13,6 +13,7 @@ import {
   useRemoveNPCGroupMembership,
   useSetNPCGroupMembershipVisibility,
 } from '@/features/npcs/api/queries';
+import { InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import type { NPC } from '@/entities/npc';
 
 interface Props {
@@ -34,7 +35,7 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
   const [addGroupSearch, setAddGroupSearch] = useState('');
   const [addGroupRole, setAddGroupRole] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [confirmRemoveGroupId, setConfirmRemoveGroupId] = useState<string | null>(null);
+  const confirmRemove = useInlineConfirm<string>();
 
   if (!enabled) return null;
 
@@ -55,7 +56,7 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
 
   const handleRemoveGroup = (groupId: string) => {
     removeGroupMembership.mutate({ npcId: npc.id, groupId });
-    setConfirmRemoveGroupId(null);
+    confirmRemove.cancel();
   };
 
   return (
@@ -168,25 +169,15 @@ export function NpcGroupMembershipsSection({ campaignId, npc, isGm, enabled, par
                   )}
                 </div>
               </Link>
-              {isGm && (confirmRemoveGroupId === m.groupId ? (
-                <div className="flex items-center gap-1 px-2 py-3 border-l border-outline-variant/10 bg-error/5">
-                  <span className="text-[10px] text-on-surface-variant whitespace-nowrap">{t('confirm_remove')}</span>
-                  <button
-                    onClick={() => handleRemoveGroup(m.groupId)}
-                    className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors"
-                  >
-                    {t('confirm_yes')}
-                  </button>
-                  <button
-                    onClick={() => setConfirmRemoveGroupId(null)}
-                    className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors"
-                  >
-                    {t('confirm_no')}
-                  </button>
-                </div>
+              {isGm && (confirmRemove.isAsking(m.groupId) ? (
+                <InlineConfirm
+                  label={t('confirm_remove')}
+                  onYes={() => handleRemoveGroup(m.groupId)}
+                  onNo={confirmRemove.cancel}
+                />
               ) : (
                 <button
-                  onClick={() => setConfirmRemoveGroupId(m.groupId)}
+                  onClick={() => confirmRemove.ask(m.groupId)}
                   title={t('remove_from_group')}
                   className="px-2 py-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100"
                 >

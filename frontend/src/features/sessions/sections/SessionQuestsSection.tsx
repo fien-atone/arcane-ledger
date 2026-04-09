@@ -13,7 +13,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
 import { useSaveSession } from '@/features/sessions/api/queries';
-import { SectionPanel } from '@/shared/ui';
+import { SectionPanel, InlineConfirm, useInlineConfirm } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 import type { QuestStatus } from '@/entities/quest';
 
@@ -40,7 +40,7 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
 
   const [questSearch, setQuestSearch] = useState('');
   const [questSearchOpen, setQuestSearchOpen] = useState(false);
-  const [confirmRemoveQuestId, setConfirmRemoveQuestId] = useState<string | null>(null);
+  const confirmRemove = useInlineConfirm<string>();
 
   const questIds = session.questIds ?? [];
   const linked = [...(session.quests ?? [])].sort((a, b) => a.title.localeCompare(b.title));
@@ -57,7 +57,7 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
   };
   const removeQuest = async (id: string) => {
     await saveSession.mutate({ ...session, questIds: questIds.filter((x) => x !== id) }, { only: 'questIds' });
-    setConfirmRemoveQuestId(null);
+    confirmRemove.cancel();
   };
 
   return (
@@ -131,14 +131,14 @@ export function SessionQuestsSection({ campaignId, session, isGm, partyEnabled }
                     </span>
                   </button>
                 )}
-                {isGm && (confirmRemoveQuestId === quest.id ? (
-                  <div className="flex items-center gap-1 px-2 border-l border-outline-variant/10 bg-error/5">
-                    <span className="text-[10px] text-on-surface-variant">{t('confirm_remove')}</span>
-                    <button onClick={() => removeQuest(quest.id)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-error hover:text-on-surface transition-colors">{t('confirm_yes')}</button>
-                    <button onClick={() => setConfirmRemoveQuestId(null)} className="px-2 py-1 text-[10px] font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors">{t('confirm_no')}</button>
-                  </div>
+                {isGm && (confirmRemove.isAsking(quest.id) ? (
+                  <InlineConfirm
+                    label={t('confirm_remove')}
+                    onYes={() => removeQuest(quest.id)}
+                    onNo={confirmRemove.cancel}
+                  />
                 ) : (
-                  <button onClick={() => setConfirmRemoveQuestId(quest.id)} title={t('remove_from_session')}
+                  <button onClick={() => confirmRemove.ask(quest.id)} title={t('remove_from_session')}
                     className="px-3 border-l border-outline-variant/10 text-on-surface-variant/20 hover:text-error hover:bg-error/5 transition-colors opacity-0 group-hover/card:opacity-100">
                     <span className="material-symbols-outlined text-[14px]">close</span>
                   </button>
