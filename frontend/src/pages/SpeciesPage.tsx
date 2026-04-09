@@ -35,14 +35,12 @@ export default function SpeciesPage() {
     isLoading,
     isError,
     speciesList,
-    filtered,
     typeFilters,
     search,
     setSearch,
     typeFilter,
     setTypeFilter,
     resolveTypeName,
-    countForType,
     drawerOpen,
     openDrawer,
     closeDrawer,
@@ -75,9 +73,7 @@ export default function SpeciesPage() {
             typeFilter={typeFilter}
             onTypeFilterChange={setTypeFilter}
             typeFilters={typeFilters}
-            countForType={countForType}
-            filteredCount={filtered.length}
-            totalCount={speciesList?.length ?? 0}
+            shownCount={speciesList?.length ?? 0}
             onAdd={openDrawer}
           />
 
@@ -85,7 +81,7 @@ export default function SpeciesPage() {
             campaignId={cId}
             isLoading={isLoading}
             isError={isError}
-            filtered={filtered}
+            filtered={speciesList ?? []}
             typesEnabled={typesEnabled}
             resolveTypeName={resolveTypeName}
           />

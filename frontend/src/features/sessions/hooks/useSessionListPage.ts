@@ -1,21 +1,29 @@
 /**
  * Page-level state and data for SessionListPage (Tier 2 list page).
  *
+ * F-11: search filtering is SERVER-SIDE. This hook:
+ *
+ *  - Reads `?q` from the URL
+ *  - Drives the <input> off a local debounced state (300 ms)
+ *  - Passes the debounced search to `useSessions`, which uses Apollo v4's
+ *    `previousData` to keep the existing list visible during refetches.
+ *  - Removes the client-side `useMemo` search filter — the list returned
+ *    from the query is already filtered by the server.
+ *
+ * Today / Next / Previous badges: computed against the currently-loaded
+ * (possibly search-filtered) list. When a search is active, the "next"
+ * badge reflects the next future session *in the filtered result set*, not
+ * the global next session. This is an intentional minor behaviour change
+ * to avoid a second unfiltered query just for badges — consistent with the
+ * F-11 tradeoff.
+ *
  * Loads:
  * - The campaign (for the title in the back link + GM role check)
- * - The full list of sessions for the campaign
+ * - The (server-filtered) list of sessions for the campaign
  *
  * Owns the page-level UI state:
  * - URL search params (q) — mirrored into search
  * - addOpen — whether the "add session" drawer is open
- *
- * Derives:
- * - filtered (client-side search applied to title + brief)
- * - getBadge — Today / Tomorrow / Next / Previous status badge for a row
- *
- * Matches the list-page pattern established by useQuestListPage /
- * useGroupListPage: the hook owns shared state and hands minimal props down
- * to presentational section widgets. Filtering is client-side.
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -25,6 +33,7 @@ import {
   useSectionEnabled,
 } from '@/features/campaigns/api/queries';
 import { useSessions } from '@/features/sessions/api/queries';
+import { useDebouncedSearch } from '@/shared/hooks';
 import type { Session } from '@/entities/session';
 
 export interface SessionBadge {
@@ -40,9 +49,11 @@ export interface UseSessionListPageResult {
   sessionsEnabled: boolean;
   isGm: boolean;
   isLoading: boolean;
+  isFetching: boolean;
   isError: boolean;
+  /** Server-filtered list. Stays populated via Apollo previousData during
+   *  in-flight refetches. */
   sessions: Session[] | undefined;
-  filtered: Session[];
   search: string;
   setSearch: (v: string) => void;
   addOpen: boolean;
@@ -60,14 +71,21 @@ export function useSessionListPage(campaignId: string): UseSessionListPageResult
   const { data: campaign } = useCampaign(campaignId);
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
 
-  const { data: sessions, isLoading, isError } = useSessions(campaignId);
-
   const [searchParams, setSearchParams] = useSearchParams();
-  const search = searchParams.get('q') ?? '';
+  const urlSearch = searchParams.get('q') ?? '';
+
+  const { value: search, debouncedValue: debouncedSearch, setValue: setDebouncedSearch } =
+    useDebouncedSearch(urlSearch, 300);
+
+  const { data: sessions, isLoading, isFetching, isError } = useSessions(campaignId, {
+    search: debouncedSearch || undefined,
+  });
+
   const [addOpen, setAddOpen] = useState(false);
 
   const setSearch = useCallback(
     (val: string) => {
+      setDebouncedSearch(val);
       setSearchParams(
         (prev) => {
           if (val) prev.set('q', val);
@@ -77,19 +95,8 @@ export function useSessionListPage(campaignId: string): UseSessionListPageResult
         { replace: true },
       );
     },
-    [setSearchParams],
+    [setDebouncedSearch, setSearchParams],
   );
-
-  const filtered = useMemo(() => {
-    if (!sessions) return [];
-    const q = search.trim().toLowerCase();
-    if (!q) return sessions;
-    return sessions.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) ||
-        s.brief?.toLowerCase().includes(q),
-    );
-  }, [sessions, search]);
 
   const formatDate = useCallback(
     (iso: string) =>
@@ -175,9 +182,9 @@ export function useSessionListPage(campaignId: string): UseSessionListPageResult
     sessionsEnabled,
     isGm,
     isLoading,
+    isFetching,
     isError,
     sessions,
-    filtered,
     search,
     setSearch,
     addOpen,

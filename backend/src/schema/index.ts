@@ -323,7 +323,7 @@ export const typeDefs = `#graphql
     campaign(id: ID!): Campaign
 
     # Sessions
-    sessions(campaignId: ID!): [Session!]!
+    sessions(campaignId: ID!, search: String): [Session!]!
     session(campaignId: ID!, id: ID!): Session
 
     # NPCs
@@ -340,7 +340,7 @@ export const typeDefs = `#graphql
     searchUsers(campaignId: ID!, query: String!): [User!]!
 
     # Quests
-    quests(campaignId: ID!): [Quest!]!
+    quests(campaignId: ID!, search: String, status: String): [Quest!]!
     quest(campaignId: ID!, id: ID!): Quest
 
     # Groups
@@ -348,7 +348,7 @@ export const typeDefs = `#graphql
     group(campaignId: ID!, id: ID!): Group
 
     # Locations
-    locations(campaignId: ID!): [Location!]!
+    locations(campaignId: ID!, search: String, type: String): [Location!]!
     location(campaignId: ID!, id: ID!): Location
 
     # Location Types
@@ -362,7 +362,7 @@ export const typeDefs = `#graphql
     speciesTypes(campaignId: ID!, search: String): [SpeciesType!]!
 
     # Species
-    species(campaignId: ID!): [Species!]!
+    species(campaignId: ID!, search: String, type: String): [Species!]!
 
     # Relations
     relationsForEntity(campaignId: ID!, entityId: ID!): [Relation!]!

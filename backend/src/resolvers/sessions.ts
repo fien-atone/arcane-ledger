@@ -5,8 +5,21 @@ import { publishCampaignEvent } from '../publish.js';
 
 export const sessionResolvers = {
   Query: {
-    sessions: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
-      const sessions = await ctx.prisma.session.findMany({ where: { campaignId }, orderBy: { number: 'desc' } });
+    sessions: async (
+      _: unknown,
+      { campaignId, search }: { campaignId: string; search?: string },
+      ctx: Context,
+    ) => {
+      const trimmedSearch = search?.trim();
+      const sessions = await ctx.prisma.session.findMany({
+        where: {
+          campaignId,
+          ...(trimmedSearch
+            ? { title: { contains: trimmedSearch, mode: 'insensitive' as const } }
+            : {}),
+        },
+        orderBy: { number: 'desc' },
+      });
       const role = await getCampaignRole(ctx, campaignId);
       // Sessions always fully visible to all — only summary (legacy GM notes) is hidden from players
       if (role === 'PLAYER') {

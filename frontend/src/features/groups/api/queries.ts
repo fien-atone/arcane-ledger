@@ -63,11 +63,33 @@ function mapGroup(raw: any): Group {
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
-export const useGroups = (campaignId: string, opts?: { search?: string; type?: string }) => {
-  const { data, loading, error } = useQuery<any>(GROUPS_QUERY, {
-    variables: { campaignId, search: opts?.search?.trim() || null, type: opts?.type || null },
+/**
+ * Loads the group list for a campaign. Supports server-side filtering by
+ * `search` (name substring, case-insensitive — NOT aliases) and `type`
+ * (exact match on the group type id). Uses the flicker-free pattern
+ * established by the NPC pilot.
+ */
+export const useGroups = (
+  campaignId: string,
+  opts?: { search?: string; type?: string },
+) => {
+  const { data, previousData, loading, error } = useQuery<any>(GROUPS_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+      type: opts?.type || null,
+    },
+    notifyOnNetworkStatusChange: true,
   });
-  return { data: data?.groups?.map(mapGroup) as Group[] | undefined, isLoading: loading, isError: !!error, error };
+  const effective = data ?? previousData;
+  const isInitialLoad = loading && !previousData;
+  return {
+    data: effective?.groups?.map(mapGroup) as Group[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
+    isError: !!error,
+    error,
+  };
 };
 
 export const useGroup = (campaignId: string, groupId: string) => {

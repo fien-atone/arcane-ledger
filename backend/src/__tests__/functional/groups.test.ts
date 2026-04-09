@@ -150,6 +150,111 @@ describe('Groups', () => {
     groupTypeId = '';
   });
 
+  it('filters groups by search (name, case-insensitive partial match)', async () => {
+    // Server-side search by name. Case-insensitive substring match over
+    // `name` only — description/aliases are NOT searched.
+    const uniqueMarker = `SrchGrp${uid}`;
+    const a = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: GroupInput!) { saveGroup(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Alpha`, aliases: ['ZZZ_only_in_alias'] } },
+      gmToken,
+    );
+    const b = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: GroupInput!) { saveGroup(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Beta` } },
+      gmToken,
+    );
+    const aId = (a.data!.saveGroup as Record<string, string>).id;
+    const bId = (b.data!.saveGroup as Record<string, string>).id;
+
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { groups(campaignId: $campaignId, search: $search) { id name } }`,
+      { campaignId: CAMPAIGN_ID, search: uniqueMarker.toLowerCase() },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const groups = res.data!.groups as Array<Record<string, string>>;
+    const ids = groups.map((g) => g.id);
+    expect(ids).toContain(aId);
+    expect(ids).toContain(bId);
+
+    // Alias-only search should NOT find the group
+    const aliasRes = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { groups(campaignId: $campaignId, search: $search) { id } }`,
+      { campaignId: CAMPAIGN_ID, search: 'ZZZ_only_in_alias' },
+      gmToken,
+    );
+    const aliasGroups = aliasRes.data!.groups as Array<Record<string, string>>;
+    expect(aliasGroups.find((g) => g.id === aId)).toBeUndefined();
+
+    await prisma.group.delete({ where: { id: aId } }).catch(() => {});
+    await prisma.group.delete({ where: { id: bId } }).catch(() => {});
+  });
+
+  it('filters groups by type (exact match on type id)', async () => {
+    // Server-side type filter: exact match on the group's `type` column.
+    // group.type is a FK to GroupType.id so we create a fresh type first.
+    const gtRes = await graphql(
+      request,
+      `mutation($campaignId: ID!, $name: String!) {
+        saveGroupType(campaignId: $campaignId, name: $name) { id }
+      }`,
+      { campaignId: CAMPAIGN_ID, name: `GtFilter ${uid}` },
+      gmToken,
+    );
+    const gtId = (gtRes.data!.saveGroupType as Record<string, string>).id;
+
+    const uniqueMarker = `TypeGrp${uid}`;
+    const typed = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: GroupInput!) { saveGroup(campaignId: $campaignId, input: $input) { id type } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Typed`, type: gtId } },
+      gmToken,
+    );
+    const untyped = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: GroupInput!) { saveGroup(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Untyped`, type: '' } },
+      gmToken,
+    );
+    const typedId = (typed.data!.saveGroup as Record<string, string>).id;
+    const untypedId = (untyped.data!.saveGroup as Record<string, string>).id;
+
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!, $type: String) { groups(campaignId: $campaignId, type: $type) { id type } }`,
+      { campaignId: CAMPAIGN_ID, type: gtId },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const groups = res.data!.groups as Array<Record<string, string>>;
+    expect(groups.find((g) => g.id === typedId)).toBeDefined();
+    expect(groups.find((g) => g.id === untypedId)).toBeUndefined();
+    expect(groups.every((g) => g.type === gtId)).toBe(true);
+
+    await prisma.group.delete({ where: { id: typedId } }).catch(() => {});
+    await prisma.group.delete({ where: { id: untypedId } }).catch(() => {});
+    await prisma.groupType.delete({ where: { id: gtId } }).catch(() => {});
+  });
+
+  it('returns all groups for campaign when no search or type is provided', async () => {
+    // Baseline: without filters, the resolver returns all groups scoped to
+    // the campaign (existing behaviour must be preserved).
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!) { groups(campaignId: $campaignId) { id } }`,
+      { campaignId: CAMPAIGN_ID },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const groups = res.data!.groups as Array<Record<string, string>>;
+    expect(Array.isArray(groups)).toBe(true);
+  });
+
   it('deletes a group', async () => {
     // Delete the group and verify it no longer appears in the campaign's group list.
     const res = await graphql(

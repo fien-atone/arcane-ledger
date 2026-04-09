@@ -9,9 +9,9 @@ import { renderWithProviders } from '@/test/helpers';
 import type { TypeFilterOption } from '../hooks/useLocationListPage';
 
 const typeFilters: TypeFilterOption[] = [
-  { value: 'all', label: 'filter_all', count: 5 },
-  { value: 'lt-world', label: 'Continent', count: 1 },
-  { value: 'lt-region', label: 'Region', count: 4 },
+  { value: 'all', label: 'filter_all' },
+  { value: 'lt-world', label: 'Continent' },
+  { value: 'lt-region', label: 'Region' },
 ];
 
 function baseProps(overrides: Partial<React.ComponentProps<typeof LocationListHeroSection>> = {}) {
@@ -23,8 +23,7 @@ function baseProps(overrides: Partial<React.ComponentProps<typeof LocationListHe
     typeFilter: 'all' as const,
     onTypeFilterChange: vi.fn(),
     typeFilters,
-    filteredCount: 5,
-    totalCount: 5,
+    shownCount: 5,
     onAdd: vi.fn(),
     ...overrides,
   };

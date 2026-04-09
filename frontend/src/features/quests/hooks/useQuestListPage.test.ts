@@ -1,9 +1,11 @@
 /**
  * Tests for useQuestListPage hook.
  *
- * Mocks the CAMPAIGN + QUESTS queries and asserts on:
- *  - derived shape (loading flags, filtered list, statusFilters)
- *  - search / statusFilter state transitions
+ * F-11: search and status filtering are server-side. Tests mock the
+ * underlying query with different variable combinations and assert on:
+ *  - derived shape (loading flags, quests list, statusFilters without counts)
+ *  - statusFilter transitions trigger a refetch with uppercase status
+ *  - search updates the URL instantly but the query variable is debounced
  *  - openAdd / closeAdd drawer state
  */
 import { describe, it, expect } from 'vitest';
@@ -34,8 +36,8 @@ const CAMPAIGN_QUERY = gql`
 `;
 
 const QUESTS_QUERY = gql`
-  query Quests($campaignId: ID!) {
-    quests(campaignId: $campaignId) {
+  query Quests($campaignId: ID!, $search: String, $status: String) {
+    quests(campaignId: $campaignId, search: $search, status: $status) {
       id
       campaignId
       title
@@ -85,42 +87,43 @@ const baseQuest = {
   sessions: [],
 };
 
-const questsMock = {
-  request: { query: QUESTS_QUERY, variables: { campaignId: 'camp-1' } },
-  result: {
-    data: {
-      quests: [
-        {
-          ...baseQuest,
-          id: 'q-1',
-          title: 'Find the Sword',
-          description: 'Locate the ancient blade',
-          status: 'ACTIVE',
-        },
-        {
-          ...baseQuest,
-          id: 'q-2',
-          title: 'Rescue the Merchant',
-          description: 'The caravan was attacked',
-          status: 'COMPLETED',
-        },
-        {
-          ...baseQuest,
-          id: 'q-3',
-          title: 'Slay the Dragon',
-          description: 'Dragon terrorises the villages',
-          status: 'ACTIVE',
-        },
-      ],
-    },
-  },
+const q1 = {
+  ...baseQuest,
+  id: 'q-1',
+  title: 'Find the Sword',
+  description: 'Locate the ancient blade',
+  status: 'ACTIVE',
+};
+const q2 = {
+  ...baseQuest,
+  id: 'q-2',
+  title: 'Rescue the Merchant',
+  description: 'The caravan was attacked',
+  status: 'COMPLETED',
+};
+const q3 = {
+  ...baseQuest,
+  id: 'q-3',
+  title: 'Slay the Dragon',
+  description: 'Dragon terrorises the villages',
+  status: 'ACTIVE',
+};
+
+const questsUnfilteredMock = {
+  request: { query: QUESTS_QUERY, variables: { campaignId: 'camp-1', search: null, status: null } },
+  result: { data: { quests: [q1, q2, q3] } },
+};
+
+const questsActiveMock = {
+  request: { query: QUESTS_QUERY, variables: { campaignId: 'camp-1', search: null, status: 'ACTIVE' } },
+  result: { data: { quests: [q1, q3] } },
 };
 
 describe('useQuestListPage', () => {
   it('returns expected shape after loading', async () => {
     const { result } = renderHookWithProviders(
       () => useQuestListPage('camp-1'),
-      { mocks: [campaignMock, questsMock] },
+      { mocks: [campaignMock, questsUnfilteredMock] },
     );
 
     expect(result.current.isLoading).toBe(true);
@@ -132,63 +135,46 @@ describe('useQuestListPage', () => {
     expect(result.current.partyEnabled).toBe(true);
     expect(result.current.isGm).toBe(true);
 
-    // statusFilters: all + 5 statuses
+    // statusFilters: all + 5 statuses = 6 entries, no `count` field
     expect(result.current.statusFilters).toHaveLength(6);
-    expect(result.current.statusFilters[0]).toMatchObject({
+    expect(result.current.statusFilters[0]).toEqual({
       value: 'all',
-      count: 3,
+      label: 'filter_all',
     });
-    expect(
-      result.current.statusFilters.find((f) => f.value === 'active')?.count,
-    ).toBe(2);
-    expect(
-      result.current.statusFilters.find((f) => f.value === 'completed')?.count,
-    ).toBe(1);
-    expect(
-      result.current.statusFilters.find((f) => f.value === 'failed')?.count,
-    ).toBe(0);
-
-    // Default (all, no search): all 3 quests
-    expect(result.current.filtered).toHaveLength(3);
   });
 
-  it('search filters by title and description', async () => {
+  it('statusFilter triggers a server refetch with the uppercase status', async () => {
     const { result } = renderHookWithProviders(
       () => useQuestListPage('camp-1'),
-      { mocks: [campaignMock, questsMock] },
+      { mocks: [campaignMock, questsUnfilteredMock, questsActiveMock] },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.quests!.map((q) => q.id)).toEqual(['q-1', 'q-2', 'q-3']);
+
+    act(() => result.current.setStatusFilter('active'));
+    await waitFor(() =>
+      expect(result.current.quests!.map((q) => q.id)).toEqual(['q-1', 'q-3']),
+    );
+    expect(result.current.statusFilter).toBe('active');
+  });
+
+  it('search is driven locally but updates the URL immediately', async () => {
+    const { result } = renderHookWithProviders(
+      () => useQuestListPage('camp-1'),
+      { mocks: [campaignMock, questsUnfilteredMock] },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => result.current.setSearch('dragon'));
-    await waitFor(() => expect(result.current.search).toBe('dragon'));
-    expect(result.current.filtered.map((q) => q.id)).toEqual(['q-3']);
-
-    act(() => result.current.setSearch('caravan'));
-    await waitFor(() => expect(result.current.search).toBe('caravan'));
-    // Matches description of q-2
-    expect(result.current.filtered.map((q) => q.id)).toEqual(['q-2']);
-  });
-
-  it('statusFilter narrows results to a single status', async () => {
-    const { result } = renderHookWithProviders(
-      () => useQuestListPage('camp-1'),
-      { mocks: [campaignMock, questsMock] },
-    );
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    act(() => result.current.setStatusFilter('active'));
-    await waitFor(() => expect(result.current.statusFilter).toBe('active'));
-    expect(result.current.filtered.map((q) => q.id)).toEqual(['q-1', 'q-3']);
-
-    act(() => result.current.setStatusFilter('all'));
-    await waitFor(() => expect(result.current.statusFilter).toBe('all'));
-    expect(result.current.filtered).toHaveLength(3);
+    expect(result.current.search).toBe('dragon');
+    // Debounced variable won't have fired yet — the list is unchanged.
+    expect(result.current.quests).toHaveLength(3);
   });
 
   it('openAdd / closeAdd toggles the drawer state', async () => {
     const { result } = renderHookWithProviders(
       () => useQuestListPage('camp-1'),
-      { mocks: [campaignMock, questsMock] },
+      { mocks: [campaignMock, questsUnfilteredMock] },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 

@@ -5,8 +5,8 @@ import type { Session } from '@/entities/session';
 // ── GraphQL documents ─────────────────────────────────────────────
 
 const SESSIONS_QUERY = gql`
-  query Sessions($campaignId: ID!) {
-    sessions(campaignId: $campaignId) {
+  query Sessions($campaignId: ID!, $search: String) {
+    sessions(campaignId: $campaignId, search: $search) {
       id
       campaignId
       number
@@ -84,20 +84,34 @@ function mapSession(raw: any): Session {
 
 // ── Hooks ─────────────────────────────────────────────────────────
 
-export const useSessions = (campaignId: string) => {
-  const { data, loading, error } = useQuery<any>(SESSIONS_QUERY, {
-    variables: { campaignId },
+/**
+ * Loads the session list for a campaign. Supports server-side filtering by
+ * `search` (title substring, case-insensitive — NOT brief). Uses the
+ * flicker-free pattern established by the NPC pilot.
+ */
+export const useSessions = (campaignId: string, opts?: { search?: string }) => {
+  const { data, previousData, loading, error } = useQuery<any>(SESSIONS_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+    },
+    notifyOnNetworkStatusChange: true,
   });
+  const effective = data ?? previousData;
+  const isInitialLoad = loading && !previousData;
   return {
-    data: data?.sessions?.map(mapSession) as Session[] | undefined,
-    isLoading: loading,
+    data: effective?.sessions?.map(mapSession) as Session[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
     isError: !!error,
   };
 };
 
 export const useLastSession = (campaignId: string) => {
+  // Always queries the full list (search: null) so the "last session" is
+  // computed against every session, independent of any list-page filter.
   const { data, loading, error } = useQuery<any>(SESSIONS_QUERY, {
-    variables: { campaignId },
+    variables: { campaignId, search: null },
   });
   const sessions = data?.sessions?.map(mapSession) as Session[] | undefined;
   const last = sessions?.length
@@ -112,7 +126,7 @@ export const useLastSession = (campaignId: string) => {
 
 export const useSaveSession = (campaignId: string) => {
   const [saveSession, { loading }] = useMutation(SAVE_SESSION, {
-    refetchQueries: [{ query: SESSIONS_QUERY, variables: { campaignId } }],
+    refetchQueries: ['Sessions'],
   });
 
   return {
@@ -139,7 +153,7 @@ export const useSaveSession = (campaignId: string) => {
 
 export const useDeleteSession = (campaignId: string) => {
   const [deleteSession, { loading }] = useMutation(DELETE_SESSION, {
-    refetchQueries: [{ query: SESSIONS_QUERY, variables: { campaignId } }],
+    refetchQueries: ['Sessions'],
   });
 
   return {
@@ -152,9 +166,9 @@ export const useDeleteSession = (campaignId: string) => {
   };
 };
 
-export const useSessionNote = (campaignId: string) => {
+export const useSessionNote = (_campaignId: string) => {
   const [saveNote, { loading }] = useMutation(SAVE_SESSION_NOTE, {
-    refetchQueries: [{ query: SESSIONS_QUERY, variables: { campaignId } }],
+    refetchQueries: ['Sessions'],
   });
 
   return {

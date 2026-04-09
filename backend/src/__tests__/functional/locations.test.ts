@@ -220,6 +220,113 @@ describe('Locations', () => {
     locationTypeId = '';
   });
 
+  it('filters locations by search (name, case-insensitive partial match)', async () => {
+    // Server-side search by name. Case-insensitive substring match over
+    // `name` only — description is NOT searched.
+    const uniqueMarker = `SrchLoc${uid}`;
+    const a = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: LocationInput!) { saveLocation(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Alpha`, description: 'ZZZ_only_in_desc' } },
+      gmToken,
+    );
+    const b = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: LocationInput!) { saveLocation(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Beta` } },
+      gmToken,
+    );
+    const aId = (a.data!.saveLocation as Record<string, string>).id;
+    const bId = (b.data!.saveLocation as Record<string, string>).id;
+
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { locations(campaignId: $campaignId, search: $search) { id name } }`,
+      { campaignId: CAMPAIGN_ID, search: uniqueMarker.toLowerCase() },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const locs = res.data!.locations as Array<Record<string, string>>;
+    const ids = locs.map((l) => l.id);
+    expect(ids).toContain(aId);
+    expect(ids).toContain(bId);
+
+    // Description-only search should NOT find the location
+    const descRes = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { locations(campaignId: $campaignId, search: $search) { id } }`,
+      { campaignId: CAMPAIGN_ID, search: 'ZZZ_only_in_desc' },
+      gmToken,
+    );
+    const descLocs = descRes.data!.locations as Array<Record<string, string>>;
+    expect(descLocs.find((l) => l.id === aId)).toBeUndefined();
+
+    await prisma.location.delete({ where: { id: aId } }).catch(() => {});
+    await prisma.location.delete({ where: { id: bId } }).catch(() => {});
+  });
+
+  it('filters locations by type (exact match on type id)', async () => {
+    // Server-side type filter: exact match on the location's `type` column
+    // (which stores the location type id string). Only locations with the
+    // given type should be returned. We create a fresh LocationType for this
+    // test since location.type is a FK to LocationType.id.
+    const ltRes = await graphql(
+      request,
+      `mutation($campaignId: ID!, $name: String!, $icon: String!, $category: String!) {
+        saveLocationType(campaignId: $campaignId, name: $name, icon: $icon, category: $category) { id }
+      }`,
+      { campaignId: CAMPAIGN_ID, name: `LtFilter ${uid}`, icon: 'place', category: 'civilization' },
+      gmToken,
+    );
+    const ltId = (ltRes.data!.saveLocationType as Record<string, string>).id;
+
+    const uniqueMarker = `TypeLoc${uid}`;
+    const typed = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: LocationInput!) { saveLocation(campaignId: $campaignId, input: $input) { id type } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Typed`, type: ltId } },
+      gmToken,
+    );
+    const untyped = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: LocationInput!) { saveLocation(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Untyped` } },
+      gmToken,
+    );
+    const typedId = (typed.data!.saveLocation as Record<string, string>).id;
+    const untypedId = (untyped.data!.saveLocation as Record<string, string>).id;
+
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!, $type: String) { locations(campaignId: $campaignId, type: $type) { id type } }`,
+      { campaignId: CAMPAIGN_ID, type: ltId },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const locs = res.data!.locations as Array<Record<string, string>>;
+    expect(locs.find((l) => l.id === typedId)).toBeDefined();
+    expect(locs.find((l) => l.id === untypedId)).toBeUndefined();
+    expect(locs.every((l) => l.type === ltId)).toBe(true);
+
+    await prisma.location.delete({ where: { id: typedId } }).catch(() => {});
+    await prisma.location.delete({ where: { id: untypedId } }).catch(() => {});
+    await prisma.locationType.delete({ where: { id: ltId } }).catch(() => {});
+  });
+
+  it('returns all locations for campaign when no search or type is provided', async () => {
+    // Baseline: without filters, the resolver returns all locations scoped
+    // to the campaign (existing behaviour must be preserved).
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!) { locations(campaignId: $campaignId) { id } }`,
+      { campaignId: CAMPAIGN_ID },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const locs = res.data!.locations as Array<Record<string, string>>;
+    expect(Array.isArray(locs)).toBe(true);
+  });
+
   it('deletes a location', async () => {
     // Step 1: Delete the child location first (explicit ordering rather than relying on cascade).
     // Step 2: Delete the parent location and verify it returns true.

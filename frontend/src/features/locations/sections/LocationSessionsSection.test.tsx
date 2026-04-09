@@ -9,8 +9,8 @@ import { renderWithProviders } from '@/test/helpers';
 import type { Location } from '@/entities/location';
 
 const SESSIONS_QUERY = gql`
-  query Sessions($campaignId: ID!) {
-    sessions(campaignId: $campaignId) {
+  query Sessions($campaignId: ID!, $search: String) {
+    sessions(campaignId: $campaignId, search: $search) {
       id
       campaignId
       number
@@ -37,12 +37,12 @@ const baseLocation: Location = {
 };
 
 const emptySessionsMock = {
-  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1', search: null } },
   result: { data: { sessions: [] } },
 };
 
 const sessionsWithLocationMock = {
-  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1', search: null } },
   result: {
     data: {
       sessions: [

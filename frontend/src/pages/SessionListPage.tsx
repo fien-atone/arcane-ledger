@@ -35,7 +35,6 @@ export default function SessionListPage() {
     isLoading,
     isError,
     sessions,
-    filtered,
     search,
     setSearch,
     addOpen,
@@ -70,8 +69,7 @@ export default function SessionListPage() {
             isGm={isGm}
             search={search}
             onSearchChange={setSearch}
-            filteredCount={filtered.length}
-            totalCount={sessions?.length ?? 0}
+            shownCount={sessions?.length ?? 0}
             onAdd={openAdd}
           />
 
@@ -79,7 +77,7 @@ export default function SessionListPage() {
             campaignId={cId}
             isLoading={isLoading}
             isError={isError}
-            filtered={filtered}
+            filtered={sessions ?? []}
             formatDate={formatDate}
             getBadge={getBadge}
           />

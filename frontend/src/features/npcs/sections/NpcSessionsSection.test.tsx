@@ -12,8 +12,8 @@ import { NpcSessionsSection } from './NpcSessionsSection';
 import { renderWithProviders } from '@/test/helpers';
 
 const SESSIONS_QUERY = gql`
-  query Sessions($campaignId: ID!) {
-    sessions(campaignId: $campaignId) {
+  query Sessions($campaignId: ID!, $search: String) {
+    sessions(campaignId: $campaignId, search: $search) {
       id
       campaignId
       number
@@ -31,12 +31,12 @@ const SESSIONS_QUERY = gql`
 `;
 
 const emptySessionsMock = {
-  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1', search: null } },
   result: { data: { sessions: [] } },
 };
 
 const sessionsWithNpcMock = {
-  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1', search: null } },
   result: {
     data: {
       sessions: [

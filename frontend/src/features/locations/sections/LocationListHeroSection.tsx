@@ -21,8 +21,10 @@ interface Props {
   typeFilter: LocationType | 'all';
   onTypeFilterChange: (v: LocationType | 'all') => void;
   typeFilters: TypeFilterOption[];
-  filteredCount: number;
-  totalCount: number;
+  /** F-11: number of locations in the currently displayed (server-filtered)
+   *  list. No "of total" ratio — counts were dropped with the server-side
+   *  filter switch. */
+  shownCount: number;
   onAdd: () => void;
 }
 
@@ -34,8 +36,7 @@ export function LocationListHeroSection({
   typeFilter,
   onTypeFilterChange,
   typeFilters,
-  filteredCount,
-  totalCount,
+  shownCount,
   onAdd,
 }: Props) {
   const { t } = useTranslation('locations');
@@ -80,7 +81,7 @@ export function LocationListHeroSection({
         </div>
         {locationTypesEnabled && (
           <div className="flex flex-wrap gap-1.5">
-            {typeFilters.map(({ value, label, count }) => (
+            {typeFilters.map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => onTypeFilterChange(value)}
@@ -90,24 +91,13 @@ export function LocationListHeroSection({
                     : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
                 }`}
               >
-                {label}{' '}
-                <span
-                  className={
-                    typeFilter === value
-                      ? 'text-on-primary/70'
-                      : 'text-on-surface-variant/40'
-                  }
-                >
-                  {count}
-                </span>
+                {label}
               </button>
             ))}
           </div>
         )}
         <span className="ml-auto text-[10px] text-on-surface-variant/40">
-          <span className="text-on-surface font-bold">{filteredCount}</span>{' '}
-          {t('common:of')}{' '}
-          <span className="text-primary font-bold">{totalCount}</span>
+          <span className="text-primary font-bold">{shownCount}</span>
         </span>
       </div>
     </SectionPanel>

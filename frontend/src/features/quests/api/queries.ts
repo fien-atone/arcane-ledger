@@ -21,8 +21,8 @@ const QUEST_FIELDS = `
 `;
 
 const QUESTS_QUERY = gql`
-  query Quests($campaignId: ID!) {
-    quests(campaignId: $campaignId) {
+  query Quests($campaignId: ID!, $search: String, $status: String) {
+    quests(campaignId: $campaignId, search: $search, status: $status) {
       ${QUEST_FIELDS}
     }
   }
@@ -74,24 +74,42 @@ function mapQuest(raw: any): Quest {
 
 // ── Hooks ─────────────────────────────────────────────────────────
 
-export const useQuests = (campaignId: string) => {
-  const { data, loading, error } = useQuery<any>(QUESTS_QUERY, {
-    variables: { campaignId },
+/**
+ * Loads the quest list for a campaign. Supports server-side filtering by
+ * `search` (title substring, case-insensitive — NOT description) and
+ * `status` (case-insensitive, normalized to UPPERCASE by the resolver).
+ * Uses the flicker-free pattern established by the NPC pilot.
+ */
+export const useQuests = (
+  campaignId: string,
+  opts?: { search?: string; status?: string },
+) => {
+  const { data, previousData, loading, error } = useQuery<any>(QUESTS_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+      status: opts?.status || null,
+    },
+    notifyOnNetworkStatusChange: true,
   });
+  const effective = data ?? previousData;
+  const isInitialLoad = loading && !previousData;
   return {
-    data: data?.quests?.map(mapQuest) as Quest[] | undefined,
-    isLoading: loading,
+    data: effective?.quests?.map(mapQuest) as Quest[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
     isError: !!error,
   };
 };
 
 export const useActiveQuests = (campaignId: string) => {
+  // Delegates to the server-side status filter.
   const { data, loading, error } = useQuery<any>(QUESTS_QUERY, {
-    variables: { campaignId },
+    variables: { campaignId, search: null, status: 'ACTIVE' },
   });
   const quests = data?.quests?.map(mapQuest) as Quest[] | undefined;
   return {
-    data: quests?.filter((q) => q.status === 'active'),
+    data: quests,
     isLoading: loading,
     isError: !!error,
   };
@@ -111,7 +129,7 @@ export const useQuest = (campaignId: string, questId: string) => {
 
 export const useSaveQuest = (campaignId: string) => {
   const [saveQuest, { loading }] = useMutation(SAVE_QUEST, {
-    refetchQueries: [{ query: QUESTS_QUERY, variables: { campaignId } }],
+    refetchQueries: ['Quests'],
   });
 
   return {
@@ -156,7 +174,7 @@ export const useSetQuestVisibility = () => {
 
 export const useDeleteQuest = (campaignId: string) => {
   const [deleteQuest, { loading }] = useMutation(DELETE_QUEST, {
-    refetchQueries: [{ query: QUESTS_QUERY, variables: { campaignId } }],
+    refetchQueries: ['Quests'],
   });
 
   return {

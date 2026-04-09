@@ -6,11 +6,22 @@ import { redactEntity, LOCATION_FIELDS } from './redact.js';
 
 export const locationResolvers = {
   Query: {
-    locations: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
+    locations: async (
+      _: unknown,
+      { campaignId, search, type }: { campaignId: string; search?: string; type?: string },
+      ctx: Context,
+    ) => {
       const role = await getCampaignRole(ctx, campaignId);
-      const where = role === 'PLAYER'
-        ? { campaignId, playerVisible: true as const }
-        : { campaignId };
+      const trimmedSearch = search?.trim();
+      const trimmedType = type?.trim();
+      const where = {
+        campaignId,
+        ...(trimmedSearch
+          ? { name: { contains: trimmedSearch, mode: 'insensitive' as const } }
+          : {}),
+        ...(trimmedType ? { type: trimmedType } : {}),
+        ...(role === 'PLAYER' ? { playerVisible: true as const } : {}),
+      };
       const locations = await ctx.prisma.location.findMany({ where, orderBy: { name: 'asc' } });
       if (role === 'PLAYER') {
         return locations.map((loc) => redactEntity(loc, loc.playerVisibleFields, LOCATION_FIELDS));

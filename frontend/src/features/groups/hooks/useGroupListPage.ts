@@ -1,29 +1,31 @@
 /**
  * Page-level state and data for GroupListPage (Tier 2 list page).
  *
+ * F-11: search and type filtering are SERVER-SIDE. This hook:
+ *
+ *  - Reads `?q` and `?type` from the URL
+ *  - Drives the <input> off a local debounced state (300 ms)
+ *  - Passes the debounced search + type to `useGroups`, which uses Apollo
+ *    v4's `previousData` to keep the existing list visible during
+ *    refetches. The Groups resolver already handled server-side
+ *    search/type — F-11 just removes the redundant client-side filter
+ *    and adds the flicker-free refetch behaviour.
+ *  - Removes the client-side `useMemo` filter — the list returned from
+ *    the query is already filtered by the server.
+ *
+ * Type-filter chip counts: removed for the F-11 pilot. The server returns
+ * the filtered list, so counts per type are no longer directly available.
+ *
  * Loads:
- * - The campaign (for the title in the back link + GM role check)
- * - The full list of groups for the campaign
+ * - The campaign (for the title + GM role check)
+ * - The (server-filtered) list of groups for the campaign
  * - The group types catalog (for the type filter chips and row icon)
  *
  * Owns the page-level UI state:
  * - URL search params (q, type) — mirrored into search + typeFilter
  * - addOpen — whether the "add group" drawer is open
- *
- * Derives:
- * - typeFilters (all + each known type with counts) — empty list when
- *   the group_types section is disabled
- * - filtered (client-side search + type filter applied)
- * - resolveType — helper used by the list row to look up name + icon
- *   for a group's type id, falling back to the raw type id.
- *
- * Matches the list-page pattern established by useNpcListPage /
- * useLocationListPage: the hook owns shared state and hands minimal props
- * down to presentational section widgets. Filtering is client-side
- * (consistent with GroupTypesPage) — server-side search/type will be
- * handled in the F-11 sweep later.
  */
-import { useMemo, useState, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -32,13 +34,13 @@ import {
 } from '@/features/campaigns/api/queries';
 import { useGroups, useSetGroupVisibility } from '@/features/groups/api';
 import { useGroupTypes } from '@/features/groupTypes';
+import { useDebouncedSearch } from '@/shared/hooks';
 import type { Group } from '@/entities/group';
 import type { GroupTypeEntry } from '@/entities/groupType';
 
 export interface TypeFilterOption {
   value: string;
   label: string;
-  count: number;
 }
 
 export interface ResolvedGroupType {
@@ -54,9 +56,11 @@ export interface UseGroupListPageResult {
   partyEnabled: boolean;
   isGm: boolean;
   isLoading: boolean;
+  isFetching: boolean;
   isError: boolean;
+  /** Server-filtered list. Stays populated via Apollo previousData during
+   *  in-flight refetches. */
   groups: Group[] | undefined;
-  filtered: Group[];
   typeFilters: TypeFilterOption[];
   search: string;
   setSearch: (v: string) => void;
@@ -77,19 +81,27 @@ export function useGroupListPage(campaignId: string): UseGroupListPageResult {
   const { data: campaign } = useCampaign(campaignId);
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
 
-  // Client-side filtering: always fetch the full list, filter in memory.
-  const { data: groups, isLoading, isError } = useGroups(campaignId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSearch = searchParams.get('q') ?? '';
+  const typeFilter = searchParams.get('type') ?? 'all';
+
+  const { value: search, debouncedValue: debouncedSearch, setValue: setDebouncedSearch } =
+    useDebouncedSearch(urlSearch, 300);
+
+  const typeForQuery = typeFilter === 'all' ? undefined : typeFilter;
+
+  const { data: groups, isLoading, isFetching, isError } = useGroups(campaignId, {
+    search: debouncedSearch || undefined,
+    type: typeForQuery,
+  });
   const { data: groupTypes } = useGroupTypes(campaignId);
   const setGroupVisibility = useSetGroupVisibility();
-
-  const [searchParams, setSearchParams] = useSearchParams();
-  const search = searchParams.get('q') ?? '';
-  const typeFilter = searchParams.get('type') ?? 'all';
 
   const [addOpen, setAddOpen] = useState(false);
 
   const setSearch = useCallback(
     (val: string) => {
+      setDebouncedSearch(val);
       setSearchParams(
         (prev) => {
           if (val) prev.set('q', val);
@@ -99,7 +111,7 @@ export function useGroupListPage(campaignId: string): UseGroupListPageResult {
         { replace: true },
       );
     },
-    [setSearchParams],
+    [setDebouncedSearch, setSearchParams],
   );
 
   const setTypeFilter = useCallback(
@@ -118,32 +130,14 @@ export function useGroupListPage(campaignId: string): UseGroupListPageResult {
 
   const typeFilters = useMemo<TypeFilterOption[]>(() => {
     if (!groupTypesEnabled) return [];
-    const total = groups?.length ?? 0;
     const entries: TypeFilterOption[] = [
-      { value: 'all', label: t('filter_all'), count: total },
+      { value: 'all', label: t('filter_all') },
     ];
     for (const gt of groupTypes ?? []) {
-      entries.push({
-        value: gt.id,
-        label: gt.name,
-        count: groups?.filter((g) => g.type === gt.id).length ?? 0,
-      });
+      entries.push({ value: gt.id, label: gt.name });
     }
     return entries;
-  }, [groupTypesEnabled, groupTypes, groups, t]);
-
-  const filtered = useMemo(() => {
-    if (!groups) return [];
-    const q = search.trim().toLowerCase();
-    return groups.filter((g) => {
-      const matchSearch =
-        !q ||
-        g.name.toLowerCase().includes(q) ||
-        (g.aliases ?? []).some((a) => a.toLowerCase().includes(q));
-      const matchType = typeFilter === 'all' || g.type === typeFilter;
-      return matchSearch && matchType;
-    });
-  }, [groups, search, typeFilter]);
+  }, [groupTypesEnabled, groupTypes, t]);
 
   const resolveType = useCallback(
     (typeId: string): ResolvedGroupType => {
@@ -177,9 +171,9 @@ export function useGroupListPage(campaignId: string): UseGroupListPageResult {
     partyEnabled,
     isGm,
     isLoading,
+    isFetching,
     isError,
     groups,
-    filtered,
     typeFilters,
     search,
     setSearch,

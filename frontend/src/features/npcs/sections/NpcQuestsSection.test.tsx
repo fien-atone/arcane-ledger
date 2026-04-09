@@ -12,8 +12,8 @@ import { NpcQuestsSection } from './NpcQuestsSection';
 import { renderWithProviders } from '@/test/helpers';
 
 const QUESTS_QUERY = gql`
-  query Quests($campaignId: ID!) {
-    quests(campaignId: $campaignId) {
+  query Quests($campaignId: ID!, $search: String, $status: String) {
+    quests(campaignId: $campaignId, search: $search, status: $status) {
       id
       campaignId
       title
@@ -32,12 +32,12 @@ const QUESTS_QUERY = gql`
 `;
 
 const emptyQuestsMock = {
-  request: { query: QUESTS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: QUESTS_QUERY, variables: { campaignId: 'camp-1', search: null, status: null } },
   result: { data: { quests: [] } },
 };
 
 const questsForNpcMock = {
-  request: { query: QUESTS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: QUESTS_QUERY, variables: { campaignId: 'camp-1', search: null, status: null } },
   result: {
     data: {
       quests: [

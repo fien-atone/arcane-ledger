@@ -38,7 +38,6 @@ export default function GroupListPage() {
     isLoading,
     isError,
     groups,
-    filtered,
     typeFilters,
     search,
     setSearch,
@@ -79,8 +78,7 @@ export default function GroupListPage() {
             typeFilter={typeFilter}
             onTypeFilterChange={setTypeFilter}
             typeFilters={typeFilters}
-            filteredCount={filtered.length}
-            totalCount={groups?.length ?? 0}
+            shownCount={groups?.length ?? 0}
             onAdd={openAdd}
           />
 
@@ -91,7 +89,7 @@ export default function GroupListPage() {
             partyEnabled={partyEnabled}
             isLoading={isLoading}
             isError={isError}
-            filtered={filtered}
+            filtered={groups ?? []}
             resolveType={resolveType}
             onToggleVisibility={toggleVisibility}
           />

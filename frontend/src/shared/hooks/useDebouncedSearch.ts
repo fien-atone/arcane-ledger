@@ -30,17 +30,31 @@ export function useDebouncedSearch(
   const [value, setValueState] = useState(initialValue);
   const [debouncedValue, setDebouncedValue] = useState(initialValue);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track the last value the caller wrote through `setValue`. We use this
+  // to distinguish a true external `initialValue` change (back/forward
+  // navigation, link click) from the echo that happens when a caller
+  // updates the URL synchronously on every keystroke — in that case the
+  // URL reflects the value we JUST set, and we must not bypass the debounce.
+  const lastSelfValueRef = useRef(initialValue);
 
-  // Re-sync when the caller changes `initialValue` (e.g., URL param restored
-  // from back/forward navigation). This deliberately bypasses the debounce
-  // so the URL drives the query instantly on navigation.
+  // Re-sync only when the external `initialValue` actually differs from
+  // what we wrote ourselves last time. Handles back/forward navigation
+  // without clobbering debounced input that is being echoed back via URL.
   useEffect(() => {
-    setValueState(initialValue);
-    setDebouncedValue(initialValue);
+    if (initialValue !== lastSelfValueRef.current) {
+      lastSelfValueRef.current = initialValue;
+      setValueState(initialValue);
+      setDebouncedValue(initialValue);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    }
   }, [initialValue]);
 
   const setValue = useCallback(
     (next: string) => {
+      lastSelfValueRef.current = next;
       setValueState(next);
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {

@@ -3,8 +3,8 @@ import { useQuery, useMutation } from '@apollo/client/react';
 import type { Species } from '@/entities/species';
 
 const SPECIES_QUERY = gql`
-  query Species($campaignId: ID!) {
-    species(campaignId: $campaignId) {
+  query Species($campaignId: ID!, $search: String, $type: String) {
+    species(campaignId: $campaignId, search: $search, type: $type) {
       id campaignId name pluralName type size description traits
     }
   }
@@ -30,17 +30,42 @@ const DELETE_SPECIES = gql`
   }
 `;
 
-export const useSpecies = (campaignId?: string) => {
-  const { data, loading, error } = useQuery<any>(SPECIES_QUERY, {
-    variables: { campaignId },
+/**
+ * Loads the species catalog for a campaign. Supports server-side filtering
+ * by `search` (name substring, case-insensitive) and `type` (exact match
+ * on the species type id). Uses the flicker-free pattern established by
+ * the NPC pilot.
+ */
+export const useSpecies = (
+  campaignId?: string,
+  opts?: { search?: string; type?: string },
+) => {
+  const { data, previousData, loading, error } = useQuery<any>(SPECIES_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+      type: opts?.type || null,
+    },
     skip: !campaignId,
+    notifyOnNetworkStatusChange: true,
   });
-  return { data: data?.species as Species[] | undefined, isLoading: loading, isError: !!error, error };
+  const effective = data ?? previousData;
+  const isInitialLoad = loading && !previousData;
+  return {
+    data: effective?.species as Species[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
+    isError: !!error,
+    error,
+  };
 };
 
 export const useSpeciesById = (campaignId?: string, id?: string) => {
+  // Always queries the unfiltered list (search/type: null) so callers can
+  // look up any species id regardless of any list-page filter that might
+  // be active for the same campaign.
   const { data, loading, error } = useQuery<any>(SPECIES_QUERY, {
-    variables: { campaignId },
+    variables: { campaignId, search: null, type: null },
     skip: !campaignId || !id,
   });
   const species = id ? (data?.species as Species[] | undefined)?.find((s: Species) => s.id === id) : undefined;

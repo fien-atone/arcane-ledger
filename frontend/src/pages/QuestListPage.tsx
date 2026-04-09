@@ -36,7 +36,6 @@ export default function QuestListPage() {
     isLoading,
     isError,
     quests,
-    filtered,
     statusFilters,
     search,
     setSearch,
@@ -76,8 +75,7 @@ export default function QuestListPage() {
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
             statusFilters={statusFilters}
-            filteredCount={filtered.length}
-            totalCount={quests?.length ?? 0}
+            shownCount={quests?.length ?? 0}
             onAdd={openAdd}
           />
 
@@ -87,7 +85,7 @@ export default function QuestListPage() {
             partyEnabled={partyEnabled}
             isLoading={isLoading}
             isError={isError}
-            filtered={filtered}
+            filtered={quests ?? []}
             onToggleVisibility={toggleVisibility}
           />
         </div>

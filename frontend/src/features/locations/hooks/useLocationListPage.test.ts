@@ -35,8 +35,8 @@ const CAMPAIGN_QUERY = gql`
 `;
 
 const LOCATIONS_QUERY = gql`
-  query Locations($campaignId: ID!) {
-    locations(campaignId: $campaignId) {
+  query Locations($campaignId: ID!, $search: String, $type: String) {
+    locations(campaignId: $campaignId, search: $search, type: $type) {
       id campaignId name type settlementPopulation biome
       parentLocationId description image gmNotes
       playerVisible playerVisibleFields
@@ -75,7 +75,7 @@ const campaignMock = {
 };
 
 const locationsMock = {
-  request: { query: LOCATIONS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: LOCATIONS_QUERY, variables: { campaignId: 'camp-1', search: null, type: null } },
   result: {
     data: {
       locations: [
@@ -145,6 +145,20 @@ const locationTypesMock = {
   },
 };
 
+// F-11: the hook now relies on server-side search + type filter, so the
+// second (refetch) mock used by the typeFilter test covers the filtered
+// response.
+const locationsRegionMock = {
+  request: { query: LOCATIONS_QUERY, variables: { campaignId: 'camp-1', search: null, type: 'lt-region' } },
+  result: {
+    data: {
+      locations: (locationsMock.result.data.locations as Array<Record<string, unknown>>).filter(
+        (l) => l.type === 'lt-region',
+      ),
+    },
+  },
+};
+
 describe('useLocationListPage', () => {
   it('returns expected shape after loading', async () => {
     const { result } = renderHookWithProviders(
@@ -162,10 +176,9 @@ describe('useLocationListPage', () => {
     expect(result.current.partyEnabled).toBe(true);
     expect(result.current.isGm).toBe(true);
 
-    // typeFilters: "all" + 3 used types (world, geographic, civilization)
+    // typeFilters: "all" + 3 defined location types, no `count` field
     expect(result.current.typeFilters).toHaveLength(4);
-    expect(result.current.typeFilters[0].value).toBe('all');
-    expect(result.current.typeFilters[0].count).toBe(3);
+    expect(result.current.typeFilters[0]).toEqual({ value: 'all', label: 'filter_all' });
 
     // depthMap: loc-1 (root) = 0, loc-2 = 1, loc-3 = 2
     expect(result.current.depthMap.get('loc-1')).toBe(0);
@@ -180,7 +193,7 @@ describe('useLocationListPage', () => {
     ]);
   });
 
-  it('search filters by name and description', async () => {
+  it('search is driven locally but updates the URL immediately', async () => {
     const { result } = renderHookWithProviders(
       () => useLocationListPage('camp-1'),
       { mocks: [campaignMock, locationsMock, locationTypesMock] },
@@ -188,20 +201,24 @@ describe('useLocationListPage', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => result.current.setSearch('capital'));
-    await waitFor(() => expect(result.current.search).toBe('capital'));
-    expect(result.current.filtered.map((l) => l.id)).toEqual(['loc-3']);
+    // `search` reflects the live input value immediately
+    expect(result.current.search).toBe('capital');
+    // The debounced query variable won't have fired yet — the list is unchanged.
+    expect(result.current.locations).toHaveLength(3);
   });
 
-  it('typeFilter narrows results to a single type', async () => {
+  it('typeFilter triggers a server refetch with the type id', async () => {
     const { result } = renderHookWithProviders(
       () => useLocationListPage('camp-1'),
-      { mocks: [campaignMock, locationsMock, locationTypesMock] },
+      { mocks: [campaignMock, locationsMock, locationTypesMock, locationsRegionMock] },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => result.current.setTypeFilter('lt-region'));
-    await waitFor(() => expect(result.current.typeFilter).toBe('lt-region'));
-    expect(result.current.filtered.map((l) => l.id)).toEqual(['loc-2']);
+    await waitFor(() =>
+      expect(result.current.locations!.map((l) => l.id)).toEqual(['loc-2']),
+    );
+    expect(result.current.typeFilter).toBe('lt-region');
   });
 
   it('openAdd/closeAdd toggles the drawer state', async () => {

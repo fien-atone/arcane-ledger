@@ -32,8 +32,8 @@ const CAMPAIGN_QUERY = gql`
 `;
 
 const SESSIONS_QUERY = gql`
-  query Sessions($campaignId: ID!) {
-    sessions(campaignId: $campaignId) {
+  query Sessions($campaignId: ID!, $search: String) {
+    sessions(campaignId: $campaignId, search: $search) {
       id
       campaignId
       number
@@ -86,7 +86,7 @@ const sessionFixture = (id: string, number: number, title: string) => ({
 });
 
 const sessionsMock = {
-  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: SESSIONS_QUERY, variables: { campaignId: 'camp-1', search: null } },
   result: {
     data: {
       sessions: [

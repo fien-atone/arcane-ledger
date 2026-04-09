@@ -35,7 +35,6 @@ export default function LocationListPage() {
     isGm,
     isLoading,
     isError,
-    locations,
     filtered,
     typeMap,
     typeFilters,
@@ -79,8 +78,7 @@ export default function LocationListPage() {
             typeFilter={typeFilter}
             onTypeFilterChange={setTypeFilter}
             typeFilters={typeFilters}
-            filteredCount={filtered.length}
-            totalCount={locations?.length ?? 0}
+            shownCount={filtered.length}
             onAdd={openAdd}
           />
 

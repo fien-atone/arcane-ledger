@@ -5,8 +5,8 @@ import type { Location } from '@/entities/location';
 // ── Queries ──────────────────────────────────────────────────────────────────
 
 const LOCATIONS_QUERY = gql`
-  query Locations($campaignId: ID!) {
-    locations(campaignId: $campaignId) {
+  query Locations($campaignId: ID!, $search: String, $type: String) {
+    locations(campaignId: $campaignId, search: $search, type: $type) {
       id campaignId name type settlementPopulation biome
       parentLocationId description image gmNotes
       playerVisible playerVisibleFields
@@ -58,11 +58,34 @@ const DELETE_LOCATION = gql`
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
-export const useLocations = (campaignId: string) => {
-  const { data, loading, error } = useQuery<any>(LOCATIONS_QUERY, {
-    variables: { campaignId },
+/**
+ * Loads the location list for a campaign. Supports server-side filtering by
+ * `search` (name substring, case-insensitive — NOT description) and `type`
+ * (exact match on the location type id). Uses the flicker-free pattern
+ * established by the NPC pilot: `notifyOnNetworkStatusChange` + `previousData`
+ * fallback so the previous list stays visible during refetches.
+ */
+export const useLocations = (
+  campaignId: string,
+  opts?: { search?: string; type?: string },
+) => {
+  const { data, previousData, loading, error } = useQuery<any>(LOCATIONS_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+      type: opts?.type || null,
+    },
+    notifyOnNetworkStatusChange: true,
   });
-  return { data: data?.locations as Location[] | undefined, isLoading: loading, isError: !!error, error };
+  const effective = data ?? previousData;
+  const isInitialLoad = loading && !previousData;
+  return {
+    data: effective?.locations as Location[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
+    isError: !!error,
+    error,
+  };
 };
 
 export const useLocation = (campaignId: string, locationId: string) => {
@@ -90,10 +113,9 @@ export const useSaveLocation = (campaignId: string) => {
       };
       execute({
         variables: { campaignId, id: id || undefined, input },
-        refetchQueries: [
-          { query: LOCATIONS_QUERY, variables: { campaignId } },
-          { query: LOCATION_QUERY, variables: { campaignId, id } },
-        ],
+        // Named refetch so the currently-active Locations query re-runs with
+        // whatever search/type variables the caller is using (see F-11 notes).
+        refetchQueries: ['Locations', 'Location'],
       }).then((result) => {
         const saved = (result.data as any)?.saveLocation;
         opts?.onSuccess?.(saved ? { ...loc, ...saved } : loc);
@@ -130,7 +152,7 @@ export const useDeleteLocation = (campaignId: string) => {
     mutate: (locationId: string, opts?: { onSuccess?: () => void }) => {
       execute({
         variables: { campaignId, id: locationId },
-        refetchQueries: [{ query: LOCATIONS_QUERY, variables: { campaignId } }],
+        refetchQueries: ['Locations'],
       }).then(() => opts?.onSuccess?.()).catch(() => {});
     },
     isPending: loading,

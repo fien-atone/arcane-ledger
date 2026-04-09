@@ -16,8 +16,7 @@ function baseProps(
     isGm: true,
     search: '',
     onSearchChange: vi.fn(),
-    filteredCount: 3,
-    totalCount: 3,
+    shownCount: 3,
     onAdd: vi.fn(),
     ...overrides,
   };

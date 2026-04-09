@@ -9,12 +9,12 @@ import { renderWithProviders } from '@/test/helpers';
 import type { StatusFilterOption } from '../hooks/useQuestListPage';
 
 const statusFilters: StatusFilterOption[] = [
-  { value: 'all', label: 'filter_all', count: 3 },
-  { value: 'active', label: 'status_active', count: 2 },
-  { value: 'undiscovered', label: 'status_undiscovered', count: 0 },
-  { value: 'completed', label: 'status_completed', count: 1 },
-  { value: 'unavailable', label: 'status_unavailable', count: 0 },
-  { value: 'failed', label: 'status_failed', count: 0 },
+  { value: 'all', label: 'filter_all' },
+  { value: 'active', label: 'status_active' },
+  { value: 'undiscovered', label: 'status_undiscovered' },
+  { value: 'completed', label: 'status_completed' },
+  { value: 'unavailable', label: 'status_unavailable' },
+  { value: 'failed', label: 'status_failed' },
 ];
 
 function baseProps(
@@ -29,8 +29,7 @@ function baseProps(
     statusFilter: 'all' as const,
     onStatusFilterChange: vi.fn(),
     statusFilters,
-    filteredCount: 3,
-    totalCount: 3,
+    shownCount: 3,
     onAdd: vi.fn(),
     ...overrides,
   };

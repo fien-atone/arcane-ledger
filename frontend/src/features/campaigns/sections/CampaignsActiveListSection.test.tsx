@@ -10,8 +10,8 @@ import { renderWithProviders } from '@/test/helpers';
 import type { CampaignSummary } from '@/entities/campaign';
 
 const SESSIONS_QUERY = gql`
-  query Sessions($campaignId: ID!) {
-    sessions(campaignId: $campaignId) {
+  query Sessions($campaignId: ID!, $search: String) {
+    sessions(campaignId: $campaignId, search: $search) {
       id
       campaignId
       number
@@ -29,7 +29,7 @@ const SESSIONS_QUERY = gql`
 `;
 
 const emptySessionsMock = (campaignId: string) => ({
-  request: { query: SESSIONS_QUERY, variables: { campaignId } },
+  request: { query: SESSIONS_QUERY, variables: { campaignId, search: null } },
   result: { data: { sessions: [] } },
 });
 

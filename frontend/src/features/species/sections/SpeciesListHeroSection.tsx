@@ -18,9 +18,10 @@ interface Props {
   typeFilter: string;
   onTypeFilterChange: (v: string) => void;
   typeFilters: TypeFilterOption[];
-  countForType: (value: string) => number;
-  filteredCount: number;
-  totalCount: number;
+  /** F-11: number of species in the currently displayed (server-filtered)
+   *  list. No "of total" ratio — counts were dropped with the server-side
+   *  filter switch. */
+  shownCount: number;
   onAdd: () => void;
 }
 
@@ -30,9 +31,7 @@ export function SpeciesListHeroSection({
   typeFilter,
   onTypeFilterChange,
   typeFilters,
-  countForType,
-  filteredCount,
-  totalCount,
+  shownCount,
   onAdd,
 }: Props) {
   const { t } = useTranslation('species');
@@ -73,36 +72,23 @@ export function SpeciesListHeroSection({
         </div>
         {typeFilters.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {typeFilters.map(({ value, label }) => {
-              const count = countForType(value);
-              return (
-                <button
-                  key={value}
-                  onClick={() => onTypeFilterChange(value)}
-                  className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
-                    typeFilter === value
-                      ? 'bg-primary text-on-primary'
-                      : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
-                  }`}
-                >
-                  {label}{' '}
-                  <span
-                    className={
-                      typeFilter === value
-                        ? 'text-on-primary/70'
-                        : 'text-on-surface-variant/40'
-                    }
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+            {typeFilters.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => onTypeFilterChange(value)}
+                className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full transition-all ${
+                  typeFilter === value
+                    ? 'bg-primary text-on-primary'
+                    : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         )}
         <span className="ml-auto text-[10px] text-on-surface-variant/40">
-          <span className="text-on-surface font-bold">{filteredCount}</span> of{' '}
-          <span className="text-primary font-bold">{totalCount}</span>
+          <span className="text-primary font-bold">{shownCount}</span>
         </span>
       </div>
     </SectionPanel>

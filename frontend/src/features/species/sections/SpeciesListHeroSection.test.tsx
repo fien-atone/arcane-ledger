@@ -21,9 +21,7 @@ function baseProps(
       { value: 'all', label: 'All' },
       { value: 'st-humanoid', label: 'Humanoid' },
     ],
-    countForType: (v: string) => (v === 'all' ? 3 : 2),
-    filteredCount: 3,
-    totalCount: 3,
+    shownCount: 3,
     onAdd: vi.fn(),
     ...overrides,
   };

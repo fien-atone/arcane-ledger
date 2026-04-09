@@ -36,8 +36,8 @@ const CAMPAIGN_QUERY = gql`
 `;
 
 const SPECIES_QUERY = gql`
-  query Species($campaignId: ID!) {
-    species(campaignId: $campaignId) {
+  query Species($campaignId: ID!, $search: String, $type: String) {
+    species(campaignId: $campaignId, search: $search, type: $type) {
       id campaignId name pluralName type size description traits
     }
   }
@@ -72,7 +72,7 @@ const campaignMock = {
 };
 
 const speciesMock = {
-  request: { query: SPECIES_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: SPECIES_QUERY, variables: { campaignId: 'camp-1', search: null, type: null } },
   result: {
     data: {
       species: [
@@ -138,6 +138,18 @@ const speciesTypesMock = {
   },
 };
 
+// F-11: second mock for the type-filter refetch
+const speciesHumanoidMock = {
+  request: { query: SPECIES_QUERY, variables: { campaignId: 'camp-1', search: null, type: 'st-humanoid' } },
+  result: {
+    data: {
+      species: (speciesMock.result.data.species as Array<Record<string, unknown>>).filter(
+        (s) => s.type === 'st-humanoid',
+      ),
+    },
+  },
+};
+
 describe('useSpeciesListPage', () => {
   it('returns expected shape after loading', async () => {
     const { result } = renderHookWithProviders(
@@ -153,22 +165,16 @@ describe('useSpeciesListPage', () => {
     expect(result.current.speciesEnabled).toBe(true);
     expect(result.current.typesEnabled).toBe(true);
 
-    // typeFilters: all + 2 species types = 3 entries
+    // typeFilters: all + 2 species types = 3 entries (no count field)
     expect(result.current.typeFilters).toHaveLength(3);
-    expect(result.current.typeFilters[0]).toMatchObject({ value: 'all' });
-    expect(result.current.countForType('all')).toBe(3);
-    expect(result.current.countForType('st-humanoid')).toBe(2);
-    expect(result.current.countForType('st-beast')).toBe(1);
-
-    // Default (all, no search): all 3 species
-    expect(result.current.filtered).toHaveLength(3);
+    expect(result.current.typeFilters[0]).toEqual({ value: 'all', label: 'filter_all' });
 
     // resolveTypeName prefers the catalog, falls back to raw id
     expect(result.current.resolveTypeName('st-humanoid')).toBe('Humanoid');
     expect(result.current.resolveTypeName('st-unknown')).toBe('st-unknown');
   });
 
-  it('search filters by name (case-insensitive)', async () => {
+  it('search is driven locally but updates the URL immediately', async () => {
     const { result } = renderHookWithProviders(
       () => useSpeciesListPage('camp-1'),
       { mocks: [campaignMock, speciesMock, speciesTypesMock] },
@@ -176,26 +182,23 @@ describe('useSpeciesListPage', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => result.current.setSearch('GOB'));
-    await waitFor(() => expect(result.current.search).toBe('GOB'));
-    expect(result.current.filtered.map((s) => s.id)).toEqual(['s-2']);
+    expect(result.current.search).toBe('GOB');
+    // Debounced variable won't have fired yet — list is unchanged.
+    expect(result.current.speciesList).toHaveLength(3);
   });
 
-  it('typeFilter narrows results to a single type', async () => {
+  it('typeFilter triggers a server refetch with the type id', async () => {
     const { result } = renderHookWithProviders(
       () => useSpeciesListPage('camp-1'),
-      { mocks: [campaignMock, speciesMock, speciesTypesMock] },
+      { mocks: [campaignMock, speciesMock, speciesTypesMock, speciesHumanoidMock] },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => result.current.setTypeFilter('st-humanoid'));
     await waitFor(() =>
-      expect(result.current.typeFilter).toBe('st-humanoid'),
+      expect(result.current.speciesList!.map((s) => s.id)).toEqual(['s-1', 's-2']),
     );
-    expect(result.current.filtered.map((s) => s.id)).toEqual(['s-1', 's-2']);
-
-    act(() => result.current.setTypeFilter('all'));
-    await waitFor(() => expect(result.current.typeFilter).toBe('all'));
-    expect(result.current.filtered).toHaveLength(3);
+    expect(result.current.typeFilter).toBe('st-humanoid');
   });
 
   it('openDrawer / closeDrawer toggles the add drawer state', async () => {
