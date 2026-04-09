@@ -3,8 +3,12 @@
  *
  * Loads:
  * - The campaign (for the title in the back link + role check)
- * - The full list of location types
+ * - The (server-filtered) list of location types
  * - The full set of containment rules
+ *
+ * F-11 sweep: search is SERVER-SIDE. Uses `useDebouncedSearch` (300 ms) to
+ * drive the query variable; `useLocationTypes` returns `data ?? previousData`
+ * to keep the existing list visible while the new query is in flight.
  *
  * Owns the page-level UI state:
  * - selectedTypeId — which type is currently shown in the right panel
@@ -12,9 +16,11 @@
  * - search — left-list search filter
  *
  * Derives:
- * - sorted (sorted by category order)
- * - filtered (filtered by search)
- * - selected (currently-shown LocationTypeEntry, defaults to first sorted entry)
+ * - sorted — list sorted by category order (client-side sort applied on
+ *   top of the already-filtered server list)
+ * - filtered — alias for `sorted` (kept for call-site compatibility with
+ *   `LocationTypesListSection`, which still takes a `filtered` prop)
+ * - selected — currently-shown LocationTypeEntry, defaults to first sorted entry
  *
  * Section widgets receive minimal props (selected entry, helpers) and do not
  * re-fetch the type list themselves.
@@ -25,6 +31,7 @@ import {
   useLocationTypes,
   useContainmentRules,
 } from '@/features/locationTypes';
+import { useDebouncedSearch } from '@/shared/hooks';
 import type {
   LocationTypeEntry,
   LocationTypeCategory,
@@ -46,6 +53,7 @@ export interface UseLocationTypesPageResult {
   locationTypesEnabled: boolean;
   isGm: boolean;
   isLoading: boolean;
+  isFetching: boolean;
   types: LocationTypeEntry[];
   containRules: LocationTypeContainmentRule[];
   sorted: LocationTypeEntry[];
@@ -68,12 +76,21 @@ export function useLocationTypesPage(campaignId: string): UseLocationTypesPageRe
   const { data: campaign } = useCampaign(campaignId);
   const locationTypesEnabled = useSectionEnabled(campaignId, 'location_types');
 
-  const { data: types, isLoading: loadingTypes } = useLocationTypes(campaignId);
+  const {
+    value: search,
+    debouncedValue: debouncedSearch,
+    setValue: setSearch,
+  } = useDebouncedSearch('', 300);
+
+  const {
+    data: types,
+    isLoading: loadingTypes,
+    isFetching: fetchingTypes,
+  } = useLocationTypes(campaignId, { search: debouncedSearch || undefined });
   const { data: containRules, isLoading: loadingContain } = useContainmentRules();
 
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
-  const [search, setSearch] = useState('');
 
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
   const isLoading = loadingTypes || loadingContain;
@@ -90,10 +107,10 @@ export function useLocationTypesPage(campaignId: string): UseLocationTypesPageRe
     [allTypes],
   );
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return q ? sorted.filter((t) => t.name.toLowerCase().includes(q)) : sorted;
-  }, [sorted, search]);
+  // `filtered` is identical to `sorted` now that filtering is server-side.
+  // Kept as a distinct alias so `LocationTypesListSection` (which still
+  // takes a `filtered` prop) doesn't need to change.
+  const filtered = sorted;
 
   const selected =
     allTypes.find((t) => t.id === selectedTypeId) ?? sorted[0] ?? null;
@@ -123,6 +140,7 @@ export function useLocationTypesPage(campaignId: string): UseLocationTypesPageRe
     locationTypesEnabled,
     isGm,
     isLoading,
+    isFetching: fetchingTypes,
     types: allTypes,
     containRules: allRules,
     sorted,

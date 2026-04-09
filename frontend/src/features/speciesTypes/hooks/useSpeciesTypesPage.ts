@@ -3,16 +3,17 @@
  *
  * Loads:
  * - The campaign (for the title in the back link + role check)
- * - The filtered list of species types (driven by debounced search)
+ * - The (server-filtered) list of species types — search is debounced
+ *   and pushed into the GraphQL variable.
+ *
+ * F-11 sweep: search is SERVER-SIDE. Uses `useDebouncedSearch` (300 ms)
+ * to drive the query variable; `useSpeciesTypes` returns `data ?? previousData`
+ * to keep the existing list visible while the new query is in flight.
  *
  * Owns the page-level UI state:
  * - selectedTypeId — which type is currently shown in the right panel
  * - showNew — whether the right panel is in "create new type" mode
  * - search — left-list search filter
- *
- * Derives:
- * - filtered (already server-filtered via useSpeciesTypes(search))
- * - selected (currently-shown SpeciesTypeEntry, defaults to first entry)
  *
  * Section widgets receive minimal props (selected entry, helpers) and do not
  * re-fetch the type list themselves.
@@ -20,7 +21,7 @@
 import { useState } from 'react';
 import { useCampaign, useSectionEnabled } from '@/features/campaigns/api/queries';
 import { useSpeciesTypes } from '@/features/speciesTypes/api';
-import { useDebouncedValue } from '@/shared/lib/useDebouncedValue';
+import { useDebouncedSearch } from '@/shared/hooks';
 import type { SpeciesTypeEntry } from '@/entities/speciesType';
 
 export interface UseSpeciesTypesPageResult {
@@ -29,6 +30,7 @@ export interface UseSpeciesTypesPageResult {
   speciesTypesEnabled: boolean;
   isGm: boolean;
   isLoading: boolean;
+  isFetching: boolean;
   types: SpeciesTypeEntry[];
   selected: SpeciesTypeEntry | null;
   selectedTypeId: string | null;
@@ -46,9 +48,17 @@ export function useSpeciesTypesPage(campaignId: string): UseSpeciesTypesPageResu
   const { data: campaign } = useCampaign(campaignId);
   const speciesTypesEnabled = useSectionEnabled(campaignId, 'species_types');
 
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebouncedValue(search);
-  const { data: types, isLoading } = useSpeciesTypes(campaignId, debouncedSearch);
+  const {
+    value: search,
+    debouncedValue: debouncedSearch,
+    setValue: setSearch,
+  } = useDebouncedSearch('', 300);
+
+  const {
+    data: types,
+    isLoading,
+    isFetching,
+  } = useSpeciesTypes(campaignId, { search: debouncedSearch || undefined });
 
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
@@ -86,6 +96,7 @@ export function useSpeciesTypesPage(campaignId: string): UseSpeciesTypesPageResu
     speciesTypesEnabled,
     isGm,
     isLoading,
+    isFetching,
     types: allTypes,
     selected,
     selectedTypeId,

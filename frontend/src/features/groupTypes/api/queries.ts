@@ -24,12 +24,40 @@ const DELETE_GROUP_TYPE = gql`
   }
 `;
 
-export const useGroupTypes = (campaignId?: string, search?: string) => {
-  const { data, loading, error } = useQuery<any>(GROUP_TYPES_QUERY, {
-    variables: { campaignId, search: search?.trim() || null },
+/**
+ * Loads the group types list for a campaign. Supports server-side name
+ * search via the optional `search` field on `opts`.
+ *
+ * Flicker-free strategy (F-11 sweep, mirrors the NPC pilot):
+ *  - `notifyOnNetworkStatusChange: true` makes Apollo emit loading states
+ *    on variable changes, not just initial fetch.
+ *  - We return `data ?? previousData` so the caller keeps rendering the
+ *    previous list while the new query is in flight.
+ *  - `isLoading` is only true on the very first load (no previous data).
+ *  - `isFetching` stays true for every in-flight request so the global
+ *    loading bar still moves on each keystroke.
+ */
+export const useGroupTypes = (
+  campaignId?: string,
+  opts?: { search?: string },
+) => {
+  const { data, previousData, loading, error } = useQuery<any>(GROUP_TYPES_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+    },
     skip: !campaignId,
+    notifyOnNetworkStatusChange: true,
   });
-  return { data: data?.groupTypes as GroupTypeEntry[] | undefined, isLoading: loading, isError: !!error, error };
+  const effective = data ?? previousData;
+  const isInitialLoad = loading && !previousData;
+  return {
+    data: effective?.groupTypes as GroupTypeEntry[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
+    isError: !!error,
+    error,
+  };
 };
 
 export const useSaveGroupType = (campaignId: string) => {

@@ -34,8 +34,8 @@ const CAMPAIGN_QUERY = gql`
 `;
 
 const LOCATION_TYPES_QUERY = gql`
-  query LocationTypes($campaignId: ID!) {
-    locationTypes(campaignId: $campaignId) {
+  query LocationTypes($campaignId: ID!, $search: String) {
+    locationTypes(campaignId: $campaignId, search: $search) {
       id name icon category biomeOptions isSettlement builtin
     }
   }
@@ -70,7 +70,7 @@ const campaignMock = {
 };
 
 const locationTypesMock = {
-  request: { query: LOCATION_TYPES_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: LOCATION_TYPES_QUERY, variables: { campaignId: 'camp-1', search: null } },
   result: {
     data: {
       locationTypes: [
@@ -125,14 +125,45 @@ describe('useLocationTypesPage', () => {
     expect(result.current.selected?.id).toBe('lt-3');
   });
 
-  it('search filters the list and falls back to first when filtered out', async () => {
+  it('pushes debounced search into the GraphQL query variable (server-side)', async () => {
+    // Typing into the search input should, after the debounce delay, fire a
+    // new GraphQL query with the search variable set. The filtered list in
+    // the result is whatever the server returns — not a client-side filter.
+    const searchMock = {
+      request: {
+        query: LOCATION_TYPES_QUERY,
+        variables: { campaignId: 'camp-1', search: 'reg' },
+      },
+      result: {
+        data: {
+          locationTypes: [
+            {
+              id: 'lt-3',
+              name: 'Region',
+              icon: 'terrain',
+              category: 'geographic',
+              biomeOptions: [],
+              isSettlement: false,
+              builtin: false,
+            },
+          ],
+        },
+      },
+    };
+
     const { result } = renderHookWithProviders(() => useLocationTypesPage('camp-1'), {
-      mocks: [campaignMock, locationTypesMock, containmentRulesMock],
+      mocks: [campaignMock, locationTypesMock, containmentRulesMock, searchMock],
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => result.current.setSearch('reg'));
-    expect(result.current.filtered).toHaveLength(1);
-    expect(result.current.filtered[0].id).toBe('lt-3');
+    // Input value updates instantly
+    expect(result.current.search).toBe('reg');
+
+    // After the debounce delay, the server returns the narrowed list
+    await waitFor(() => {
+      expect(result.current.filtered).toHaveLength(1);
+      expect(result.current.filtered[0]?.id).toBe('lt-3');
+    });
   });
 });
