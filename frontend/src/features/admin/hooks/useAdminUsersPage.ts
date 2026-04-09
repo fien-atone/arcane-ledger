@@ -2,7 +2,7 @@
  * Page-level state for AdminUsersPage — the admin-only user management page.
  *
  * Owns:
- * - search input + debounced search (300ms)
+ * - search input via shared useDebouncedSearch (300ms)
  * - edit/create drawer open state and the user being edited
  * - delete confirmation state (inline Yes/No, not a modal)
  * - the users list fetch + delete mutation
@@ -10,8 +10,9 @@
  * Section widgets (hero + list) receive state + handlers via props; the hook
  * is the single source of truth for the page.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAdminUsers, useDeleteUser } from '@/features/admin/api/queries';
+import { useDebouncedSearch } from '@/shared/hooks';
 import type { User } from '@/entities/user';
 
 export interface UseAdminUsersPageResult {
@@ -36,9 +37,8 @@ export interface UseAdminUsersPageResult {
 }
 
 export function useAdminUsersPage(): UseAdminUsersPageResult {
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { value: search, debouncedValue: debouncedSearch, setValue: setSearch } =
+    useDebouncedSearch('', 300);
 
   const { data: users, isLoading } = useAdminUsers(debouncedSearch || undefined);
   const deleteUser = useDeleteUser();
@@ -46,12 +46,6 @@ export function useAdminUsersPage(): UseAdminUsersPageResult {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-
-  // Debounce search (300ms) — mirrors the original AdminUsersPage behavior.
-  useEffect(() => {
-    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(debounceRef.current);
-  }, [search]);
 
   const openCreate = useCallback(() => {
     setEditingUser(undefined);
