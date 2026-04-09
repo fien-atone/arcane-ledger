@@ -8,8 +8,8 @@ import type {
 // ── Queries ──────────────────────────────────────────────────────────────────
 
 const LOCATION_TYPES_QUERY = gql`
-  query LocationTypes($campaignId: ID!) {
-    locationTypes(campaignId: $campaignId) {
+  query LocationTypes($campaignId: ID!, $search: String) {
+    locationTypes(campaignId: $campaignId, search: $search) {
       id name icon category biomeOptions isSettlement builtin
     }
   }
@@ -61,12 +61,35 @@ const DELETE_CONTAINMENT_RULE = gql`
 
 // ── Type Hooks ───────────────────────────────────────────────────────────────
 
-export function useLocationTypes(campaignId?: string) {
-  const { data, loading, error } = useQuery<any>(LOCATION_TYPES_QUERY, {
-    variables: { campaignId },
+/**
+ * Loads the location types list for a campaign. Supports server-side name
+ * search via the optional `search` field on `opts`.
+ *
+ * Flicker-free strategy (F-11 sweep, mirrors the NPC pilot): returns
+ * `data ?? previousData` so callers keep showing the previous list while
+ * the next query is in flight. See `useNpcs` for the full rationale.
+ */
+export function useLocationTypes(
+  campaignId?: string,
+  opts?: { search?: string },
+) {
+  const { data, previousData, loading, error } = useQuery<any>(LOCATION_TYPES_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+    },
     skip: !campaignId,
+    notifyOnNetworkStatusChange: true,
   });
-  return { data: data?.locationTypes as LocationTypeEntry[] | undefined, isLoading: loading, isError: !!error, error };
+  const effective = data ?? previousData;
+  const isInitialLoad = loading && !previousData;
+  return {
+    data: effective?.locationTypes as LocationTypeEntry[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
+    isError: !!error,
+    error,
+  };
 }
 
 export function useSaveLocationType(campaignId: string) {

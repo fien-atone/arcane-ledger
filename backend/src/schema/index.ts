@@ -352,7 +352,7 @@ export const typeDefs = `#graphql
     location(campaignId: ID!, id: ID!): Location
 
     # Location Types
-    locationTypes(campaignId: ID!): [LocationType!]!
+    locationTypes(campaignId: ID!, search: String): [LocationType!]!
     containmentRules: [LocationTypeContainmentRule!]!
 
     # Group Types

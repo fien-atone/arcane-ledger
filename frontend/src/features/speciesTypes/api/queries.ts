@@ -24,12 +24,35 @@ const DELETE_SPECIES_TYPE = gql`
   }
 `;
 
-export const useSpeciesTypes = (campaignId?: string, search?: string) => {
-  const { data, loading, error } = useQuery<any>(SPECIES_TYPES_QUERY, {
-    variables: { campaignId, search: search?.trim() || null },
+/**
+ * Loads the species types list for a campaign. Supports server-side name
+ * search via the optional `search` field on `opts`.
+ *
+ * Flicker-free strategy (F-11 sweep, mirrors the NPC pilot): returns
+ * `data ?? previousData` so callers keep showing the previous list while
+ * the next query is in flight. See `useNpcs` for the full rationale.
+ */
+export const useSpeciesTypes = (
+  campaignId?: string,
+  opts?: { search?: string },
+) => {
+  const { data, previousData, loading, error } = useQuery<any>(SPECIES_TYPES_QUERY, {
+    variables: {
+      campaignId,
+      search: opts?.search?.trim() || null,
+    },
     skip: !campaignId,
+    notifyOnNetworkStatusChange: true,
   });
-  return { data: data?.speciesTypes as SpeciesTypeEntry[] | undefined, isLoading: loading, isError: !!error, error };
+  const effective = data ?? previousData;
+  const isInitialLoad = loading && !previousData;
+  return {
+    data: effective?.speciesTypes as SpeciesTypeEntry[] | undefined,
+    isLoading: isInitialLoad,
+    isFetching: loading,
+    isError: !!error,
+    error,
+  };
 };
 
 export const useSaveSpeciesType = (campaignId: string) => {

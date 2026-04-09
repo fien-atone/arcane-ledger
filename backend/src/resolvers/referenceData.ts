@@ -4,29 +4,47 @@ import { publishCampaignEvent } from '../publish.js';
 
 export const referenceDataResolvers = {
   Query: {
-    locationTypes: (_: unknown, { campaignId }: { campaignId: string }, { prisma }: Context) =>
-      prisma.locationType.findMany({ where: { campaignId }, orderBy: { name: 'asc' } }),
+    locationTypes: (_: unknown, { campaignId, search }: { campaignId: string; search?: string }, { prisma }: Context) => {
+      const trimmedSearch = search?.trim();
+      return prisma.locationType.findMany({
+        where: {
+          campaignId,
+          ...(trimmedSearch
+            ? { name: { contains: trimmedSearch, mode: 'insensitive' as const } }
+            : {}),
+        },
+        orderBy: { name: 'asc' },
+      });
+    },
 
     containmentRules: (_: unknown, __: unknown, { prisma }: Context) =>
       prisma.locationTypeContainmentRule.findMany(),
 
-    groupTypes: (_: unknown, { campaignId, search }: { campaignId: string; search?: string }, { prisma }: Context) =>
-      prisma.groupType.findMany({
+    groupTypes: (_: unknown, { campaignId, search }: { campaignId: string; search?: string }, { prisma }: Context) => {
+      const trimmedSearch = search?.trim();
+      return prisma.groupType.findMany({
         where: {
           campaignId,
-          ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
+          ...(trimmedSearch
+            ? { name: { contains: trimmedSearch, mode: 'insensitive' as const } }
+            : {}),
         },
         orderBy: { name: 'asc' },
-      }),
+      });
+    },
 
-    speciesTypes: (_: unknown, { campaignId, search }: { campaignId: string; search?: string }, { prisma }: Context) =>
-      prisma.speciesType.findMany({
+    speciesTypes: (_: unknown, { campaignId, search }: { campaignId: string; search?: string }, { prisma }: Context) => {
+      const trimmedSearch = search?.trim();
+      return prisma.speciesType.findMany({
         where: {
           campaignId,
-          ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
+          ...(trimmedSearch
+            ? { name: { contains: trimmedSearch, mode: 'insensitive' as const } }
+            : {}),
         },
         orderBy: { name: 'asc' },
-      }),
+      });
+    },
 
     species: (
       _: unknown,

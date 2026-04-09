@@ -41,6 +41,7 @@ _Nothing currently in progress._
 | F-19 | 🟡 | Audit log for all mutations — record who/what/when for every create/update/delete across all entities (not just admin). Enables: forensics, undo of accidental deletes, "recently changed" view, accountability in shared GM groups. Store as separate AuditLog table with entity type, entity id, action, user id, timestamp, and JSON snapshot of the change | — |
 | F-20 | 🟢 | Password requirements: minimum 8 characters, mix of letters and numbers. Currently only enforced as 4 characters in self-service password change | — |
 | F-21 | 🟢 | Email format validation on backend (currently any string accepted as email). Use Zod or simple regex check before user creation/update | — |
+| F-22 | 🟡 | Restore filter chip counts after F-11. Server-side search returns only filtered rows, so per-status/per-type counts (e.g. "Alive (12)") were dropped across NPCs, Locations, Quests, Groups, Species list pages. Fix: add lightweight aggregation queries like `npcCountsByStatus(campaignId)` / `locationCountsByType(campaignId)` etc. (Prisma `groupBy`), fetch them independently of the filter, wire into `useXxxListPage` as a second hook. Also restores the "X of Y" counter in hero sections. | — |
 
 ---
 

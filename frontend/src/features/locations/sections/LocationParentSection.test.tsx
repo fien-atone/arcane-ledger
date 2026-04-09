@@ -21,15 +21,15 @@ const LOCATIONS_QUERY = gql`
 `;
 
 const LOCATION_TYPES_QUERY = gql`
-  query LocationTypes($campaignId: ID!) {
-    locationTypes(campaignId: $campaignId) {
+  query LocationTypes($campaignId: ID!, $search: String) {
+    locationTypes(campaignId: $campaignId, search: $search) {
       id name icon category biomeOptions isSettlement builtin
     }
   }
 `;
 
 const locationTypesMock = {
-  request: { query: LOCATION_TYPES_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: LOCATION_TYPES_QUERY, variables: { campaignId: 'camp-1', search: null } },
   result: { data: { locationTypes: [] } },
 };
 
