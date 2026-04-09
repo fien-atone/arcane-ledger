@@ -4,7 +4,7 @@ TTRPG campaign management app. GM-first, dark fantasy aesthetic.
 
 Manage NPCs, locations, sessions, quests, groups, species, and social relations — all in one place. Built for Game Masters who want to keep their world organized.
 
-See [architecture/](architecture/) for system design, data model, and product docs.
+See [docs/](docs/) for architecture, product vision, data model, features, and test coverage.
 
 ---
 
@@ -149,20 +149,27 @@ arcane-ledger/
 │       ├── auth/            # JWT middleware
 │       ├── seed.ts          # Database seed script
 │       └── index.ts         # Server entry point
-├── architecture/            # Solution & system architecture docs
-│   ├── system-architecture.md
-│   ├── data-model.md
-│   ├── product.md
-│   ├── requirements.md
-│   ├── roadmap.md
-│   └── screens.md
+├── docs/                    # All project documentation
+│   ├── ARCHITECTURE.md      #   system architecture
+│   ├── PRODUCT.md           #   product vision, personas, positioning
+│   ├── STACK.md             #   exact framework versions + gotchas
+│   ├── ERD.md               #   entity relationship diagram (Mermaid)
+│   ├── METAMODEL.md         #   domain concepts and business rules
+│   ├── FEATURES.md          #   what users can do, by domain
+│   ├── TESTS.md             #   test inventory in plain language
+│   ├── REFACTOR_PLAN.md     #   historical refactor tracker
+│   ├── metrics/             #   feature effort log (t-shirt sizes)
+│   └── specs/               #   per-feature specs (F-XX.md)
 ├── .claude/
-│   └── agents/              # AI agent configs
+│   └── agents/              # AI agent configs (versioned in git)
 │       ├── architect.md
 │       ├── frontend-dev.md
-│       └── backend-dev.md
+│       ├── backend-dev.md
+│       ├── product-manager.md
+│       ├── qa-engineer.md
+│       └── tech-writer.md
 ├── docker-compose.yml
-├── CLAUDE.md                # Team coordinator guide
+├── CLAUDE.md                # Team coordinator guide (root)
 ├── BACKLOG.md               # Bugs, features, tech debt tracker
 └── README.md
 ```

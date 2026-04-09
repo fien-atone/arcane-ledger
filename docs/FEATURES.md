@@ -1,9 +1,11 @@
 # Features — Arcane Ledger
 
-**Last updated**: 2026-04-07  
-**Current version**: 0.3.1
+**Last updated**: 2026-04-10
+**Current version**: 0.3.1 (plus post-0.3.1 internal refactors — see [REFACTOR_PLAN.md](REFACTOR_PLAN.md))
 
 This document describes what users can do in the app, organized by domain. It's intended for newcomers, product planning, and as a checklist of what's already shipped vs. what's in the backlog.
+
+For product intent and vision, see [PRODUCT.md](PRODUCT.md). For architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -254,3 +256,19 @@ Presets: All, Basic, None. GM Notes are never visible to players.
 - Landing page (`/en`, `/ru`) — features, roadmap, contact
 - Changelog page (`/en/changelog`, `/ru/changelog`)
 - Login page (`/en/login`, `/ru/login`)
+
+---
+
+## Search and Filtering (server-side, post-0.3.1)
+
+All list pages (NPCs, Locations, Sessions, Quests, Groups, Species, and all type pages) run their search and filters **on the server**:
+
+- 300ms debounced input — the query variable only changes after the user stops typing
+- Apollo v4 `previousData` keep-alive — the list never goes blank between keystrokes, it stays visible until the new results arrive
+- URL params for deep-linking: `?q=…&status=…` restore state on refresh or back/forward navigation
+- Name-only search (not aliases — aliases can be re-added later if needed)
+- Status/type filters combine with search
+
+Admin Users search uses the same `useDebouncedSearch` hook for consistency.
+
+**Known tradeoff:** filter chips no longer show counts (e.g., "Alive (12)") because the server returns only filtered rows. Tracked as F-22 in the backlog for restoration via aggregation queries.

@@ -139,7 +139,7 @@ Additional fields:
 ---
 
 #### Species
-A global catalogue (not campaign-scoped). Humanoids, beasts, undead, constructs, fey, etc.
+A catalogue of species available in the campaign (per-campaign, not global — each campaign has its own set). Humanoids, beasts, undead, constructs, fey, etc. A separate `SpeciesType` reference table groups species by broader category and is also per-campaign.
 
 - Has **type** (14 options) and **size** (tiny → gargantuan)
 - Linked to Characters and NPCs via `speciesId` (FK) + `species` (denormalised name for display)
@@ -213,7 +213,7 @@ A faction, guild, cult, family, council, or other organisation.
 #### GroupTypeEntry
 A managed vocabulary of group types (e.g. "Guild", "Cult", "Noble House").
 - Has a Material Symbol **icon** for display
-- Global (not per-campaign scoped)
+- Per-campaign (each campaign defines its own set)
 
 ---
 
@@ -229,14 +229,16 @@ A managed vocabulary of group types (e.g. "Guild", "Cult", "Noble House").
 | Quest | ✓ | |
 | Group | ✓ | |
 | Relation | ✓ | |
-| Species | | ✓ (shared across campaigns) |
-| GroupTypeEntry | | ✓ (shared across campaigns) |
+| Species | ✓ | |
+| SpeciesType | ✓ | |
+| LocationType | ✓ | |
+| GroupTypeEntry | ✓ | |
 
 ---
 
 ## Key Business Rules
 
-1. **Every campaign-scoped entity carries `campaignId`** — no entity is shared between campaigns (except Species and GroupTypeEntry).
+1. **Every entity carries `campaignId`** — no entity is shared between campaigns. Reference tables (LocationType, GroupType, Species, SpeciesType) are also per-campaign, not global.
 2. **Species is denormalised onto Characters/NPCs** — `speciesId` is the FK; `species` (name string) is kept for display without a join.
 3. **NPC location presence is a list** — an NPC can be "present" at multiple locations simultaneously (with notes), not just one.
 4. **Relations are directional and asymmetric** — Alvin's feelings toward Kronhave are a separate record from Kronhave's feelings toward Alvin.
