@@ -261,6 +261,76 @@ describe('Sessions', () => {
     expect(gmNote.content).toBe('GM notes for session');
   });
 
+  it('filters sessions by search (title, case-insensitive partial match)', async () => {
+    // Server-side search by title. Case-insensitive substring match over
+    // `title` only. Sessions have no status filter.
+    const uniqueMarker = `SrchSess${uid}`;
+    const a = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: SessionInput!) { saveSession(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { number: 9001, title: `${uniqueMarker} Alpha`, brief: 'ZZZ_only_in_brief' } },
+      gmToken,
+    );
+    const b = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: SessionInput!) { saveSession(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { number: 9002, title: `${uniqueMarker} Beta` } },
+      gmToken,
+    );
+    const aId = (a.data!.saveSession as Record<string, string>).id;
+    const bId = (b.data!.saveSession as Record<string, string>).id;
+
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { sessions(campaignId: $campaignId, search: $search) { id title } }`,
+      { campaignId: CAMPAIGN_ID, search: uniqueMarker.toLowerCase() },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const sessions = res.data!.sessions as Array<Record<string, string>>;
+    const ids = sessions.map((s) => s.id);
+    expect(ids).toContain(aId);
+    expect(ids).toContain(bId);
+
+    // Brief-only search should NOT find the session
+    const briefRes = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { sessions(campaignId: $campaignId, search: $search) { id } }`,
+      { campaignId: CAMPAIGN_ID, search: 'ZZZ_only_in_brief' },
+      gmToken,
+    );
+    const briefSessions = briefRes.data!.sessions as Array<Record<string, string>>;
+    expect(briefSessions.find((s) => s.id === aId)).toBeUndefined();
+
+    // Narrow search returns just one
+    const narrow = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { sessions(campaignId: $campaignId, search: $search) { id } }`,
+      { campaignId: CAMPAIGN_ID, search: `${uniqueMarker} Alpha` },
+      gmToken,
+    );
+    const narrowSessions = narrow.data!.sessions as Array<Record<string, string>>;
+    expect(narrowSessions.map((s) => s.id)).toContain(aId);
+    expect(narrowSessions.map((s) => s.id)).not.toContain(bId);
+
+    await prisma.session.delete({ where: { id: aId } }).catch(() => {});
+    await prisma.session.delete({ where: { id: bId } }).catch(() => {});
+  });
+
+  it('returns all sessions for campaign when no search is provided', async () => {
+    // Baseline: without filters, the resolver returns all sessions scoped
+    // to the campaign (existing behaviour must be preserved).
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!) { sessions(campaignId: $campaignId) { id } }`,
+      { campaignId: CAMPAIGN_ID },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const sessions = res.data!.sessions as Array<Record<string, string>>;
+    expect(Array.isArray(sessions)).toBe(true);
+  });
+
   it('deletes a session', async () => {
     // Delete the session. Cascade should also remove linked junction records and notes.
     // Verify: mutation returns true.

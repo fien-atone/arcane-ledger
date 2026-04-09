@@ -28,8 +28,24 @@ export const referenceDataResolvers = {
         orderBy: { name: 'asc' },
       }),
 
-    species: (_: unknown, { campaignId }: { campaignId: string }, { prisma }: Context) =>
-      prisma.species.findMany({ where: { campaignId }, orderBy: { name: 'asc' } }),
+    species: (
+      _: unknown,
+      { campaignId, search, type }: { campaignId: string; search?: string; type?: string },
+      { prisma }: Context,
+    ) => {
+      const trimmedSearch = search?.trim();
+      const trimmedType = type?.trim();
+      return prisma.species.findMany({
+        where: {
+          campaignId,
+          ...(trimmedSearch
+            ? { name: { contains: trimmedSearch, mode: 'insensitive' as const } }
+            : {}),
+          ...(trimmedType ? { type: trimmedType } : {}),
+        },
+        orderBy: { name: 'asc' },
+      });
+    },
   },
 
   Mutation: {

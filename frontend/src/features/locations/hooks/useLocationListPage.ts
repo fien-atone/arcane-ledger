@@ -1,9 +1,27 @@
 /**
  * Page-level state and data for LocationListPage (Tier 2 list page).
  *
+ * F-11: search and type filtering are SERVER-SIDE. This hook:
+ *
+ *  - Reads `?q` and `?type` from the URL
+ *  - Drives the <input> off a local debounced state (300 ms). The URL
+ *    updates live on every keystroke; the GraphQL query only re-fires
+ *    once the user stops typing.
+ *  - Passes the debounced search + type to `useLocations`, which uses
+ *    Apollo v4's `previousData` to keep the existing list visible while
+ *    the new query is in flight.
+ *  - Removes the client-side `useMemo` search/type filter — the list
+ *    returned from the query is already filtered by the server.
+ *  - Hierarchical sort is still applied locally in the "all, no search"
+ *    mode because the server returns the full list in that case.
+ *
+ * Type-filter chip counts: removed for the F-11 pilot. The server returns
+ * the filtered list, so counts per type are no longer directly available.
+ * Re-adding them would require a second aggregation query — deferred.
+ *
  * Loads:
  * - The campaign (for the title in the back link + role check)
- * - The full list of locations for the campaign
+ * - The (server-filtered) list of locations for the campaign
  * - The location types catalog (for icons + filter chips)
  *
  * Owns the page-level UI state:
@@ -12,15 +30,13 @@
  *
  * Derives:
  * - typeMap (id -> LocationTypeEntry)
- * - typeFilters (all + used types with counts, ordered by category)
+ * - typeFilters (all + location types that exist in the catalog, ordered
+ *   by category, WITHOUT counts)
  * - depthMap (location id -> nesting depth, for indentation)
- * - filtered (search + type filter applied, hierarchically sorted when "all")
- *
- * Section widgets receive minimal props and do not re-fetch the list themselves,
- * matching the list-page pattern established by useLocationTypesPage and
- * usePartyPage.
+ * - filtered (server-returned list with hierarchical sort in the default
+ *   all/no-search mode)
  */
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -32,6 +48,7 @@ import {
   useSetLocationVisibility,
 } from '@/features/locations/api';
 import { useLocationTypes } from '@/features/locationTypes';
+import { useDebouncedSearch } from '@/shared/hooks';
 import type { Location, LocationType } from '@/entities/location';
 import type { LocationTypeEntry } from '@/entities/locationType';
 
@@ -49,7 +66,6 @@ export type TypeMap = Map<string, LocationTypeEntry>;
 export interface TypeFilterOption {
   value: LocationType | 'all';
   label: string;
-  count: number;
 }
 
 export interface UseLocationListPageResult {
@@ -60,7 +76,11 @@ export interface UseLocationListPageResult {
   partyEnabled: boolean;
   isGm: boolean;
   isLoading: boolean;
+  isFetching: boolean;
   isError: boolean;
+  /** Server-filtered list. Stays populated via Apollo previousData during
+   *  in-flight refetches — callers should NOT show a blank state based on
+   *  isFetching alone. */
   locations: Location[] | undefined;
   filtered: Location[];
   typeMap: TypeMap;
@@ -84,37 +104,59 @@ export function useLocationListPage(campaignId: string): UseLocationListPageResu
   const { data: campaign } = useCampaign(campaignId);
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
 
-  const { data: locations, isLoading, isError } = useLocations(campaignId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSearch = searchParams.get('q') ?? '';
+  const typeFilter = (searchParams.get('type') ?? 'all') as LocationType | 'all';
+
+  // Debounced search: drives the network variable; the URL and the input
+  // stay live on every keystroke.
+  const { value: search, debouncedValue: debouncedSearch, setValue: setDebouncedSearch } =
+    useDebouncedSearch(urlSearch, 300);
+
+  const typeFilterForQuery = typeFilter === 'all' ? undefined : typeFilter;
+
+  const {
+    data: locations,
+    isLoading,
+    isFetching,
+    isError,
+  } = useLocations(campaignId, {
+    search: debouncedSearch || undefined,
+    type: typeFilterForQuery,
+  });
   const setLocationVisibility = useSetLocationVisibility();
   const { data: locationTypes = [] } = useLocationTypes(campaignId);
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const search = searchParams.get('q') ?? '';
-  const typeFilter = (searchParams.get('type') ?? 'all') as LocationType | 'all';
-
   const [addOpen, setAddOpen] = useState(false);
 
-  const setSearch = (val: string) => {
-    setSearchParams(
-      (prev) => {
-        if (val) prev.set('q', val);
-        else prev.delete('q');
-        return prev;
-      },
-      { replace: true },
-    );
-  };
+  const setSearch = useCallback(
+    (val: string) => {
+      setDebouncedSearch(val);
+      setSearchParams(
+        (prev) => {
+          if (val) prev.set('q', val);
+          else prev.delete('q');
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setDebouncedSearch, setSearchParams],
+  );
 
-  const setTypeFilter = (val: LocationType | 'all') => {
-    setSearchParams(
-      (prev) => {
-        if (val === 'all') prev.delete('type');
-        else prev.set('type', val);
-        return prev;
-      },
-      { replace: true },
-    );
-  };
+  const setTypeFilter = useCallback(
+    (val: LocationType | 'all') => {
+      setSearchParams(
+        (prev) => {
+          if (val === 'all') prev.delete('type');
+          else prev.set('type', val);
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   // Build id -> entry lookup
   const typeMap = useMemo<TypeMap>(
@@ -135,29 +177,19 @@ export function useLocationListPage(campaignId: string): UseLocationListPageResu
     [locationTypes],
   );
 
-  // Filters: All + only types that appear in this campaign's locations
+  // Filter chips: All + every defined location type (counts dropped — see
+  // F-11 note in the header).
   const typeFilters = useMemo<TypeFilterOption[]>(() => {
-    const usedTypeIds = new Set(locations?.map((l) => l.type) ?? []);
     const usedTypes = typeOrder
       .map((id) => typeMap.get(id))
-      .filter(
-        (lt): lt is LocationTypeEntry => !!lt && usedTypeIds.has(lt.id),
-      );
+      .filter((lt): lt is LocationTypeEntry => !!lt);
     return [
-      {
-        value: 'all' as const,
-        label: t('filter_all'),
-        count: locations?.length ?? 0,
-      },
-      ...usedTypes.map((lt) => ({
-        value: lt.id,
-        label: lt.name,
-        count: locations?.filter((l) => l.type === lt.id).length ?? 0,
-      })),
+      { value: 'all' as const, label: t('filter_all') },
+      ...usedTypes.map((lt) => ({ value: lt.id, label: lt.name })),
     ];
-  }, [locations, typeOrder, typeMap, t]);
+  }, [typeOrder, typeMap, t]);
 
-  // Depth map for hierarchy indent
+  // Depth map for hierarchy indent — works against the current list.
   const depthMap = useMemo(() => {
     const map = new Map<string, number>();
     if (!locations) return map;
@@ -190,19 +222,13 @@ export function useLocationListPage(campaignId: string): UseLocationListPageResu
     [typeMap],
   );
 
+  // Server already filtered by search + type. Here we only apply the
+  // hierarchical sort in the default mode (no search, no type filter) and
+  // the flat category sort otherwise. No content filtering.
   const filtered = useMemo(() => {
-    const list =
-      locations?.filter((l) => {
-        const matchesType = typeFilter === 'all' || l.type === typeFilter;
-        const matchesSearch =
-          !search ||
-          l.name.toLowerCase().includes(search.toLowerCase()) ||
-          l.description.toLowerCase().includes(search.toLowerCase());
-        return matchesType && matchesSearch;
-      }) ?? [];
+    const list = locations ?? [];
 
-    // In "all" mode without search: hierarchical sort (parents -> children)
-    if (typeFilter === 'all' && !search) {
+    if (typeFilter === 'all' && !debouncedSearch) {
       const byParent = new Map<string, Location[]>();
       const roots: Location[] = [];
       for (const loc of list) {
@@ -220,7 +246,7 @@ export function useLocationListPage(campaignId: string): UseLocationListPageResu
         (byParent.get(loc.id) ?? []).sort(sortByCategory).forEach(walk);
       };
       roots.sort(sortByCategory).forEach(walk);
-      // Orphans (parent not in filtered list): append at end
+      // Orphans (parent not in list): append at end
       const seen = new Set(result.map((l) => l.id));
       list
         .filter((l) => !seen.has(l.id))
@@ -230,16 +256,19 @@ export function useLocationListPage(campaignId: string): UseLocationListPageResu
     }
 
     return [...list].sort(sortByCategory);
-  }, [locations, typeFilter, search, sortByCategory]);
+  }, [locations, typeFilter, debouncedSearch, sortByCategory]);
 
-  const toggleVisibility = (loc: Location) => {
-    setLocationVisibility.mutate({
-      campaignId,
-      id: loc.id,
-      playerVisible: !loc.playerVisible,
-      playerVisibleFields: loc.playerVisibleFields ?? [],
-    });
-  };
+  const toggleVisibility = useCallback(
+    (loc: Location) => {
+      setLocationVisibility.mutate({
+        campaignId,
+        id: loc.id,
+        playerVisible: !loc.playerVisible,
+        playerVisibleFields: loc.playerVisibleFields ?? [],
+      });
+    },
+    [campaignId, setLocationVisibility],
+  );
 
   return {
     campaignId,
@@ -249,6 +278,7 @@ export function useLocationListPage(campaignId: string): UseLocationListPageResu
     partyEnabled,
     isGm,
     isLoading,
+    isFetching,
     isError,
     locations,
     filtered,

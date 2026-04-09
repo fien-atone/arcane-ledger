@@ -148,6 +148,21 @@ const groupTypesMock = {
   },
 };
 
+// F-11: second mock for the type-filter refetch
+const groupsGuildMock = {
+  request: {
+    query: GROUPS_QUERY,
+    variables: { campaignId: 'camp-1', search: null, type: 'gt-guild' },
+  },
+  result: {
+    data: {
+      groups: (groupsMock.result.data.groups as Array<Record<string, unknown>>).filter(
+        (g) => g.type === 'gt-guild',
+      ),
+    },
+  },
+};
+
 describe('useGroupListPage', () => {
   it('returns expected shape after loading', async () => {
     const { result } = renderHookWithProviders(
@@ -165,21 +180,12 @@ describe('useGroupListPage', () => {
     expect(result.current.partyEnabled).toBe(true);
     expect(result.current.isGm).toBe(true);
 
-    // typeFilters: all + 2 group types = 3 entries
+    // typeFilters: all + 2 group types = 3 entries, no `count` field
     expect(result.current.typeFilters).toHaveLength(3);
-    expect(result.current.typeFilters[0]).toMatchObject({
+    expect(result.current.typeFilters[0]).toEqual({
       value: 'all',
-      count: 3,
+      label: 'filter_all',
     });
-    expect(
-      result.current.typeFilters.find((f) => f.value === 'gt-guild')?.count,
-    ).toBe(2);
-    expect(
-      result.current.typeFilters.find((f) => f.value === 'gt-cult')?.count,
-    ).toBe(1);
-
-    // Default (all, no search): all 3 groups
-    expect(result.current.filtered).toHaveLength(3);
 
     // resolveType prefers the groupTypes catalog
     expect(result.current.resolveType('gt-guild')).toEqual({
@@ -193,37 +199,31 @@ describe('useGroupListPage', () => {
     });
   });
 
-  it('search filters by name and aliases', async () => {
+  it('search is driven locally but updates the URL immediately', async () => {
     const { result } = renderHookWithProviders(
       () => useGroupListPage('camp-1'),
       { mocks: [campaignMock, groupsMock, groupTypesMock] },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    act(() => result.current.setSearch('the order'));
-    await waitFor(() => expect(result.current.search).toBe('the order'));
-    // Matches alias "The Order"
-    expect(result.current.filtered.map((g) => g.id)).toEqual(['g-1']);
-
     act(() => result.current.setSearch('silver'));
-    await waitFor(() => expect(result.current.search).toBe('silver'));
-    expect(result.current.filtered.map((g) => g.id)).toEqual(['g-3']);
+    expect(result.current.search).toBe('silver');
+    // Debounced variable won't have fired yet — the list is unchanged.
+    expect(result.current.groups).toHaveLength(3);
   });
 
-  it('typeFilter narrows results to a single type', async () => {
+  it('typeFilter triggers a server refetch with the type id', async () => {
     const { result } = renderHookWithProviders(
       () => useGroupListPage('camp-1'),
-      { mocks: [campaignMock, groupsMock, groupTypesMock] },
+      { mocks: [campaignMock, groupsMock, groupTypesMock, groupsGuildMock] },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => result.current.setTypeFilter('gt-guild'));
-    await waitFor(() => expect(result.current.typeFilter).toBe('gt-guild'));
-    expect(result.current.filtered.map((g) => g.id)).toEqual(['g-1', 'g-3']);
-
-    act(() => result.current.setTypeFilter('all'));
-    await waitFor(() => expect(result.current.typeFilter).toBe('all'));
-    expect(result.current.filtered).toHaveLength(3);
+    await waitFor(() =>
+      expect(result.current.groups!.map((g) => g.id)).toEqual(['g-1', 'g-3']),
+    );
+    expect(result.current.typeFilter).toBe('gt-guild');
   });
 
   it('openAdd / closeAdd toggles the drawer state', async () => {

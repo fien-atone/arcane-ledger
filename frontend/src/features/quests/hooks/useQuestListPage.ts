@@ -1,23 +1,30 @@
 /**
  * Page-level state and data for QuestListPage (Tier 2 list page).
  *
+ * F-11: search and status filtering are SERVER-SIDE. This hook:
+ *
+ *  - Reads `?q` and `?status` from the URL
+ *  - Drives the <input> off a local debounced state (300 ms)
+ *  - Passes the debounced search + uppercase status to `useQuests`, which
+ *    uses Apollo v4's `previousData` to keep the existing list visible
+ *    during refetches (no list flicker).
+ *  - Removes the client-side `useMemo` filter — the list returned from
+ *    the query is already filtered by the server.
+ *
+ * Status-filter chip counts: removed for the F-11 pilot. The server
+ * returns the filtered list, so counts per status are no longer directly
+ * available. Re-adding them would require a second aggregation query —
+ * deferred.
+ *
  * Loads:
- * - The campaign (for the title in the back link + GM role check)
- * - The full list of quests for the campaign
+ * - The campaign (for the title + GM role check)
+ * - The (server-filtered) list of quests for the campaign
  *
  * Owns the page-level UI state:
  * - URL search params (q, status) — mirrored into search + statusFilter
  * - addOpen — whether the "add quest" drawer is open
- *
- * Derives:
- * - statusFilters (all + each QuestStatus with counts)
- * - filtered (client-side search + status filter applied)
- *
- * Matches the list-page pattern established by useGroupListPage /
- * useNpcListPage: the hook owns shared state and hands minimal props down
- * to presentational section widgets. Filtering is client-side.
  */
-import { useMemo, useState, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -25,6 +32,7 @@ import {
   useSectionEnabled,
 } from '@/features/campaigns/api/queries';
 import { useQuests, useSetQuestVisibility } from '@/features/quests/api';
+import { useDebouncedSearch } from '@/shared/hooks';
 import type { Quest, QuestStatus } from '@/entities/quest';
 
 export type StatusFilterValue = QuestStatus | 'all';
@@ -32,7 +40,6 @@ export type StatusFilterValue = QuestStatus | 'all';
 export interface StatusFilterOption {
   value: StatusFilterValue;
   label: string;
-  count: number;
 }
 
 const STATUS_FILTER_KEYS: StatusFilterValue[] = [
@@ -51,9 +58,11 @@ export interface UseQuestListPageResult {
   partyEnabled: boolean;
   isGm: boolean;
   isLoading: boolean;
+  isFetching: boolean;
   isError: boolean;
+  /** Server-filtered list. Stays populated via Apollo previousData during
+   *  in-flight refetches. */
   quests: Quest[] | undefined;
-  filtered: Quest[];
   statusFilters: StatusFilterOption[];
   search: string;
   setSearch: (v: string) => void;
@@ -72,17 +81,26 @@ export function useQuestListPage(campaignId: string): UseQuestListPageResult {
   const { data: campaign } = useCampaign(campaignId);
   const isGm = campaign?.myRole?.toLowerCase() === 'gm';
 
-  const { data: quests, isLoading, isError } = useQuests(campaignId);
-  const setQuestVisibility = useSetQuestVisibility();
-
   const [searchParams, setSearchParams] = useSearchParams();
-  const search = searchParams.get('q') ?? '';
+  const urlSearch = searchParams.get('q') ?? '';
   const statusFilter = (searchParams.get('status') ?? 'all') as StatusFilterValue;
+
+  const { value: search, debouncedValue: debouncedSearch, setValue: setDebouncedSearch } =
+    useDebouncedSearch(urlSearch, 300);
+
+  const statusForQuery = statusFilter === 'all' ? undefined : statusFilter.toUpperCase();
+
+  const { data: quests, isLoading, isFetching, isError } = useQuests(campaignId, {
+    search: debouncedSearch || undefined,
+    status: statusForQuery,
+  });
+  const setQuestVisibility = useSetQuestVisibility();
 
   const [addOpen, setAddOpen] = useState(false);
 
   const setSearch = useCallback(
     (val: string) => {
+      setDebouncedSearch(val);
       setSearchParams(
         (prev) => {
           if (val) prev.set('q', val);
@@ -92,7 +110,7 @@ export function useQuestListPage(campaignId: string): UseQuestListPageResult {
         { replace: true },
       );
     },
-    [setSearchParams],
+    [setDebouncedSearch, setSearchParams],
   );
 
   const setStatusFilter = useCallback(
@@ -113,26 +131,8 @@ export function useQuestListPage(campaignId: string): UseQuestListPageResult {
     return STATUS_FILTER_KEYS.map((value) => ({
       value,
       label: value === 'all' ? t('filter_all') : t(`status_${value}`),
-      count:
-        value === 'all'
-          ? quests?.length ?? 0
-          : quests?.filter((q) => q.status === value).length ?? 0,
     }));
-  }, [quests, t]);
-
-  const filtered = useMemo(() => {
-    if (!quests) return [];
-    const q = search.trim().toLowerCase();
-    return quests.filter((quest) => {
-      const matchStatus =
-        statusFilter === 'all' || quest.status === statusFilter;
-      const matchSearch =
-        !q ||
-        quest.title.toLowerCase().includes(q) ||
-        quest.description.toLowerCase().includes(q);
-      return matchStatus && matchSearch;
-    });
-  }, [quests, search, statusFilter]);
+  }, [t]);
 
   const toggleVisibility = useCallback(
     (quest: Quest) => {
@@ -153,9 +153,9 @@ export function useQuestListPage(campaignId: string): UseQuestListPageResult {
     partyEnabled,
     isGm,
     isLoading,
+    isFetching,
     isError,
     quests,
-    filtered,
     statusFilters,
     search,
     setSearch,

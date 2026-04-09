@@ -119,6 +119,28 @@ describe('useDebouncedSearch', () => {
     expect(result.current.debouncedValue).toBe('b');
   });
 
+  it('does NOT bypass debounce when initialValue echoes a value we just setValue (URL-sync case)', () => {
+    // Simulates the list-page wiring where the caller updates the URL
+    // synchronously on every keystroke, and then passes the URL param back
+    // in as `initialValue` on the next render. The hook must ignore that
+    // echo — otherwise debounce is defeated.
+    const { result, rerender } = renderHook(
+      ({ initial }: { initial: string }) => useDebouncedSearch(initial, 300),
+      { initialProps: { initial: '' } },
+    );
+    act(() => result.current.setValue('a'));
+    expect(result.current.value).toBe('a');
+    expect(result.current.debouncedValue).toBe(''); // still debouncing
+    // The caller pushes 'a' into the URL, which re-renders the hook with
+    // the new initialValue. This used to bypass the debounce.
+    rerender({ initial: 'a' });
+    expect(result.current.debouncedValue).toBe(''); // STILL debouncing
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(result.current.debouncedValue).toBe('a'); // only now
+  });
+
   it('exposes stable setValue reference across re-renders (same delay)', () => {
     const { result, rerender } = renderHook(() => useDebouncedSearch('', 300));
     const first = result.current.setValue;

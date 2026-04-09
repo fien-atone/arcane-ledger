@@ -9,9 +9,9 @@ import { renderWithProviders } from '@/test/helpers';
 import type { TypeFilterOption } from '../hooks/useGroupListPage';
 
 const typeFilters: TypeFilterOption[] = [
-  { value: 'all', label: 'filter_all', count: 3 },
-  { value: 'gt-guild', label: 'Guild', count: 2 },
-  { value: 'gt-cult', label: 'Cult', count: 1 },
+  { value: 'all', label: 'filter_all' },
+  { value: 'gt-guild', label: 'Guild' },
+  { value: 'gt-cult', label: 'Cult' },
 ];
 
 function baseProps(
@@ -24,8 +24,7 @@ function baseProps(
     typeFilter: 'all',
     onTypeFilterChange: vi.fn(),
     typeFilters,
-    filteredCount: 3,
-    totalCount: 3,
+    shownCount: 3,
     onAdd: vi.fn(),
     ...overrides,
   };

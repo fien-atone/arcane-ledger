@@ -13,8 +13,10 @@ interface Props {
   isGm: boolean;
   search: string;
   onSearchChange: (v: string) => void;
-  filteredCount: number;
-  totalCount: number;
+  /** F-11: number of sessions in the currently displayed (server-filtered)
+   *  list. No "of total" ratio — counts were dropped with the server-side
+   *  filter switch. */
+  shownCount: number;
   onAdd: () => void;
 }
 
@@ -22,8 +24,7 @@ export function SessionListHeroSection({
   isGm,
   search,
   onSearchChange,
-  filteredCount,
-  totalCount,
+  shownCount,
   onAdd,
 }: Props) {
   const { t } = useTranslation('sessions');
@@ -65,9 +66,7 @@ export function SessionListHeroSection({
           />
         </div>
         <span className="ml-auto text-[10px] text-on-surface-variant/40">
-          <span className="text-on-surface font-bold">{filteredCount}</span>{' '}
-          {t('common:of')}{' '}
-          <span className="text-primary font-bold">{totalCount}</span>
+          <span className="text-primary font-bold">{shownCount}</span>
         </span>
       </div>
     </SectionPanel>

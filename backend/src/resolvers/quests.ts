@@ -6,11 +6,24 @@ import { redactEntity, QUEST_FIELDS } from './redact.js';
 
 export const questResolvers = {
   Query: {
-    quests: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
+    quests: async (
+      _: unknown,
+      { campaignId, search, status }: { campaignId: string; search?: string; status?: string },
+      ctx: Context,
+    ) => {
       const role = await getCampaignRole(ctx, campaignId);
       const isPlayer = role === 'PLAYER';
+      const trimmedSearch = search?.trim();
+      const normalizedStatus = status?.trim().toUpperCase();
       const quests = await ctx.prisma.quest.findMany({
-        where: { campaignId, ...(isPlayer ? { playerVisible: true } : {}) },
+        where: {
+          campaignId,
+          ...(trimmedSearch
+            ? { title: { contains: trimmedSearch, mode: 'insensitive' as const } }
+            : {}),
+          ...(normalizedStatus ? { status: normalizedStatus as any } : {}),
+          ...(isPlayer ? { playerVisible: true } : {}),
+        },
         orderBy: { title: 'asc' },
       });
       if (isPlayer) {

@@ -21,8 +21,10 @@ interface Props {
   statusFilter: StatusFilterValue;
   onStatusFilterChange: (v: StatusFilterValue) => void;
   statusFilters: StatusFilterOption[];
-  filteredCount: number;
-  totalCount: number;
+  /** F-11: number of quests in the currently displayed (server-filtered)
+   *  list. No "of total" ratio — counts were dropped with the server-side
+   *  filter switch. */
+  shownCount: number;
   onAdd: () => void;
 }
 
@@ -33,8 +35,7 @@ export function QuestListHeroSection({
   statusFilter,
   onStatusFilterChange,
   statusFilters,
-  filteredCount,
-  totalCount,
+  shownCount,
   onAdd,
 }: Props) {
   const { t } = useTranslation('quests');
@@ -78,7 +79,7 @@ export function QuestListHeroSection({
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {statusFilters.map(({ value, label, count }) => (
+          {statusFilters.map(({ value, label }) => (
             <button
               key={value}
               onClick={() => onStatusFilterChange(value)}
@@ -88,22 +89,12 @@ export function QuestListHeroSection({
                   : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
               }`}
             >
-              {label}{' '}
-              <span
-                className={
-                  statusFilter === value
-                    ? 'text-on-primary/70'
-                    : 'text-on-surface-variant/40'
-                }
-              >
-                {count}
-              </span>
+              {label}
             </button>
           ))}
         </div>
         <span className="ml-auto text-[10px] text-on-surface-variant/40">
-          <span className="text-on-surface font-bold">{filteredCount}</span> of{' '}
-          <span className="text-primary font-bold">{totalCount}</span>
+          <span className="text-primary font-bold">{shownCount}</span>
         </span>
       </div>
     </SectionPanel>

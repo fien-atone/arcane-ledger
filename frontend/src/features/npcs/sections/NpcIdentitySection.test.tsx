@@ -12,15 +12,15 @@ import { renderWithProviders } from '@/test/helpers';
 import type { NPC } from '@/entities/npc';
 
 const SPECIES_QUERY = gql`
-  query Species($campaignId: ID!) {
-    species(campaignId: $campaignId) {
+  query Species($campaignId: ID!, $search: String, $type: String) {
+    species(campaignId: $campaignId, search: $search, type: $type) {
       id campaignId name pluralName type size description traits
     }
   }
 `;
 
 const emptySpeciesMock = {
-  request: { query: SPECIES_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: SPECIES_QUERY, variables: { campaignId: 'camp-1', search: null, type: null } },
   result: { data: { species: [] } },
 };
 

@@ -22,8 +22,8 @@ const LOCATION_TYPES_QUERY = gql`
 `;
 
 const LOCATIONS_QUERY = gql`
-  query Locations($campaignId: ID!) {
-    locations(campaignId: $campaignId) {
+  query Locations($campaignId: ID!, $search: String, $type: String) {
+    locations(campaignId: $campaignId, search: $search, type: $type) {
       id campaignId name type settlementPopulation biome
       parentLocationId description image gmNotes
       playerVisible playerVisibleFields
@@ -57,7 +57,7 @@ const locationTypesMock = {
 };
 
 const locationsMock = {
-  request: { query: LOCATIONS_QUERY, variables: { campaignId: 'camp-1' } },
+  request: { query: LOCATIONS_QUERY, variables: { campaignId: 'camp-1', search: null, type: null } },
   result: { data: { locations: [] } },
 };
 
