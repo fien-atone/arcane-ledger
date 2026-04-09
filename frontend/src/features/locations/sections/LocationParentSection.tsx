@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocations } from '@/features/locations/api';
 import { useLocationTypes } from '@/features/locationTypes';
 import { CATEGORY_ICON_COLOR, CATEGORY_TILE_CLS } from '@/entities/locationType';
+import { SectionPanel } from '@/shared/ui';
 import type { Location } from '@/entities/location';
 
 interface Props {
@@ -34,7 +35,7 @@ export function LocationParentSection({ campaignId, location, locationTypesEnabl
   const te = locationTypesEnabled ? typeMap.get(parentLocation.type) : undefined;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-3">
         {t('section_part_of')}
       </h4>
@@ -69,6 +70,6 @@ export function LocationParentSection({ campaignId, location, locationTypesEnabl
           arrow_forward
         </span>
       </Link>
-    </div>
+    </SectionPanel>
   );
 }

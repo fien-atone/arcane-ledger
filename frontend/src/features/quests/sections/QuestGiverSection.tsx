@@ -7,6 +7,7 @@
  */
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { SectionPanel } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import type { Quest } from '@/entities/quest';
 
@@ -23,13 +24,7 @@ export function QuestGiverSection({ campaignId, quest, npcsEnabled }: Props) {
   const giver = quest.giver;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-          {t('section_quest_giver')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-      </div>
+    <SectionPanel title={t('section_quest_giver')}>
       {giver ? (
         <Link
           to={`/campaigns/${campaignId}/npcs/${giver.id}`}
@@ -55,6 +50,6 @@ export function QuestGiverSection({ campaignId, quest, npcsEnabled }: Props) {
       ) : (
         <p className="text-xs text-on-surface-variant/40 italic">{t('no_quest_giver')}</p>
       )}
-    </div>
+    </SectionPanel>
   );
 }

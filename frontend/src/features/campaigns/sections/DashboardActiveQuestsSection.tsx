@@ -5,6 +5,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useQuests } from '@/features/quests/api';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   campaignId: string;
@@ -16,19 +17,17 @@ export function DashboardActiveQuestsSection({ campaignId }: Props) {
   const activeQuests = (allQuests ?? []).filter((q) => q.status === 'active');
 
   return (
-    <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-5">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-          {t('dashboard.active_quests')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
+    <SectionPanel
+      title={t('dashboard.active_quests')}
+      action={
         <Link
           to={`/campaigns/${campaignId}/quests`}
           className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
         >
           {t('dashboard.all_quests')}
         </Link>
-      </div>
+      }
+    >
       {activeQuests && activeQuests.length > 0 ? (
         <div className="space-y-2">
           {activeQuests.slice(0, 5).map((quest) => (
@@ -51,6 +50,6 @@ export function DashboardActiveQuestsSection({ campaignId }: Props) {
       ) : (
         <p className="text-xs text-on-surface-variant/40 italic">{t('dashboard.no_active_quests')}</p>
       )}
-    </section>
+    </SectionPanel>
   );
 }

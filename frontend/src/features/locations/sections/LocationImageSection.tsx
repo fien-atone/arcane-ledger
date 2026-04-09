@@ -16,6 +16,7 @@ import { useLocations } from '@/features/locations/api';
 import { useNpcs } from '@/features/npcs/api/queries';
 import { useLocationTypes } from '@/features/locationTypes';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
+import { SectionPanel } from '@/shared/ui';
 import type { Location, MapMarker } from '@/entities/location';
 import { LocationPlaceholder } from './map/LocationPlaceholder';
 import { LocationMapViewer } from './map/LocationMapViewer';
@@ -72,7 +73,7 @@ export function LocationImageSection({
 
   return (
     <>
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+      <SectionPanel>
         <LocationPlaceholder
           name={location.name}
           imageUrl={resolveImageUrl(location.image, imgVersion)}
@@ -82,7 +83,7 @@ export function LocationImageSection({
           onUpload={isGm ? onUploadImage : undefined}
           onOpenMap={() => setMapOpen(true)}
         />
-      </div>
+      </SectionPanel>
 
       {mapOpen && location.image && (
         <LocationMapViewer

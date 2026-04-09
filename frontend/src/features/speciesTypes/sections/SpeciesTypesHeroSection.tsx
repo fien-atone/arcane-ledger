@@ -5,6 +5,7 @@
  * Pure presentational: receives the onAddNew callback from the page.
  */
 import { useTranslation } from 'react-i18next';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   onAddNew: () => void;
@@ -14,7 +15,7 @@ export function SpeciesTypesHeroSection({ onAddNew }: Props) {
   const { t } = useTranslation('species');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
           <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
@@ -34,6 +35,6 @@ export function SpeciesTypesHeroSection({ onAddNew }: Props) {
           </span>
         </button>
       </div>
-    </div>
+    </SectionPanel>
   );
 }

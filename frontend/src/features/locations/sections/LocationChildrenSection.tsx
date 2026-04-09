@@ -13,6 +13,7 @@ import { useLocations, useSetLocationVisibility } from '@/features/locations/api
 import { LocationEditDrawer } from '@/features/locations/ui';
 import { useLocationTypes } from '@/features/locationTypes';
 import { CATEGORY_HEX_COLOR } from '@/entities/locationType';
+import { SectionPanel } from '@/shared/ui';
 import type { Location } from '@/entities/location';
 import { CATEGORY_ORDER } from './map/constants';
 
@@ -53,7 +54,7 @@ export function LocationChildrenSection({
 
   return (
     <>
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+      <SectionPanel>
         <div className="flex items-center gap-3 mb-3 min-w-0">
           <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
             {t('section_notable_places')}
@@ -141,7 +142,7 @@ export function LocationChildrenSection({
             );
           })}
         </div>
-      </div>
+      </SectionPanel>
 
       <LocationEditDrawer
         open={addChildLocOpen}

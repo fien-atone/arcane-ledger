@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useParty } from '@/features/characters/api/queries';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   campaignId: string;
@@ -21,19 +22,17 @@ export function DashboardPartySection({ campaignId, speciesEnabled }: Props) {
   const { data: party } = useParty(campaignId);
 
   return (
-    <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-          {t('dashboard.the_party')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
+    <SectionPanel
+      title={t('dashboard.the_party')}
+      action={
         <Link
           to={`/campaigns/${campaignId}/party`}
           className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
         >
           {t('dashboard.manage')}
         </Link>
-      </div>
+      }
+    >
       {party && party.length > 0 ? (
         <div className="space-y-2">
           {party.map((character) => {
@@ -64,6 +63,6 @@ export function DashboardPartySection({ campaignId, speciesEnabled }: Props) {
       ) : (
         <p className="text-xs text-on-surface-variant/40 italic">{t('dashboard.no_characters')}</p>
       )}
-    </section>
+    </SectionPanel>
   );
 }

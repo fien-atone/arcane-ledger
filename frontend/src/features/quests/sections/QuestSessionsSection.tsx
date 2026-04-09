@@ -7,6 +7,7 @@
  */
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { SectionPanel } from '@/shared/ui';
 import type { Quest } from '@/entities/quest';
 
 interface Props {
@@ -23,13 +24,7 @@ export function QuestSessionsSection({ campaignId, quest, sessionsEnabled }: Pro
   if (linkedSessions.length === 0) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-          {t('section_sessions')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-      </div>
+    <SectionPanel title={t('section_sessions')}>
       <div className="space-y-2">
         {linkedSessions.map((s) => (
           <Link
@@ -54,6 +49,6 @@ export function QuestSessionsSection({ campaignId, quest, sessionsEnabled }: Pro
           </Link>
         ))}
       </div>
-    </div>
+    </SectionPanel>
   );
 }

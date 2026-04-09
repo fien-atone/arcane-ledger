@@ -8,6 +8,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useSessions } from '@/features/sessions/api/queries';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   campaignId: string;
@@ -32,13 +33,7 @@ export function DashboardNextSessionSection({ campaignId }: Props) {
 
   if (!nextSession) {
     return (
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-        <div className="flex items-center gap-4 mb-5">
-          <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-            {t('dashboard.next_session')}
-          </h2>
-          <div className="h-px flex-1 bg-outline-variant/20" />
-        </div>
+      <SectionPanel title={t('dashboard.next_session')}>
         <Link
           to={`/campaigns/${campaignId}/sessions`}
           className="group flex items-center gap-4 p-5 bg-surface-container-high border border-dashed border-outline-variant/20 hover:border-primary/30 rounded-sm transition-colors"
@@ -49,7 +44,7 @@ export function DashboardNextSessionSection({ campaignId }: Props) {
             <p className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">{t('dashboard.schedule_next_session')}</p>
           </div>
         </Link>
-      </div>
+      </SectionPanel>
     );
   }
 
@@ -88,13 +83,7 @@ export function DashboardNextSessionSection({ campaignId }: Props) {
   const textCls = isToday ? 'text-primary' : 'text-secondary';
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-5">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-          {t('dashboard.next_session')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-      </div>
+    <SectionPanel title={t('dashboard.next_session')}>
       <Link
         to={`/campaigns/${campaignId}/sessions/${nextSession.id}`}
         className={`group flex items-center gap-4 p-5 bg-surface-container-high border border-outline-variant/15 border-l-2 ${accentCls} hover:border-outline-variant/30 rounded-sm transition-colors`}
@@ -113,6 +102,6 @@ export function DashboardNextSessionSection({ campaignId }: Props) {
         </div>
         <span className={`material-symbols-outlined ${textCls} opacity-40 group-hover:opacity-100 transition-all`}>arrow_forward</span>
       </Link>
-    </div>
+    </SectionPanel>
   );
 }

@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSessions } from '@/features/sessions/api/queries';
 import { getWeekdays } from '@/shared/lib/weekdays';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   campaignId: string;
@@ -45,13 +46,7 @@ export function DashboardCalendarSection({ campaignId }: Props) {
   const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
 
   return (
-    <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary whitespace-nowrap">
-          {t('dashboard.calendar')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-      </div>
+    <SectionPanel title={t('dashboard.calendar')}>
       <div className="space-y-3">
         {/* Month nav */}
         <div className="flex items-center justify-between">
@@ -116,6 +111,6 @@ export function DashboardCalendarSection({ campaignId }: Props) {
           })}
         </div>
       </div>
-    </section>
+    </SectionPanel>
   );
 }

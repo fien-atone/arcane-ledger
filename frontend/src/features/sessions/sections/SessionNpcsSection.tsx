@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useNpcs, useSetNpcVisibility } from '@/features/npcs/api/queries';
 import { useSaveSession } from '@/features/sessions/api/queries';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
+import { SectionPanel } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 interface Props {
@@ -53,23 +54,18 @@ export function SessionNpcsSection({ campaignId, session, isGm, partyEnabled }: 
   };
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-          {t('section_npcs')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-        {isGm && (
-          <button
-            onClick={() => { setNpcSearchOpen((v) => !v); setNpcSearch(''); }}
-            className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-          >
-            <span className="material-symbols-outlined text-[13px]">person_add</span>
-            {t('add')}
-          </button>
-        )}
-      </div>
-
+    <SectionPanel
+      title={t('section_npcs')}
+      action={isGm ? (
+        <button
+          onClick={() => { setNpcSearchOpen((v) => !v); setNpcSearch(''); }}
+          className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+        >
+          <span className="material-symbols-outlined text-[13px]">person_add</span>
+          {t('add')}
+        </button>
+      ) : undefined}
+    >
       {isGm && npcSearchOpen && (
         <div className="border border-outline-variant/20 bg-surface-container-low mb-4">
           <div className="relative">
@@ -157,6 +153,6 @@ export function SessionNpcsSection({ campaignId, session, isGm, partyEnabled }: 
           })}
         </div>
       ) : null}
-    </div>
+    </SectionPanel>
   );
 }

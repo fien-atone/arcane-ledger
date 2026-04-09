@@ -11,6 +11,7 @@
  */
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { SectionPanel } from '@/shared/ui';
 import type { StatusFilter, StatusFilterOption } from '../hooks/useNpcListPage';
 
 interface Props {
@@ -43,7 +44,7 @@ export function NpcListHeroSection({
   const { t } = useTranslation('npcs');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 mb-8">
+    <SectionPanel className="mb-8">
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
@@ -127,6 +128,6 @@ export function NpcListHeroSection({
           <span className="text-primary font-bold">{totalCount}</span>
         </span>
       </div>
-    </div>
+    </SectionPanel>
   );
 }

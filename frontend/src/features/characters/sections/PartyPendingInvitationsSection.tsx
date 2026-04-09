@@ -8,25 +8,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCancelInvitation } from '@/features/invitations/api/queries';
+import { SectionPanel } from '@/shared/ui';
 import type { CampaignInvitation } from '@/entities/invitation';
 
 interface Props {
   invitations: CampaignInvitation[];
   isGm: boolean;
-}
-
-function SectionHeader({ title, count }: { title: string; count?: number }) {
-  return (
-    <div className="flex items-center gap-4 mb-4">
-      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-        {title}
-      </h3>
-      <div className="h-px flex-1 bg-outline-variant/20" />
-      {count != null && (
-        <span className="text-[10px] text-on-surface-variant/30">{count}</span>
-      )}
-    </div>
-  );
 }
 
 export function PartyPendingInvitationsSection({ invitations, isGm }: Props) {
@@ -37,8 +24,11 @@ export function PartyPendingInvitationsSection({ invitations, isGm }: Props) {
   if (invitations.length === 0) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <SectionHeader title={t('section_pending_invitations')} count={invitations.length} />
+    <SectionPanel
+      size="sm"
+      title={t('section_pending_invitations')}
+      action={<span className="text-[10px] text-on-surface-variant/30">{invitations.length}</span>}
+    >
       <div className="space-y-2">
         {invitations.map((inv) => {
           const isConfirming = confirmingId === inv.id;
@@ -101,6 +91,6 @@ export function PartyPendingInvitationsSection({ invitations, isGm }: Props) {
           );
         })}
       </div>
-    </div>
+    </SectionPanel>
   );
 }

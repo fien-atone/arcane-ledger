@@ -8,6 +8,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSessions } from '@/features/sessions/api';
+import { SectionPanel } from '@/shared/ui';
 import type { Location } from '@/entities/location';
 
 interface Props {
@@ -27,14 +28,8 @@ export function LocationSessionsSection({ campaignId, location, enabled }: Props
     .sort((a, b) => b.number - a.number);
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <section className="space-y-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-            {t('section_session_appearances')}
-          </h2>
-          <div className="h-px flex-1 bg-outline-variant/20" />
-        </div>
+    <SectionPanel title={t('section_session_appearances')}>
+      <section>
         {sessionAppearances.length === 0 ? (
           <p className="text-xs text-on-surface-variant/40 italic">
             {t('no_sessions_tagged')}
@@ -61,6 +56,6 @@ export function LocationSessionsSection({ campaignId, location, enabled }: Props
           </div>
         )}
       </section>
-    </div>
+    </SectionPanel>
   );
 }

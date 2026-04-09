@@ -3,6 +3,7 @@
  * SocialRelationsSection used for tracking typed relations between entities.
  */
 import { SocialRelationsSection } from '@/features/relations/ui';
+import { SectionPanel } from '@/shared/ui';
 
 interface Props {
   campaignId: string;
@@ -13,8 +14,8 @@ interface Props {
 export function CharacterRelationsSection({ campaignId, characterId, isGm }: Props) {
   if (!isGm) return null;
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <SocialRelationsSection campaignId={campaignId} entityId={characterId} />
-    </div>
+    </SectionPanel>
   );
 }

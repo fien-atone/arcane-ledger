@@ -14,6 +14,7 @@ import { useLocations } from '@/features/locations/api';
 import { useLocationTypes } from '@/features/locationTypes';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { CATEGORY_ICON_COLOR } from '@/entities/locationType';
+import { SectionPanel } from '@/shared/ui';
 import type { Location } from '@/entities/location';
 import { MiniMapPreview } from './map/MiniMapPreview';
 import { CATEGORY_MARKER_CLS, MARKER_DEFAULT_CLS } from './map/constants';
@@ -45,7 +46,7 @@ export function LocationMiniMapSection({ campaignId, location, locationTypesEnab
     : MARKER_DEFAULT_CLS.bubble;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <h4 className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-2 flex items-center gap-2">
         <span className="material-symbols-outlined text-[13px] text-primary">my_location</span>
         {t('section_on_map_of', { name: parentLocation.name })}
@@ -71,6 +72,6 @@ export function LocationMiniMapSection({ campaignId, location, locationTypesEnab
           </div>
         </div>
       </Link>
-    </div>
+    </SectionPanel>
   );
 }

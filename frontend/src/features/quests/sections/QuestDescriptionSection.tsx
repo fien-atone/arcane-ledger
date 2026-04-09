@@ -4,7 +4,7 @@
  * GM gets the inline rich-text editor; players get read-only formatted content.
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionPanel } from '@/shared/ui';
 import type { Quest } from '@/entities/quest';
 
 interface Props {
@@ -17,7 +17,7 @@ export function QuestDescriptionSection({ quest, isGm, onSaveField }: Props) {
   const { t } = useTranslation('quests');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <InlineRichField
         label={t('section_description')}
         value={quest.description}
@@ -25,6 +25,6 @@ export function QuestDescriptionSection({ quest, isGm, onSaveField }: Props) {
         placeholder={t('placeholder_description')}
         readOnly={!isGm}
       />
-    </div>
+    </SectionPanel>
   );
 }

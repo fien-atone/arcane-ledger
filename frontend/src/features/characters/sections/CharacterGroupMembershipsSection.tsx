@@ -13,6 +13,7 @@ import {
   useAddCharacterGroupMembership,
   useRemoveCharacterGroupMembership,
 } from '@/features/characters/api/queries';
+import { SectionPanel } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
 
 interface Props {
@@ -72,28 +73,24 @@ export function CharacterGroupMembershipsSection({
   };
 
   return (
-    <section className="bg-surface-container border border-outline-variant/20 rounded-sm p-6 space-y-4">
-      <div className="flex items-center gap-4">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-          {t('detail.section_group_memberships')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-        {isGm && (
-          <button
-            onClick={() => {
-              setAddGroupOpen((v) => !v);
-              setAddGroupSearch('');
-              setAddGroupRole('');
-              setSelectedGroupId(null);
-            }}
-            className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
-          >
-            <span className="material-symbols-outlined text-[13px]">group_add</span>
-            {t('detail.add')}
-          </button>
-        )}
-      </div>
-
+    <SectionPanel
+      title={t('detail.section_group_memberships')}
+      action={isGm ? (
+        <button
+          onClick={() => {
+            setAddGroupOpen((v) => !v);
+            setAddGroupSearch('');
+            setAddGroupRole('');
+            setSelectedGroupId(null);
+          }}
+          className="flex items-center gap-1 px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all"
+        >
+          <span className="material-symbols-outlined text-[13px]">group_add</span>
+          {t('detail.add')}
+        </button>
+      ) : undefined}
+    >
+      <div className="space-y-4">
       {addGroupOpen && (
         <div className="border border-outline-variant/20 bg-surface-container-low">
           <div className="relative">
@@ -249,6 +246,7 @@ export function CharacterGroupMembershipsSection({
           ))}
         </div>
       ) : null}
-    </section>
+      </div>
+    </SectionPanel>
   );
 }

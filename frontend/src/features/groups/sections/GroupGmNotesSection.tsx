@@ -5,7 +5,7 @@
  * SessionGmNotesSection patterns).
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionPanel } from '@/shared/ui';
 import type { Group } from '@/entities/group';
 
 interface Props {
@@ -19,13 +19,13 @@ export function GroupGmNotesSection({ group, isGm, onSaveField }: Props) {
   if (!isGm) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <InlineRichField
         label={t('section_gm_notes')}
         value={group.gmNotes}
         onSave={(html) => onSaveField('gmNotes', html)}
         isGmNotes
       />
-    </div>
+    </SectionPanel>
   );
 }

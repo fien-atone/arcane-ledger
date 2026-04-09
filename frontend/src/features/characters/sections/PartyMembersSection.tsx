@@ -15,7 +15,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Select } from '@/shared/ui';
+import { Select, SectionPanel } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import {
   useAssignCharacterToPlayer,
@@ -30,20 +30,6 @@ interface Props {
   unassignedCharacters: PlayerCharacter[];
   isGm: boolean;
   onCreateCharacter: (forUserId: string) => void;
-}
-
-function SectionHeader({ title, count }: { title: string; count?: number }) {
-  return (
-    <div className="flex items-center gap-4 mb-4">
-      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-        {title}
-      </h3>
-      <div className="h-px flex-1 bg-outline-variant/20" />
-      {count != null && (
-        <span className="text-[10px] text-on-surface-variant/30">{count}</span>
-      )}
-    </div>
-  );
 }
 
 function MemberCard({
@@ -285,8 +271,11 @@ export function PartyMembersSection({
   if (slots.length === 0) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <SectionHeader title={t('section_party_members')} count={slots.length} />
+    <SectionPanel
+      size="sm"
+      title={t('section_party_members')}
+      action={<span className="text-[10px] text-on-surface-variant/30">{slots.length}</span>}
+    >
       {/* Column headers */}
       <div className="grid grid-cols-[1fr_auto_1fr] mb-2 px-1">
         <span className="text-[9px] font-label font-bold uppercase tracking-widest text-on-surface-variant/40">
@@ -309,6 +298,6 @@ export function PartyMembersSection({
           />
         ))}
       </div>
-    </div>
+    </SectionPanel>
   );
 }

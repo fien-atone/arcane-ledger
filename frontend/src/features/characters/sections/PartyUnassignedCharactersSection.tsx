@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Select } from '@/shared/ui';
+import { Select, SectionPanel } from '@/shared/ui';
 import { resolveImageUrl } from '@/shared/api/imageUrl';
 import { useAssignCharacterToPlayer } from '@/features/invitations/api/queries';
 import type { PlayerCharacter } from '@/entities/character';
@@ -20,20 +20,6 @@ interface Props {
   campaignId: string;
   membersWithoutCharacter: MemberWithoutCharacter[];
   isGm: boolean;
-}
-
-function SectionHeader({ title, count }: { title: string; count?: number }) {
-  return (
-    <div className="flex items-center gap-4 mb-4">
-      <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-        {title}
-      </h3>
-      <div className="h-px flex-1 bg-outline-variant/20" />
-      {count != null && (
-        <span className="text-[10px] text-on-surface-variant/30">{count}</span>
-      )}
-    </div>
-  );
 }
 
 function UnassignedCharacterCard({
@@ -140,11 +126,11 @@ export function PartyUnassignedCharactersSection({
   if (characters.length === 0) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <SectionHeader
-        title={t('section_unassigned_characters')}
-        count={characters.length}
-      />
+    <SectionPanel
+      size="sm"
+      title={t('section_unassigned_characters')}
+      action={<span className="text-[10px] text-on-surface-variant/30">{characters.length}</span>}
+    >
       <div className="space-y-2">
         {characters.map((char) => (
           <UnassignedCharacterCard
@@ -156,6 +142,6 @@ export function PartyUnassignedCharactersSection({
           />
         ))}
       </div>
-    </div>
+    </SectionPanel>
   );
 }

@@ -5,7 +5,7 @@
  * (or an empty placeholder if no brief was written).
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField, RichContent } from '@/shared/ui';
+import { InlineRichField, RichContent, SectionPanel } from '@/shared/ui';
 import type { Session } from '@/entities/session';
 
 interface Props {
@@ -18,7 +18,7 @@ export function SessionBriefSection({ session, isGm, onSaveField }: Props) {
   const { t } = useTranslation('sessions');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       {isGm ? (
         <InlineRichField
           label={t('section_brief')}
@@ -43,6 +43,6 @@ export function SessionBriefSection({ session, isGm, onSaveField }: Props) {
           <p className="text-xs text-on-surface-variant/40 italic">{t('no_brief')}</p>
         </div>
       )}
-    </div>
+    </SectionPanel>
   );
 }

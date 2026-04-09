@@ -5,7 +5,7 @@
  * see them. Other players viewing the character do not see this section.
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionPanel } from '@/shared/ui';
 import type { PlayerCharacter } from '@/entities/character';
 
 interface Props {
@@ -21,7 +21,7 @@ export function CharacterBackgroundSection({ character, isGm, canViewAll, onSave
 
   return (
     <>
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+      <SectionPanel>
         <InlineRichField
           label={t('detail.section_backstory')}
           value={character.background}
@@ -29,9 +29,9 @@ export function CharacterBackgroundSection({ character, isGm, canViewAll, onSave
           placeholder={t('detail.placeholder_backstory')}
           readOnly={!isGm}
         />
-      </div>
+      </SectionPanel>
 
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+      <SectionPanel>
         <InlineRichField
           label={t('detail.section_personality')}
           value={character.personality}
@@ -39,9 +39,9 @@ export function CharacterBackgroundSection({ character, isGm, canViewAll, onSave
           placeholder={t('detail.placeholder_personality')}
           readOnly={!isGm}
         />
-      </div>
+      </SectionPanel>
 
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+      <SectionPanel>
         <InlineRichField
           label={t('detail.section_motivation')}
           value={character.motivation}
@@ -49,9 +49,9 @@ export function CharacterBackgroundSection({ character, isGm, canViewAll, onSave
           placeholder={t('detail.placeholder_motivation')}
           readOnly={!isGm}
         />
-      </div>
+      </SectionPanel>
 
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+      <SectionPanel>
         <InlineRichField
           label={t('detail.section_bonds')}
           value={character.bonds}
@@ -59,9 +59,9 @@ export function CharacterBackgroundSection({ character, isGm, canViewAll, onSave
           placeholder={t('detail.placeholder_bonds')}
           readOnly={!isGm}
         />
-      </div>
+      </SectionPanel>
 
-      <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+      <SectionPanel>
         <InlineRichField
           label={t('detail.section_flaws')}
           value={character.flaws}
@@ -69,7 +69,7 @@ export function CharacterBackgroundSection({ character, isGm, canViewAll, onSave
           placeholder={t('detail.placeholder_flaws')}
           readOnly={!isGm}
         />
-      </div>
+      </SectionPanel>
     </>
   );
 }

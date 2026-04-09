@@ -5,7 +5,7 @@
  *
  * Owns its own mutation hook.
  */
-import { VisibilityPanel } from '@/shared/ui';
+import { VisibilityPanel, SectionPanel } from '@/shared/ui';
 import { useSetGroupVisibility } from '@/features/groups/api';
 import { GROUP_VISIBILITY_FIELDS, GROUP_BASIC_PRESET } from '@/shared/lib/visibilityFields';
 import type { Group } from '@/entities/group';
@@ -23,7 +23,7 @@ export function GroupVisibilitySection({ campaignId, group, isGm, partyEnabled }
   if (!isGm || !partyEnabled) return null;
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
+    <SectionPanel>
       <VisibilityPanel
         playerVisible={group.playerVisible ?? false}
         playerVisibleFields={group.playerVisibleFields ?? []}
@@ -48,6 +48,6 @@ export function GroupVisibilitySection({ campaignId, group, isGm, partyEnabled }
         })}
         isPending={setGroupVisibility.isPending}
       />
-    </div>
+    </SectionPanel>
   );
 }

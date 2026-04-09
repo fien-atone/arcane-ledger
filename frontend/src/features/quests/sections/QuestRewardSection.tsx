@@ -4,7 +4,7 @@
  * GM gets the inline editor; players get read-only formatted content.
  */
 import { useTranslation } from 'react-i18next';
-import { InlineRichField } from '@/shared/ui';
+import { InlineRichField, SectionPanel } from '@/shared/ui';
 import type { Quest } from '@/entities/quest';
 
 interface Props {
@@ -17,13 +17,7 @@ export function QuestRewardSection({ quest, isGm, onSaveField }: Props) {
   const { t } = useTranslation('quests');
 
   return (
-    <div className="bg-surface-container border border-outline-variant/20 rounded-sm p-6">
-      <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-sm font-label font-bold tracking-[0.2em] uppercase text-primary">
-          {t('section_reward')}
-        </h2>
-        <div className="h-px flex-1 bg-outline-variant/20" />
-      </div>
+    <SectionPanel title={t('section_reward')}>
       <InlineRichField
         label=""
         value={quest.reward}
@@ -31,6 +25,6 @@ export function QuestRewardSection({ quest, isGm, onSaveField }: Props) {
         placeholder={t('placeholder_reward')}
         readOnly={!isGm}
       />
-    </div>
+    </SectionPanel>
   );
 }
