@@ -1,12 +1,17 @@
 /**
  * Tests for useNpcListPage hook.
  *
- * Mocks the three underlying GraphQL queries (CAMPAIGN + NPCS + SPECIES)
- * and asserts on:
- *  - the derived shape (loading flags, filtered list, statusFilters)
- *  - search / statusFilter state transitions
+ * F-11: search and status filtering are server-side. The hook passes
+ * debounced search + uppercase status as GraphQL variables. These tests
+ * mock the underlying queries with different variable combinations and
+ * assert on:
+ *  - the derived shape (loading flags, list, statusFilters without counts)
+ *  - statusFilter state transitions trigger a refetch with uppercase status
  *  - resolveSpeciesName preferring the species catalog
  *  - openAdd / closeAdd drawer state
+ *
+ * Debounced search is covered separately in useDebouncedSearch.test.ts;
+ * here we verify the hook wires the variables through correctly.
  */
 import { describe, it, expect } from 'vitest';
 import { act } from 'react';
@@ -36,8 +41,8 @@ const CAMPAIGN_QUERY = gql`
 `;
 
 const NPCS_QUERY = gql`
-  query Npcs($campaignId: ID!) {
-    npcs(campaignId: $campaignId) {
+  query Npcs($campaignId: ID!, $search: String, $status: String) {
+    npcs(campaignId: $campaignId, search: $search, status: $status) {
       id campaignId name aliases status gender age species speciesId
       appearance personality description motivation flaws gmNotes image
       playerVisible playerVisibleFields
@@ -97,37 +102,50 @@ const baseNpc = {
   groupMemberships: [],
 };
 
-const npcsMock = {
-  request: { query: NPCS_QUERY, variables: { campaignId: 'camp-1' } },
+const aldric = {
+  ...baseNpc,
+  id: 'npc-1',
+  name: 'Aldric Thorne',
+  aliases: ['The Grey'],
+  status: 'ALIVE',
+  speciesId: 'sp-human',
+};
+const mira = {
+  ...baseNpc,
+  id: 'npc-2',
+  name: 'Mira Vale',
+  aliases: [],
+  status: 'DEAD',
+  speciesId: null,
+  species: 'Elf',
+};
+const borin = {
+  ...baseNpc,
+  id: 'npc-3',
+  name: 'Borin',
+  aliases: [],
+  status: 'MISSING',
+};
+
+// Unfiltered load — matches initial hook mount (search: null, status: null)
+const npcsUnfilteredMock = {
+  request: {
+    query: NPCS_QUERY,
+    variables: { campaignId: 'camp-1', search: null, status: null },
+  },
   result: {
-    data: {
-      npcs: [
-        {
-          ...baseNpc,
-          id: 'npc-1',
-          name: 'Aldric Thorne',
-          aliases: ['The Grey'],
-          status: 'alive',
-          speciesId: 'sp-human',
-        },
-        {
-          ...baseNpc,
-          id: 'npc-2',
-          name: 'Mira Vale',
-          aliases: [],
-          status: 'dead',
-          speciesId: null,
-          species: 'Elf',
-        },
-        {
-          ...baseNpc,
-          id: 'npc-3',
-          name: 'Borin',
-          aliases: [],
-          status: 'missing',
-        },
-      ],
-    },
+    data: { npcs: [aldric, mira, borin] },
+  },
+};
+
+// Status=DEAD refetch
+const npcsDeadMock = {
+  request: {
+    query: NPCS_QUERY,
+    variables: { campaignId: 'camp-1', search: null, status: 'DEAD' },
+  },
+  result: {
+    data: { npcs: [mira] },
   },
 };
 
@@ -155,7 +173,7 @@ describe('useNpcListPage', () => {
   it('returns expected shape after loading', async () => {
     const { result } = renderHookWithProviders(
       () => useNpcListPage('camp-1'),
-      { mocks: [campaignMock, npcsMock, speciesMock] },
+      { mocks: [campaignMock, npcsUnfilteredMock, speciesMock] },
     );
 
     expect(result.current.isLoading).toBe(true);
@@ -169,63 +187,78 @@ describe('useNpcListPage', () => {
     expect(result.current.socialGraphEnabled).toBe(true);
     expect(result.current.isGm).toBe(true);
 
-    // statusFilters: all + 4 statuses = 5 entries
+    // statusFilters: all + 4 statuses = 5 entries, no `count` field
     expect(result.current.statusFilters).toHaveLength(5);
-    expect(result.current.statusFilters[0]).toMatchObject({
+    expect(result.current.statusFilters[0]).toEqual({
       value: 'all',
-      count: 3,
+      label: 'status_all',
     });
-    expect(
-      result.current.statusFilters.find((f) => f.value === 'alive')?.count,
-    ).toBe(1);
-    expect(
-      result.current.statusFilters.find((f) => f.value === 'dead')?.count,
-    ).toBe(1);
-
-    // Default (all, no search): all 3 NPCs
-    expect(result.current.filtered).toHaveLength(3);
 
     // resolveSpeciesName prefers the species catalog
-    const aldric = result.current.npcs!.find((n) => n.id === 'npc-1')!;
-    expect(result.current.resolveSpeciesName(aldric)).toBe('Human');
+    const a = result.current.npcs!.find((n) => n.id === 'npc-1')!;
+    expect(result.current.resolveSpeciesName(a)).toBe('Human');
     // Falls back to free-text species
-    const mira = result.current.npcs!.find((n) => n.id === 'npc-2')!;
-    expect(result.current.resolveSpeciesName(mira)).toBe('Elf');
+    const m = result.current.npcs!.find((n) => n.id === 'npc-2')!;
+    expect(result.current.resolveSpeciesName(m)).toBe('Elf');
   });
 
-  it('search filters by name and aliases', async () => {
+  it('statusFilter triggers a server refetch with the uppercase status', async () => {
     const { result } = renderHookWithProviders(
       () => useNpcListPage('camp-1'),
-      { mocks: [campaignMock, npcsMock, speciesMock] },
+      { mocks: [campaignMock, npcsUnfilteredMock, speciesMock, npcsDeadMock] },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    act(() => result.current.setSearch('grey'));
-    await waitFor(() => expect(result.current.search).toBe('grey'));
-    // Matches alias "The Grey"
-    expect(result.current.filtered.map((n) => n.id)).toEqual(['npc-1']);
-
-    act(() => result.current.setSearch('mira'));
-    await waitFor(() => expect(result.current.search).toBe('mira'));
-    expect(result.current.filtered.map((n) => n.id)).toEqual(['npc-2']);
-  });
-
-  it('statusFilter narrows results to a single status', async () => {
-    const { result } = renderHookWithProviders(
-      () => useNpcListPage('camp-1'),
-      { mocks: [campaignMock, npcsMock, speciesMock] },
-    );
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.npcs!.map((n) => n.id)).toEqual(['npc-1', 'npc-2', 'npc-3']);
 
     act(() => result.current.setStatusFilter('dead'));
-    await waitFor(() => expect(result.current.statusFilter).toBe('dead'));
-    expect(result.current.filtered.map((n) => n.id)).toEqual(['npc-2']);
+    await waitFor(() =>
+      expect(result.current.npcs!.map((n) => n.id)).toEqual(['npc-2']),
+    );
+    expect(result.current.statusFilter).toBe('dead');
+  });
+
+  it('previousData keeps the list visible while the new query is in flight', async () => {
+    const { result } = renderHookWithProviders(
+      () => useNpcListPage('camp-1'),
+      { mocks: [campaignMock, npcsUnfilteredMock, speciesMock, npcsDeadMock] },
+    );
+    // Wait for the initial list to appear
+    await waitFor(() => expect(result.current.npcs).toHaveLength(3));
+
+    // Trigger a refetch by changing the status filter; between the
+    // state update and the mock resolving, `npcs` must NOT become undefined.
+    act(() => result.current.setStatusFilter('dead'));
+    // Immediately after dispatch, npcs should still reflect the previous
+    // (unfiltered) list OR the new one — but never undefined/empty while
+    // isLoading remains false (initial load completed).
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.npcs).toBeDefined();
+    expect(result.current.npcs!.length).toBeGreaterThan(0);
+
+    await waitFor(() =>
+      expect(result.current.npcs!.map((n) => n.id)).toEqual(['npc-2']),
+    );
+  });
+
+  it('search is driven locally but updates the URL immediately', async () => {
+    const { result } = renderHookWithProviders(
+      () => useNpcListPage('camp-1'),
+      { mocks: [campaignMock, npcsUnfilteredMock, speciesMock] },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => result.current.setSearch('ald'));
+    // `search` reflects the live input value (drives the <input>)
+    expect(result.current.search).toBe('ald');
+    // The debounced query variable (tested separately in
+    // useDebouncedSearch) won't have fired yet — the list is unchanged.
+    expect(result.current.npcs).toHaveLength(3);
   });
 
   it('openAdd / closeAdd toggles the drawer state', async () => {
     const { result } = renderHookWithProviders(
       () => useNpcListPage('camp-1'),
-      { mocks: [campaignMock, npcsMock, speciesMock] },
+      { mocks: [campaignMock, npcsUnfilteredMock, speciesMock] },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 

@@ -32,7 +32,7 @@ function baseProps(
     partyEnabled: true,
     isLoading: false,
     isError: false,
-    filtered: [npc],
+    npcs: [npc],
     resolveSpeciesName: () => 'Human',
     onToggleVisibility: vi.fn(),
     ...overrides,
@@ -40,8 +40,8 @@ function baseProps(
 }
 
 describe('NpcListSection', () => {
-  it('shows empty state when filtered is empty', () => {
-    renderWithProviders(<NpcListSection {...baseProps({ filtered: [] })} />);
+  it('shows empty state when npcs is empty', () => {
+    renderWithProviders(<NpcListSection {...baseProps({ npcs: [] })} />);
     expect(screen.getByText('empty_title')).toBeInTheDocument();
   });
 

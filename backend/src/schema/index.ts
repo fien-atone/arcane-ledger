@@ -327,7 +327,7 @@ export const typeDefs = `#graphql
     session(campaignId: ID!, id: ID!): Session
 
     # NPCs
-    npcs(campaignId: ID!): [NPC!]!
+    npcs(campaignId: ID!, search: String, status: String): [NPC!]!
     npc(campaignId: ID!, id: ID!): NPC
 
     # Characters

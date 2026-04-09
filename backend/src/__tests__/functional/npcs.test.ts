@@ -271,6 +271,114 @@ describe('NPCs', () => {
     expect(found).toBeUndefined();
   });
 
+  it('filters npcs by search (name, case-insensitive partial match)', async () => {
+    // Server-side search by name. Should NOT match aliases (per product
+    // decision: alias search is too noisy). Case-insensitive substring
+    // match over `name` only.
+    const uniqueMarker = `SrchNpc${uid}`;
+    const a = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: NPCInput!) { saveNPC(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Alpha`, aliases: ['ZZZ_only_in_alias'] } },
+      gmToken,
+    );
+    const b = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: NPCInput!) { saveNPC(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Beta` } },
+      gmToken,
+    );
+    const aId = (a.data!.saveNPC as Record<string, string>).id;
+    const bId = (b.data!.saveNPC as Record<string, string>).id;
+
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { npcs(campaignId: $campaignId, search: $search) { id name } }`,
+      { campaignId: CAMPAIGN_ID, search: uniqueMarker.toLowerCase() },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const npcs = res.data!.npcs as Array<Record<string, string>>;
+    const ids = npcs.map((n) => n.id);
+    expect(ids).toContain(aId);
+    expect(ids).toContain(bId);
+
+    // Alias-only search should NOT find the NPC
+    const aliasRes = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { npcs(campaignId: $campaignId, search: $search) { id } }`,
+      { campaignId: CAMPAIGN_ID, search: 'ZZZ_only_in_alias' },
+      gmToken,
+    );
+    const aliasNpcs = aliasRes.data!.npcs as Array<Record<string, string>>;
+    expect(aliasNpcs.find((n) => n.id === aId)).toBeUndefined();
+
+    // Narrower search returns just one
+    const narrow = await graphql(
+      request,
+      `query($campaignId: ID!, $search: String) { npcs(campaignId: $campaignId, search: $search) { id name } }`,
+      { campaignId: CAMPAIGN_ID, search: `${uniqueMarker} Alpha` },
+      gmToken,
+    );
+    const narrowNpcs = narrow.data!.npcs as Array<Record<string, string>>;
+    expect(narrowNpcs.map((n) => n.id)).toContain(aId);
+    expect(narrowNpcs.map((n) => n.id)).not.toContain(bId);
+
+    await prisma.nPC.delete({ where: { id: aId } }).catch(() => {});
+    await prisma.nPC.delete({ where: { id: bId } }).catch(() => {});
+  });
+
+  it('filters npcs by status (server-side, uppercase-normalized)', async () => {
+    // Server accepts case-insensitive status and normalizes to UPPER for the
+    // DB enum. Only NPCs matching the given status should be returned.
+    const uniqueMarker = `StatNpc${uid}`;
+    const aliveRes = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: NPCInput!) { saveNPC(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Alive`, status: 'ALIVE' } },
+      gmToken,
+    );
+    const deadRes = await graphql(
+      request,
+      `mutation($campaignId: ID!, $input: NPCInput!) { saveNPC(campaignId: $campaignId, input: $input) { id } }`,
+      { campaignId: CAMPAIGN_ID, input: { name: `${uniqueMarker} Dead`, status: 'DEAD' } },
+      gmToken,
+    );
+    const aliveId = (aliveRes.data!.saveNPC as Record<string, string>).id;
+    const deadId = (deadRes.data!.saveNPC as Record<string, string>).id;
+
+    // Request with lowercase status — resolver should normalize
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!, $status: String) { npcs(campaignId: $campaignId, status: $status) { id status } }`,
+      { campaignId: CAMPAIGN_ID, status: 'alive' },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const npcs = res.data!.npcs as Array<Record<string, string>>;
+    expect(npcs.find((n) => n.id === aliveId)).toBeDefined();
+    expect(npcs.find((n) => n.id === deadId)).toBeUndefined();
+    // All returned rows have status ALIVE
+    expect(npcs.every((n) => n.status === 'ALIVE')).toBe(true);
+
+    await prisma.nPC.delete({ where: { id: aliveId } }).catch(() => {});
+    await prisma.nPC.delete({ where: { id: deadId } }).catch(() => {});
+  });
+
+  it('returns all npcs for campaign when no search or status is provided', async () => {
+    // Baseline: without filters, the resolver returns all NPCs scoped to
+    // the campaign (existing behaviour must be preserved).
+    const res = await graphql(
+      request,
+      `query($campaignId: ID!) { npcs(campaignId: $campaignId) { id } }`,
+      { campaignId: CAMPAIGN_ID },
+      gmToken,
+    );
+    expect(res.errors).toBeUndefined();
+    const npcs = res.data!.npcs as Array<Record<string, string>>;
+    expect(Array.isArray(npcs)).toBe(true);
+  });
+
   it('deletes NPC and it no longer appears in list', async () => {
     // Step 1: Delete the NPC via deleteNPC mutation, verify it returns true.
     // Step 2: Re-query the NPC list and confirm the deleted NPC is gone.

@@ -6,11 +6,22 @@ import { redactEntity, NPC_FIELDS } from './redact.js';
 
 export const npcResolvers = {
   Query: {
-    npcs: async (_: unknown, { campaignId }: { campaignId: string }, ctx: Context) => {
+    npcs: async (
+      _: unknown,
+      { campaignId, search, status }: { campaignId: string; search?: string; status?: string },
+      ctx: Context,
+    ) => {
       const role = await getCampaignRole(ctx, campaignId);
-      const where = role === 'PLAYER'
-        ? { campaignId, playerVisible: true as const }
-        : { campaignId };
+      const trimmedSearch = search?.trim();
+      const normalizedStatus = status?.trim().toUpperCase();
+      const where = {
+        campaignId,
+        ...(trimmedSearch
+          ? { name: { contains: trimmedSearch, mode: 'insensitive' as const } }
+          : {}),
+        ...(normalizedStatus ? { status: normalizedStatus as any } : {}),
+        ...(role === 'PLAYER' ? { playerVisible: true as const } : {}),
+      };
       const npcs = await ctx.prisma.nPC.findMany({ where, orderBy: { name: 'asc' } });
       if (role === 'PLAYER') {
         return npcs.map((npc) => redactEntity(npc, npc.playerVisibleFields, NPC_FIELDS));
