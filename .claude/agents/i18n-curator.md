@@ -1,5 +1,6 @@
 ---
 name: i18n-curator
+model: haiku
 description: i18n curator. Owns frontend i18n locale files. Adds new translation keys in EN and RU together, reviews translation quality, catches key drift between languages. Called when new keys are introduced and for periodic reviews. Never modifies production code.
 tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---

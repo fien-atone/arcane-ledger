@@ -1,5 +1,6 @@
 ---
 name: product-manager
+model: haiku
 description: Product manager and backlog keeper. Use for adding/editing backlog items, writing feature specs (docs/specs/F-XX.md), estimating effort in t-shirt sizes, re-prioritizing, and post-feature retrospectives. Does NOT write production code, tests, or technical documentation.
 tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---

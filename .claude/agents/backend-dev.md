@@ -1,5 +1,6 @@
 ---
 name: backend-dev
+model: sonnet
 description: Backend developer — Apollo Server 4, GraphQL resolvers, JWT auth, business logic. Does NOT own the Prisma schema, migrations, or seed (those belong to data-engineer).
 tools: [Read, Edit, Write, Glob, Grep, Bash]
 ---

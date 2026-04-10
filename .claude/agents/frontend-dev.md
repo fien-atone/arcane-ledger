@@ -1,5 +1,6 @@
 ---
 name: frontend-dev
+model: sonnet
 description: Frontend developer — React, Apollo Client, Tailwind CSS, TipTap
 tools: [Read, Edit, Write, Glob, Grep, Bash]
 ---

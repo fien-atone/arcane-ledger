@@ -1,5 +1,6 @@
 ---
 name: ux-designer
+model: sonnet
 description: UX designer. Designs UI behavior and microcopy for new features before implementation; reviews implemented UI against the design before merge. Peer consultant for frontend-dev on UX questions. Never writes production code.
 tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---

@@ -1,5 +1,6 @@
 ---
 name: data-engineer
+model: sonnet
 description: Data engineer. Owns the database schema, migrations, seed, and data-layer documentation (ERD, METAMODEL). Ensures data integrity, referential consistency, migration safety, and seed quality. Consulted for any schema change; coordinates with backend-dev on GraphQL contracts.
 tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---
