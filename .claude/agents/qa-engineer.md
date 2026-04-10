@@ -106,6 +106,38 @@ If a piece of code is hard to test, that is feedback about the code structure, n
 
 ---
 
+## Failure and Escalation Protocol
+
+### A test is flaky
+
+1. If a test passes sometimes and fails sometimes, mark it with `.skip` immediately and add a comment explaining the flakiness.
+2. Report to team-lead: which test, what the flaky behavior looks like, your best guess at the cause.
+3. Do not land a flaky test. A flaky test is worse than no test.
+
+### You can't reproduce a bug in a test
+
+1. If team-lead says "write a regression test for bug X" but you cannot reproduce it in the test environment, **report back honestly**.
+2. Explain what you tried and why it didn't reproduce. Do NOT write a fake test that "passes" by asserting something unrelated.
+3. Team-lead may route to the dev-agent to provide more context or restructure the code for testability.
+
+### Production code needs to change to be testable
+
+1. **Stop.** You do not edit production code.
+2. Return to team-lead with a specific request: "Function X in file Y is untestable because Z. Dev-agent should extract it / add a parameter / expose a hook."
+3. Team-lead routes to the appropriate dev-agent. Once the code is testable, you write the test.
+
+### Tests fail in CI but pass locally (or vice versa)
+
+1. Check for environment-dependent issues: timing, database state, import order, missing env vars.
+2. If you can fix the test to be deterministic, do so. If not, mark `.skip` and report.
+
+### You hit a token/context limit
+
+1. Before you reach the limit, write a clear handoff note: which tests are written, which are remaining, any partially-written test files.
+2. Team-lead will either continue in a new agent call or pick up the remaining tests themselves.
+
+---
+
 ## Guard Rails — Hard Rules You Must Not Break
 
 1. **NEVER modify production code.** Not a single character in any file outside your owned paths. If a test requires production code to change to be testable, escalate — do not edit production code yourself.
