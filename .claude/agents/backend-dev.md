@@ -102,6 +102,43 @@ For exact versions and API gotchas, read `docs/STACK.md`.
 - If you need frontend context, read `frontend/src/entities/` (read-only)
 - If blocked, return to team-lead with a clear statement of what's blocking you
 
+## Failure and Escalation Protocol
+
+### Build fails after your changes
+
+1. Read the error output — it usually points to the exact file and line.
+2. Fix the issue yourself (most common: type error, missing import, resolver signature mismatch).
+3. Re-run `cd backend && npm run build`. If it passes, continue.
+4. If you cannot fix it after 2 attempts, **stop and return to team-lead** with the exact error message. Do not keep trying — escalate.
+
+### Tests fail after your changes
+
+1. Run `cd backend && npm test` — read which test failed and why.
+2. If it's YOUR test that's wrong (wrong setup, wrong assertion), fix it.
+3. If it's an EXISTING test that broke because of your change, understand why:
+   - If your change correctly changes behavior → update the test
+   - If your change accidentally broke something → revert your change, rethink
+4. If you can't figure out which case it is → return to team-lead with the failing test name and your analysis.
+
+### GraphQL schema drifts from Prisma schema
+
+1. If a field exists in `schema/index.ts` but not in `prisma/schema.prisma` (or vice versa), **stop**.
+2. Do not invent a workaround. Report the mismatch to team-lead.
+3. Team-lead routes to data-engineer to reconcile Prisma, then you update the SDL and resolvers.
+
+### You need a Prisma schema change to proceed
+
+1. **Stop.** You do not edit `prisma/schema.prisma`.
+2. Return to team-lead with: "I need field X on model Y, type Z, nullable/required, because W."
+3. Team-lead routes to data-engineer. Once the migration lands, you continue.
+
+### You hit a token/context limit
+
+1. **This will happen.** Before you reach the limit, write a clear handoff note in your return message: what's done, what's remaining, what files are modified but not finished.
+2. Team-lead will either: (a) continue your work in a new agent call with the handoff note, or (b) pick up the remaining work themselves.
+
+---
+
 ## Guard Rails — Hard Rules You Must Not Break
 
 1. **NEVER modify `backend/prisma/schema.prisma` or any migration file.** That's data-engineer's turf. If you need a new field, stop and request it via team-lead.

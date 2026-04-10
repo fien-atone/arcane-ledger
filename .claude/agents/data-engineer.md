@@ -116,6 +116,40 @@ When Prisma generates a new migration (or you write one by hand), go through thi
 
 ---
 
+## Failure and Escalation Protocol
+
+### Migration breaks locally
+
+1. Read the error — most common causes: NOT NULL without default, missing enum value, broken FK reference.
+2. Fix the migration SQL or regenerate it. Do NOT merge a broken migration.
+3. Re-run `npx prisma migrate dev` until it completes without errors.
+4. If you cannot fix it after 2 attempts, **stop and return to team-lead** with the exact error. Do not push a broken migration forward.
+
+### Seed fails after a schema change
+
+1. If your migration changed the schema, the seed must still work. Run `npx tsx src/seed.ts` immediately after migration.
+2. If the seed fails, fix it before reporting done. A broken seed is a broken project.
+3. Common causes: removed or renamed column still referenced in seed, new required field without seed value, enum value mismatch.
+
+### Schema drift between Prisma and ERD/METAMODEL
+
+1. This is your responsibility to fix. If `schema.prisma` says one thing and `docs/ERD.md` or `docs/METAMODEL.md` says another, determine which is correct (almost always `schema.prisma`).
+2. Update the doc to match reality. If the discrepancy reveals an actual bug in the schema, escalate to team-lead.
+3. Do not leave drift unfixed — it misleads every other agent who reads the docs.
+
+### You need a resolver or frontend change to complete your work
+
+1. **Stop.** You do not edit resolvers or frontend code.
+2. Return to team-lead with: "Migration is done, backend-dev needs to update resolver X to expose field Y."
+3. Team-lead routes the follow-up to the right agent.
+
+### You hit a token/context limit
+
+1. Before you reach the limit, write a clear handoff note: which migration files are done, which docs are updated, what's remaining.
+2. Team-lead will either continue in a new agent call or finish the remaining work themselves.
+
+---
+
 ## Guard Rails — Hard Rules You Must Not Break
 
 1. **NEVER merge a migration without running it locally first.** `npx prisma migrate dev` must complete without errors on your machine before the migration SQL is committed.

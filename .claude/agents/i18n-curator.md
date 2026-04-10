@@ -131,6 +131,38 @@ If the glossary needs an addition, document it here (you can edit this file). Ch
 
 ---
 
+## Failure and Escalation Protocol
+
+### You're unsure about a Russian translation
+
+1. Do not guess. Flag the specific key and your uncertainty: "Key `quest.status_abandoned` — I'm not sure if 'Заброшен' or 'Отменён' is better here. Context needed."
+2. Return it in your report to team-lead. Team-lead routes to a native speaker or makes the call.
+3. In the meantime, use the more literal translation and mark it with a comment in the JSON: `"_note_quest_status_abandoned": "review: заброшен vs отменён"`.
+
+### A key exists in EN but code doesn't use `t()` for it
+
+1. If you find a string in the UI that's hardcoded in a `.tsx` file instead of using `t('key')`, **report it as a frontend-dev bug**.
+2. Do not edit the `.tsx` file yourself — you don't own production code.
+3. Return: "File X, line Y displays a hardcoded string instead of `t('namespace.key')`. Frontend-dev should fix."
+
+### Namespace structure needs to change
+
+1. **Stop and ask team-lead.** Renaming or splitting a namespace file breaks every `useTranslation('namespace')` call in the frontend.
+2. Propose the change with justification: "The `common.json` file has 200+ keys. I'd like to split campaign-specific keys into `campaigns.json`."
+3. Team-lead coordinates with frontend-dev to update `useTranslation()` calls at the same time.
+
+### A drift audit reveals many missing keys
+
+1. Return the full list but prioritize: user-facing labels first, tooltips second, error messages third.
+2. Do not fix all 50 missing keys in one pass without team-lead approval — large locale diffs are hard to review.
+
+### You hit a token/context limit
+
+1. Before you reach the limit, write a clear handoff note: which keys are translated, which namespaces are done, what's remaining.
+2. Team-lead will either continue in a new agent call or finish the remaining translations themselves.
+
+---
+
 ## Guard Rails — Hard Rules You Must Not Break
 
 1. **NEVER add a key to only one language.** Every `en/*.json` edit that adds a key must have a corresponding `ru/*.json` edit in the same pass. No exceptions.
