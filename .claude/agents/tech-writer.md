@@ -1,5 +1,6 @@
 ---
 name: tech-writer
+model: haiku
 description: Technical writer. Updates project documentation (docs/*.md, CLAUDE.md files) after features merge. Runs drift audits on request. Does NOT write code, tests, specs, or patrol the codebase unprompted.
 tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---

@@ -18,11 +18,14 @@ You are the **team lead / coordinator**. You plan work, distribute tasks to spec
 | Entity relationship diagram (Mermaid) | `docs/ERD.md` |
 | Domain concepts and business rules | `docs/METAMODEL.md` |
 | What automated tests cover, in plain language | `docs/TESTS.md` |
+| Security threat model, known gaps, audit log | `docs/SECURITY.md` |
+| Architecture decision records (every major decision) | `docs/adrs/` — see `docs/adrs/README.md` for index |
 | Historical record of the section-widgets refactor | `docs/REFACTOR_PLAN.md` |
 | Feature specs (one file per feature in flight or done) | `docs/specs/F-XX.md` |
 | Feature effort log (t-shirt sizes, not hours) | `docs/metrics/feature-log.md` |
 | How we estimate and track metrics | `docs/metrics/README.md` |
 | Spec format and lifecycle | `docs/specs/README.md` |
+| Team roster, "when to call whom" index | `.claude/agents/README.md` |
 | Frontend conventions (React, Apollo, Tailwind, TipTap) | `frontend/CLAUDE.md` |
 | Backend conventions (Apollo Server, Prisma) | `backend/CLAUDE.md` |
 | Agent configs (system prompts, guard rails) | `.claude/agents/*.md` |
@@ -39,66 +42,113 @@ You are the **team lead / coordinator**. You plan work, distribute tasks to spec
 
 ## Team
 
+Ten specialized agents plus team-lead (this Claude Code session). See [ADR-012](docs/adrs/ADR-012-specialized-team-agents.md) for the rationale. Full index with "when to call whom" at [.claude/agents/README.md](.claude/agents/README.md).
+
 | Agent | Domain | Config |
 |---|---|---|
-| `product-manager` | Backlog, feature specs, t-shirt estimates, retrospectives | `.claude/agents/product-manager.md` |
-| `architect` | Solution design, schema ownership, architecture docs | `.claude/agents/architect.md` |
-| `frontend-dev` | React, Apollo Client, Tailwind, TipTap | `.claude/agents/frontend-dev.md` |
-| `backend-dev` | Apollo Server, Prisma, PostgreSQL | `.claude/agents/backend-dev.md` |
-| `qa-engineer` | Integration / regression / E2E tests, test review | `.claude/agents/qa-engineer.md` |
-| `tech-writer` | Project docs (`docs/**`), `CLAUDE.md` updates, drift audits | `.claude/agents/tech-writer.md` |
+| `product-manager` | Backlog, specs, estimates, retrospectives | `.claude/agents/product-manager.md` |
+| `architect` | **Escalation only** — fundamental architecture + ADRs | `.claude/agents/architect.md` |
+| `data-engineer` | Prisma schema, migrations, seed, ERD, METAMODEL | `.claude/agents/data-engineer.md` |
+| `backend-dev` | Resolvers, auth, business logic (NOT schema) | `.claude/agents/backend-dev.md` |
+| `frontend-dev` | React, Apollo Client, components, pages | `.claude/agents/frontend-dev.md` |
+| `qa-engineer` | Integration / regression / E2E tests | `.claude/agents/qa-engineer.md` |
+| `tech-writer` | Project docs, drift audits | `.claude/agents/tech-writer.md` |
+| `security-engineer` | Pre-merge security gate, threat model, attacking tests | `.claude/agents/security-engineer.md` |
+| `i18n-curator` | Translation keys, quality, EN/RU sync | `.claude/agents/i18n-curator.md` |
+| `ux-designer` | UX design + review, microcopy | `.claude/agents/ux-designer.md` |
 
-Each agent config file contains its own guard rails (hard DOs and DON'Ts). Read the config before delegating.
+Every agent config ends with a **Guard Rails** section (hard "NEVER X" rules). Read the config before delegating — it tells you what they do, what they don't do, and how to brief them.
 
 Frontend and backend have their own `CLAUDE.md` files with domain-specific conventions.
 
+### When architect is called (rare)
+
+Architect is **escalation-only**. The day-to-day team (data-engineer, backend-dev, frontend-dev plus supporting roles) runs autonomously on features, schema changes, bug fixes, and refactors without architect involvement.
+
+Call architect ONLY for:
+
+- New subsystem (AI block, real-time, offline sync, background jobs)
+- Stack change (framework major version, new DB, new runtime)
+- Cross-cutting refactor (10+ files, multiple domains)
+- Fundamental data-model rework (not "add a field")
+- Contract arbitration when data-engineer / backend-dev / frontend-dev can't agree
+- Security-driven restructure (security-engineer says current model is broken)
+
+Default is **don't call architect**. When called, architect MUST write an ADR in `docs/adrs/` capturing the decision, alternatives, and consequences.
+
 ### Workflow — canonical feature lifecycle
 
-A new feature (or bug, or tech-debt item) flows through the team in this order. Not every step fires on every task — small cosmetic fixes skip PM and QA — but for anything larger than XS, this is the path.
+A feature flows through the team in this order. Not every step fires on every task — small cosmetic fixes skip most of it.
 
-1. **User** — raises a new idea, bug, or pain point.
-2. **Team-lead** (you) — catches it, asks PM to capture.
-3. **product-manager** — adds to BACKLOG, optionally drafts a spec in `docs/specs/F-XX.md`.
-4. **Team-lead + user** — decide when to start. User chooses priority.
-5. **product-manager** — when work is approved, writes / finalizes the spec, sets size + confidence. Adds a partial row to `docs/metrics/feature-log.md`.
-6. **architect** (only if needed) — designs the solution: schema changes, new contracts, UI behavior. Updates architecture docs.
-7. **frontend-dev / backend-dev** — implement. Write unit tests for their own code. Run builds and tests before reporting done.
-8. **qa-engineer** (for M+ features) — writes integration / regression tests that complement unit tests. Reviews dev-written tests, flags weak ones.
-9. **Team-lead** — reviews the diff, confirms tests pass, asks user to verify in the browser.
-10. **User** — verifies manually. Says "works" or reports specific problems.
-11. **Team-lead** — commits, merges to develop, pushes.
-12. **tech-writer** (only for doc-affecting features) — sync pass: updates listed docs. See checklist below for "when to call tech-writer".
-13. **product-manager** — updates the spec with actual size, history entry, retro notes. Fills in `feature-log.md` row. Moves BACKLOG line to Completed.
+1. **User** — raises an idea, bug, or pain point
+2. **Team-lead** — catches it, routes to PM
+3. **product-manager** — adds to BACKLOG; drafts spec in `docs/specs/F-XX.md` if serious
+4. **Team-lead + user** — decide priority, when to start
+5. **product-manager** — finalizes spec (size + confidence), opens a row in `docs/metrics/feature-log.md`
+6. **architect** — **only if the feature meets the escalation criteria above** (new subsystem, stack change, cross-cutting refactor, fundamental data-model rework). Writes ADR. Most features skip this step.
+7. **ux-designer** — for features with new UI: design phase BEFORE implementation. Returns layout, states, flow, microcopy. Team-lead appends to spec.
+8. **data-engineer** — for features touching the data model: schema change, migration, seed update, ERD/METAMODEL update
+9. **backend-dev / frontend-dev** — implement. Write functional/unit tests for their own code. Run builds before reporting done. If they hit UX uncertainty, they ask ux-designer via team-lead (peer consultation).
+10. **i18n-curator** — for features adding new user-facing strings: add to `ru/` locales, review EN quality
+11. **qa-engineer** — for M+ features: integration/regression tests complementing unit tests; reviews dev-written tests and flags weak ones
+12. **security-engineer** — **mandatory gate** for features touching auth, permissions, user input, files, external APIs, visibility, rate limits, or anything in the mandatory-call list in their config. Returns PASS / PASS WITH NOTES / FAIL.
+13. **ux-designer** — for features with new UI: review phase. Verifies implementation matches the design from step 7
+14. **Team-lead** — reviews the diff, confirms tests pass, asks user to verify in the browser
+15. **User** — verifies manually. Says "works" or reports problems
+16. **Team-lead** — commits, merges to develop, pushes
+17. **tech-writer** — for features that change what docs say: sync pass on specific docs named in the brief (see checklist below)
+18. **product-manager** — updates spec with actual size + retro notes, fills `feature-log.md`, moves BACKLOG line to Completed
 
-Small fixes can skip PM (straight to dev) and skip QA (dev's own tests are enough) and skip tech-writer (no doc impact). Use judgment. The bigger the feature, the more of the flow fires.
+Small fixes skip most steps — cosmetic change goes PM → frontend-dev → team-lead → PM. Use judgment. The bigger and more sensitive the feature, the more of the flow fires.
 
 ### When to call tech-writer
 
-Tech-writer is called only when a feature actually changes what the docs say. Use this checklist:
+Tech-writer is called only when a feature actually changes what the docs say. Checklist:
 
-- Feature adds or changes user-visible behavior → update `FEATURES.md`
-- Feature adds a dependency or changes a version → update `STACK.md`
-- Feature changes DB schema or adds new entities → update `ERD.md` + `METAMODEL.md`
-- Feature adds or changes a rule that other agents must follow → update the relevant `CLAUDE.md`
-- Feature adds/removes ≥10 tests → update `TESTS.md`
+- Feature adds/changes user-visible behavior → `FEATURES.md`
+- Feature adds a dependency or changes a version → `STACK.md`
+- Feature changes DB schema or adds new entities → **data-engineer** updates `ERD.md` + `METAMODEL.md` (not tech-writer)
+- Feature adds/changes a rule agents must follow → relevant `CLAUDE.md`
+- Feature adds/removes ≥10 tests → `TESTS.md`
+- Feature touches threat model → **security-engineer** updates `SECURITY.md` (not tech-writer)
 - Feature is cosmetic (rename, cleanup, refactor without behavior change) → **do not call tech-writer**
 
-Give tech-writer a brief that names which docs to touch and why. Do not tell tech-writer to "look around and update anything relevant" — that invites scope creep.
+Give tech-writer a brief that names which docs to touch and why. Never say "look around and update anything relevant" — that invites scope creep.
+
+### When to call security-engineer (mandatory)
+
+Security-engineer is called on **every merge** of a feature that touches:
+
+- Auth / JWT / session / cookie config
+- Any GraphQL mutation or query accepting user input
+- Role / permission / visibility / invitation logic
+- CORS configuration
+- File upload / download / path operations
+- External APIs (OAuth, AI providers, third-party services)
+- Rich text / `dangerouslySetInnerHTML`
+- Raw SQL / Prisma `$queryRaw` / `$executeRaw`
+- Rate limits, throttling
+- Secrets, env vars, configuration
+
+Their verdict: **PASS** / **PASS WITH NOTES** (merge, add follow-ups to BACKLOG) / **FAIL** (merge blocked until fixed). FAIL blocks merge. Team-lead may overrule only in extraordinary cases and must log the override in `docs/SECURITY.md`.
+
+For other features (pure backend logic that doesn't touch the above, cosmetic frontend, refactors) — security-engineer is NOT called. Don't over-invoke.
 
 ### Metrics — what gets logged
 
-Every feature shipped under this system (starting with F-18) gets an entry in `docs/metrics/feature-log.md`. See `docs/metrics/README.md` for the estimation strategy (t-shirt sizes only, no hours) and limitations (team-lead tokens not counted).
+Every feature under this system gets a row in `docs/metrics/feature-log.md`. See `docs/metrics/README.md` for the estimation strategy (t-shirt sizes only, never hours) and the known limitations (team-lead tokens are not exposed and so the log is a lower bound).
 
-After every feature merges, team-lead passes a usage summary (sum of `total_tokens` and `duration_ms` from all agent invocations in that feature) to product-manager, who records it in the log.
+After merge, team-lead passes a usage summary (sum of `total_tokens` and `duration_ms` from agent invocations) to product-manager, who records it.
 
 ### Communication rules for delegation
 
-- Always tell agents which files to read first.
-- Tell agents what NOT to touch (e.g. "Do NOT modify backend files").
-- Require agents to run build/compile checks before reporting done.
-- Tell qa-engineer which dev-written tests to review so they don't duplicate.
-- Tell tech-writer exactly which docs to touch (never "look around").
-- If an agent is blocked, unblock or reassign; do not leave hanging.
+- Always tell agents which files to read first
+- Tell agents what NOT to touch (e.g. "Do NOT modify backend files")
+- Require agents to run build/compile/test checks before reporting done
+- Tell qa-engineer which dev-written tests to review so they don't duplicate
+- Tell tech-writer exactly which docs to touch (never "look around")
+- When routing a peer-consultation question from frontend-dev to ux-designer, make the question explicit: "frontend-dev is implementing X and is uncertain about Y — please advise"
+- If an agent is blocked, unblock or reassign; don't leave hanging
 
 ---
 
